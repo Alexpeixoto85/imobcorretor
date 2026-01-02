@@ -506,12 +506,18 @@
             overflow: hidden;
             height: 120px;
             background: #f1f5f9;
+            cursor: pointer;
         }
 
         .image-gallery-img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .image-gallery-item:hover .image-gallery-img {
+            transform: scale(1.05);
         }
 
         .remove-image-btn {
@@ -529,6 +535,7 @@
             justify-content: center;
             font-size: 0.7rem;
             cursor: pointer;
+            z-index: 2;
         }
 
         .add-image-btn {
@@ -612,6 +619,12 @@
             height: 100%;
             object-fit: cover;
             display: none;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .carousel-slide:hover {
+            transform: scale(1.02);
         }
 
         .carousel-slide.active {
@@ -657,6 +670,11 @@
             cursor: pointer;
             font-size: 1rem;
             z-index: 1;
+            transition: background 0.3s;
+        }
+
+        .carousel-arrow:hover {
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .carousel-arrow.prev {
@@ -676,6 +694,159 @@
         .btn-pdf:hover {
             background: #dc2626;
         }
+
+        /* --- Image Fullscreen Viewer --- */
+        .fullscreen-viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .fullscreen-viewer.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .fullscreen-image-container {
+            width: 100%;
+            height: 80vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .fullscreen-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.3s ease;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .fullscreen-nav {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        .fullscreen-nav button {
+            pointer-events: auto;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .fullscreen-nav button:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .fullscreen-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001;
+            transition: background 0.3s;
+        }
+
+        .fullscreen-close:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        .fullscreen-counter {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: white;
+            font-size: 1rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            width: fit-content;
+            margin: 0 auto;
+        }
+
+        .fullscreen-thumbnails {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            overflow-x: auto;
+            max-width: 90%;
+            margin-top: 10px;
+        }
+
+        .fullscreen-thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s, transform 0.3s;
+            flex-shrink: 0;
+            border: 2px solid transparent;
+        }
+
+        .fullscreen-thumbnail:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+
+        .fullscreen-thumbnail.active {
+            opacity: 1;
+            border-color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .fullscreen-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
@@ -693,6 +864,34 @@
 
     <div id="toast" class="toast">
         <i class="fas fa-check-circle"></i> <span>Ação realizada!</span>
+    </div>
+
+    <!-- Image Fullscreen Viewer -->
+    <div class="fullscreen-viewer" id="fullscreen-viewer">
+        <button class="fullscreen-close" onclick="UI.closeFullscreen()">
+            <i class="fas fa-times"></i>
+        </button>
+        
+        <div class="fullscreen-image-container">
+            <img id="fullscreen-current-image" class="fullscreen-image" src="" alt="Imagem em tela cheia">
+            
+            <div class="fullscreen-nav">
+                <button onclick="UI.prevFullscreenImage()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button onclick="UI.nextFullscreenImage()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="fullscreen-counter">
+            <span id="fullscreen-counter">1</span> / <span id="fullscreen-total">1</span>
+        </div>
+        
+        <div class="fullscreen-thumbnails" id="fullscreen-thumbnails">
+            <!-- Thumbnails will be added here -->
+        </div>
     </div>
 
     <main>
@@ -1106,7 +1305,7 @@
             </div>
             <div class="form-group">
                 <label class="form-label">Taxa de Comissão (%)</label>
-                <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
+                    <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
@@ -1457,6 +1656,8 @@
             chartInstance: null,
             currentCarouselIndex: 0,
             currentCarouselImages: [],
+            fullscreenImages: [],
+            fullscreenCurrentIndex: 0,
             
             init: () => {
                 UI.data.clientes = Storage.get('clientes');
@@ -1596,7 +1797,7 @@
                     <div class="property-card" onclick="UI.showImovelDetails('${i.id}')">
                         <div class="property-image">
                             ${i.imagens && i.imagens.length > 0 ? 
-                                `<img src="${i.imagens[0]}" style="width:100%;height:100%;object-fit:cover;">` : 
+                                `<img src="${i.imagens[0]}" style="width:100%;height:100%;object-fit:cover; cursor: pointer;" onclick="event.stopPropagation(); UI.openFullscreen('${i.id}', 0)">` : 
                                 `<i class="fas fa-home" style="font-size:3rem;"></i>`
                             }
                             <div class="property-badge badge-warning">RESERVADO</div>
@@ -1702,11 +1903,14 @@
                     Utils.formatCurrency(i.precoVenda) : 
                     Utils.formatCurrency(i.precoAluguel) + ' <span class="period">/mês</span>';
                 
+                const mainImageClick = i.imagens && i.imagens.length > 0 ? 
+                    `onclick="event.stopPropagation(); UI.openFullscreen('${i.id}', 0)"` : '';
+                
                 return `
                     <div class="property-card" onclick="UI.showImovelDetails('${i.id}')">
                         <div class="property-image">
                             ${i.imagens && i.imagens.length > 0 ? 
-                                `<img src="${i.imagens[0]}" style="width:100%;height:100%;object-fit:cover;">` : 
+                                `<img src="${i.imagens[0]}" style="width:100%;height:100%;object-fit:cover; cursor: pointer;" ${mainImageClick}>` : 
                                 `<i class="fas fa-home" style="font-size:3rem;"></i>`
                             }
                             <div class="property-badge ${badgeClass}">${badgeText}</div>
@@ -1773,7 +1977,7 @@
                     carouselHTML = `
                         <div class="carousel-container">
                             ${i.imagens.map((img, index) => `
-                                <img src="${img}" class="carousel-slide ${index === 0 ? 'active' : ''}" id="slide-${index}">
+                                <img src="${img}" class="carousel-slide ${index === 0 ? 'active' : ''}" id="slide-${index}" onclick="UI.openFullscreen('${i.id}', ${index})">
                             `).join('')}
                             
                             ${i.imagens.length > 1 ? `
@@ -1925,6 +2129,99 @@
                 document.querySelectorAll('.carousel-dot').forEach((dot, index) => {
                     dot.classList.toggle('active', index === UI.currentCarouselIndex);
                 });
+            },
+
+            // Funções do visualizador em tela cheia
+            openFullscreen: (imovelId, imageIndex) => {
+                const imovel = UI.data.imoveis.find(x => x.id === imovelId);
+                if(!imovel || !imovel.imagens || imovel.imagens.length === 0) return;
+                
+                UI.fullscreenImages = imovel.imagens;
+                UI.fullscreenCurrentIndex = imageIndex;
+                
+                // Atualizar imagem atual
+                document.getElementById('fullscreen-current-image').src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                
+                // Atualizar contador
+                document.getElementById('fullscreen-counter').textContent = UI.fullscreenCurrentIndex + 1;
+                document.getElementById('fullscreen-total').textContent = UI.fullscreenImages.length;
+                
+                // Atualizar miniaturas
+                const thumbnailsContainer = document.getElementById('fullscreen-thumbnails');
+                thumbnailsContainer.innerHTML = '';
+                
+                UI.fullscreenImages.forEach((img, index) => {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = `fullscreen-thumbnail ${index === UI.fullscreenCurrentIndex ? 'active' : ''}`;
+                    thumbnail.onclick = () => UI.goToFullscreenImage(index);
+                    
+                    const thumbnailImg = document.createElement('img');
+                    thumbnailImg.src = img;
+                    thumbnail.appendChild(thumbnailImg);
+                    
+                    thumbnailsContainer.appendChild(thumbnail);
+                });
+                
+                // Abrir visualizador
+                document.getElementById('fullscreen-viewer').classList.add('active');
+                
+                // Adicionar listener para teclado
+                document.addEventListener('keydown', UI.handleFullscreenKeyboard);
+            },
+
+            closeFullscreen: () => {
+                document.getElementById('fullscreen-viewer').classList.remove('active');
+                UI.fullscreenImages = [];
+                UI.fullscreenCurrentIndex = 0;
+                
+                // Remover listener do teclado
+                document.removeEventListener('keydown', UI.handleFullscreenKeyboard);
+            },
+
+            nextFullscreenImage: () => {
+                if(UI.fullscreenImages.length <= 1) return;
+                UI.fullscreenCurrentIndex = (UI.fullscreenCurrentIndex + 1) % UI.fullscreenImages.length;
+                UI.updateFullscreenViewer();
+            },
+
+            prevFullscreenImage: () => {
+                if(UI.fullscreenImages.length <= 1) return;
+                UI.fullscreenCurrentIndex = (UI.fullscreenCurrentIndex - 1 + UI.fullscreenImages.length) % UI.fullscreenImages.length;
+                UI.updateFullscreenViewer();
+            },
+
+            goToFullscreenImage: (index) => {
+                UI.fullscreenCurrentIndex = index;
+                UI.updateFullscreenViewer();
+            },
+
+            updateFullscreenViewer: () => {
+                // Atualizar imagem
+                document.getElementById('fullscreen-current-image').src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                
+                // Atualizar contador
+                document.getElementById('fullscreen-counter').textContent = UI.fullscreenCurrentIndex + 1;
+                
+                // Atualizar miniaturas ativas
+                document.querySelectorAll('.fullscreen-thumbnail').forEach((thumb, index) => {
+                    thumb.classList.toggle('active', index === UI.fullscreenCurrentIndex);
+                });
+            },
+
+            handleFullscreenKeyboard: (e) => {
+                if(!document.getElementById('fullscreen-viewer').classList.contains('active')) return;
+                
+                switch(e.key) {
+                    case 'Escape':
+                        UI.closeFullscreen();
+                        break;
+                    case 'ArrowLeft':
+                        UI.prevFullscreenImage();
+                        break;
+                    case 'ArrowRight':
+                        UI.nextFullscreenImage();
+                        break;
+                }
             },
 
             showClienteDetails: (id) => {
@@ -2342,7 +2639,7 @@
                             const galleryItem = document.createElement('div');
                             galleryItem.className = 'image-gallery-item';
                             galleryItem.innerHTML = `
-                                <img src="${img}" class="image-gallery-img">
+                                <img src="${img}" class="image-gallery-img" onclick="UI.openFullscreen('${i.id}', ${index})">
                                 <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${index})">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -2409,7 +2706,7 @@
                             const galleryItem = document.createElement('div');
                             galleryItem.className = 'image-gallery-item';
                             galleryItem.innerHTML = `
-                                <img src="${compressedBase64}" class="image-gallery-img">
+                                <img src="${compressedBase64}" class="image-gallery-img" onclick="UI.openFullscreen('${document.getElementById('i-id').value || 'new'}', ${newImages.length - 1})">
                                 <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${newImages.length - 1})">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -2456,7 +2753,7 @@
                             const galleryItem = document.createElement('div');
                             galleryItem.className = 'image-gallery-item';
                             galleryItem.innerHTML = `
-                                <img src="${img}" class="image-gallery-img">
+                                <img src="${img}" class="image-gallery-img" onclick="UI.openFullscreen('${document.getElementById('i-id').value || 'new'}', ${idx})">
                                 <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${idx})">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -2674,6 +2971,13 @@
         // Listener para mostrar/ocultar campo de aluguel
         document.getElementById('i-transacao').addEventListener('change', function() {
             App.imovel.toggleAluguelFields();
+        });
+
+        // Listener para fechar fullscreen com clique no overlay
+        document.getElementById('fullscreen-viewer').addEventListener('click', function(e) {
+            if(e.target === this) {
+                UI.closeFullscreen();
+            }
         });
 
         document.addEventListener('DOMContentLoaded', UI.init);
