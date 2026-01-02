@@ -258,6 +258,7 @@
             box-shadow: var(--shadow-sm);
             cursor: pointer;
             transition: transform 0.2s;
+            position: relative;
         }
         .client-card:active { transform: scale(0.98); }
 
@@ -280,6 +281,32 @@
         .client-row {
             display: flex; align-items: center; gap: 8px;
             font-size: 0.85rem; color: var(--secondary);
+        }
+
+        .client-actions {
+            display: flex; gap: 8px; margin-top: 12px;
+            padding-top: 12px; border-top: 1px solid var(--border);
+        }
+
+        .btn-whatsapp-client {
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .btn-whatsapp-client:active {
+            transform: scale(0.95);
         }
 
         /* --- Schedule Card --- */
@@ -846,6 +873,28 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* WhatsApp quick action */
+        .whatsapp-quick {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #25D366;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 2;
+            transition: transform 0.2s;
+        }
+
+        .whatsapp-quick:hover {
+            transform: scale(1.1);
         }
     </style>
 </head>
@@ -1628,6 +1677,57 @@
                     console.error('Erro ao gerar PDF:', err);
                     Utils.toast('Erro ao gerar PDF', 'error');
                 }
+            },
+            openWhatsApp: (phoneNumber, message = '') => {
+                if (!phoneNumber) {
+                    Utils.toast('Número de telefone não informado', 'error');
+                    return;
+                }
+                
+                // Remover formatação do telefone
+                const cleanNumber = phoneNumber.replace(/\D/g, '');
+                
+                // Verificar se tem DDI (Brasil = 55)
+                let finalNumber = cleanNumber;
+                if (cleanNumber.length === 11 && cleanNumber.startsWith('0')) {
+                    finalNumber = '55' + cleanNumber.substring(1);
+                } else if (cleanNumber.length === 10) {
+                    finalNumber = '55' + cleanNumber;
+                } else if (cleanNumber.length === 13 && cleanNumber.startsWith('55')) {
+                    finalNumber = cleanNumber;
+                } else {
+                    // Tentar adivinhar o formato
+                    finalNumber = '55' + cleanNumber;
+                }
+                
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappUrl = `https://wa.me/${finalNumber}${message ? `?text=${encodedMessage}` : ''}`;
+                
+                window.open(whatsappUrl, '_blank');
+            },
+            generateWhatsAppMessage: (cliente, settings) => {
+                let message = `Olá ${cliente.nome.split(' ')[0]}! Tudo bem?\n\n`;
+                message += `Aqui é ${settings.nome || 'o corretor'} da ${settings.imobiliaria || 'imobiliária'}.\n\n`;
+                
+                if (cliente.tipo === 'comprador') {
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. `;
+                    if (cliente.faixaPreco) {
+                        message += `Lembrei que você busca algo na faixa de ${cliente.faixaPreco}.\n\n`;
+                    }
+                    message += `Tenho algumas opções que podem te interessar. Podemos conversar?`;
+                } else if (cliente.tipo === 'vendedor') {
+                    message += `Estou acompanhando o seu imóvel. `;
+                    message += `Temos novidades sobre a negociação. Podemos conversar?`;
+                } else {
+                    message += `Estou entrando em contato para conversarmos sobre imóveis. `;
+                    message += `Podemos agendar uma conversa?`;
+                }
+                
+                message += `\n\n📞 ${settings.telefone || ''}`;
+                message += `\n🏢 ${settings.imobiliaria || ''}`;
+                message += `\n👨‍💼 ${settings.nome || ''} | CRECI: ${settings.creci || ''}`;
+                
+                return message;
             }
         };
 
@@ -1820,7 +1920,8 @@
                 if(filter) {
                     filtered = filtered.filter(c => 
                         c.nome.toLowerCase().includes(filter.toLowerCase()) ||
-                        c.email.toLowerCase().includes(filter.toLowerCase())
+                        c.email.toLowerCase().includes(filter.toLowerCase()) ||
+                        c.telefone.toLowerCase().includes(filter.toLowerCase())
                     );
                 }
                 
@@ -1831,6 +1932,9 @@
 
                 list.innerHTML = filtered.map(c => `
                     <div class="client-card" onclick="UI.showClienteDetails('${c.id}')">
+                        <div class="whatsapp-quick" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
                         <div class="client-header">
                             <div class="client-name">${c.nome}</div>
                             <span class="client-type type-${c.tipo}">${Utils.getTipoClienteText(c.tipo)}</span>
@@ -1839,6 +1943,14 @@
                             <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
                             ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
                             ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
+                        </div>
+                        <div class="client-actions">
+                            <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </button>
+                            <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${c.id}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
                         </div>
                     </div>
                 `).join('');
@@ -2228,7 +2340,6 @@
                 const c = UI.data.clientes.find(x => x.id === id);
                 if(!c) return;
                 
-                // TODO: Implementar detalhes do cliente
                 App.cliente.edit(id);
             },
 
@@ -2236,7 +2347,6 @@
                 const v = UI.data.visitas.find(x => x.id === id);
                 if(!v) return;
                 
-                // TODO: Implementar detalhes da visita
                 App.agenda.edit(id);
             },
 
@@ -2546,6 +2656,20 @@
                     document.getElementById('c-observacoes').value = c.observacoes || '';
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
                     UI.openModal('cliente');
+                },
+                whatsapp: (id) => {
+                    const c = UI.data.clientes.find(x => x.id === id);
+                    if(!c || !c.telefone) {
+                        Utils.toast('Cliente sem número de telefone', 'error');
+                        return;
+                    }
+                    
+                    const settings = Storage.getSettings();
+                    const message = Utils.generateWhatsAppMessage(c, settings);
+                    
+                    Utils.openWhatsApp(c.telefone, message);
+                    
+                    Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
                 }
             },
 
