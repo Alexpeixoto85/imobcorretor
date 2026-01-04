@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -32,6 +33,15 @@
             --property-sale: #3b82f6;
             --property-rent: #10b981;
             --property-featured: #f59e0b;
+            
+            /* Cores para tipos de agendamento */
+            --type-visita: #3b82f6;
+            --type-reuniao-construtor: #8b5cf6;
+            --type-reuniao-equipe: #0ea5e9;
+            --type-documentacao: #10b981;
+            --type-plantao: #7c3aed;
+            --type-generico: #f59e0b;
+            --type-outro: #64748b;
             
             /* Dimensões */
             --safe-top: env(safe-area-inset-top);
@@ -154,6 +164,7 @@
         .bg-red { background: #fee2e2; color: var(--danger); }
         .bg-purple { background: #f3e8ff; color: #8b5cf6; }
         .bg-cyan { background: #cffafe; color: #06b6d4; }
+        .bg-teal { background: #ccfbf1; color: #0d9488; }
 
         /* --- Section Titles --- */
         .section-title {
@@ -316,20 +327,36 @@
             padding: 16px;
             margin-bottom: 12px;
             box-shadow: var(--shadow-sm);
-            border-left: 4px solid var(--primary);
+            border-left: 4px solid var(--type-visita);
             cursor: pointer;
+            transition: transform 0.2s;
         }
-        .schedule-card.plantoes { border-left-color: #7c3aed; }
+        .schedule-card:active { transform: scale(0.98); }
+        
+        .schedule-card.visita { border-left-color: var(--type-visita); }
+        .schedule-card.reuniao-construtor { border-left-color: var(--type-reuniao-construtor); }
+        .schedule-card.reuniao-equipe { border-left-color: var(--type-reuniao-equipe); }
+        .schedule-card.documentacao { border-left-color: var(--type-documentacao); }
+        .schedule-card.plantao { border-left-color: var(--type-plantao); }
+        .schedule-card.generico { border-left-color: var(--type-generico); }
+        .schedule-card.outro { border-left-color: var(--type-outro); }
 
         .schedule-header {
             display: flex; justify-content: space-between; margin-bottom: 8px;
         }
         .schedule-type { 
             font-size: 0.75rem; padding: 3px 8px; border-radius: 4px;
-            font-weight: 600; background: #dbeafe; color: var(--primary);
+            font-weight: 600; background: var(--type-visita); color: white;
         }
+        .schedule-type.visita { background: var(--type-visita); }
+        .schedule-type.reuniao-construtor { background: var(--type-reuniao-construtor); }
+        .schedule-type.reuniao-equipe { background: var(--type-reuniao-equipe); }
+        .schedule-type.documentacao { background: var(--type-documentacao); }
+        .schedule-type.plantao { background: var(--type-plantao); }
+        .schedule-type.generico { background: var(--type-generico); }
+        .schedule-type.outro { background: var(--type-outro); }
+        
         .schedule-urgent { background: #fee2e2; color: var(--danger); }
-        .schedule-plantoes { background: #7c3aed; color: white; }
         
         .schedule-time {
             font-size: 0.85rem; color: var(--secondary);
@@ -337,7 +364,7 @@
             margin-bottom: 8px;
         }
         .schedule-title { font-weight: 600; color: var(--dark); margin-bottom: 4px; }
-        .schedule-notes { font-size: 0.85rem; color: var(--secondary); }
+        .schedule-notes { font-size: 0.85rem; color: var(--secondary); line-height: 1.4; }
 
         /* --- Bottom Navigation --- */
         .bottom-nav {
@@ -625,6 +652,8 @@
         .badge-warning { background: var(--warning); color: white; }
         .badge-danger { background: var(--danger); color: white; }
         .badge-purple { background: #7c3aed; color: white; }
+        .badge-cyan { background: #0ea5e9; color: white; }
+        .badge-teal { background: #0d9488; color: white; }
         
         @keyframes pulse { 
             0% { opacity: 1; } 
@@ -959,6 +988,50 @@
             font-size: 0.7rem;
             color: #64748b;
         }
+
+        /* --- Agenda Filters --- */
+        .agenda-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+        }
+
+        .filter-chip {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            background: white;
+            color: var(--secondary);
+        }
+
+        .filter-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .filter-chip.visita { border-color: var(--type-visita); color: var(--type-visita); }
+        .filter-chip.reuniao-construtor { border-color: var(--type-reuniao-construtor); color: var(--type-reuniao-construtor); }
+        .filter-chip.reuniao-equipe { border-color: var(--type-reuniao-equipe); color: var(--type-reuniao-equipe); }
+        .filter-chip.documentacao { border-color: var(--type-documentacao); color: var(--type-documentacao); }
+        .filter-chip.plantao { border-color: var(--type-plantao); color: var(--type-plantao); }
+        .filter-chip.generico { border-color: var(--type-generico); color: var(--type-generico); }
+        .filter-chip.outro { border-color: var(--type-outro); color: var(--type-outro); }
+
+        .filter-chip.active.visita { background: var(--type-visita); color: white; }
+        .filter-chip.active.reuniao-construtor { background: var(--type-reuniao-construtor); color: white; }
+        .filter-chip.active.reuniao-equipe { background: var(--type-reuniao-equipe); color: white; }
+        .filter-chip.active.documentacao { background: var(--type-documentacao); color: white; }
+        .filter-chip.active.plantao { background: var(--type-plantao); color: white; }
+        .filter-chip.active.generico { background: var(--type-generico); color: white; }
+        .filter-chip.active.outro { background: var(--type-outro); color: white; }
     </style>
 </head>
 <body>
@@ -1102,6 +1175,19 @@
                     <i class="fas fa-plus"></i>
                 </button>
             </div>
+            
+            <!-- Filtros de Tipo -->
+            <div class="agenda-filters" id="agenda-filters">
+                <div class="filter-chip active" data-type="todos" onclick="UI.filterAgenda('todos')">Todos</div>
+                <div class="filter-chip visita" data-type="visita" onclick="UI.filterAgenda('visita')">Visitas</div>
+                <div class="filter-chip reuniao-construtor" data-type="reuniao-construtor" onclick="UI.filterAgenda('reuniao-construtor')">Reunião Construtor</div>
+                <div class="filter-chip reuniao-equipe" data-type="reuniao-equipe" onclick="UI.filterAgenda('reuniao-equipe')">Reunião Equipe</div>
+                <div class="filter-chip documentacao" data-type="documentacao" onclick="UI.filterAgenda('documentacao')">Documentação</div>
+                <div class="filter-chip plantao" data-type="plantao" onclick="UI.filterAgenda('plantao')">Plantões</div>
+                <div class="filter-chip generico" data-type="generico" onclick="UI.filterAgenda('generico')">Genéricos</div>
+                <div class="filter-chip outro" data-type="outro" onclick="UI.filterAgenda('outro')">Outros</div>
+            </div>
+            
             <div id="agenda-list"></div>
         </div>
 
@@ -1136,18 +1222,18 @@
                 </div>
             </div>
 
-            <!-- Nova seção para Relatório de Plantões -->
+            <!-- Nova seção para Relatório de Agendamentos -->
             <div class="section-title">
-                Relatório de Plantões
-                <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px;" onclick="UI.generatePlantoesReport()">
+                Relatório de Agendamentos
+                <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px;" onclick="UI.generateAgendaReport()">
                     <i class="fas fa-file-pdf"></i>
                 </button>
             </div>
             <div class="chart-container">
-                <canvas id="plantoesChart"></canvas>
+                <canvas id="agendaChart"></canvas>
             </div>
-            <div id="plantoes-report">
-                <!-- Relatório de plantões será preenchido aqui -->
+            <div id="agenda-report">
+                <!-- Relatório de agendamentos será preenchido aqui -->
             </div>
         </div>
     </main>
@@ -1338,30 +1424,34 @@
     <div class="modal-overlay" id="overlay-visita"></div>
     <div class="modal-sheet" id="sheet-visita">
         <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-visita">Agendar Visita/Plantão</h3>
+        <h3 class="section-title" id="title-visita">Novo Agendamento</h3>
         <form id="form-visita" onsubmit="App.agenda.save(event)">
             <input type="hidden" id="v-id">
             
             <div class="form-group">
-                <label class="form-label">Tipo</label>
+                <label class="form-label">Tipo de Agendamento</label>
                 <select id="v-tipo" class="form-control" required onchange="UI.toggleVisitaFields()">
                     <option value="visita">Visita ao Imóvel</option>
-                    <option value="reuniao">Reunião com Cliente</option>
+                    <option value="reuniao-construtor">Reunião com Construtor</option>
+                    <option value="reuniao-equipe">Reunião de Equipe</option>
                     <option value="documentacao">Assinatura de Documentos</option>
                     <option value="plantao">Plantão</option>
+                    <option value="generico">Agendamento Genérico</option>
                     <option value="outro">Outro</option>
                 </select>
             </div>
 
-            <div class="form-group cliente-group">
+            <!-- Campos para tipos que precisam de cliente -->
+            <div class="form-group cliente-dependent-group">
                 <label class="form-label">Cliente</label>
-                <select id="v-cliente" class="form-control" required>
+                <select id="v-cliente" class="form-control">
                     <option value="">Selecione...</option>
                 </select>
             </div>
 
-            <div class="form-group imovel-group">
-                <label class="form-label">Imóvel (para visitas)</label>
+            <!-- Campos para tipos que precisam de imóvel -->
+            <div class="form-group imovel-dependent-group">
+                <label class="form-label">Imóvel</label>
                 <select id="v-imovel" class="form-control">
                     <option value="">Selecione...</option>
                 </select>
@@ -1378,39 +1468,120 @@
                 </div>
             </div>
 
-            <div class="form-group local-group">
-                <label class="form-label">Local/Endereço</label>
-                <input type="text" id="v-local" class="form-control" placeholder="Endereço da visita ou reunião">
+            <!-- Campos específicos para cada tipo -->
+            <div class="tipo-specific-group" id="grupo-visita">
+                <div class="form-group">
+                    <label class="form-label">Local/Endereço da Visita</label>
+                    <input type="text" id="v-local-visita" class="form-control" placeholder="Endereço da visita">
+                </div>
             </div>
 
-            <!-- Campos específicos para Plantão -->
-            <div class="form-group plantoes-group" style="display: none;">
-                <label class="form-label">Detalhes do Plantão</label>
-                <textarea id="v-detalhes-plantoes" class="form-control" placeholder="Descreva as atividades do plantão..."></textarea>
+            <div class="tipo-specific-group" id="grupo-reuniao-construtor" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Nome do Construtor/Incorporadora</label>
+                    <input type="text" id="v-construtor-nome" class="form-control" placeholder="Nome da construtora">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Empreendimento/Lançamento</label>
+                    <input type="text" id="v-construtor-empreendimento" class="form-control" placeholder="Nome do empreendimento">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Assuntos da Reunião</label>
+                    <textarea id="v-construtor-assuntos" class="form-control" placeholder="Ex: Lançamentos, condições comerciais, parcerias..."></textarea>
+                </div>
             </div>
 
-            <div class="form-group plantoes-group" style="display: none;">
-                <label class="form-label">Clientes Atendidos</label>
-                <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
+            <div class="tipo-specific-group" id="grupo-reuniao-equipe" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Tipo de Reunião</label>
+                    <select id="v-equipe-tipo" class="form-control">
+                        <option value="estrategia">Reunião Estratégica</option>
+                        <option value="metas">Definição de Metas</option>
+                        <option value="resultados">Análise de Resultados</option>
+                        <option value="treinamento">Treinamento</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Participantes</label>
+                    <input type="text" id="v-equipe-participantes" class="form-control" placeholder="Nomes dos participantes">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Pauta/Assuntos</label>
+                    <textarea id="v-equipe-assuntos" class="form-control" placeholder="Tópicos da reunião..."></textarea>
+                </div>
+            </div>
+
+            <div class="tipo-specific-group" id="grupo-documentacao" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Tipo de Documento</label>
+                    <select id="v-documentacao-tipo" class="form-control">
+                        <option value="contrato-venda">Contrato de Venda</option>
+                        <option value="contrato-aluguel">Contrato de Aluguel</option>
+                        <option value="proposta">Proposta</option>
+                        <option value="financiamento">Documentos de Financiamento</option>
+                        <option value="outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Local da Assinatura</label>
+                    <input type="text" id="v-documentacao-local" class="form-control" placeholder="Local da assinatura">
+                </div>
+            </div>
+
+            <div class="tipo-specific-group" id="grupo-plantao" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Local do Plantão</label>
+                    <input type="text" id="v-plantao-local" class="form-control" placeholder="Endereço do plantão">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Detalhes do Plantão</label>
+                    <textarea id="v-detalhes-plantoes" class="form-control" placeholder="Descreva as atividades do plantão..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Clientes Atendidos</label>
+                    <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
 Exemplo:
 João Silva - (11) 99999-9999 - Interessado em apartamento 2 quartos
 Maria Santos - (11) 88888-8888 - Agendou visita para amanhã
 Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Negócios Gerados</label>
+                    <input type="text" id="v-negocios-gerados" class="form-control" placeholder="Ex: 2 visitas agendadas, 1 proposta enviada">
+                </div>
             </div>
 
-            <div class="form-group plantoes-group" style="display: none;">
-                <label class="form-label">Negócios Gerados</label>
-                <input type="text" id="v-negocios-gerados" class="form-control" placeholder="Ex: 2 visitas agendadas, 1 proposta enviada">
+            <div class="tipo-specific-group" id="grupo-generico" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Título do Agendamento</label>
+                    <input type="text" id="v-generico-titulo" class="form-control" placeholder="Título descritivo">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Local</label>
+                    <input type="text" id="v-generico-local" class="form-control" placeholder="Local do compromisso">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição Detalhada</label>
+                    <textarea id="v-generico-descricao" class="form-control" placeholder="Descreva o propósito deste agendamento..."></textarea>
+                </div>
             </div>
 
-            <div class="form-group plantoes-group" style="display: none;">
-                <label class="form-label">Observações do Plantão</label>
-                <textarea id="v-observacoes-plantoes" class="form-control" placeholder="Anotações gerais sobre o plantão..."></textarea>
+            <div class="tipo-specific-group" id="grupo-outro" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Descrição do Compromisso</label>
+                    <input type="text" id="v-outro-descricao" class="form-control" placeholder="Descreva brevemente">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Detalhes</label>
+                    <textarea id="v-outro-detalhes" class="form-control" placeholder="Informações adicionais..."></textarea>
+                </div>
             </div>
 
+            <!-- Observações gerais (para todos os tipos) -->
             <div class="form-group">
                 <label class="form-label">Observações Gerais</label>
-                <textarea id="v-observacoes" class="form-control" placeholder="Detalhes sobre a visita..."></textarea>
+                <textarea id="v-observacoes" class="form-control" placeholder="Observações adicionais..."></textarea>
             </div>
 
             <div class="form-group">
@@ -1593,9 +1764,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             getTipoVisitaText: (tipo) => {
                 const tipos = {
                     'visita': 'Visita ao Imóvel',
-                    'reuniao': 'Reunião',
-                    'documentacao': 'Documentação',
+                    'reuniao-construtor': 'Reunião com Construtor',
+                    'reuniao-equipe': 'Reunião de Equipe',
+                    'documentacao': 'Assinatura de Documentos',
                     'plantao': 'Plantão',
+                    'generico': 'Agendamento Genérico',
                     'outro': 'Outro'
                 };
                 return tipos[tipo] || tipo;
@@ -1782,7 +1955,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast('Erro ao gerar PDF', 'error');
                 }
             },
-            generatePlantoesPDF: async (plantoesData) => {
+            generateAgendaReport: async (agendaData) => {
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'mm', 'a4');
@@ -1791,119 +1964,273 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     let yPos = margin;
                     
-                    // Configurações
+                    // Configurações do corretor
                     const settings = Storage.getSettings();
                     
-                    // Cabeçalho
-                    doc.setFontSize(20);
-                    doc.setTextColor(124, 58, 237); // Roxo para plantões
-                    doc.text('RELATÓRIO DE PLANTÕES', pageWidth/2, yPos, {align: 'center'});
-                    yPos += 10;
+                    // --- CABEÇALHO ---
+                    doc.setFillColor(37, 99, 235); // Azul primário
+                    doc.rect(0, 0, pageWidth, 40, 'F');
                     
+                    // Logo/Texto
+                    doc.setFontSize(24);
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('RELATÓRIO DE AGENDAMENTOS', pageWidth/2, 20, {align: 'center'});
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(255, 255, 255, 0.8);
+                    doc.text(`${settings.imobiliaria || 'Imobiliária'} • ${settings.nome || 'Corretor'}`, pageWidth/2, 28, {align: 'center'});
+                    
+                    yPos = 50;
+                    
+                    // --- INFORMAÇÕES DO CORRETOR ---
                     doc.setFontSize(12);
-                    doc.setTextColor(100, 116, 139);
-                    doc.text(`${settings.imobiliaria || 'Imobiliária'} | Corretor: ${settings.nome || '---'}`, pageWidth/2, yPos, {align: 'center'});
-                    yPos += 10;
-                    
-                    doc.text(`Período: ${plantoesData.periodo || 'Todos os plantões'}`, pageWidth/2, yPos, {align: 'center'});
-                    yPos += 15;
-                    
-                    // Linha divisória
-                    doc.setDrawColor(124, 58, 237);
-                    doc.setLineWidth(0.5);
-                    doc.line(margin, yPos, pageWidth - margin, yPos);
-                    yPos += 10;
-                    
-                    // Estatísticas gerais
-                    doc.setFontSize(14);
                     doc.setTextColor(15, 23, 42);
-                    doc.text('ESTATÍSTICAS GERAIS', margin, yPos);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('INFORMAÇÕES DO CORRETOR', margin, yPos);
                     yPos += 8;
                     
-                    const stats = [
-                        `Total de Plantões: ${plantoesData.totalPlantoes}`,
-                        `Clientes Atendidos: ${plantoesData.totalClientesAtendidos}`,
-                        `Negócios Gerados: ${plantoesData.totalNegociosGerados}`,
-                        `Visitas Agendadas: ${plantoesData.totalVisitasAgendadas}`
+                    doc.setDrawColor(37, 99, 235);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, yPos, margin + 80, yPos);
+                    yPos += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(100, 116, 139);
+                    
+                    const corretorInfo = [
+                        `Corretor: ${settings.nome || '---'}`,
+                        `CRECI: ${settings.creci || '---'}`,
+                        `Imobiliária: ${settings.imobiliaria || '---'}`,
+                        `Telefone: ${settings.telefone || '---'}`,
+                        `Email: ${settings.email || '---'}`
                     ];
                     
-                    doc.setFontSize(11);
-                    stats.forEach(stat => {
-                        doc.text(`• ${stat}`, margin, yPos);
+                    corretorInfo.forEach(info => {
+                        doc.text(info, margin, yPos);
                         yPos += 6;
                     });
                     
                     yPos += 10;
                     
-                    // Detalhes por plantão
-                    if(plantoesData.plantoes && plantoesData.plantoes.length > 0) {
+                    // --- RESUMO DO PERÍODO ---
+                    doc.setFontSize(12);
+                    doc.setTextColor(15, 23, 42);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('PERÍODO DO RELATÓRIO', margin, yPos);
+                    yPos += 8;
+                    
+                    doc.setDrawColor(37, 99, 235);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, yPos, margin + 70, yPos);
+                    yPos += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Período: ${agendaData.periodo || 'Todos os agendamentos'}`, margin, yPos);
+                    yPos += 6;
+                    doc.text(`Data do relatório: ${new Date().toLocaleDateString('pt-BR')}`, margin, yPos);
+                    yPos += 15;
+                    
+                    // --- ESTATÍSTICAS PRINCIPAIS ---
+                    doc.setFontSize(14);
+                    doc.setTextColor(37, 99, 235);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('ESTATÍSTICAS GERAIS', pageWidth/2, yPos, {align: 'center'});
+                    yPos += 10;
+                    
+                    // Grid de estatísticas
+                    const stats = [
+                        { label: 'Total Agendamentos', value: agendaData.totalAgendamentos, color: [37, 99, 235] },
+                        { label: 'Visitas', value: agendaData.visitas, color: [59, 130, 246] },
+                        { label: 'Reuniões Construtor', value: agendaData.reunioesConstrutor, color: [139, 92, 246] },
+                        { label: 'Reuniões Equipe', value: agendaData.reunioesEquipe, color: [14, 165, 233] },
+                        { label: 'Plantões', value: agendaData.plantoes, color: [124, 58, 237] },
+                        { label: 'Realizados', value: agendaData.realizados, color: [16, 185, 129] }
+                    ];
+                    
+                    const statWidth = (pageWidth - 2*margin - 30) / 3;
+                    let statX = margin;
+                    
+                    for(let i = 0; i < stats.length; i++) {
+                        if(i > 0 && i % 3 === 0) {
+                            yPos += 45;
+                            statX = margin;
+                        }
+                        
+                        // Caixa do stat
+                        doc.setFillColor(...stats[i].color, 0.1);
+                        doc.roundedRect(statX, yPos, statWidth, 35, 3, 3, 'F');
+                        
+                        doc.setDrawColor(...stats[i].color);
+                        doc.setLineWidth(0.5);
+                        doc.roundedRect(statX, yPos, statWidth, 35, 3, 3, 'S');
+                        
+                        // Valor
+                        doc.setFontSize(16);
+                        doc.setTextColor(...stats[i].color);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(stats[i].value.toString(), statX + statWidth/2, yPos + 15, {align: 'center'});
+                        
+                        // Label
+                        doc.setFontSize(8);
+                        doc.setTextColor(100, 116, 139);
+                        doc.setFont('helvetica', 'normal');
+                        const labelLines = doc.splitTextToSize(stats[i].label, statWidth - 10);
+                        doc.text(labelLines, statX + statWidth/2, yPos + 25, {align: 'center'});
+                        
+                        statX += statWidth + 10;
+                    }
+                    
+                    yPos += 50;
+                    
+                    // Verificar nova página
+                    if(yPos > pageHeight - 50) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+                    
+                    // --- DETALHES DOS AGENDAMENTOS ---
+                    if(agendaData.agendamentos && agendaData.agendamentos.length > 0) {
                         doc.setFontSize(14);
                         doc.setTextColor(15, 23, 42);
-                        doc.text('DETALHES DOS PLANTÕES', margin, yPos);
-                        yPos += 8;
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('DETALHES DOS AGENDAMENTOS', margin, yPos);
+                        yPos += 10;
                         
-                        for(let i = 0; i < plantoesData.plantoes.length; i++) {
-                            const plantao = plantoesData.plantoes[i];
+                        doc.setDrawColor(37, 99, 235);
+                        doc.setLineWidth(0.5);
+                        doc.line(margin, yPos, margin + 110, yPos);
+                        yPos += 15;
+                        
+                        for(let i = 0; i < agendaData.agendamentos.length; i++) {
+                            const agendamento = agendaData.agendamentos[i];
                             
                             // Verificar se precisa de nova página
-                            if(yPos > pageHeight - 60) {
+                            if(yPos > pageHeight - 100) {
                                 doc.addPage();
                                 yPos = margin;
                             }
                             
-                            doc.setFontSize(12);
-                            doc.setTextColor(124, 58, 237);
-                            doc.text(`Plantão ${i+1} - ${Utils.formatDate(plantao.data)} ${plantao.horario}`, margin, yPos);
-                            yPos += 6;
+                            // Cabeçalho do agendamento
+                            const typeColor = {
+                                'visita': [59, 130, 246],
+                                'reuniao-construtor': [139, 92, 246],
+                                'reuniao-equipe': [14, 165, 233],
+                                'documentacao': [16, 185, 129],
+                                'plantao': [124, 58, 237],
+                                'generico': [245, 158, 11],
+                                'outro': [100, 116, 139]
+                            }[agendamento.tipo] || [37, 99, 235];
                             
-                            doc.setFontSize(10);
-                            doc.setTextColor(15, 23, 42);
+                            doc.setFillColor(...typeColor, 0.1);
+                            doc.roundedRect(margin, yPos, pageWidth - 2*margin, 25, 3, 3, 'F');
                             
-                            if(plantao.detalhes) {
-                                const detalhesLines = doc.splitTextToSize(`Detalhes: ${plantao.detalhes}`, pageWidth - 2*margin);
-                                doc.text(detalhesLines, margin, yPos);
-                                yPos += detalhesLines.length * 5;
-                            }
+                            doc.setFontSize(11);
+                            doc.setTextColor(...typeColor);
+                            doc.setFont('helvetica', 'bold');
+                            doc.text(`${Utils.getTipoVisitaText(agendamento.tipo).toUpperCase()} - ${Utils.formatDate(agendamento.data)} ${agendamento.horario}`, margin + 10, yPos + 8);
                             
-                            if(plantao.clientesAtendidos) {
-                                doc.text('Clientes Atendidos:', margin, yPos);
-                                yPos += 5;
-                                
-                                const clientes = plantao.clientesAtendidos.split('\n');
-                                for(let cliente of clientes.slice(0, 3)) {
-                                    if(cliente.trim()) {
-                                        doc.text(`• ${cliente.substring(0, 60)}${cliente.length > 60 ? '...' : ''}`, margin + 5, yPos);
-                                        yPos += 5;
+                            doc.setFontSize(9);
+                            doc.setTextColor(100, 116, 139);
+                            doc.setFont('helvetica', 'normal');
+                            doc.text(`Status: ${agendamento.status === 'realizado' ? '✅ Realizado' : agendamento.status === 'cancelado' ? '❌ Cancelado' : agendamento.status === 'confirmado' ? '✅ Confirmado' : '⏰ Agendado'}`, pageWidth - margin - 10, yPos + 8, {align: 'right'});
+                            
+                            yPos += 30;
+                            
+                            // Detalhes específicos por tipo
+                            let detalhesHTML = '';
+                            
+                            switch(agendamento.tipo) {
+                                case 'visita':
+                                    if(agendamento.localVisita) {
+                                        detalhesHTML += `Local: ${agendamento.localVisita}\n`;
                                     }
-                                }
-                                
-                                if(clientes.length > 3) {
-                                    doc.text(`... e mais ${clientes.length - 3} clientes`, margin + 5, yPos);
-                                    yPos += 5;
-                                }
+                                    break;
+                                    
+                                case 'reuniao-construtor':
+                                    if(agendamento.construtorNome) {
+                                        detalhesHTML += `Construtor: ${agendamento.construtorNome}\n`;
+                                    }
+                                    if(agendamento.construtorEmpreendimento) {
+                                        detalhesHTML += `Empreendimento: ${agendamento.construtorEmpreendimento}\n`;
+                                    }
+                                    if(agendamento.construtorAssuntos) {
+                                        detalhesHTML += `Assuntos: ${agendamento.construtorAssuntos}\n`;
+                                    }
+                                    break;
+                                    
+                                case 'reuniao-equipe':
+                                    if(agendamento.equipeTipo) {
+                                        detalhesHTML += `Tipo: ${agendamento.equipeTipo}\n`;
+                                    }
+                                    if(agendamento.equipeParticipantes) {
+                                        detalhesHTML += `Participantes: ${agendamento.equipeParticipantes}\n`;
+                                    }
+                                    if(agendamento.equipeAssuntos) {
+                                        detalhesHTML += `Pauta: ${agendamento.equipeAssuntos}\n`;
+                                    }
+                                    break;
+                                    
+                                case 'plantao':
+                                    if(agendamento.plantaoLocal) {
+                                        detalhesHTML += `Local: ${agendamento.plantaoLocal}\n`;
+                                    }
+                                    if(agendamento.detalhesPlantoes) {
+                                        detalhesHTML += `Atividades: ${agendamento.detalhesPlantoes}\n`;
+                                    }
+                                    if(agendamento.clientesAtendidos) {
+                                        const clientesCount = agendamento.clientesAtendidos.split('\n').filter(c => c.trim()).length;
+                                        detalhesHTML += `Clientes Atendidos: ${clientesCount}\n`;
+                                    }
+                                    break;
+                                    
+                                case 'generico':
+                                    if(agendamento.genericoTitulo) {
+                                        detalhesHTML += `Título: ${agendamento.genericoTitulo}\n`;
+                                    }
+                                    if(agendamento.genericoLocal) {
+                                        detalhesHTML += `Local: ${agendamento.genericoLocal}\n`;
+                                    }
+                                    if(agendamento.genericoDescricao) {
+                                        detalhesHTML += `Descrição: ${agendamento.genericoDescricao}\n`;
+                                    }
+                                    break;
                             }
                             
-                            if(plantao.negociosGerados) {
-                                doc.text(`Negócios: ${plantao.negociosGerados}`, margin, yPos);
+                            if(agendamento.observacoes) {
+                                detalhesHTML += `Observações: ${agendamento.observacoes}\n`;
+                            }
+                            
+                            if(detalhesHTML) {
+                                doc.setFontSize(10);
+                                doc.setTextColor(15, 23, 42);
+                                doc.setFont('helvetica', 'bold');
+                                doc.text('Detalhes:', margin, yPos);
+                                yPos += 5;
+                                
+                                doc.setFontSize(9);
+                                doc.setTextColor(100, 116, 139);
+                                doc.setFont('helvetica', 'normal');
+                                const detalhesLines = doc.splitTextToSize(detalhesHTML, pageWidth - 2*margin - 10);
+                                doc.text(detalhesLines, margin + 5, yPos);
+                                yPos += detalhesLines.length * 5 + 10;
+                            } else {
                                 yPos += 5;
                             }
                             
-                            if(plantao.observacoes) {
-                                const obsLines = doc.splitTextToSize(`Obs: ${plantao.observacoes}`, pageWidth - 2*margin);
-                                doc.text(obsLines, margin, yPos);
-                                yPos += obsLines.length * 5;
-                            }
-                            
-                            yPos += 5;
+                            // Linha divisória
                             doc.setDrawColor(226, 232, 240);
-                            doc.setLineWidth(0.2);
+                            doc.setLineWidth(0.3);
                             doc.line(margin, yPos, pageWidth - margin, yPos);
-                            yPos += 10;
+                            yPos += 15;
                         }
                     }
                     
-                    // Rodapé
-                    if(yPos > pageHeight - 30) {
+                    // --- RODAPÉ PROFISSIONAL ---
+                    if(yPos > pageHeight - 40) {
                         doc.addPage();
                         yPos = margin;
                     }
@@ -1913,18 +2240,29 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 10;
                     
-                    doc.setFontSize(10);
+                    // Informações de contato
+                    doc.setFontSize(8);
                     doc.setTextColor(100, 116, 139);
-                    doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth/2, yPos, {align: 'center'});
+                    doc.setFont('helvetica', 'normal');
+                    
+                    const contactInfo = [
+                        `Relatório gerado automaticamente pelo ImobiPro - Gestão Imobiliária`,
+                        `Data: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}`,
+                        `Para mais informações, entre em contato: ${settings.telefone || '---'} | ${settings.email || '---'}`
+                    ];
+                    
+                    contactInfo.forEach((info, index) => {
+                        doc.text(info, pageWidth/2, yPos + (index * 4), {align: 'center'});
+                    });
                     
                     // Salvar PDF
-                    const fileName = `relatorio_plantoes_${new Date().toISOString().split('T')[0]}.pdf`;
+                    const fileName = `relatorio_agendamentos_${settings.nome ? settings.nome.replace(/\s+/g, '_').toLowerCase() : 'corretor'}_${new Date().toISOString().split('T')[0]}.pdf`;
                     doc.save(fileName);
                     
-                    Utils.toast('Relatório de plantões gerado!');
+                    Utils.toast('Relatório de agendamentos gerado com sucesso!');
                     
                 } catch(err) {
-                    console.error('Erro ao gerar relatório de plantões:', err);
+                    console.error('Erro ao gerar relatório de agendamentos:', err);
                     Utils.toast('Erro ao gerar relatório', 'error');
                 }
             },
@@ -2004,11 +2342,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 visitas: [] 
             },
             chartInstance: null,
-            plantoesChartInstance: null,
+            agendaChartInstance: null,
             currentCarouselIndex: 0,
             currentCarouselImages: [],
             fullscreenImages: [],
             fullscreenCurrentIndex: 0,
+            currentAgendaFilter: 'todos',
             
             init: () => {
                 UI.data.clientes = Storage.get('clientes');
@@ -2121,28 +2460,43 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const imovel = UI.data.imoveis.find(i => i.id === v.imovelId) || { titulo: 'Imóvel não especificado' };
                 
                 const isUrgent = v.status === 'agendado' && v.data === Utils.getToday();
-                const isPlantao = v.tipo === 'plantao';
+                const tipoClass = v.tipo || 'visita';
                 
                 let additionalInfo = '';
-                if(isPlantao && v.detalhesPlantoes) {
+                if(v.tipo === 'plantao' && v.detalhesPlantoes) {
                     additionalInfo = `<div class="plantoes-summary">${v.detalhesPlantoes.substring(0, 60)}${v.detalhesPlantoes.length > 60 ? '...' : ''}</div>`;
+                } else if(v.tipo === 'reuniao-construtor' && v.construtorNome) {
+                    additionalInfo = `<div class="schedule-notes">Com: ${v.construtorNome}</div>`;
+                } else if(v.tipo === 'reuniao-equipe' && v.equipeTipo) {
+                    additionalInfo = `<div class="schedule-notes">${v.equipeTipo}</div>`;
+                } else if(v.tipo === 'generico' && v.genericoTitulo) {
+                    additionalInfo = `<div class="schedule-notes">${v.genericoTitulo}</div>`;
                 }
                 
                 return `
-                    <div class="schedule-card ${isPlantao ? 'plantoes' : ''} ${isUrgent ? 'schedule-urgent' : ''}" onclick="UI.showVisitaDetails('${v.id}')">
+                    <div class="schedule-card ${tipoClass} ${isUrgent ? 'schedule-urgent' : ''}" onclick="UI.showVisitaDetails('${v.id}')">
                         <div class="schedule-header">
-                            <div class="schedule-type ${isPlantao ? 'schedule-plantoes' : ''}">${Utils.getTipoVisitaText(v.tipo)}</div>
-                            <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
+                            <div class="schedule-type ${tipoClass}">${Utils.getTipoVisitaText(v.tipo)}</div>
+                            <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : v.status === 'confirmado' ? 'badge-cyan' : 'badge-primary'}">
                                 ${Utils.getStatusVisitaText(v.status)}
                             </span>
                         </div>
                         <div class="schedule-time">
                             <i class="far fa-calendar"></i> ${Utils.formatDate(v.data)} <i class="far fa-clock"></i> ${v.horario}
                         </div>
-                        <div class="schedule-title">${isPlantao ? 'PLANTÃO' : cliente.nome}</div>
+                        <div class="schedule-title">
+                            ${v.tipo === 'visita' ? cliente.nome : 
+                              v.tipo === 'reuniao-construtor' ? (v.construtorNome || 'Reunião Construtor') :
+                              v.tipo === 'reuniao-equipe' ? 'Reunião de Equipe' :
+                              v.tipo === 'plantao' ? 'PLANTÃO' :
+                              v.tipo === 'generico' ? (v.genericoTitulo || 'Agendamento Genérico') :
+                              v.tipo === 'outro' ? (v.outroDescricao || 'Outro') :
+                              'Agendamento'}
+                        </div>
                         ${additionalInfo}
                         <div class="schedule-notes">
-                            ${v.tipo === 'visita' ? `Visita: ${imovel.titulo.substring(0, 30)}...` : v.observacoes || ''}
+                            ${v.tipo === 'visita' ? `Visita: ${imovel.titulo.substring(0, 30)}...` : 
+                             v.observacoes ? v.observacoes.substring(0, 50) + (v.observacoes.length > 50 ? '...' : '') : ''}
                         </div>
                     </div>
                 `;
@@ -2606,61 +2960,197 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(!v) return;
                 
                 // Se for plantão, mostrar detalhes específicos
-                if(v.tipo === 'plantao') {
+                if(v.tipo === 'plantao' || v.tipo === 'reuniao-construtor' || v.tipo === 'reuniao-equipe' || v.tipo === 'generico') {
                     let detalhesHTML = `
                         <div class="details-card">
                             <div class="details-header">
-                                <div class="details-title">PLANTÃO - ${Utils.formatDate(v.data)} ${v.horario}</div>
-                                <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
+                                <div class="details-title">${Utils.getTipoVisitaText(v.tipo).toUpperCase()} - ${Utils.formatDate(v.data)} ${v.horario}</div>
+                                <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : v.status === 'confirmado' ? 'badge-cyan' : 'badge-primary'}">
                                     ${Utils.getStatusVisitaText(v.status)}
                                 </span>
                             </div>
-                            
-                            <div class="details-section">
-                                <div class="details-section-title"><i class="fas fa-clipboard-list"></i> DETALHES DO PLANTÃO</div>
-                                <div class="info-item">
-                                    <div class="info-label">Atividades</div>
-                                    <div class="info-value">${v.detalhesPlantoes || 'Não informado'}</div>
-                                </div>
-                            </div>
                     `;
                     
-                    if(v.clientesAtendidos) {
-                        const clientes = v.clientesAtendidos.split('\n').filter(c => c.trim());
-                        detalhesHTML += `
-                            <div class="details-section">
-                                <div class="details-section-title"><i class="fas fa-users"></i> CLIENTES ATENDIDOS (${clientes.length})</div>
-                                <div class="plantoes-info">
-                                    ${clientes.map(cliente => `
-                                        <div class="client-item">
-                                            <div class="client-name">${cliente.split(' - ')[0] || cliente}</div>
-                                            ${cliente.includes(' - ') ? `<div class="client-situation">${cliente.split(' - ').slice(1).join(' - ')}</div>` : ''}
+                    // Detalhes específicos por tipo
+                    switch(v.tipo) {
+                        case 'plantao':
+                            if(v.plantaoLocal) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-map-marker-alt"></i> LOCAL DO PLANTÃO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Endereço</div>
+                                            <div class="info-value">${v.plantaoLocal}</div>
                                         </div>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        `;
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.detalhesPlantoes) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-clipboard-list"></i> DETALHES DO PLANTÃO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Atividades</div>
+                                            <div class="info-value">${v.detalhesPlantoes}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.clientesAtendidos) {
+                                const clientes = v.clientesAtendidos.split('\n').filter(c => c.trim());
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-users"></i> CLIENTES ATENDIDOS (${clientes.length})</div>
+                                        <div class="plantoes-info">
+                                            ${clientes.map(cliente => `
+                                                <div class="client-item">
+                                                    <div class="client-name">${cliente.split(' - ')[0] || cliente}</div>
+                                                    ${cliente.includes(' - ') ? `<div class="client-situation">${cliente.split(' - ').slice(1).join(' - ')}</div>` : ''}
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.negociosGerados) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-handshake"></i> NEGÓCIOS GERADOS</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Resultados</div>
+                                            <div class="info-value">${v.negociosGerados}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            break;
+                            
+                        case 'reuniao-construtor':
+                            if(v.construtorNome) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-building"></i> CONSTRUTOR/INCORPORADORA</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Nome</div>
+                                            <div class="info-value">${v.construtorNome}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.construtorEmpreendimento) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-home"></i> EMPREENDIMENTO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Nome do Lançamento</div>
+                                            <div class="info-value">${v.construtorEmpreendimento}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.construtorAssuntos) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-clipboard-list"></i> ASSUNTOS DA REUNIÃO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Tópicos Discutidos</div>
+                                            <div class="info-value">${v.construtorAssuntos}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            break;
+                            
+                        case 'reuniao-equipe':
+                            if(v.equipeTipo) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-users"></i> TIPO DE REUNIÃO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Categoria</div>
+                                            <div class="info-value">${v.equipeTipo}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.equipeParticipantes) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-user-friends"></i> PARTICIPANTES</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Integrantes</div>
+                                            <div class="info-value">${v.equipeParticipantes}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.equipeAssuntos) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-list-alt"></i> PAUTA/ASSUNTOS</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Tópicos</div>
+                                            <div class="info-value">${v.equipeAssuntos}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            break;
+                            
+                        case 'generico':
+                            if(v.genericoTitulo) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-heading"></i> TÍTULO</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Descrição</div>
+                                            <div class="info-value">${v.genericoTitulo}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.genericoLocal) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-map-marker-alt"></i> LOCAL</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Endereço/Local</div>
+                                            <div class="info-value">${v.genericoLocal}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            
+                            if(v.genericoDescricao) {
+                                detalhesHTML += `
+                                    <div class="details-section">
+                                        <div class="details-section-title"><i class="fas fa-align-left"></i> DESCRIÇÃO DETALHADA</div>
+                                        <div class="info-item">
+                                            <div class="info-label">Detalhes</div>
+                                            <div class="info-value">${v.genericoDescricao}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                            break;
                     }
                     
-                    if(v.negociosGerados) {
+                    // Observações gerais
+                    if(v.observacoes) {
                         detalhesHTML += `
                             <div class="details-section">
-                                <div class="details-section-title"><i class="fas fa-handshake"></i> NEGÓCIOS GERADOS</div>
-                                <div class="info-item">
-                                    <div class="info-label">Resultados</div>
-                                    <div class="info-value">${v.negociosGerados}</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    
-                    if(v.observacoesPlantoes) {
-                        detalhesHTML += `
-                            <div class="details-section">
-                                <div class="details-section-title"><i class="fas fa-sticky-note"></i> OBSERVAÇÕES DO PLANTÃO</div>
+                                <div class="details-section-title"><i class="fas fa-sticky-note"></i> OBSERVAÇÕES GERAIS</div>
                                 <div class="info-item">
                                     <div class="info-label">Anotações</div>
-                                    <div class="info-value">${v.observacoesPlantoes}</div>
+                                    <div class="info-value">${v.observacoes}</div>
                                 </div>
                             </div>
                         `;
@@ -2686,12 +3176,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            renderAgenda: () => {
+            renderAgenda: (filterType = null) => {
                 const list = document.getElementById('agenda-list');
                 const hoje = Utils.getToday();
                 
+                // Aplicar filtro
+                let visitasFiltradas = UI.data.visitas;
+                if(filterType && filterType !== 'todos') {
+                    visitasFiltradas = visitasFiltradas.filter(v => v.tipo === filterType);
+                }
+                
                 // Visitas futuras (a partir de hoje)
-                const visitasFuturas = UI.data.visitas.filter(v => 
+                const visitasFuturas = visitasFiltradas.filter(v => 
                     v.data >= hoje && v.status !== 'cancelado'
                 ).sort((a,b) => {
                     if(a.data === b.data) return a.horario.localeCompare(b.horario);
@@ -2699,7 +3195,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 });
                 
                 if(visitasFuturas.length === 0) {
-                    list.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhuma visita agendada!</p></div>`;
+                    const filterText = filterType && filterType !== 'todos' ? ` de ${Utils.getTipoVisitaText(filterType).toLowerCase()}` : '';
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhum agendamento${filterText} encontrado!</p></div>`;
                     return;
                 }
 
@@ -2725,8 +3222,24 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 list.innerHTML = html;
             },
 
+            filterAgenda: (type) => {
+                // Atualizar filtros ativos
+                document.querySelectorAll('.filter-chip').forEach(chip => {
+                    chip.classList.remove('active');
+                });
+                
+                const activeChip = document.querySelector(`.filter-chip[data-type="${type}"]`);
+                if(activeChip) {
+                    activeChip.classList.add('active');
+                }
+                
+                UI.currentAgendaFilter = type;
+                UI.renderAgenda(type === 'todos' ? null : type);
+            },
+
             renderRelatorios: () => {
                 const imoveis = UI.data.imoveis;
+                const visitas = UI.data.visitas;
                 const hoje = new Date();
                 const mesAtual = hoje.getMonth();
                 const anoAtual = hoje.getFullYear();
@@ -2768,8 +3281,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 // Renderizar gráfico principal
                 UI.renderChart();
                 
-                // Renderizar relatório de plantões
-                UI.renderPlantoesReport();
+                // Renderizar relatório de agendamentos
+                UI.renderAgendaReport();
             },
 
             renderChart: () => {
@@ -2863,32 +3376,32 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 });
             },
 
-            renderPlantoesReport: () => {
-                const plantoes = UI.data.visitas.filter(v => v.tipo === 'plantao');
+            renderAgendaReport: () => {
+                const visitas = UI.data.visitas;
                 
-                if(plantoes.length === 0) {
-                    document.getElementById('plantoes-report').innerHTML = `
+                if(visitas.length === 0) {
+                    document.getElementById('agenda-report').innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-calendar-check" style="color: #7c3aed;"></i>
-                            <p>Nenhum plantão registrado ainda.</p>
+                            <i class="fas fa-calendar-alt" style="color: var(--primary);"></i>
+                            <p>Nenhum agendamento registrado ainda.</p>
                         </div>
                     `;
                     
                     // Remover gráfico se não houver dados
-                    const ctx = document.getElementById('plantoesChart').getContext('2d');
-                    if (UI.plantoesChartInstance) {
-                        UI.plantoesChartInstance.destroy();
+                    const ctx = document.getElementById('agendaChart').getContext('2d');
+                    if (UI.agendaChartInstance) {
+                        UI.agendaChartInstance.destroy();
                     }
                     
                     // Criar gráfico vazio
-                    UI.plantoesChartInstance = new Chart(ctx, {
+                    UI.agendaChartInstance = new Chart(ctx, {
                         type: 'bar',
                         data: {
                             labels: ['Nenhum dado'],
                             datasets: [{
-                                label: 'Plantões',
+                                label: 'Agendamentos',
                                 data: [0],
-                                backgroundColor: '#7c3aed',
+                                backgroundColor: '#2563eb',
                             }]
                         },
                         options: {
@@ -2903,51 +3416,45 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     return;
                 }
 
-                // Agrupar plantões por mês
+                // Agrupar agendamentos por tipo
+                const tipos = ['visita', 'reuniao-construtor', 'reuniao-equipe', 'documentacao', 'plantao', 'generico', 'outro'];
+                const contagemPorTipo = {};
+                tipos.forEach(tipo => {
+                    contagemPorTipo[tipo] = visitas.filter(v => v.tipo === tipo).length;
+                });
+                
+                // Agrupar por mês
                 const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                 const hoje = new Date();
                 const anoAtual = hoje.getFullYear();
                 
-                const plantoesPorMes = new Array(12).fill(0);
-                const clientesPorMes = new Array(12).fill(0);
+                const visitasPorMes = new Array(12).fill(0);
                 
-                plantoes.forEach(p => {
-                    if(p.data) {
-                        const data = new Date(p.data);
+                visitas.forEach(v => {
+                    if(v.data) {
+                        const data = new Date(v.data);
                         if(data.getFullYear() === anoAtual) {
                             const mes = data.getMonth();
-                            plantoesPorMes[mes]++;
-                            
-                            // Contar clientes atendidos
-                            if(p.clientesAtendidos) {
-                                const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
-                                clientesPorMes[mes] += clientes.length;
-                            }
+                            visitasPorMes[mes]++;
                         }
                     }
                 });
                 
-                // Renderizar gráfico de plantões
-                const ctx = document.getElementById('plantoesChart').getContext('2d');
-                if (UI.plantoesChartInstance) {
-                    UI.plantoesChartInstance.destroy();
+                // Renderizar gráfico de agendamentos
+                const ctx = document.getElementById('agendaChart').getContext('2d');
+                if (UI.agendaChartInstance) {
+                    UI.agendaChartInstance.destroy();
                 }
 
-                UI.plantoesChartInstance = new Chart(ctx, {
+                UI.agendaChartInstance = new Chart(ctx, {
                     type: 'bar',
                     data: {
                         labels: meses,
                         datasets: [
                             {
-                                label: 'Plantões',
-                                data: plantoesPorMes,
-                                backgroundColor: '#7c3aed',
-                                borderRadius: 4,
-                            },
-                            {
-                                label: 'Clientes Atendidos',
-                                data: clientesPorMes,
-                                backgroundColor: '#a78bfa',
+                                label: 'Agendamentos',
+                                data: visitasPorMes,
+                                backgroundColor: '#2563eb',
                                 borderRadius: 4,
                             }
                         ]
@@ -2977,18 +3484,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 });
                 
                 // Calcular estatísticas
-                const totalPlantoes = plantoes.length;
-                const plantoesRealizados = plantoes.filter(p => p.status === 'realizado').length;
-                const totalClientesAtendidos = plantoes.reduce((acc, p) => {
-                    if(p.clientesAtendidos) {
-                        const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
-                        return acc + clientes.length;
-                    }
-                    return acc;
-                }, 0);
+                const totalAgendamentos = visitas.length;
+                const realizados = visitas.filter(v => v.status === 'realizado').length;
+                const cancelados = visitas.filter(v => v.status === 'cancelado').length;
+                const confirmados = visitas.filter(v => v.status === 'confirmado').length;
                 
-                // Plantões mais recentes
-                const plantoesRecentes = plantoes
+                // Agendamentos mais recentes
+                const agendamentosRecentes = visitas
                     .sort((a,b) => new Date(b.data) - new Date(a.data))
                     .slice(0, 5);
                 
@@ -2996,120 +3498,126 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 let html = `
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                            <div class="stat-icon bg-blue">
                                 <i class="fas fa-calendar-alt"></i>
                             </div>
-                            <div class="stat-value">${totalPlantoes}</div>
-                            <div class="stat-label">Total Plantões</div>
+                            <div class="stat-value">${totalAgendamentos}</div>
+                            <div class="stat-label">Total</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                            <div class="stat-icon bg-green">
                                 <i class="fas fa-check-circle"></i>
                             </div>
-                            <div class="stat-value">${plantoesRealizados}</div>
+                            <div class="stat-value">${realizados}</div>
                             <div class="stat-label">Realizados</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
-                                <i class="fas fa-users"></i>
+                            <div class="stat-icon bg-red">
+                                <i class="fas fa-times-circle"></i>
                             </div>
-                            <div class="stat-value">${totalClientesAtendidos}</div>
-                            <div class="stat-label">Clientes Atendidos</div>
+                            <div class="stat-value">${cancelados}</div>
+                            <div class="stat-label">Cancelados</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
-                                <i class="fas fa-chart-line"></i>
+                            <div class="stat-icon bg-cyan">
+                                <i class="fas fa-check-double"></i>
                             </div>
-                            <div class="stat-value">${plantoesRecentes.length}</div>
-                            <div class="stat-label">Últimos 5</div>
+                            <div class="stat-value">${confirmados}</div>
+                            <div class="stat-label">Confirmados</div>
                         </div>
                     </div>
                     
-                    <div class="section-title" style="margin-top: 20px;">Plantões Recentes</div>
+                    <div class="section-title" style="margin-top: 20px;">Distribuição por Tipo</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: var(--type-visita, 0.1); color: var(--type-visita);">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="stat-value">${contagemPorTipo.visita}</div>
+                            <div class="stat-label">Visitas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: var(--type-reuniao-construtor, 0.1); color: var(--type-reuniao-construtor);">
+                                <i class="fas fa-building"></i>
+                            </div>
+                            <div class="stat-value">${contagemPorTipo['reuniao-construtor']}</div>
+                            <div class="stat-label">Reuniões Construtor</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: var(--type-reuniao-equipe, 0.1); color: var(--type-reuniao-equipe);">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value">${contagemPorTipo['reuniao-equipe']}</div>
+                            <div class="stat-label">Reuniões Equipe</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: var(--type-plantao, 0.1); color: var(--type-plantao);">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <div class="stat-value">${contagemPorTipo.plantao}</div>
+                            <div class="stat-label">Plantões</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title" style="margin-top: 20px;">Agendamentos Recentes</div>
                 `;
                 
-                if(plantoesRecentes.length === 0) {
-                    html += `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhum plantão recente</p></div>`;
+                if(agendamentosRecentes.length === 0) {
+                    html += `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhum agendamento recente</p></div>`;
                 } else {
-                    plantoesRecentes.forEach(p => {
-                        const clientesCount = p.clientesAtendidos ? 
-                            p.clientesAtendidos.split('\n').filter(c => c.trim()).length : 0;
-                        
-                        html += `
-                            <div class="schedule-card plantoes" onclick="UI.showVisitaDetails('${p.id}')">
-                                <div class="schedule-header">
-                                    <div class="schedule-type schedule-plantoes">PLANTÃO</div>
-                                    <span class="badge ${p.status === 'realizado' ? 'badge-success' : p.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
-                                        ${Utils.getStatusVisitaText(p.status)}
-                                    </span>
-                                </div>
-                                <div class="schedule-time">
-                                    <i class="far fa-calendar"></i> ${Utils.formatDate(p.data)} <i class="far fa-clock"></i> ${p.horario}
-                                </div>
-                                <div class="schedule-title">${p.detalhesPlantoes ? p.detalhesPlantoes.substring(0, 40) + (p.detalhesPlantoes.length > 40 ? '...' : '') : 'Plantão'}</div>
-                                <div class="plantoes-info">
-                                    <div class="plantoes-stats">
-                                        <div class="plantoes-stat">
-                                            <div class="plantoes-stat-value">${clientesCount}</div>
-                                            <div class="plantoes-stat-label">Clientes</div>
-                                        </div>
-                                        <div class="plantoes-stat">
-                                            <div class="plantoes-stat-value">${p.negociosGerados ? p.negociosGerados.split(',').length : 0}</div>
-                                            <div class="plantoes-stat-label">Negócios</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
+                    agendamentosRecentes.forEach(v => {
+                        html += UI.createVisitaCard(v);
                     });
                 }
                 
-                document.getElementById('plantoes-report').innerHTML = html;
+                document.getElementById('agenda-report').innerHTML = html;
             },
 
-            generatePlantoesReport: () => {
-                const plantoes = UI.data.visitas.filter(v => v.tipo === 'plantao');
+            generateAgendaReport: () => {
+                const visitas = UI.data.visitas;
                 
-                if(plantoes.length === 0) {
-                    Utils.toast('Nenhum plantão para gerar relatório', 'error');
+                if(visitas.length === 0) {
+                    Utils.toast('Nenhum agendamento para gerar relatório', 'error');
                     return;
                 }
                 
                 // Preparar dados para o PDF
-                const plantoesData = {
-                    totalPlantoes: plantoes.length,
-                    totalClientesAtendidos: plantoes.reduce((acc, p) => {
-                        if(p.clientesAtendidos) {
-                            const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
-                            return acc + clientes.length;
-                        }
-                        return acc;
-                    }, 0),
-                    totalNegociosGerados: plantoes.reduce((acc, p) => {
-                        if(p.negociosGerados) {
-                            return acc + p.negociosGerados.split(',').length;
-                        }
-                        return acc;
-                    }, 0),
-                    totalVisitasAgendadas: plantoes.reduce((acc, p) => {
-                        if(p.negociosGerados && p.negociosGerados.toLowerCase().includes('visita')) {
-                            return acc + 1;
-                        }
-                        return acc;
-                    }, 0),
-                    periodo: `${Utils.formatDate(plantoes[plantoes.length-1].data)} a ${Utils.formatDate(plantoes[0].data)}`,
-                    plantoes: plantoes.sort((a,b) => new Date(b.data) - new Date(a.data)).map(p => ({
-                        data: p.data,
-                        horario: p.horario,
-                        detalhes: p.detalhesPlantoes,
-                        clientesAtendidos: p.clientesAtendidos,
-                        negociosGerados: p.negociosGerados,
-                        observacoes: p.observacoesPlantoes || p.observacoes,
-                        status: p.status
+                const agendaData = {
+                    totalAgendamentos: visitas.length,
+                    visitas: visitas.filter(v => v.tipo === 'visita').length,
+                    reunioesConstrutor: visitas.filter(v => v.tipo === 'reuniao-construtor').length,
+                    reunioesEquipe: visitas.filter(v => v.tipo === 'reuniao-equipe').length,
+                    documentacao: visitas.filter(v => v.tipo === 'documentacao').length,
+                    plantoes: visitas.filter(v => v.tipo === 'plantao').length,
+                    genericos: visitas.filter(v => v.tipo === 'generico').length,
+                    outros: visitas.filter(v => v.tipo === 'outro').length,
+                    realizados: visitas.filter(v => v.status === 'realizado').length,
+                    periodo: `${Utils.formatDate(visitas[visitas.length-1].data)} a ${Utils.formatDate(visitas[0].data)}`,
+                    agendamentos: visitas.sort((a,b) => new Date(b.data) - new Date(a.data)).map(v => ({
+                        tipo: v.tipo,
+                        data: v.data,
+                        horario: v.horario,
+                        status: v.status,
+                        localVisita: v.localVisita,
+                        construtorNome: v.construtorNome,
+                        construtorEmpreendimento: v.construtorEmpreendimento,
+                        construtorAssuntos: v.construtorAssuntos,
+                        equipeTipo: v.equipeTipo,
+                        equipeParticipantes: v.equipeParticipantes,
+                        equipeAssuntos: v.equipeAssuntos,
+                        plantaoLocal: v.plantaoLocal,
+                        detalhesPlantoes: v.detalhesPlantoes,
+                        clientesAtendidos: v.clientesAtendidos,
+                        negociosGerados: v.negociosGerados,
+                        genericoTitulo: v.genericoTitulo,
+                        genericoLocal: v.genericoLocal,
+                        genericoDescricao: v.genericoDescricao,
+                        outroDescricao: v.outroDescricao,
+                        observacoes: v.observacoes
                     }))
                 };
                 
-                Utils.generatePlantoesPDF(plantoesData);
+                Utils.generateAgendaReport(agendaData);
             },
 
             // --- MODALS ---
@@ -3168,19 +3676,22 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 30)}...</option>`;
                 });
                 
+                // Reset form
                 document.getElementById('form-visita').reset();
                 document.getElementById('v-id').value = '';
-                document.getElementById('title-visita').innerText = 'Agendar Visita/Plantão';
+                document.getElementById('title-visita').innerText = 'Novo Agendamento';
                 
                 // Set default date and time
                 document.getElementById('v-data').value = Utils.getToday();
                 document.getElementById('v-horario').value = Utils.getTodayTime();
                 
-                // Reset campos de plantão
-                document.getElementById('v-detalhes-plantoes').value = '';
-                document.getElementById('v-clientes-atendidos').value = '';
-                document.getElementById('v-negocios-gerados').value = '';
-                document.getElementById('v-observacoes-plantoes').value = '';
+                // Reset campos específicos
+                document.querySelectorAll('.tipo-specific-group').forEach(group => {
+                    group.style.display = 'none';
+                    group.querySelectorAll('input, textarea, select').forEach(input => {
+                        input.value = '';
+                    });
+                });
                 
                 // Mostrar campos padrão
                 UI.toggleVisitaFields();
@@ -3190,21 +3701,34 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
             toggleVisitaFields: () => {
                 const tipo = document.getElementById('v-tipo').value;
-                const isPlantao = tipo === 'plantao';
                 
-                // Mostrar/ocultar campos de cliente e imóvel
-                document.querySelectorAll('.cliente-group, .imovel-group, .local-group').forEach(el => {
-                    el.style.display = isPlantao ? 'none' : 'block';
+                // Ocultar todos os grupos específicos
+                document.querySelectorAll('.tipo-specific-group').forEach(group => {
+                    group.style.display = 'none';
                 });
                 
-                // Mostrar/ocultar campos específicos de plantão
-                document.querySelectorAll('.plantoes-group').forEach(el => {
-                    el.style.display = isPlantao ? 'block' : 'none';
+                // Mostrar grupo específico do tipo selecionado
+                const grupoId = `grupo-${tipo}`;
+                const grupoEspecifico = document.getElementById(grupoId);
+                if(grupoEspecifico) {
+                    grupoEspecifico.style.display = 'block';
+                }
+                
+                // Mostrar/ocultar campos de cliente e imóvel dependendo do tipo
+                const tiposComCliente = ['visita', 'documentacao'];
+                const tiposComImovel = ['visita'];
+                
+                document.querySelectorAll('.cliente-dependent-group').forEach(el => {
+                    el.style.display = tiposComCliente.includes(tipo) ? 'block' : 'none';
+                });
+                
+                document.querySelectorAll('.imovel-dependent-group').forEach(el => {
+                    el.style.display = tiposComImovel.includes(tipo) ? 'block' : 'none';
                 });
                 
                 // Ajustar required
-                document.getElementById('v-cliente').required = !isPlantao;
-                document.getElementById('v-imovel').required = false;
+                document.getElementById('v-cliente').required = tiposComCliente.includes(tipo);
+                document.getElementById('v-imovel').required = tiposComImovel.includes(tipo);
             },
 
             openNewVisitaFromImovel: (imovelId) => {
@@ -3549,26 +4073,55 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 save: (e) => {
                     e.preventDefault();
                     const id = document.getElementById('v-id').value || Utils.id();
+                    const tipo = document.getElementById('v-tipo').value;
                     
                     const visita = {
                         id,
-                        tipo: document.getElementById('v-tipo').value,
-                        clienteId: document.getElementById('v-tipo').value === 'plantao' ? null : document.getElementById('v-cliente').value,
-                        imovelId: document.getElementById('v-imovel').value || null,
+                        tipo: tipo,
+                        clienteId: tipo === 'visita' || tipo === 'documentacao' ? document.getElementById('v-cliente').value : null,
+                        imovelId: tipo === 'visita' ? document.getElementById('v-imovel').value : null,
                         data: document.getElementById('v-data').value,
                         horario: document.getElementById('v-horario').value,
-                        local: document.getElementById('v-local').value,
                         observacoes: document.getElementById('v-observacoes').value,
                         status: document.getElementById('v-status').value,
                         dataCriacao: new Date().toISOString()
                     };
 
-                    // Campos específicos para plantão
-                    if(visita.tipo === 'plantao') {
-                        visita.detalhesPlantoes = document.getElementById('v-detalhes-plantoes').value;
-                        visita.clientesAtendidos = document.getElementById('v-clientes-atendidos').value;
-                        visita.negociosGerados = document.getElementById('v-negocios-gerados').value;
-                        visita.observacoesPlantoes = document.getElementById('v-observacoes-plantoes').value;
+                    // Campos específicos por tipo
+                    switch(tipo) {
+                        case 'visita':
+                            visita.localVisita = document.getElementById('v-local-visita').value;
+                            break;
+                            
+                        case 'reuniao-construtor':
+                            visita.construtorNome = document.getElementById('v-construtor-nome').value;
+                            visita.construtorEmpreendimento = document.getElementById('v-construtor-empreendimento').value;
+                            visita.construtorAssuntos = document.getElementById('v-construtor-assuntos').value;
+                            break;
+                            
+                        case 'reuniao-equipe':
+                            visita.equipeTipo = document.getElementById('v-equipe-tipo').value;
+                            visita.equipeParticipantes = document.getElementById('v-equipe-participantes').value;
+                            visita.equipeAssuntos = document.getElementById('v-equipe-assuntos').value;
+                            break;
+                            
+                        case 'plantao':
+                            visita.plantaoLocal = document.getElementById('v-plantao-local').value;
+                            visita.detalhesPlantoes = document.getElementById('v-detalhes-plantoes').value;
+                            visita.clientesAtendidos = document.getElementById('v-clientes-atendidos').value;
+                            visita.negociosGerados = document.getElementById('v-negocios-gerados').value;
+                            break;
+                            
+                        case 'generico':
+                            visita.genericoTitulo = document.getElementById('v-generico-titulo').value;
+                            visita.genericoLocal = document.getElementById('v-generico-local').value;
+                            visita.genericoDescricao = document.getElementById('v-generico-descricao').value;
+                            break;
+                            
+                        case 'outro':
+                            visita.outroDescricao = document.getElementById('v-outro-descricao').value;
+                            visita.outroDetalhes = document.getElementById('v-outro-detalhes').value;
+                            break;
                     }
 
                     const idx = UI.data.visitas.findIndex(v => v.id === id);
@@ -3576,7 +4129,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     else UI.data.visitas.push(visita);
 
                     Storage.set('visitas', UI.data.visitas);
-                    Utils.toast(visita.tipo === 'plantao' ? 'Plantão agendado!' : 'Visita agendada!');
+                    Utils.toast(`${Utils.getTipoVisitaText(tipo)} salvo!`);
                     UI.closeModals();
                     UI.renderDashboard();
                     UI.renderAgenda();
@@ -3606,19 +4159,47 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('v-imovel').value = v.imovelId || '';
                     document.getElementById('v-data').value = v.data;
                     document.getElementById('v-horario').value = v.horario;
-                    document.getElementById('v-local').value = v.local || '';
                     document.getElementById('v-observacoes').value = v.observacoes || '';
                     document.getElementById('v-status').value = v.status;
                     
-                    // Campos específicos para plantão
-                    if(v.tipo === 'plantao') {
-                        document.getElementById('v-detalhes-plantoes').value = v.detalhesPlantoes || '';
-                        document.getElementById('v-clientes-atendidos').value = v.clientesAtendidos || '';
-                        document.getElementById('v-negocios-gerados').value = v.negociosGerados || '';
-                        document.getElementById('v-observacoes-plantoes').value = v.observacoesPlantoes || '';
+                    // Campos específicos por tipo
+                    switch(v.tipo) {
+                        case 'visita':
+                            document.getElementById('v-local-visita').value = v.localVisita || '';
+                            break;
+                            
+                        case 'reuniao-construtor':
+                            document.getElementById('v-construtor-nome').value = v.construtorNome || '';
+                            document.getElementById('v-construtor-empreendimento').value = v.construtorEmpreendimento || '';
+                            document.getElementById('v-construtor-assuntos').value = v.construtorAssuntos || '';
+                            break;
+                            
+                        case 'reuniao-equipe':
+                            document.getElementById('v-equipe-tipo').value = v.equipeTipo || '';
+                            document.getElementById('v-equipe-participantes').value = v.equipeParticipantes || '';
+                            document.getElementById('v-equipe-assuntos').value = v.equipeAssuntos || '';
+                            break;
+                            
+                        case 'plantao':
+                            document.getElementById('v-plantao-local').value = v.plantaoLocal || '';
+                            document.getElementById('v-detalhes-plantoes').value = v.detalhesPlantoes || '';
+                            document.getElementById('v-clientes-atendidos').value = v.clientesAtendidos || '';
+                            document.getElementById('v-negocios-gerados').value = v.negociosGerados || '';
+                            break;
+                            
+                        case 'generico':
+                            document.getElementById('v-generico-titulo').value = v.genericoTitulo || '';
+                            document.getElementById('v-generico-local').value = v.genericoLocal || '';
+                            document.getElementById('v-generico-descricao').value = v.genericoDescricao || '';
+                            break;
+                            
+                        case 'outro':
+                            document.getElementById('v-outro-descricao').value = v.outroDescricao || '';
+                            document.getElementById('v-outro-detalhes').value = v.outroDetalhes || '';
+                            break;
                     }
                     
-                    document.getElementById('title-visita').innerText = v.tipo === 'plantao' ? 'Editar Plantão' : 'Editar Visita';
+                    document.getElementById('title-visita').innerText = `Editar ${Utils.getTipoVisitaText(v.tipo)}`;
                     
                     // Configurar campos visíveis
                     UI.toggleVisitaFields();
@@ -3736,7 +4317,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             App.imovel.toggleAluguelFields();
         });
 
-        // Listener para mostrar/ocultar campos de plantão
+        // Listener para mostrar/ocultar campos específicos de agendamento
         document.getElementById('v-tipo').addEventListener('change', function() {
             UI.toggleVisitaFields();
         });
