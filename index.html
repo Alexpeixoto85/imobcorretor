@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -165,6 +164,7 @@
         .bg-purple { background: #f3e8ff; color: #8b5cf6; }
         .bg-cyan { background: #cffafe; color: #06b6d4; }
         .bg-teal { background: #ccfbf1; color: #0d9488; }
+        .bg-pink { background: #fce7f3; color: #db2777; }
 
         /* --- Section Titles --- */
         .section-title {
@@ -654,6 +654,7 @@
         .badge-purple { background: #7c3aed; color: white; }
         .badge-cyan { background: #0ea5e9; color: white; }
         .badge-teal { background: #0d9488; color: white; }
+        .badge-pink { background: #db2777; color: white; }
         
         @keyframes pulse { 
             0% { opacity: 1; } 
@@ -1032,6 +1033,56 @@
         .filter-chip.active.plantao { background: var(--type-plantao); color: white; }
         .filter-chip.active.generico { background: var(--type-generico); color: white; }
         .filter-chip.active.outro { background: var(--type-outro); color: white; }
+
+        /* --- Birthday Alert --- */
+        .birthday-alert {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            border-left: 4px solid #db2777;
+            animation: pulse 2s infinite;
+        }
+
+        .birthday-alert-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .birthday-alert-title {
+            font-weight: 700;
+            color: #9d174d;
+            font-size: 1rem;
+        }
+
+        .birthday-alert-content {
+            font-size: 0.85rem;
+            color: #831843;
+            line-height: 1.4;
+        }
+
+        /* --- Photo Fullscreen Fix --- */
+        .image-fullscreen {
+            width: 100vw;
+            height: 100vh;
+            object-fit: contain;
+            background: #000;
+        }
+
+        /* --- Warning Note --- */
+        .warning-note {
+            font-size: 0.75rem;
+            color: var(--warning);
+            font-style: italic;
+            margin-top: 8px;
+            text-align: center;
+            padding: 8px;
+            background: #fef3c7;
+            border-radius: 6px;
+            border: 1px solid #fde68a;
+        }
     </style>
 </head>
 <body>
@@ -1114,6 +1165,15 @@
                     <div class="stat-value" id="dash-destaques">0</div>
                     <div class="stat-label">Destaques</div>
                 </div>
+            </div>
+
+            <!-- Aniversariantes do Dia -->
+            <div class="section-title">
+                Aniversariantes Hoje
+                <span class="badge badge-pink" id="aniversariantes-badge" style="display:none">!</span>
+            </div>
+            <div id="aniversariantes-list">
+                <!-- Lista de aniversariantes será preenchida aqui -->
             </div>
 
             <div class="section-title">
@@ -1297,6 +1357,16 @@
                 <input type="email" id="c-email" class="form-control">
             </div>
             <div class="form-group">
+                <label class="form-label">Imóvel de Interesse</label>
+                <select id="c-imovel-interesse" class="form-control">
+                    <option value="">Selecione um imóvel...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data de Nascimento</label>
+                <input type="date" id="c-data-nascimento" class="form-control">
+            </div>
+            <div class="form-group">
                 <label class="form-label">Faixa de Preço (Interesse)</label>
                 <input type="text" id="c-faixa-preco" class="form-control" placeholder="Ex: R$ 300.000 - 500.000">
             </div>
@@ -1368,6 +1438,36 @@
                 </div>
             </div>
 
+            <!-- NOVOS CAMPOS ADICIONADOS -->
+            <div class="form-group">
+                <label class="form-label">Data de Entrega</label>
+                <input type="date" id="i-data-entrega" class="form-control">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Construtora</label>
+                <input type="text" id="i-construtora" class="form-control" placeholder="Nome da construtora">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Forma de Pagamento</label>
+                <input type="text" id="i-forma-pagamento" class="form-control" placeholder="Ex: Financiamento, entrada + parcelas, etc.">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Valor do Condomínio (R$)</label>
+                    <input type="text" id="i-condominio" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gás Encanado</label>
+                    <select id="i-gas-encanado" class="form-control">
+                        <option value="sim">Sim</option>
+                        <option value="nao">Não</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label class="form-label">Endereço Completo</label>
                 <input type="text" id="i-endereco" class="form-control" placeholder="Rua, número, bairro, cidade" required>
@@ -1413,6 +1513,10 @@
             <div class="form-group">
                 <label class="form-label">Observações Internas</label>
                 <textarea id="i-observacoes" class="form-control" placeholder="Informações privadas sobre o imóvel..."></textarea>
+            </div>
+
+            <div class="warning-note">
+                <i class="fas fa-exclamation-triangle"></i> Os valores informados podem sofrer alteração sem aviso prévio.
             </div>
 
             <button type="submit" class="btn-block">Salvar Imóvel</button>
@@ -1782,6 +1886,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
                 return statuses[status] || status;
             },
+            // Verificar se é aniversário
+            isBirthdayToday: (birthdate) => {
+                if (!birthdate) return false;
+                const today = new Date();
+                const birth = new Date(birthdate);
+                return today.getDate() === birth.getDate() && today.getMonth() === birth.getMonth();
+            },
+            // Calcular idade
+            calculateAge: (birthdate) => {
+                if (!birthdate) return null;
+                const today = new Date();
+                const birth = new Date(birthdate);
+                let age = today.getFullYear() - birth.getFullYear();
+                const m = today.getMonth() - birth.getMonth();
+                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                    age--;
+                }
+                return age;
+            },
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -1831,7 +1954,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     doc.text(precoText, margin, yPos);
                     yPos += 10;
                     
-                    // Características
+                    // Características principais
                     doc.setFontSize(12);
                     doc.setTextColor(15, 23, 42);
                     const features = [
@@ -1842,6 +1965,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         `Vagas: ${imovel.vagas || 0}`,
                         `Status: ${Utils.getStatusText(imovel.status)}`
                     ];
+                    
+                    // Adicionar novos campos se existirem
+                    if(imovel.dataEntrega) features.push(`Data de Entrega: ${Utils.formatDate(imovel.dataEntrega)}`);
+                    if(imovel.construtora) features.push(`Construtora: ${imovel.construtora}`);
+                    if(imovel.formaPagamento) features.push(`Forma de Pagamento: ${imovel.formaPagamento}`);
+                    if(imovel.condominio) features.push(`Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês`);
+                    features.push(`Gás Encanado: ${imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'}`);
                     
                     features.forEach(feature => {
                         doc.text(`• ${feature}`, margin, yPos);
@@ -1860,6 +1990,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text(descLines, margin, yPos);
                         yPos += descLines.length * 5 + 5;
                     }
+                    
+                    // Aviso sobre alteração de valores
+                    doc.setFontSize(9);
+                    doc.setTextColor(245, 158, 11);
+                    doc.setFont('helvetica', 'italic');
+                    doc.text('* Os valores informados podem sofrer alteração sem aviso prévio.', margin, yPos);
+                    yPos += 8;
                     
                     // Verificar se precisa de nova página para imagens
                     if(yPos > pageHeight - 100) {
@@ -2432,6 +2569,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const destaques = imoveis.filter(i => i.destaque).length;
                 document.getElementById('dash-destaques').innerText = destaques;
                 
+                // Aniversariantes do dia
+                UI.renderAniversariantes();
+                
                 // Render visitas de hoje
                 const visitasList = document.getElementById('visitas-list');
                 if(visitasHoje.length === 0) {
@@ -2453,6 +2593,63 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 // Badges
                 document.getElementById('visitas-badge').style.display = visitasHoje.length > 0 ? 'inline-block' : 'none';
                 document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
+            },
+
+            renderAniversariantes: () => {
+                const hoje = new Date();
+                const diaHoje = hoje.getDate();
+                const mesHoje = hoje.getMonth() + 1;
+                
+                const aniversariantes = UI.data.clientes.filter(cliente => {
+                    if (!cliente.dataNascimento) return false;
+                    const nascimento = new Date(cliente.dataNascimento);
+                    return nascimento.getDate() === diaHoje && (nascimento.getMonth() + 1) === mesHoje;
+                });
+                
+                const aniversariantesList = document.getElementById('aniversariantes-list');
+                const badge = document.getElementById('aniversariantes-badge');
+                
+                if (aniversariantes.length === 0) {
+                    aniversariantesList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-birthday-cake"></i>
+                            <p>Nenhum aniversariante hoje</p>
+                        </div>
+                    `;
+                    badge.style.display = 'none';
+                } else {
+                    aniversariantesList.innerHTML = aniversariantes.map(cliente => {
+                        const idade = Utils.calculateAge(cliente.dataNascimento);
+                        return `
+                            <div class="client-card" onclick="UI.showClienteDetails('${cliente.id}')">
+                                <div class="client-header">
+                                    <div class="client-name">${cliente.nome} <span class="badge badge-pink">🎂 ${idade ? idade + ' anos' : 'Aniversário'}</span></div>
+                                    <span class="client-type type-${cliente.tipo}">${Utils.getTipoClienteText(cliente.tipo)}</span>
+                                </div>
+                                <div class="client-info">
+                                    <div class="client-row"><i class="fas fa-phone"></i> ${cliente.telefone}</div>
+                                    ${cliente.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${cliente.email}</div>` : ''}
+                                    ${cliente.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(cliente.dataNascimento)}</div>` : ''}
+                                </div>
+                                <div class="client-actions">
+                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${cliente.id}')">
+                                        <i class="fab fa-whatsapp"></i> Parabéns!
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    badge.style.display = 'inline-block';
+                    badge.innerText = aniversariantes.length.toString();
+                    
+                    // Mostrar alerta se houver aniversariantes
+                    if (aniversariantes.length > 0) {
+                        const nomes = aniversariantes.map(c => c.nome.split(' ')[0]).join(', ');
+                        setTimeout(() => {
+                            Utils.toast(`🎂 Hoje é aniversário de: ${nomes}`, 'success');
+                        }, 1000);
+                    }
+                }
             },
 
             createVisitaCard: (v) => {
@@ -2542,30 +2739,45 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     return;
                 }
 
-                list.innerHTML = filtered.map(c => `
-                    <div class="client-card" onclick="UI.showClienteDetails('${c.id}')">
-                        <div class="whatsapp-quick" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
-                            <i class="fab fa-whatsapp"></i>
+                list.innerHTML = filtered.map(c => {
+                    const hoje = new Date();
+                    const nascimento = c.dataNascimento ? new Date(c.dataNascimento) : null;
+                    const isAniversario = nascimento && 
+                                         nascimento.getDate() === hoje.getDate() && 
+                                         (nascimento.getMonth() + 1) === (hoje.getMonth() + 1);
+                    
+                    const idade = Utils.calculateAge(c.dataNascimento);
+                    const imovelInteresse = c.imovelInteresseId ? 
+                        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
+                    
+                    return `
+                        <div class="client-card" onclick="UI.showClienteDetails('${c.id}')">
+                            ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
+                            <div class="whatsapp-quick" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <div class="client-header">
+                                <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''}</div>
+                                <span class="client-type type-${c.tipo}">${Utils.getTipoClienteText(c.tipo)}</span>
+                            </div>
+                            <div class="client-info">
+                                <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
+                                ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
+                                ${c.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(c.dataNascimento)}</div>` : ''}
+                                ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
+                                ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
+                            </div>
+                            <div class="client-actions">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${c.id}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
                         </div>
-                        <div class="client-header">
-                            <div class="client-name">${c.nome}</div>
-                            <span class="client-type type-${c.tipo}">${Utils.getTipoClienteText(c.tipo)}</span>
-                        </div>
-                        <div class="client-info">
-                            <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
-                            ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
-                            ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
-                        </div>
-                        <div class="client-actions">
-                            <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
-                                <i class="fab fa-whatsapp"></i> WhatsApp
-                            </button>
-                            <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${c.id}')">
-                                <i class="fas fa-edit"></i> Editar
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             },
 
             renderImoveis: (filter = '', tipoFilter = '', statusFilter = '') => {
@@ -2576,7 +2788,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(filter) {
                     filtered = filtered.filter(i => 
                         i.titulo.toLowerCase().includes(filter.toLowerCase()) ||
-                        i.endereco.toLowerCase().includes(filter.toLowerCase())
+                        i.endereco.toLowerCase().includes(filter.toLowerCase()) ||
+                        i.construtora?.toLowerCase().includes(filter.toLowerCase())
                     );
                 }
                 
@@ -2691,6 +2904,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const precoVenda = i.precoVenda ? Utils.formatCurrency(i.precoVenda) : '-';
                 const precoAluguel = i.precoAluguel ? Utils.formatCurrency(i.precoAluguel) + '/mês' : '-';
+                const condominio = i.condominio ? Utils.formatCurrency(i.condominio) + '/mês' : '-';
+                const dataEntrega = i.dataEntrega ? Utils.formatDate(i.dataEntrega) : '-';
+                const gasEncanado = i.gasEncanado === 'sim' ? 'Sim' : 'Não';
                 
                 // Carousel para múltiplas imagens
                 let carouselHTML = '';
@@ -2738,6 +2954,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     <div class="info-value">${precoAluguel}</div>
                                 </div>
                                 <div class="info-item">
+                                    <div class="info-label">Condomínio</div>
+                                    <div class="info-value">${condominio}</div>
+                                </div>
+                                <div class="info-item">
                                     <div class="info-label">Transação</div>
                                     <div class="info-value">${i.transacao === 'venda' ? 'Venda' : i.transacao === 'aluguel' ? 'Aluguel' : 'Venda/Aluguel'}</div>
                                 </div>
@@ -2751,7 +2971,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         </div>
                         
                         <div class="details-section">
-                            <div class="details-section-title"><i class="fas fa-info-circle"></i> INFORMAÇÕES</div>
+                            <div class="details-section-title"><i class="fas fa-info-circle"></i> INFORMAÇÕES DO IMÓVEL</div>
                             <div class="details-info-grid">
                                 <div class="info-item">
                                     <div class="info-label">Tipo</div>
@@ -2781,6 +3001,34 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         </div>
                         
                         <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-building"></i> INFORMAÇÕES ADICIONAIS</div>
+                            <div class="details-info-grid">
+                                ${i.dataEntrega ? `
+                                <div class="info-item">
+                                    <div class="info-label">Data de Entrega</div>
+                                    <div class="info-value">${dataEntrega}</div>
+                                </div>
+                                ` : ''}
+                                ${i.construtora ? `
+                                <div class="info-item">
+                                    <div class="info-label">Construtora</div>
+                                    <div class="info-value">${i.construtora}</div>
+                                </div>
+                                ` : ''}
+                                ${i.formaPagamento ? `
+                                <div class="info-item">
+                                    <div class="info-label">Forma de Pagamento</div>
+                                    <div class="info-value">${i.formaPagamento}</div>
+                                </div>
+                                ` : ''}
+                                <div class="info-item">
+                                    <div class="info-label">Gás Encanado</div>
+                                    <div class="info-value">${gasEncanado}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="details-section">
                             <div class="details-section-title"><i class="fas fa-map-marker-alt"></i> LOCALIZAÇÃO</div>
                             <div class="info-item">
                                 <div class="info-label">Endereço</div>
@@ -2805,6 +3053,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </div>
                         </div>
                         ` : ''}
+                        
+                        <div class="warning-note">
+                            <i class="fas fa-exclamation-triangle"></i> Os valores informados podem sofrer alteração sem aviso prévio.
+                        </div>
                         
                         <div class="details-actions">
                             <button class="btn-details btn-details-primary" onclick="App.imovel.edit('${i.id}')">
@@ -2863,8 +3115,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.fullscreenImages = imovel.imagens;
                 UI.fullscreenCurrentIndex = imageIndex;
                 
-                // Atualizar imagem atual
-                document.getElementById('fullscreen-current-image').src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                // Atualizar imagem atual - AGORA OCUPA TELA INTEIRA
+                const fullscreenImage = document.getElementById('fullscreen-current-image');
+                fullscreenImage.src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                fullscreenImage.className = 'image-fullscreen';
                 
                 // Atualizar contador
                 document.getElementById('fullscreen-counter').textContent = UI.fullscreenCurrentIndex + 1;
@@ -2898,6 +3152,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.fullscreenImages = [];
                 UI.fullscreenCurrentIndex = 0;
                 
+                // Restaurar classe original da imagem
+                document.getElementById('fullscreen-current-image').className = 'fullscreen-image';
+                
                 // Remover listener do teclado
                 document.removeEventListener('keydown', UI.handleFullscreenKeyboard);
             },
@@ -2921,7 +3178,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
             updateFullscreenViewer: () => {
                 // Atualizar imagem
-                document.getElementById('fullscreen-current-image').src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                const fullscreenImage = document.getElementById('fullscreen-current-image');
+                fullscreenImage.src = UI.fullscreenImages[UI.fullscreenCurrentIndex];
+                fullscreenImage.className = 'image-fullscreen';
                 
                 // Atualizar contador
                 document.getElementById('fullscreen-counter').textContent = UI.fullscreenCurrentIndex + 1;
@@ -3635,6 +3894,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('form-cliente').reset();
                 document.getElementById('c-id').value = '';
                 document.getElementById('title-cliente').innerText = 'Novo Cliente';
+                
+                // Popular select de imóveis de interesse
+                const imovelSelect = document.getElementById('c-imovel-interesse');
+                imovelSelect.innerHTML = '<option value="">Selecione um imóvel...</option>';
+                UI.data.imoveis.forEach(i => {
+                    imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 40)}...</option>`;
+                });
+                
                 UI.openModal('cliente');
             },
 
@@ -3654,8 +3921,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('image-counter').innerText = '0';
                 document.getElementById('i-imagens-data').value = '';
                 
-                // Set today as default
+                // Set today as default for data de entrega
                 const hoje = Utils.getToday();
+                document.getElementById('i-data-entrega').value = '';
                 
                 UI.openModal('imovel');
             },
@@ -3763,11 +4031,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const tipo = document.getElementById('c-tipo').value;
                     const telefone = document.getElementById('c-telefone').value;
                     const email = document.getElementById('c-email').value;
+                    const imovelInteresseId = document.getElementById('c-imovel-interesse').value || null;
+                    const dataNascimento = document.getElementById('c-data-nascimento').value || null;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
 
                     const newClient = { 
                         id, nome, tipo, telefone, email, 
+                        imovelInteresseId, dataNascimento,
                         faixaPreco, observacoes,
                         dataCriacao: new Date().toISOString()
                     };
@@ -3788,13 +4059,24 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 edit: (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c) return;
+                    
                     document.getElementById('c-id').value = c.id;
                     document.getElementById('c-nome').value = c.nome;
                     document.getElementById('c-tipo').value = c.tipo;
                     document.getElementById('c-telefone').value = c.telefone;
                     document.getElementById('c-email').value = c.email || '';
+                    document.getElementById('c-data-nascimento').value = c.dataNascimento || '';
                     document.getElementById('c-faixa-preco').value = c.faixaPreco || '';
                     document.getElementById('c-observacoes').value = c.observacoes || '';
+                    
+                    // Popular select de imóveis de interesse
+                    const imovelSelect = document.getElementById('c-imovel-interesse');
+                    imovelSelect.innerHTML = '<option value="">Selecione um imóvel...</option>';
+                    UI.data.imoveis.forEach(i => {
+                        imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 40)}...</option>`;
+                    });
+                    document.getElementById('c-imovel-interesse').value = c.imovelInteresseId || '';
+                    
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
                     UI.openModal('cliente');
                 },
@@ -3832,6 +4114,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         transacao: document.getElementById('i-transacao').value,
                         precoVenda: Utils.parseCurrency(document.getElementById('i-preco-venda').value) || null,
                         precoAluguel: Utils.parseCurrency(document.getElementById('i-preco-aluguel').value) || null,
+                        dataEntrega: document.getElementById('i-data-entrega').value || null,
+                        construtora: document.getElementById('i-construtora').value || '',
+                        formaPagamento: document.getElementById('i-forma-pagamento').value || '',
+                        condominio: Utils.parseCurrency(document.getElementById('i-condominio').value) || null,
+                        gasEncanado: document.getElementById('i-gas-encanado').value || 'nao',
                         endereco: document.getElementById('i-endereco').value,
                         area: parseInt(document.getElementById('i-area').value) || null,
                         quartos: parseInt(document.getElementById('i-quartos').value) || null,
@@ -3865,6 +4152,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.renderDashboard();
                     UI.renderImoveis();
                     UI.renderRelatorios();
+                    
+                    // Atualizar clientes que têm este imóvel como interesse
+                    UI.data.clientes.forEach(cliente => {
+                        if(cliente.imovelInteresseId === id) {
+                            // O imóvel foi atualizado, pode-se enviar notificação se necessário
+                        }
+                    });
                 },
                 edit: (id) => {
                     const i = UI.data.imoveis.find(x => x.id === id);
@@ -3887,6 +4181,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         Utils.maskMoney(valInput);
                     }
                     
+                    // Novos campos
+                    document.getElementById('i-data-entrega').value = i.dataEntrega || '';
+                    document.getElementById('i-construtora').value = i.construtora || '';
+                    document.getElementById('i-forma-pagamento').value = i.formaPagamento || '';
+                    
+                    if(i.condominio) {
+                        const condInput = document.getElementById('i-condominio');
+                        condInput.value = (i.condominio * 100).toFixed(0);
+                        Utils.maskMoney(condInput);
+                    }
+                    
+                    document.getElementById('i-gas-encanado').value = i.gasEncanado || 'nao';
                     document.getElementById('i-endereco').value = i.endereco;
                     document.getElementById('i-area').value = i.area || '';
                     document.getElementById('i-quartos').value = i.quartos || '';
@@ -4252,9 +4558,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                     
                     msg += `\n📐 ${i.area || '---'}m² | 🛏️ ${i.quartos || 0} quartos | 🚿 ${i.banheiros || 0} banheiros | 🚗 ${i.vagas || 0} vagas\n\n`;
-                    msg += `📞 Entre em contato: ${settings.telefone}\n`;
+                    
+                    // Adicionar informações adicionais
+                    if(i.dataEntrega) {
+                        msg += `📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
+                    }
+                    if(i.construtora) {
+                        msg += `🏗️ *Construtora:* ${i.construtora}\n`;
+                    }
+                    if(i.condominio) {
+                        msg += `🏢 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n`;
+                    }
+                    if(i.gasEncanado === 'sim') {
+                        msg += `🔥 *Gás Encanado:* Sim\n`;
+                    }
+                    
+                    msg += `\n📞 Entre em contato: ${settings.telefone}\n`;
                     msg += `👨‍💼 ${settings.nome} | CRECI ${settings.creci}\n`;
-                    msg += `🏢 ${settings.imobiliaria}`;
+                    msg += `🏢 ${settings.imobiliaria}\n\n`;
+                    msg += `⚠️ *Os valores informados podem sofrer alteração sem aviso prévio.*`;
                     
                     const encodedMsg = encodeURIComponent(msg);
                     window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
@@ -4326,6 +4648,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         document.getElementById('fullscreen-viewer').addEventListener('click', function(e) {
             if(e.target === this) {
                 UI.closeFullscreen();
+            }
+        });
+
+        // Listener para teclado no visualizador de fotos
+        document.addEventListener('keydown', function(e) {
+            if(document.getElementById('fullscreen-viewer').classList.contains('active')) {
+                if(e.key === 'Escape') {
+                    UI.closeFullscreen();
+                } else if(e.key === 'ArrowRight') {
+                    UI.nextFullscreenImage();
+                } else if(e.key === 'ArrowLeft') {
+                    UI.prevFullscreenImage();
+                }
             }
         });
 
