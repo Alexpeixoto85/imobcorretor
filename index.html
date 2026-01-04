@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -41,6 +42,16 @@
             --type-plantao: #7c3aed;
             --type-generico: #f59e0b;
             --type-outro: #64748b;
+            
+            /* Cores para funil de vendas */
+            --funnel-lead: #93c5fd;
+            --funnel-contato: #60a5fa;
+            --funnel-cpf: #3b82f6;
+            --funnel-sem-restricao: #1d4ed8;
+            --funnel-documentacao: #7c3aed;
+            --funnel-aprovado: #10b981;
+            --funnel-contrato: #059669;
+            --funnel-venda: #047857;
             
             /* Dimensões */
             --safe-top: env(safe-area-inset-top);
@@ -1083,6 +1094,223 @@
             border-radius: 6px;
             border: 1px solid #fde68a;
         }
+
+        /* --- FUNIL DE VENDAS --- */
+        .funnel-container {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .funnel-stages {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .funnel-stage {
+            position: relative;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 4px solid;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .funnel-stage:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .funnel-stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .funnel-stage-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .funnel-stage-count {
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--dark);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
+        }
+
+        .funnel-stage-clients {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .funnel-stage.expanded .funnel-stage-clients {
+            max-height: 500px;
+            margin-top: 12px;
+        }
+
+        .funnel-client-item {
+            background: rgba(241, 245, 249, 0.7);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+
+        .funnel-client-item:hover {
+            background: rgba(226, 232, 240, 0.9);
+        }
+
+        .funnel-client-name {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .funnel-client-days {
+            font-size: 0.75rem;
+            color: var(--secondary);
+        }
+
+        .funnel-chart-container {
+            height: 400px;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        /* Cores do funil */
+        .stage-lead { border-left-color: var(--funnel-lead); background: linear-gradient(90deg, rgba(147, 197, 253, 0.1) 0%, rgba(147, 197, 253, 0.05) 100%); }
+        .stage-contato { border-left-color: var(--funnel-contato); background: linear-gradient(90deg, rgba(96, 165, 250, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%); }
+        .stage-cpf { border-left-color: var(--funnel-cpf); background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%); }
+        .stage-sem-restricao { border-left-color: var(--funnel-sem-restricao); background: linear-gradient(90deg, rgba(29, 78, 216, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%); }
+        .stage-documentacao { border-left-color: var(--funnel-documentacao); background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(124, 58, 237, 0.05) 100%); }
+        .stage-aprovado { border-left-color: var(--funnel-aprovado); background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%); }
+        .stage-contrato { border-left-color: var(--funnel-contrato); background: linear-gradient(90deg, rgba(5, 150, 105, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%); }
+        .stage-venda { border-left-color: var(--funnel-venda); background: linear-gradient(90deg, rgba(4, 120, 87, 0.1) 0%, rgba(4, 120, 87, 0.05) 100%); }
+
+        /* --- LINKS ÚTEIS --- */
+        .links-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .link-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: transform 0.2s;
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .link-card:active { transform: scale(0.98); }
+
+        .link-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .link-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--dark);
+            line-height: 1.3;
+        }
+
+        .link-url {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            word-break: break-all;
+            opacity: 0.8;
+        }
+
+        .link-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        /* --- Badges para funil --- */
+        .badge-lead { background: var(--funnel-lead); color: #1e3a8a; }
+        .badge-contato { background: var(--funnel-contato); color: white; }
+        .badge-cpf { background: var(--funnel-cpf); color: white; }
+        .badge-sem-restricao { background: var(--funnel-sem-restricao); color: white; }
+        .badge-documentacao { background: var(--funnel-documentacao); color: white; }
+        .badge-aprovado { background: var(--funnel-aprovado); color: white; }
+        .badge-contrato { background: var(--funnel-contrato); color: white; }
+        .badge-venda { background: var(--funnel-venda); color: white; }
+
+        /* --- Progress Bar --- */
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* --- Drag and Drop --- */
+        .dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--primary);
+        }
+
+        .drop-zone {
+            background: rgba(37, 99, 235, 0.05);
+            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            color: var(--primary);
+            margin: 8px 0;
+            transition: all 0.3s;
+        }
+
+        .drop-zone:hover {
+            background: rgba(37, 99, 235, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1251,6 +1479,88 @@
             <div id="agenda-list"></div>
         </div>
 
+        <!-- Funil de Vendas View -->
+        <div id="funil-view" class="view">
+            <div class="section-title">
+                Funil de Vendas
+                <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openFunilSettings()">
+                    <i class="fas fa-cog"></i>
+                </button>
+            </div>
+            
+            <!-- Estatísticas do Funil -->
+            <div class="stats-grid">
+                <div class="stat-card" onclick="UI.filterFunil('lead')">
+                    <div class="stat-icon" style="background: var(--funnel-lead); color: #1e3a8a;">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="stat-value" id="funil-lead">0</div>
+                    <div class="stat-label">Leads</div>
+                </div>
+                <div class="stat-card" onclick="UI.filterFunil('venda')">
+                    <div class="stat-icon" style="background: var(--funnel-venda); color: white;">
+                        <i class="fas fa-trophy"></i>
+                    </div>
+                    <div class="stat-value" id="funil-venda">0</div>
+                    <div class="stat-label">Vendas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="stat-value" id="funil-taxa">0%</div>
+                    <div class="stat-label">Conversão</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-cyan">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-value" id="funil-tempo">0d</div>
+                    <div class="stat-label">Tempo Médio</div>
+                </div>
+            </div>
+            
+            <!-- Progresso do Funil -->
+            <div class="funnel-container">
+                <div class="section-title" style="margin-bottom: 16px;">
+                    Progresso do Funil
+                    <span class="badge badge-primary" id="funil-total">0 clientes</span>
+                </div>
+                <div id="funil-stages-container">
+                    <!-- Estágios do funil serão renderizados aqui -->
+                </div>
+            </div>
+            
+            <!-- Clientes no Funil -->
+            <div class="section-title">
+                Clientes no Funil
+                <select class="form-control" style="width: auto; padding: 4px 12px; font-size: 0.85rem;" onchange="UI.filterClientesFunil(this.value)">
+                    <option value="todos">Todos os estágios</option>
+                    <!-- Opções serão preenchidas dinamicamente -->
+                </select>
+            </div>
+            <div id="funil-clientes-list"></div>
+        </div>
+
+        <!-- Links Úteis View -->
+        <div id="links-view" class="view">
+            <div class="section-title">
+                Links Úteis
+                <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openNewLink()">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Buscar links..." oninput="UI.renderLinks(this.value)">
+            </div>
+            
+            <div class="links-grid" id="links-grid">
+                <!-- Links serão renderizados aqui -->
+            </div>
+        </div>
+
         <!-- Relatórios View -->
         <div id="relatorios-view" class="view">
             <div class="section-title">Desempenho Mensal</div>
@@ -1312,8 +1622,14 @@
         <a href="#" class="nav-item" data-target="clientes-view" onclick="UI.switchTab(this)">
             <i class="fas fa-users"></i> <span>Clientes</span>
         </a>
+        <a href="#" class="nav-item" data-target="funil-view" onclick="UI.switchTab(this)">
+            <i class="fas fa-filter"></i> <span>Funil</span>
+        </a>
         <a href="#" class="nav-item" data-target="agenda-view" onclick="UI.switchTab(this)">
             <i class="fas fa-calendar-alt"></i> <span>Agenda</span>
+        </a>
+        <a href="#" class="nav-item" data-target="links-view" onclick="UI.switchTab(this)">
+            <i class="fas fa-link"></i> <span>Links</span>
         </a>
         <a href="#" class="nav-item" data-target="relatorios-view" onclick="UI.switchTab(this)">
             <i class="fas fa-chart-bar"></i> <span>Relatórios</span>
@@ -1346,6 +1662,12 @@
                     <option value="comprador">Comprador</option>
                     <option value="vendedor">Vendedor</option>
                     <option value="ambos">Comprador/Vendedor</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Etapa no Funil</label>
+                <select id="c-etapa-funil" class="form-control" required>
+                    <!-- Opções serão preenchidas dinamicamente -->
                 </select>
             </div>
             <div class="form-group">
@@ -1747,6 +2069,55 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         </form>
     </div>
 
+    <!-- Modal de Configurações do Funil -->
+    <div class="modal-overlay" id="overlay-funil-settings"></div>
+    <div class="modal-sheet" id="sheet-funil-settings">
+        <div class="sheet-handle"></div>
+        <h3 class="section-title">Configurar Etapas do Funil</h3>
+        <div id="funil-etapas-list">
+            <!-- Etapas serão renderizadas dinamicamente -->
+        </div>
+        <button class="btn-block" style="background: var(--success); margin-top: 16px;" onclick="UI.addEtapaFunil()">
+            <i class="fas fa-plus"></i> Adicionar Etapa
+        </button>
+        <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
+    </div>
+
+    <!-- Modal de Link Útil -->
+    <div class="modal-overlay" id="overlay-link"></div>
+    <div class="modal-sheet" id="sheet-link">
+        <div class="sheet-handle"></div>
+        <h3 class="section-title" id="title-link">Novo Link Útil</h3>
+        <form id="form-link" onsubmit="App.link.save(event)">
+            <input type="hidden" id="l-id">
+            <div class="form-group">
+                <label class="form-label">Título</label>
+                <input type="text" id="l-titulo" class="form-control" placeholder="Ex: Site da Construtora..." required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">URL</label>
+                <input type="url" id="l-url" class="form-control" placeholder="https://exemplo.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Categoria</label>
+                <select id="l-categoria" class="form-control">
+                    <option value="construtora">Construtora</option>
+                    <option value="documentos">Documentos</option>
+                    <option value="financiamento">Financiamento</option>
+                    <option value="noticias">Notícias</option>
+                    <option value="ferramentas">Ferramentas</option>
+                    <option value="outros">Outros</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Descrição</label>
+                <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
+            </div>
+            <button type="submit" class="btn-block">Salvar Link</button>
+            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+        </form>
+    </div>
+
     <script>
         // --- UTILITÁRIOS ---
         const Utils = {
@@ -1886,6 +2257,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
                 return statuses[status] || status;
             },
+            getEtapaFunilText: (etapa) => {
+                const etapas = Storage.getFunilEtapas();
+                return etapas.find(e => e.id === etapa)?.nome || etapa;
+            },
+            getEtapaFunilColor: (etapa) => {
+                const etapas = Storage.getFunilEtapas();
+                const etapaObj = etapas.find(e => e.id === etapa);
+                return etapaObj?.cor || '#93c5fd';
+            },
             // Verificar se é aniversário
             isBirthdayToday: (birthdate) => {
                 if (!birthdate) return false;
@@ -1904,6 +2284,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     age--;
                 }
                 return age;
+            },
+            // Calcular dias em uma etapa
+            calculateDaysInStage: (dataEntrada) => {
+                if (!dataEntrada) return 0;
+                const entrada = new Date(dataEntrada);
+                const hoje = new Date();
+                const diffTime = Math.abs(hoje - entrada);
+                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             },
             generatePDF: async (imovel) => {
                 try {
@@ -2468,7 +2856,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 imobiliaria: 'Imobiliária Exemplo',
                 comissao: 5
             },
-            saveSettings: (data) => localStorage.setItem('imobipro_settings', JSON.stringify(data))
+            saveSettings: (data) => localStorage.setItem('imobipro_settings', JSON.stringify(data)),
+            getFunilEtapas: () => {
+                const etapasPadrao = [
+                    { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
+                    { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
+                    { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
+                    { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
+                    { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
+                    { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
+                    { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
+                    { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
+                ];
+                return JSON.parse(localStorage.getItem('imobipro_funil_etapas')) || etapasPadrao;
+            },
+            saveFunilEtapas: (etapas) => localStorage.setItem('imobipro_funil_etapas', JSON.stringify(etapas)),
+            getLinks: () => JSON.parse(localStorage.getItem('imobipro_links')) || [],
+            saveLinks: (links) => localStorage.setItem('imobipro_links', JSON.stringify(links))
         };
 
         // --- UI MANAGER ---
@@ -2476,7 +2880,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             data: { 
                 clientes: [], 
                 imoveis: [], 
-                visitas: [] 
+                visitas: [],
+                links: [],
+                funilEtapas: []
             },
             chartInstance: null,
             agendaChartInstance: null,
@@ -2485,17 +2891,32 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             fullscreenImages: [],
             fullscreenCurrentIndex: 0,
             currentAgendaFilter: 'todos',
+            draggingClient: null,
             
             init: () => {
                 UI.data.clientes = Storage.get('clientes');
                 UI.data.imoveis = Storage.get('imoveis');
                 UI.data.visitas = Storage.get('visitas');
+                UI.data.links = Storage.get('links');
+                UI.data.funilEtapas = Storage.getFunilEtapas();
+                
+                // Garantir que todos os clientes tenham etapa no funil
+                UI.data.clientes.forEach(cliente => {
+                    if (!cliente.etapaFunil) {
+                        cliente.etapaFunil = 'lead';
+                        cliente.dataEntradaFunil = cliente.dataEntradaFunil || new Date().toISOString().split('T')[0];
+                    }
+                });
+                
                 UI.renderDashboard();
                 
                 // Tabs listeners
                 document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
                     el.addEventListener('click', (e) => e.preventDefault());
                 });
+                
+                // Inicializar funil
+                UI.renderFunil();
             },
 
             switchTab: (el) => {
@@ -2517,6 +2938,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 } else if (target === 'agenda-view') {
                     fab.style.display = 'flex';
                     fab.onclick = UI.openNewVisita;
+                } else if (target === 'links-view') {
+                    fab.style.display = 'flex';
+                    fab.onclick = UI.openNewLink;
+                } else if (target === 'funil-view') {
+                    fab.style.display = 'none';
+                    UI.renderFunil();
                 } else {
                     fab.style.display = 'none';
                 }
@@ -2525,11 +2952,410 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(target === 'imoveis-view') UI.renderImoveis();
                 if(target === 'agenda-view') UI.renderAgenda();
                 if(target === 'relatorios-view') UI.renderRelatorios();
+                if(target === 'links-view') UI.renderLinks();
             },
 
             navigate: (tabName) => {
                 const el = document.querySelector(`.nav-item[data-target="${tabName}-view"]`);
                 if(el) UI.switchTab(el);
+            },
+
+            // --- FUNIL DE VENDAS ---
+            renderFunil: () => {
+                const etapas = UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem);
+                
+                // Calcular estatísticas
+                const totalClientes = UI.data.clientes.length;
+                const clientesPorEtapa = {};
+                let totalVendas = 0;
+                let totalDias = 0;
+                let clientesComData = 0;
+                
+                etapas.forEach(etapa => {
+                    const clientes = UI.data.clientes.filter(c => c.etapaFunil === etapa.id);
+                    clientesPorEtapa[etapa.id] = clientes;
+                    
+                    if (etapa.id === 'venda') {
+                        totalVendas = clientes.length;
+                    }
+                    
+                    // Calcular tempo médio
+                    clientes.forEach(cliente => {
+                        if (cliente.dataEntradaFunil) {
+                            const dias = Utils.calculateDaysInStage(cliente.dataEntradaFunil);
+                            totalDias += dias;
+                            clientesComData++;
+                        }
+                    });
+                });
+                
+                // Atualizar estatísticas
+                document.getElementById('funil-lead').textContent = clientesPorEtapa['lead']?.length || 0;
+                document.getElementById('funil-venda').textContent = totalVendas;
+                document.getElementById('funil-total').textContent = `${totalClientes} clientes`;
+                
+                // Calcular taxa de conversão
+                const taxaConversao = totalClientes > 0 ? ((totalVendas / totalClientes) * 100).toFixed(1) : 0;
+                document.getElementById('funil-taxa').textContent = `${taxaConversao}%`;
+                
+                // Calcular tempo médio
+                const tempoMedio = clientesComData > 0 ? Math.round(totalDias / clientesComData) : 0;
+                document.getElementById('funil-tempo').textContent = `${tempoMedio}d`;
+                
+                // Renderizar estágios do funil
+                const container = document.getElementById('funil-stages-container');
+                let html = '<div class="funnel-stages">';
+                
+                etapas.forEach(etapa => {
+                    const clientes = clientesPorEtapa[etapa.id] || [];
+                    const porcentagem = totalClientes > 0 ? Math.round((clientes.length / totalClientes) * 100) : 0;
+                    
+                    html += `
+                        <div class="funnel-stage stage-${etapa.id}" onclick="UI.toggleFunnelStage('${etapa.id}')">
+                            <div class="funnel-stage-header">
+                                <div class="funnel-stage-title">
+                                    <i class="fas fa-${UI.getFunnelIcon(etapa.id)}"></i>
+                                    ${etapa.nome}
+                                </div>
+                                <span class="funnel-stage-count" style="background: ${etapa.cor}; color: white;">${clientes.length}</span>
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: ${porcentagem}%; background: ${etapa.cor};"></div>
+                            </div>
+                            <div class="funnel-stage-clients" id="funnel-clients-${etapa.id}">
+                                ${clientes.map(cliente => `
+                                    <div class="funnel-client-item" draggable="true" 
+                                         data-cliente-id="${cliente.id}"
+                                         ondragstart="UI.startDrag(event, '${cliente.id}')"
+                                         ondrop="UI.dropOnClient(event, '${etapa.id}')"
+                                         ondragover="event.preventDefault()">
+                                        <div class="funnel-client-name">${cliente.nome}</div>
+                                        <div class="funnel-client-days">
+                                            ${cliente.dataEntradaFunil ? `${Utils.calculateDaysInStage(cliente.dataEntradaFunil)} dias` : 'Novo'}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                container.innerHTML = html;
+                
+                // Renderizar lista de clientes no funil
+                UI.renderClientesFunil();
+                
+                // Popular select de filtro
+                const select = document.querySelector('#funil-view select');
+                if (select) {
+                    select.innerHTML = '<option value="todos">Todos os estágios</option>';
+                    etapas.forEach(etapa => {
+                        select.innerHTML += `<option value="${etapa.id}">${etapa.nome}</option>`;
+                    });
+                }
+            },
+            
+            getFunnelIcon: (etapaId) => {
+                const icons = {
+                    'lead': 'user-plus',
+                    'contato': 'phone-alt',
+                    'cpf': 'search',
+                    'sem-restricao': 'check-circle',
+                    'documentacao': 'file-contract',
+                    'aprovado': 'thumbs-up',
+                    'contrato': 'pen-fancy',
+                    'venda': 'trophy'
+                };
+                return icons[etapaId] || 'circle';
+            },
+            
+            toggleFunnelStage: (etapaId) => {
+                const stage = document.querySelector(`.stage-${etapaId}`);
+                const clientsContainer = document.getElementById(`funnel-clients-${etapaId}`);
+                
+                if (stage.classList.contains('expanded')) {
+                    stage.classList.remove('expanded');
+                    clientsContainer.style.maxHeight = '0';
+                } else {
+                    // Fechar outros estágios
+                    document.querySelectorAll('.funnel-stage.expanded').forEach(s => {
+                        s.classList.remove('expanded');
+                        const id = s.className.match(/stage-(\w+)/)[1];
+                        document.getElementById(`funnel-clients-${id}`).style.maxHeight = '0';
+                    });
+                    
+                    stage.classList.add('expanded');
+                    clientsContainer.style.maxHeight = `${clientsContainer.scrollHeight}px`;
+                }
+            },
+            
+            startDrag: (event, clienteId) => {
+                event.dataTransfer.setData('text/plain', clienteId);
+                UI.draggingClient = clienteId;
+                event.target.classList.add('dragging');
+            },
+            
+            allowDrop: (event) => {
+                event.preventDefault();
+            },
+            
+            dropOnStage: (event, etapaId) => {
+                event.preventDefault();
+                const clienteId = event.dataTransfer.getData('text/plain');
+                
+                if (clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (cliente && cliente.etapaFunil !== etapaId) {
+                        cliente.etapaFunil = etapaId;
+                        cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
+                        Storage.set('clientes', UI.data.clientes);
+                        UI.renderFunil();
+                        UI.renderClientes();
+                        Utils.toast(`${cliente.nome} movido para ${Utils.getEtapaFunilText(etapaId)}`);
+                    }
+                }
+                
+                // Remover classe dragging
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+                UI.draggingClient = null;
+            },
+            
+            dropOnClient: (event, etapaId) => {
+                event.preventDefault();
+                UI.dropOnStage(event, etapaId);
+            },
+            
+            renderClientesFunil: (filterEtapa = 'todos') => {
+                const container = document.getElementById('funil-clientes-list');
+                let clientes = UI.data.clientes;
+                
+                if (filterEtapa !== 'todos') {
+                    clientes = clientes.filter(c => c.etapaFunil === filterEtapa);
+                }
+                
+                if (clientes.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>Nenhum cliente neste estágio do funil</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = clientes.map(cliente => {
+                    const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil);
+                    const dias = cliente.dataEntradaFunil ? Utils.calculateDaysInStage(cliente.dataEntradaFunil) : 0;
+                    
+                    return `
+                        <div class="client-card" onclick="UI.showClienteDetails('${cliente.id}')">
+                            <div class="client-header">
+                                <div class="client-name">${cliente.nome}</div>
+                                <span class="client-type" style="background: ${etapa?.cor || '#93c5fd'}; color: white;">
+                                    ${etapa?.nome || 'Lead'}
+                                </span>
+                            </div>
+                            <div class="client-info">
+                                <div class="client-row"><i class="fas fa-phone"></i> ${cliente.telefone}</div>
+                                ${cliente.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${cliente.email}</div>` : ''}
+                                <div class="client-row"><i class="fas fa-calendar"></i> ${dias} dias nesta etapa</div>
+                                ${cliente.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${cliente.faixaPreco}</div>` : ''}
+                            </div>
+                            <div class="client-actions">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${cliente.id}')">
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            
+            filterClientesFunil: (etapaId) => {
+                UI.renderClientesFunil(etapaId);
+            },
+            
+            filterFunil: (etapaId) => {
+                UI.filterClientesFunil(etapaId);
+                // Rolagem para a seção de clientes
+                document.getElementById('funil-clientes-list').scrollIntoView({ behavior: 'smooth' });
+            },
+            
+            openFunilSettings: () => {
+                const container = document.getElementById('funil-etapas-list');
+                container.innerHTML = '';
+                
+                UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem).forEach((etapa, index) => {
+                    const etapaEl = document.createElement('div');
+                    etapaEl.className = 'form-group';
+                    etapaEl.innerHTML = `
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+                            <div style="width: 30px; height: 30px; border-radius: 6px; background: ${etapa.cor}; display: flex; align-items: center; justify-content: center; color: white;">
+                                <i class="fas fa-${UI.getFunnelIcon(etapa.id)}"></i>
+                            </div>
+                            <input type="text" class="form-control" value="${etapa.nome}" 
+                                   onchange="UI.updateEtapaFunil(${index}, 'nome', this.value)" 
+                                   style="flex: 1;">
+                            <input type="color" value="${etapa.cor}" 
+                                   onchange="UI.updateEtapaFunil(${index}, 'cor', this.value)"
+                                   style="width: 40px; height: 40px; padding: 0; border: none;">
+                            <button class="icon-btn" onclick="UI.moveEtapaFunil(${index}, 'up')" ${index === 0 ? 'disabled' : ''}>
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                            <button class="icon-btn" onclick="UI.moveEtapaFunil(${index}, 'down')" ${index === UI.data.funilEtapas.length - 1 ? 'disabled' : ''}>
+                                <i class="fas fa-arrow-down"></i>
+                            </button>
+                            <button class="icon-btn" style="color: var(--danger);" onclick="UI.removeEtapaFunil(${index})" ${UI.data.funilEtapas.length <= 1 ? 'disabled' : ''}>
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(etapaEl);
+                });
+                
+                UI.openModal('funil-settings');
+            },
+            
+            updateEtapaFunil: (index, campo, valor) => {
+                UI.data.funilEtapas[index][campo] = valor;
+                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                UI.renderFunil();
+            },
+            
+            moveEtapaFunil: (index, direcao) => {
+                if (direcao === 'up' && index > 0) {
+                    const temp = UI.data.funilEtapas[index];
+                    UI.data.funilEtapas[index] = UI.data.funilEtapas[index - 1];
+                    UI.data.funilEtapas[index - 1] = temp;
+                } else if (direcao === 'down' && index < UI.data.funilEtapas.length - 1) {
+                    const temp = UI.data.funilEtapas[index];
+                    UI.data.funilEtapas[index] = UI.data.funilEtapas[index + 1];
+                    UI.data.funilEtapas[index + 1] = temp;
+                }
+                
+                // Atualizar ordens
+                UI.data.funilEtapas.forEach((etapa, idx) => {
+                    etapa.ordem = idx + 1;
+                });
+                
+                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                UI.openFunilSettings();
+                UI.renderFunil();
+            },
+            
+            addEtapaFunil: () => {
+                const novaEtapa = {
+                    id: `etapa-${Date.now()}`,
+                    nome: 'Nova Etapa',
+                    cor: '#6b7280',
+                    ordem: UI.data.funilEtapas.length + 1
+                };
+                
+                UI.data.funilEtapas.push(novaEtapa);
+                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                UI.openFunilSettings();
+                UI.renderFunil();
+            },
+            
+            removeEtapaFunil: (index) => {
+                if (UI.data.funilEtapas.length <= 1) {
+                    Utils.toast('O funil deve ter pelo menos uma etapa', 'error');
+                    return;
+                }
+                
+                const etapaRemovida = UI.data.funilEtapas[index];
+                
+                // Mover clientes desta etapa para a primeira etapa
+                UI.data.clientes.forEach(cliente => {
+                    if (cliente.etapaFunil === etapaRemovida.id) {
+                        cliente.etapaFunil = UI.data.funilEtapas[0].id;
+                    }
+                });
+                
+                Storage.set('clientes', UI.data.clientes);
+                UI.data.funilEtapas.splice(index, 1);
+                
+                // Reordenar
+                UI.data.funilEtapas.forEach((etapa, idx) => {
+                    etapa.ordem = idx + 1;
+                });
+                
+                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                UI.openFunilSettings();
+                UI.renderFunil();
+                UI.renderClientes();
+                Utils.toast('Etapa removida! Clientes movidos para a primeira etapa.');
+            },
+            
+            // --- LINKS ÚTEIS ---
+            renderLinks: (filter = '') => {
+                const container = document.getElementById('links-grid');
+                let links = UI.data.links;
+                
+                if (filter) {
+                    const termo = filter.toLowerCase();
+                    links = links.filter(link => 
+                        link.titulo.toLowerCase().includes(termo) ||
+                        link.descricao?.toLowerCase().includes(termo) ||
+                        link.categoria?.toLowerCase().includes(termo) ||
+                        link.url.toLowerCase().includes(termo)
+                    );
+                }
+                
+                if (links.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <i class="fas fa-link"></i>
+                            <p>${filter ? 'Nenhum link encontrado' : 'Nenhum link salvo ainda'}</p>
+                            ${!filter ? '<button class="btn-block" onclick="UI.openNewLink()" style="margin-top: 16px;">Adicionar Primeiro Link</button>' : ''}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = links.map(link => {
+                    const categoriaIcon = {
+                        'construtora': 'building',
+                        'documentos': 'file-contract',
+                        'financiamento': 'hand-holding-usd',
+                        'noticias': 'newspaper',
+                        'ferramentas': 'tools',
+                        'outros': 'link'
+                    }[link.categoria] || 'link';
+                    
+                    return `
+                        <div class="link-card" onclick="App.link.open('${link.id}')">
+                            <div class="link-icon">
+                                <i class="fas fa-${categoriaIcon}"></i>
+                            </div>
+                            <div class="link-title">${link.titulo}</div>
+                            <div class="link-url">${link.url.replace(/^https?:\/\//, '').substring(0, 30)}...</div>
+                            ${link.descricao ? `<div style="font-size: 0.8rem; color: var(--secondary); margin-top: 4px;">${link.descricao.substring(0, 50)}...</div>` : ''}
+                            <div class="link-actions">
+                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.edit('${link.id}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.copy('${link.id}')">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                <button class="btn-sm btn-light" style="color: var(--danger);" onclick="event.stopPropagation(); App.link.delete('${link.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+            
+            openNewLink: () => {
+                document.getElementById('form-link').reset();
+                document.getElementById('l-id').value = '';
+                document.getElementById('title-link').innerText = 'Novo Link';
+                UI.openModal('link');
             },
 
             // --- RENDER FUNCTIONS ---
@@ -2750,6 +3576,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const imovelInteresse = c.imovelInteresseId ? 
                         UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
                     
+                    // Obter etapa do funil
+                    const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
+                    
                     return `
                         <div class="client-card" onclick="UI.showClienteDetails('${c.id}')">
                             ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
@@ -2758,7 +3587,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </div>
                             <div class="client-header">
                                 <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''}</div>
-                                <span class="client-type type-${c.tipo}">${Utils.getTipoClienteText(c.tipo)}</span>
+                                <span class="client-type" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
                             </div>
                             <div class="client-info">
                                 <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
@@ -2766,6 +3595,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 ${c.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(c.dataNascimento)}</div>` : ''}
                                 ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
                                 ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
+                                <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
@@ -3902,6 +4732,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 40)}...</option>`;
                 });
                 
+                // Popular select de etapas do funil
+                const etapaSelect = document.getElementById('c-etapa-funil');
+                etapaSelect.innerHTML = '';
+                UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem).forEach(etapa => {
+                    etapaSelect.innerHTML += `<option value="${etapa.id}">${etapa.nome}</option>`;
+                });
+                
                 UI.openModal('cliente');
             },
 
@@ -4029,6 +4866,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const id = document.getElementById('c-id').value || Utils.id();
                     const nome = document.getElementById('c-nome').value;
                     const tipo = document.getElementById('c-tipo').value;
+                    const etapaFunil = document.getElementById('c-etapa-funil').value || 'lead';
                     const telefone = document.getElementById('c-telefone').value;
                     const email = document.getElementById('c-email').value;
                     const imovelInteresseId = document.getElementById('c-imovel-interesse').value || null;
@@ -4037,14 +4875,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const observacoes = document.getElementById('c-observacoes').value;
 
                     const newClient = { 
-                        id, nome, tipo, telefone, email, 
+                        id, nome, tipo, etapaFunil, telefone, email, 
                         imovelInteresseId, dataNascimento,
                         faixaPreco, observacoes,
-                        dataCriacao: new Date().toISOString()
+                        dataCriacao: new Date().toISOString(),
+                        dataEntradaFunil: new Date().toISOString().split('T')[0]
                     };
                     
                     const existingIdx = UI.data.clientes.findIndex(c => c.id === id);
                     if(existingIdx >= 0) {
+                        // Mantém a data de entrada no funil se já existir
+                        if(UI.data.clientes[existingIdx].dataEntradaFunil && UI.data.clientes[existingIdx].etapaFunil === etapaFunil) {
+                            newClient.dataEntradaFunil = UI.data.clientes[existingIdx].dataEntradaFunil;
+                        }
                         UI.data.clientes[existingIdx] = newClient;
                     } else {
                         UI.data.clientes.push(newClient);
@@ -4055,6 +4898,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.closeModals();
                     UI.renderDashboard();
                     UI.renderClientes();
+                    UI.renderFunil();
                 },
                 edit: (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
@@ -4063,6 +4907,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('c-id').value = c.id;
                     document.getElementById('c-nome').value = c.nome;
                     document.getElementById('c-tipo').value = c.tipo;
+                    document.getElementById('c-etapa-funil').value = c.etapaFunil || 'lead';
                     document.getElementById('c-telefone').value = c.telefone;
                     document.getElementById('c-email').value = c.email || '';
                     document.getElementById('c-data-nascimento').value = c.dataNascimento || '';
@@ -4076,6 +4921,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 40)}...</option>`;
                     });
                     document.getElementById('c-imovel-interesse').value = c.imovelInteresseId || '';
+                    
+                    // Popular select de etapas do funil
+                    const etapaSelect = document.getElementById('c-etapa-funil');
+                    etapaSelect.innerHTML = '';
+                    UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem).forEach(etapa => {
+                        etapaSelect.innerHTML += `<option value="${etapa.id}">${etapa.nome}</option>`;
+                    });
+                    etapaSelect.value = c.etapaFunil || 'lead';
                     
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
                     UI.openModal('cliente');
@@ -4583,12 +5436,85 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
+            link: {
+                save: (e) => {
+                    e.preventDefault();
+                    const id = document.getElementById('l-id').value || Utils.id();
+                    const link = {
+                        id,
+                        titulo: document.getElementById('l-titulo').value,
+                        url: document.getElementById('l-url').value,
+                        categoria: document.getElementById('l-categoria').value,
+                        descricao: document.getElementById('l-descricao').value,
+                        dataCriacao: new Date().toISOString()
+                    };
+                    
+                    const idx = UI.data.links.findIndex(l => l.id === id);
+                    if(idx >= 0) {
+                        UI.data.links[idx] = link;
+                    } else {
+                        UI.data.links.push(link);
+                    }
+                    
+                    Storage.saveLinks(UI.data.links);
+                    Utils.toast('Link salvo!');
+                    UI.closeModals();
+                    UI.renderLinks();
+                },
+                edit: (id) => {
+                    const link = UI.data.links.find(l => l.id === id);
+                    if(!link) return;
+                    
+                    document.getElementById('l-id').value = link.id;
+                    document.getElementById('l-titulo').value = link.titulo;
+                    document.getElementById('l-url').value = link.url;
+                    document.getElementById('l-categoria').value = link.categoria || 'outros';
+                    document.getElementById('l-descricao').value = link.descricao || '';
+                    document.getElementById('title-link').innerText = 'Editar Link';
+                    
+                    UI.openModal('link');
+                },
+                open: (id) => {
+                    const link = UI.data.links.find(l => l.id === id);
+                    if(link && link.url) {
+                        window.open(link.url, '_blank');
+                    }
+                },
+                copy: (id) => {
+                    const link = UI.data.links.find(l => l.id === id);
+                    if(link && link.url) {
+                        navigator.clipboard.writeText(link.url)
+                            .then(() => Utils.toast('URL copiada para a área de transferência!'))
+                            .catch(() => {
+                                // Fallback para navegadores mais antigos
+                                const textArea = document.createElement('textarea');
+                                textArea.value = link.url;
+                                document.body.appendChild(textArea);
+                                textArea.select();
+                                document.execCommand('copy');
+                                document.body.removeChild(textArea);
+                                Utils.toast('URL copiada para a área de transferência!');
+                            });
+                    }
+                },
+                delete: (id) => {
+                    if(confirm('Excluir este link?')) {
+                        UI.data.links = UI.data.links.filter(l => l.id !== id);
+                        Storage.saveLinks(UI.data.links);
+                        UI.renderLinks();
+                        Utils.toast('Link excluído!', 'success');
+                    }
+                }
+            },
+
             backup: {
                 exportData: () => {
                     const data = {
                         clientes: UI.data.clientes,
                         imoveis: UI.data.imoveis,
                         visitas: UI.data.visitas,
+                        links: UI.data.links,
+                        funilEtapas: UI.data.funilEtapas,
                         settings: Storage.getSettings()
                     };
                     const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
@@ -4610,6 +5536,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             if(data.clientes) Storage.set('clientes', data.clientes);
                             if(data.imoveis) Storage.set('imoveis', data.imoveis);
                             if(data.visitas) Storage.set('visitas', data.visitas);
+                            if(data.links) Storage.saveLinks(data.links);
+                            if(data.funilEtapas) Storage.saveFunilEtapas(data.funilEtapas);
                             if(data.settings) Storage.saveSettings(data.settings);
                             location.reload();
                         } catch(err) {
