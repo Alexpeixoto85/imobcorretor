@@ -319,6 +319,7 @@
             border-left: 4px solid var(--primary);
             cursor: pointer;
         }
+        .schedule-card.plantoes { border-left-color: #7c3aed; }
 
         .schedule-header {
             display: flex; justify-content: space-between; margin-bottom: 8px;
@@ -328,6 +329,7 @@
             font-weight: 600; background: #dbeafe; color: var(--primary);
         }
         .schedule-urgent { background: #fee2e2; color: var(--danger); }
+        .schedule-plantoes { background: #7c3aed; color: white; }
         
         .schedule-time {
             font-size: 0.85rem; color: var(--secondary);
@@ -622,6 +624,7 @@
         .badge-success { background: var(--success); color: white; }
         .badge-warning { background: var(--warning); color: white; }
         .badge-danger { background: var(--danger); color: white; }
+        .badge-purple { background: #7c3aed; color: white; }
         
         @keyframes pulse { 
             0% { opacity: 1; } 
@@ -896,6 +899,66 @@
         .whatsapp-quick:hover {
             transform: scale(1.1);
         }
+
+        /* --- Plantão specific styles --- */
+        .plantoes-info {
+            background: #f3e8ff;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            border-left: 3px solid #7c3aed;
+        }
+
+        .plantoes-summary {
+            font-size: 0.85rem;
+            color: #5b21b6;
+            margin-bottom: 8px;
+        }
+
+        .client-item {
+            background: white;
+            border-radius: 6px;
+            padding: 8px;
+            margin-bottom: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .client-name {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .client-situation {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .plantoes-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .plantoes-stat {
+            background: white;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .plantoes-stat-value {
+            font-weight: 700;
+            color: #7c3aed;
+            font-size: 1.2rem;
+        }
+
+        .plantoes-stat-label {
+            font-size: 0.7rem;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -1071,6 +1134,20 @@
                     <div class="stat-value" id="rel-conversao">0%</div>
                     <div class="stat-label">Conversão</div>
                 </div>
+            </div>
+
+            <!-- Nova seção para Relatório de Plantões -->
+            <div class="section-title">
+                Relatório de Plantões
+                <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px;" onclick="UI.generatePlantoesReport()">
+                    <i class="fas fa-file-pdf"></i>
+                </button>
+            </div>
+            <div class="chart-container">
+                <canvas id="plantoesChart"></canvas>
+            </div>
+            <div id="plantoes-report">
+                <!-- Relatório de plantões será preenchido aqui -->
             </div>
         </div>
     </main>
@@ -1261,28 +1338,29 @@
     <div class="modal-overlay" id="overlay-visita"></div>
     <div class="modal-sheet" id="sheet-visita">
         <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-visita">Agendar Visita</h3>
+        <h3 class="section-title" id="title-visita">Agendar Visita/Plantão</h3>
         <form id="form-visita" onsubmit="App.agenda.save(event)">
             <input type="hidden" id="v-id">
             
             <div class="form-group">
                 <label class="form-label">Tipo</label>
-                <select id="v-tipo" class="form-control" required>
+                <select id="v-tipo" class="form-control" required onchange="UI.toggleVisitaFields()">
                     <option value="visita">Visita ao Imóvel</option>
                     <option value="reuniao">Reunião com Cliente</option>
                     <option value="documentacao">Assinatura de Documentos</option>
+                    <option value="plantao">Plantão</option>
                     <option value="outro">Outro</option>
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group cliente-group">
                 <label class="form-label">Cliente</label>
                 <select id="v-cliente" class="form-control" required>
                     <option value="">Selecione...</option>
                 </select>
             </div>
 
-            <div class="form-group">
+            <div class="form-group imovel-group">
                 <label class="form-label">Imóvel (para visitas)</label>
                 <select id="v-imovel" class="form-control">
                     <option value="">Selecione...</option>
@@ -1300,13 +1378,38 @@
                 </div>
             </div>
 
-            <div class="form-group">
+            <div class="form-group local-group">
                 <label class="form-label">Local/Endereço</label>
                 <input type="text" id="v-local" class="form-control" placeholder="Endereço da visita ou reunião">
             </div>
 
+            <!-- Campos específicos para Plantão -->
+            <div class="form-group plantoes-group" style="display: none;">
+                <label class="form-label">Detalhes do Plantão</label>
+                <textarea id="v-detalhes-plantoes" class="form-control" placeholder="Descreva as atividades do plantão..."></textarea>
+            </div>
+
+            <div class="form-group plantoes-group" style="display: none;">
+                <label class="form-label">Clientes Atendidos</label>
+                <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
+Exemplo:
+João Silva - (11) 99999-9999 - Interessado em apartamento 2 quartos
+Maria Santos - (11) 88888-8888 - Agendou visita para amanhã
+Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
+            </div>
+
+            <div class="form-group plantoes-group" style="display: none;">
+                <label class="form-label">Negócios Gerados</label>
+                <input type="text" id="v-negocios-gerados" class="form-control" placeholder="Ex: 2 visitas agendadas, 1 proposta enviada">
+            </div>
+
+            <div class="form-group plantoes-group" style="display: none;">
+                <label class="form-label">Observações do Plantão</label>
+                <textarea id="v-observacoes-plantoes" class="form-control" placeholder="Anotações gerais sobre o plantão..."></textarea>
+            </div>
+
             <div class="form-group">
-                <label class="form-label">Observações</label>
+                <label class="form-label">Observações Gerais</label>
                 <textarea id="v-observacoes" class="form-control" placeholder="Detalhes sobre a visita..."></textarea>
             </div>
 
@@ -1492,6 +1595,7 @@
                     'visita': 'Visita ao Imóvel',
                     'reuniao': 'Reunião',
                     'documentacao': 'Documentação',
+                    'plantao': 'Plantão',
                     'outro': 'Outro'
                 };
                 return tipos[tipo] || tipo;
@@ -1678,6 +1782,152 @@
                     Utils.toast('Erro ao gerar PDF', 'error');
                 }
             },
+            generatePlantoesPDF: async (plantoesData) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const margin = 15;
+                    let yPos = margin;
+                    
+                    // Configurações
+                    const settings = Storage.getSettings();
+                    
+                    // Cabeçalho
+                    doc.setFontSize(20);
+                    doc.setTextColor(124, 58, 237); // Roxo para plantões
+                    doc.text('RELATÓRIO DE PLANTÕES', pageWidth/2, yPos, {align: 'center'});
+                    yPos += 10;
+                    
+                    doc.setFontSize(12);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`${settings.imobiliaria || 'Imobiliária'} | Corretor: ${settings.nome || '---'}`, pageWidth/2, yPos, {align: 'center'});
+                    yPos += 10;
+                    
+                    doc.text(`Período: ${plantoesData.periodo || 'Todos os plantões'}`, pageWidth/2, yPos, {align: 'center'});
+                    yPos += 15;
+                    
+                    // Linha divisória
+                    doc.setDrawColor(124, 58, 237);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, yPos, pageWidth - margin, yPos);
+                    yPos += 10;
+                    
+                    // Estatísticas gerais
+                    doc.setFontSize(14);
+                    doc.setTextColor(15, 23, 42);
+                    doc.text('ESTATÍSTICAS GERAIS', margin, yPos);
+                    yPos += 8;
+                    
+                    const stats = [
+                        `Total de Plantões: ${plantoesData.totalPlantoes}`,
+                        `Clientes Atendidos: ${plantoesData.totalClientesAtendidos}`,
+                        `Negócios Gerados: ${plantoesData.totalNegociosGerados}`,
+                        `Visitas Agendadas: ${plantoesData.totalVisitasAgendadas}`
+                    ];
+                    
+                    doc.setFontSize(11);
+                    stats.forEach(stat => {
+                        doc.text(`• ${stat}`, margin, yPos);
+                        yPos += 6;
+                    });
+                    
+                    yPos += 10;
+                    
+                    // Detalhes por plantão
+                    if(plantoesData.plantoes && plantoesData.plantoes.length > 0) {
+                        doc.setFontSize(14);
+                        doc.setTextColor(15, 23, 42);
+                        doc.text('DETALHES DOS PLANTÕES', margin, yPos);
+                        yPos += 8;
+                        
+                        for(let i = 0; i < plantoesData.plantoes.length; i++) {
+                            const plantao = plantoesData.plantoes[i];
+                            
+                            // Verificar se precisa de nova página
+                            if(yPos > pageHeight - 60) {
+                                doc.addPage();
+                                yPos = margin;
+                            }
+                            
+                            doc.setFontSize(12);
+                            doc.setTextColor(124, 58, 237);
+                            doc.text(`Plantão ${i+1} - ${Utils.formatDate(plantao.data)} ${plantao.horario}`, margin, yPos);
+                            yPos += 6;
+                            
+                            doc.setFontSize(10);
+                            doc.setTextColor(15, 23, 42);
+                            
+                            if(plantao.detalhes) {
+                                const detalhesLines = doc.splitTextToSize(`Detalhes: ${plantao.detalhes}`, pageWidth - 2*margin);
+                                doc.text(detalhesLines, margin, yPos);
+                                yPos += detalhesLines.length * 5;
+                            }
+                            
+                            if(plantao.clientesAtendidos) {
+                                doc.text('Clientes Atendidos:', margin, yPos);
+                                yPos += 5;
+                                
+                                const clientes = plantao.clientesAtendidos.split('\n');
+                                for(let cliente of clientes.slice(0, 3)) {
+                                    if(cliente.trim()) {
+                                        doc.text(`• ${cliente.substring(0, 60)}${cliente.length > 60 ? '...' : ''}`, margin + 5, yPos);
+                                        yPos += 5;
+                                    }
+                                }
+                                
+                                if(clientes.length > 3) {
+                                    doc.text(`... e mais ${clientes.length - 3} clientes`, margin + 5, yPos);
+                                    yPos += 5;
+                                }
+                            }
+                            
+                            if(plantao.negociosGerados) {
+                                doc.text(`Negócios: ${plantao.negociosGerados}`, margin, yPos);
+                                yPos += 5;
+                            }
+                            
+                            if(plantao.observacoes) {
+                                const obsLines = doc.splitTextToSize(`Obs: ${plantao.observacoes}`, pageWidth - 2*margin);
+                                doc.text(obsLines, margin, yPos);
+                                yPos += obsLines.length * 5;
+                            }
+                            
+                            yPos += 5;
+                            doc.setDrawColor(226, 232, 240);
+                            doc.setLineWidth(0.2);
+                            doc.line(margin, yPos, pageWidth - margin, yPos);
+                            yPos += 10;
+                        }
+                    }
+                    
+                    // Rodapé
+                    if(yPos > pageHeight - 30) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
+                    
+                    doc.setDrawColor(226, 232, 240);
+                    doc.setLineWidth(0.5);
+                    doc.line(margin, yPos, pageWidth - margin, yPos);
+                    yPos += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Relatório gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth/2, yPos, {align: 'center'});
+                    
+                    // Salvar PDF
+                    const fileName = `relatorio_plantoes_${new Date().toISOString().split('T')[0]}.pdf`;
+                    doc.save(fileName);
+                    
+                    Utils.toast('Relatório de plantões gerado!');
+                    
+                } catch(err) {
+                    console.error('Erro ao gerar relatório de plantões:', err);
+                    Utils.toast('Erro ao gerar relatório', 'error');
+                }
+            },
             openWhatsApp: (phoneNumber, message = '') => {
                 if (!phoneNumber) {
                     Utils.toast('Número de telefone não informado', 'error');
@@ -1754,6 +2004,7 @@
                 visitas: [] 
             },
             chartInstance: null,
+            plantoesChartInstance: null,
             currentCarouselIndex: 0,
             currentCarouselImages: [],
             fullscreenImages: [],
@@ -1870,11 +2121,17 @@
                 const imovel = UI.data.imoveis.find(i => i.id === v.imovelId) || { titulo: 'Imóvel não especificado' };
                 
                 const isUrgent = v.status === 'agendado' && v.data === Utils.getToday();
+                const isPlantao = v.tipo === 'plantao';
+                
+                let additionalInfo = '';
+                if(isPlantao && v.detalhesPlantoes) {
+                    additionalInfo = `<div class="plantoes-summary">${v.detalhesPlantoes.substring(0, 60)}${v.detalhesPlantoes.length > 60 ? '...' : ''}</div>`;
+                }
                 
                 return `
-                    <div class="schedule-card ${isUrgent ? 'schedule-urgent' : ''}" onclick="UI.showVisitaDetails('${v.id}')">
+                    <div class="schedule-card ${isPlantao ? 'plantoes' : ''} ${isUrgent ? 'schedule-urgent' : ''}" onclick="UI.showVisitaDetails('${v.id}')">
                         <div class="schedule-header">
-                            <div class="schedule-type">${Utils.getTipoVisitaText(v.tipo)}</div>
+                            <div class="schedule-type ${isPlantao ? 'schedule-plantoes' : ''}">${Utils.getTipoVisitaText(v.tipo)}</div>
                             <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
                                 ${Utils.getStatusVisitaText(v.status)}
                             </span>
@@ -1882,7 +2139,8 @@
                         <div class="schedule-time">
                             <i class="far fa-calendar"></i> ${Utils.formatDate(v.data)} <i class="far fa-clock"></i> ${v.horario}
                         </div>
-                        <div class="schedule-title">${cliente.nome}</div>
+                        <div class="schedule-title">${isPlantao ? 'PLANTÃO' : cliente.nome}</div>
+                        ${additionalInfo}
                         <div class="schedule-notes">
                             ${v.tipo === 'visita' ? `Visita: ${imovel.titulo.substring(0, 30)}...` : v.observacoes || ''}
                         </div>
@@ -2347,7 +2605,85 @@
                 const v = UI.data.visitas.find(x => x.id === id);
                 if(!v) return;
                 
-                App.agenda.edit(id);
+                // Se for plantão, mostrar detalhes específicos
+                if(v.tipo === 'plantao') {
+                    let detalhesHTML = `
+                        <div class="details-card">
+                            <div class="details-header">
+                                <div class="details-title">PLANTÃO - ${Utils.formatDate(v.data)} ${v.horario}</div>
+                                <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
+                                    ${Utils.getStatusVisitaText(v.status)}
+                                </span>
+                            </div>
+                            
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-clipboard-list"></i> DETALHES DO PLANTÃO</div>
+                                <div class="info-item">
+                                    <div class="info-label">Atividades</div>
+                                    <div class="info-value">${v.detalhesPlantoes || 'Não informado'}</div>
+                                </div>
+                            </div>
+                    `;
+                    
+                    if(v.clientesAtendidos) {
+                        const clientes = v.clientesAtendidos.split('\n').filter(c => c.trim());
+                        detalhesHTML += `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-users"></i> CLIENTES ATENDIDOS (${clientes.length})</div>
+                                <div class="plantoes-info">
+                                    ${clientes.map(cliente => `
+                                        <div class="client-item">
+                                            <div class="client-name">${cliente.split(' - ')[0] || cliente}</div>
+                                            ${cliente.includes(' - ') ? `<div class="client-situation">${cliente.split(' - ').slice(1).join(' - ')}</div>` : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    if(v.negociosGerados) {
+                        detalhesHTML += `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-handshake"></i> NEGÓCIOS GERADOS</div>
+                                <div class="info-item">
+                                    <div class="info-label">Resultados</div>
+                                    <div class="info-value">${v.negociosGerados}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    if(v.observacoesPlantoes) {
+                        detalhesHTML += `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-sticky-note"></i> OBSERVAÇÕES DO PLANTÃO</div>
+                                <div class="info-item">
+                                    <div class="info-label">Anotações</div>
+                                    <div class="info-value">${v.observacoesPlantoes}</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    detalhesHTML += `
+                            <div class="details-actions">
+                                <button class="btn-details btn-details-primary" onclick="App.agenda.edit('${v.id}')">
+                                    <i class="fas fa-edit"></i> Editar
+                                </button>
+                                <button class="btn-details btn-details-secondary" onclick="UI.closeModals()">
+                                    <i class="fas fa-times"></i> Fechar
+                                </button>
+                            </div>
+                        </div>
+                        <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
+                    `;
+                    
+                    document.getElementById('imovel-details-content').innerHTML = detalhesHTML;
+                    UI.openModal('imovel-details');
+                } else {
+                    App.agenda.edit(id);
+                }
             },
 
             renderAgenda: () => {
@@ -2429,8 +2765,11 @@
                 document.getElementById('rel-comissao').innerText = Utils.formatCurrency(comissaoTotal);
                 document.getElementById('rel-conversao').innerText = `${taxaConversao}%`;
                 
-                // Renderizar gráfico
+                // Renderizar gráfico principal
                 UI.renderChart();
+                
+                // Renderizar relatório de plantões
+                UI.renderPlantoesReport();
             },
 
             renderChart: () => {
@@ -2524,6 +2863,255 @@
                 });
             },
 
+            renderPlantoesReport: () => {
+                const plantoes = UI.data.visitas.filter(v => v.tipo === 'plantao');
+                
+                if(plantoes.length === 0) {
+                    document.getElementById('plantoes-report').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-calendar-check" style="color: #7c3aed;"></i>
+                            <p>Nenhum plantão registrado ainda.</p>
+                        </div>
+                    `;
+                    
+                    // Remover gráfico se não houver dados
+                    const ctx = document.getElementById('plantoesChart').getContext('2d');
+                    if (UI.plantoesChartInstance) {
+                        UI.plantoesChartInstance.destroy();
+                    }
+                    
+                    // Criar gráfico vazio
+                    UI.plantoesChartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Nenhum dado'],
+                            datasets: [{
+                                label: 'Plantões',
+                                data: [0],
+                                backgroundColor: '#7c3aed',
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false }
+                            }
+                        }
+                    });
+                    
+                    return;
+                }
+
+                // Agrupar plantões por mês
+                const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                const hoje = new Date();
+                const anoAtual = hoje.getFullYear();
+                
+                const plantoesPorMes = new Array(12).fill(0);
+                const clientesPorMes = new Array(12).fill(0);
+                
+                plantoes.forEach(p => {
+                    if(p.data) {
+                        const data = new Date(p.data);
+                        if(data.getFullYear() === anoAtual) {
+                            const mes = data.getMonth();
+                            plantoesPorMes[mes]++;
+                            
+                            // Contar clientes atendidos
+                            if(p.clientesAtendidos) {
+                                const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
+                                clientesPorMes[mes] += clientes.length;
+                            }
+                        }
+                    }
+                });
+                
+                // Renderizar gráfico de plantões
+                const ctx = document.getElementById('plantoesChart').getContext('2d');
+                if (UI.plantoesChartInstance) {
+                    UI.plantoesChartInstance.destroy();
+                }
+
+                UI.plantoesChartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [
+                            {
+                                label: 'Plantões',
+                                data: plantoesPorMes,
+                                backgroundColor: '#7c3aed',
+                                borderRadius: 4,
+                            },
+                            {
+                                label: 'Clientes Atendidos',
+                                data: clientesPorMes,
+                                backgroundColor: '#a78bfa',
+                                borderRadius: 4,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true,
+                                position: 'bottom',
+                                labels: { boxWidth: 12, font: { size: 10 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { borderDash: [2, 4], color: '#e2e8f0' },
+                                ticks: { font: { size: 10 } }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { font: { size: 10 } }
+                            }
+                        }
+                    }
+                });
+                
+                // Calcular estatísticas
+                const totalPlantoes = plantoes.length;
+                const plantoesRealizados = plantoes.filter(p => p.status === 'realizado').length;
+                const totalClientesAtendidos = plantoes.reduce((acc, p) => {
+                    if(p.clientesAtendidos) {
+                        const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
+                        return acc + clientes.length;
+                    }
+                    return acc;
+                }, 0);
+                
+                // Plantões mais recentes
+                const plantoesRecentes = plantoes
+                    .sort((a,b) => new Date(b.data) - new Date(a.data))
+                    .slice(0, 5);
+                
+                // Renderizar relatório
+                let html = `
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                                <i class="fas fa-calendar-alt"></i>
+                            </div>
+                            <div class="stat-value">${totalPlantoes}</div>
+                            <div class="stat-label">Total Plantões</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-value">${plantoesRealizados}</div>
+                            <div class="stat-label">Realizados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-value">${totalClientesAtendidos}</div>
+                            <div class="stat-label">Clientes Atendidos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="background: #ede9fe; color: #7c3aed;">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="stat-value">${plantoesRecentes.length}</div>
+                            <div class="stat-label">Últimos 5</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title" style="margin-top: 20px;">Plantões Recentes</div>
+                `;
+                
+                if(plantoesRecentes.length === 0) {
+                    html += `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhum plantão recente</p></div>`;
+                } else {
+                    plantoesRecentes.forEach(p => {
+                        const clientesCount = p.clientesAtendidos ? 
+                            p.clientesAtendidos.split('\n').filter(c => c.trim()).length : 0;
+                        
+                        html += `
+                            <div class="schedule-card plantoes" onclick="UI.showVisitaDetails('${p.id}')">
+                                <div class="schedule-header">
+                                    <div class="schedule-type schedule-plantoes">PLANTÃO</div>
+                                    <span class="badge ${p.status === 'realizado' ? 'badge-success' : p.status === 'cancelado' ? 'badge-danger' : 'badge-primary'}">
+                                        ${Utils.getStatusVisitaText(p.status)}
+                                    </span>
+                                </div>
+                                <div class="schedule-time">
+                                    <i class="far fa-calendar"></i> ${Utils.formatDate(p.data)} <i class="far fa-clock"></i> ${p.horario}
+                                </div>
+                                <div class="schedule-title">${p.detalhesPlantoes ? p.detalhesPlantoes.substring(0, 40) + (p.detalhesPlantoes.length > 40 ? '...' : '') : 'Plantão'}</div>
+                                <div class="plantoes-info">
+                                    <div class="plantoes-stats">
+                                        <div class="plantoes-stat">
+                                            <div class="plantoes-stat-value">${clientesCount}</div>
+                                            <div class="plantoes-stat-label">Clientes</div>
+                                        </div>
+                                        <div class="plantoes-stat">
+                                            <div class="plantoes-stat-value">${p.negociosGerados ? p.negociosGerados.split(',').length : 0}</div>
+                                            <div class="plantoes-stat-label">Negócios</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                document.getElementById('plantoes-report').innerHTML = html;
+            },
+
+            generatePlantoesReport: () => {
+                const plantoes = UI.data.visitas.filter(v => v.tipo === 'plantao');
+                
+                if(plantoes.length === 0) {
+                    Utils.toast('Nenhum plantão para gerar relatório', 'error');
+                    return;
+                }
+                
+                // Preparar dados para o PDF
+                const plantoesData = {
+                    totalPlantoes: plantoes.length,
+                    totalClientesAtendidos: plantoes.reduce((acc, p) => {
+                        if(p.clientesAtendidos) {
+                            const clientes = p.clientesAtendidos.split('\n').filter(c => c.trim());
+                            return acc + clientes.length;
+                        }
+                        return acc;
+                    }, 0),
+                    totalNegociosGerados: plantoes.reduce((acc, p) => {
+                        if(p.negociosGerados) {
+                            return acc + p.negociosGerados.split(',').length;
+                        }
+                        return acc;
+                    }, 0),
+                    totalVisitasAgendadas: plantoes.reduce((acc, p) => {
+                        if(p.negociosGerados && p.negociosGerados.toLowerCase().includes('visita')) {
+                            return acc + 1;
+                        }
+                        return acc;
+                    }, 0),
+                    periodo: `${Utils.formatDate(plantoes[plantoes.length-1].data)} a ${Utils.formatDate(plantoes[0].data)}`,
+                    plantoes: plantoes.sort((a,b) => new Date(b.data) - new Date(a.data)).map(p => ({
+                        data: p.data,
+                        horario: p.horario,
+                        detalhes: p.detalhesPlantoes,
+                        clientesAtendidos: p.clientesAtendidos,
+                        negociosGerados: p.negociosGerados,
+                        observacoes: p.observacoesPlantoes || p.observacoes,
+                        status: p.status
+                    }))
+                };
+                
+                Utils.generatePlantoesPDF(plantoesData);
+            },
+
             // --- MODALS ---
             openModal: (type) => {
                 document.getElementById(`overlay-${type}`).classList.add('active');
@@ -2582,13 +3170,41 @@
                 
                 document.getElementById('form-visita').reset();
                 document.getElementById('v-id').value = '';
-                document.getElementById('title-visita').innerText = 'Agendar Visita';
+                document.getElementById('title-visita').innerText = 'Agendar Visita/Plantão';
                 
                 // Set default date and time
                 document.getElementById('v-data').value = Utils.getToday();
                 document.getElementById('v-horario').value = Utils.getTodayTime();
                 
+                // Reset campos de plantão
+                document.getElementById('v-detalhes-plantoes').value = '';
+                document.getElementById('v-clientes-atendidos').value = '';
+                document.getElementById('v-negocios-gerados').value = '';
+                document.getElementById('v-observacoes-plantoes').value = '';
+                
+                // Mostrar campos padrão
+                UI.toggleVisitaFields();
+                
                 UI.openModal('visita');
+            },
+
+            toggleVisitaFields: () => {
+                const tipo = document.getElementById('v-tipo').value;
+                const isPlantao = tipo === 'plantao';
+                
+                // Mostrar/ocultar campos de cliente e imóvel
+                document.querySelectorAll('.cliente-group, .imovel-group, .local-group').forEach(el => {
+                    el.style.display = isPlantao ? 'none' : 'block';
+                });
+                
+                // Mostrar/ocultar campos específicos de plantão
+                document.querySelectorAll('.plantoes-group').forEach(el => {
+                    el.style.display = isPlantao ? 'block' : 'none';
+                });
+                
+                // Ajustar required
+                document.getElementById('v-cliente').required = !isPlantao;
+                document.getElementById('v-imovel').required = false;
             },
 
             openNewVisitaFromImovel: (imovelId) => {
@@ -2596,6 +3212,7 @@
                 setTimeout(() => {
                     document.getElementById('v-imovel').value = imovelId;
                     document.getElementById('v-tipo').value = 'visita';
+                    UI.toggleVisitaFields();
                 }, 100);
             },
 
@@ -2936,7 +3553,7 @@
                     const visita = {
                         id,
                         tipo: document.getElementById('v-tipo').value,
-                        clienteId: document.getElementById('v-cliente').value,
+                        clienteId: document.getElementById('v-tipo').value === 'plantao' ? null : document.getElementById('v-cliente').value,
                         imovelId: document.getElementById('v-imovel').value || null,
                         data: document.getElementById('v-data').value,
                         horario: document.getElementById('v-horario').value,
@@ -2946,15 +3563,24 @@
                         dataCriacao: new Date().toISOString()
                     };
 
+                    // Campos específicos para plantão
+                    if(visita.tipo === 'plantao') {
+                        visita.detalhesPlantoes = document.getElementById('v-detalhes-plantoes').value;
+                        visita.clientesAtendidos = document.getElementById('v-clientes-atendidos').value;
+                        visita.negociosGerados = document.getElementById('v-negocios-gerados').value;
+                        visita.observacoesPlantoes = document.getElementById('v-observacoes-plantoes').value;
+                    }
+
                     const idx = UI.data.visitas.findIndex(v => v.id === id);
                     if(idx >= 0) UI.data.visitas[idx] = visita;
                     else UI.data.visitas.push(visita);
 
                     Storage.set('visitas', UI.data.visitas);
-                    Utils.toast('Visita agendada!');
+                    Utils.toast(visita.tipo === 'plantao' ? 'Plantão agendado!' : 'Visita agendada!');
                     UI.closeModals();
                     UI.renderDashboard();
                     UI.renderAgenda();
+                    UI.renderRelatorios();
                 },
                 edit: (id) => {
                     const v = UI.data.visitas.find(x => x.id === id);
@@ -2976,7 +3602,7 @@
                     
                     document.getElementById('v-id').value = v.id;
                     document.getElementById('v-tipo').value = v.tipo;
-                    document.getElementById('v-cliente').value = v.clienteId;
+                    document.getElementById('v-cliente').value = v.clienteId || '';
                     document.getElementById('v-imovel').value = v.imovelId || '';
                     document.getElementById('v-data').value = v.data;
                     document.getElementById('v-horario').value = v.horario;
@@ -2984,7 +3610,19 @@
                     document.getElementById('v-observacoes').value = v.observacoes || '';
                     document.getElementById('v-status').value = v.status;
                     
-                    document.getElementById('title-visita').innerText = 'Editar Visita';
+                    // Campos específicos para plantão
+                    if(v.tipo === 'plantao') {
+                        document.getElementById('v-detalhes-plantoes').value = v.detalhesPlantoes || '';
+                        document.getElementById('v-clientes-atendidos').value = v.clientesAtendidos || '';
+                        document.getElementById('v-negocios-gerados').value = v.negociosGerados || '';
+                        document.getElementById('v-observacoes-plantoes').value = v.observacoesPlantoes || '';
+                    }
+                    
+                    document.getElementById('title-visita').innerText = v.tipo === 'plantao' ? 'Editar Plantão' : 'Editar Visita';
+                    
+                    // Configurar campos visíveis
+                    UI.toggleVisitaFields();
+                    
                     UI.openModal('visita');
                 },
                 delete: (id) => {
@@ -2993,6 +3631,7 @@
                         Storage.set('visitas', UI.data.visitas);
                         UI.renderDashboard();
                         UI.renderAgenda();
+                        UI.renderRelatorios();
                         Utils.toast('Agendamento excluído!', 'success');
                     }
                 }
@@ -3095,6 +3734,11 @@
         // Listener para mostrar/ocultar campo de aluguel
         document.getElementById('i-transacao').addEventListener('change', function() {
             App.imovel.toggleAluguelFields();
+        });
+
+        // Listener para mostrar/ocultar campos de plantão
+        document.getElementById('v-tipo').addEventListener('change', function() {
+            UI.toggleVisitaFields();
         });
 
         // Listener para fechar fullscreen com clique no overlay
