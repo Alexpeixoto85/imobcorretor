@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* ESTILOS COMPLETOS (manter todos os estilos originais) */
         :root {
             /* Cores Imobiliárias */
             --primary: #2563eb;
@@ -5021,30 +5022,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('i-titulo').value = i.titulo;
                     document.getElementById('i-tipo').value = i.tipo;
                     document.getElementById('i-transacao').value = i.transacao;
-                    
-                    if(i.precoVenda) {
-                        const valInput = document.getElementById('i-preco-venda');
-                        valInput.value = (i.precoVenda * 100).toFixed(0);
-                        Utils.maskMoney(valInput);
-                    }
-                    
-                    if(i.precoAluguel) {
-                        const valInput = document.getElementById('i-preco-aluguel');
-                        valInput.value = (i.precoAluguel * 100).toFixed(0);
-                        Utils.maskMoney(valInput);
-                    }
-                    
-                    // Novos campos
+                    document.getElementById('i-preco-venda').value = i.precoVenda ? Utils.formatCurrency(i.precoVenda) : '';
+                    document.getElementById('i-preco-aluguel').value = i.precoAluguel ? Utils.formatCurrency(i.precoAluguel) : '';
                     document.getElementById('i-data-entrega').value = i.dataEntrega || '';
                     document.getElementById('i-construtora').value = i.construtora || '';
                     document.getElementById('i-forma-pagamento').value = i.formaPagamento || '';
-                    
-                    if(i.condominio) {
-                        const condInput = document.getElementById('i-condominio');
-                        condInput.value = (i.condominio * 100).toFixed(0);
-                        Utils.maskMoney(condInput);
-                    }
-                    
+                    document.getElementById('i-condominio').value = i.condominio ? Utils.formatCurrency(i.condominio) : '';
                     document.getElementById('i-gas-encanado').value = i.gasEncanado || 'nao';
                     document.getElementById('i-endereco').value = i.endereco;
                     document.getElementById('i-area').value = i.area || '';
@@ -5054,155 +5037,124 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('i-status').value = i.status;
                     document.getElementById('i-descricao').value = i.descricao || '';
                     document.getElementById('i-observacoes').value = i.observacoes || '';
-                    
-                    // Image gallery handling
+
+                    // Atualizar galeria de imagens
                     const gallery = document.getElementById('image-gallery');
+                    gallery.innerHTML = '';
+                    
                     if(i.imagens && i.imagens.length > 0) {
-                        gallery.innerHTML = '';
                         i.imagens.forEach((img, index) => {
-                            const galleryItem = document.createElement('div');
-                            galleryItem.className = 'image-gallery-item';
-                            galleryItem.innerHTML = `
-                                <img src="${img}" class="image-gallery-img" onclick="UI.openFullscreen('${i.id}', ${index})">
-                                <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${index})">
+                            const item = document.createElement('div');
+                            item.className = 'image-gallery-item';
+                            item.innerHTML = `
+                                <img src="${img}" class="image-gallery-img">
+                                <button class="remove-image-btn" onclick="App.imovel.removeImage(${index})">
                                     <i class="fas fa-times"></i>
                                 </button>
                             `;
-                            gallery.appendChild(galleryItem);
+                            gallery.appendChild(item);
                         });
-                        
-                        // Adicionar botão para adicionar mais fotos
-                        if(i.imagens.length < 15) {
-                            const addButton = document.createElement('div');
-                            addButton.className = 'image-gallery-item add-image-btn';
-                            addButton.onclick = () => document.getElementById('i-imagem-input').click();
-                            addButton.innerHTML = `
-                                <i class="fas fa-plus"></i>
-                                <span>Adicionar Foto</span>
-                            `;
-                            gallery.appendChild(addButton);
-                        }
-                        
-                        document.getElementById('image-counter').innerText = i.imagens.length;
-                        document.getElementById('i-imagens-data').value = JSON.stringify(i.imagens);
-                    } else {
-                        gallery.innerHTML = `
-                            <div class="image-gallery-item add-image-btn" onclick="document.getElementById('i-imagem-input').click()">
-                                <i class="fas fa-plus"></i>
-                                <span>Adicionar Foto</span>
-                            </div>
-                        `;
-                        document.getElementById('image-counter').innerText = '0';
-                        document.getElementById('i-imagens-data').value = '';
                     }
+                    
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'image-gallery-item add-image-btn';
+                    addBtn.onclick = () => document.getElementById('i-imagem-input').click();
+                    addBtn.innerHTML = `
+                        <i class="fas fa-plus"></i>
+                        <span>Adicionar Foto</span>
+                    `;
+                    gallery.appendChild(addBtn);
+                    
+                    document.getElementById('image-counter').innerText = i.imagens ? i.imagens.length : 0;
+                    document.getElementById('i-imagens-data').value = i.imagens ? JSON.stringify(i.imagens) : '';
                     
                     // Toggle aluguel fields
                     App.imovel.toggleAluguelFields();
                     
-                    document.getElementById('title-imovel').innerText = `Editar Imóvel`;
+                    document.getElementById('title-imovel').innerText = 'Editar Imóvel';
                     UI.openModal('imovel');
                 },
                 handleMultipleImages: async (input) => {
-                    if (!input.files || input.files.length === 0) return;
-                    
-                    const files = Array.from(input.files);
+                    const files = Array.from(input.files).slice(0, 15); // Máximo 15 imagens
                     const currentImages = JSON.parse(document.getElementById('i-imagens-data').value || '[]');
-                    const remainingSlots = 15 - currentImages.length;
                     
-                    if(files.length > remainingSlots) {
-                        Utils.toast(`Máximo de 15 fotos. Você pode adicionar mais ${remainingSlots} fotos.`, 'error');
+                    if (currentImages.length + files.length > 15) {
+                        Utils.toast('Máximo de 15 imagens permitido', 'error');
                         return;
                     }
                     
-                    try {
-                        const gallery = document.getElementById('image-gallery');
-                        const newImages = [...currentImages];
-                        
-                        // Remover botão "Adicionar Foto" temporariamente
-                        const addButton = gallery.querySelector('.add-image-btn');
-                        if(addButton) addButton.remove();
-                        
-                        for(const file of files.slice(0, remainingSlots)) {
+                    for (const file of files) {
+                        try {
                             const base64 = await Utils.readImage(file);
-                            const compressedBase64 = await Utils.compressImage(base64, 0.7, 1200);
-                            newImages.push(compressedBase64);
-                            
-                            const galleryItem = document.createElement('div');
-                            galleryItem.className = 'image-gallery-item';
-                            galleryItem.innerHTML = `
-                                <img src="${compressedBase64}" class="image-gallery-img" onclick="UI.openFullscreen('${document.getElementById('i-id').value || 'new'}', ${newImages.length - 1})">
-                                <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${newImages.length - 1})">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            `;
-                            gallery.appendChild(galleryItem);
+                            const compressed = await Utils.compressImage(base64);
+                            currentImages.push(compressed);
+                        } catch (error) {
+                            console.error('Erro ao processar imagem:', error);
                         }
-                        
-                        // Adicionar botão "Adicionar Foto" novamente se ainda houver espaço
-                        if(newImages.length < 15) {
-                            const addButton = document.createElement('div');
-                            addButton.className = 'image-gallery-item add-image-btn';
-                            addButton.onclick = () => document.getElementById('i-imagem-input').click();
-                            addButton.innerHTML = `
-                                <i class="fas fa-plus"></i>
-                                <span>Adicionar Foto</span>
-                            `;
-                            gallery.appendChild(addButton);
-                        }
-                        
-                        // Atualizar dados
-                        document.getElementById('i-imagens-data').value = JSON.stringify(newImages);
-                        document.getElementById('image-counter').innerText = newImages.length;
-                        
-                        // Limpar input file
-                        input.value = '';
-                        
-                        Utils.toast(`${files.length} foto(s) adicionada(s)!`);
-                    } catch (e) {
-                        console.error('Erro ao processar imagens:', e);
-                        Utils.toast('Erro ao carregar imagens', 'error');
                     }
+                    
+                    // Atualizar galeria
+                    const gallery = document.getElementById('image-gallery');
+                    gallery.innerHTML = '';
+                    
+                    currentImages.forEach((img, index) => {
+                        const item = document.createElement('div');
+                        item.className = 'image-gallery-item';
+                        item.innerHTML = `
+                            <img src="${img}" class="image-gallery-img">
+                            <button class="remove-image-btn" onclick="App.imovel.removeImage(${index})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        gallery.appendChild(item);
+                    });
+                    
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'image-gallery-item add-image-btn';
+                    addBtn.onclick = () => document.getElementById('i-imagem-input').click();
+                    addBtn.innerHTML = `
+                        <i class="fas fa-plus"></i>
+                        <span>Adicionar Foto</span>
+                    `;
+                    gallery.appendChild(addBtn);
+                    
+                    document.getElementById('image-counter').innerText = currentImages.length;
+                    document.getElementById('i-imagens-data').value = JSON.stringify(currentImages);
+                    
+                    // Reset input
+                    input.value = '';
                 },
-                removeGalleryImage: (index) => {
+                removeImage: (index) => {
                     const currentImages = JSON.parse(document.getElementById('i-imagens-data').value || '[]');
-                    if(index >= 0 && index < currentImages.length) {
-                        currentImages.splice(index, 1);
-                        
-                        // Atualizar galeria
-                        const gallery = document.getElementById('image-gallery');
-                        gallery.innerHTML = '';
-                        
-                        // Adicionar imagens restantes
-                        currentImages.forEach((img, idx) => {
-                            const galleryItem = document.createElement('div');
-                            galleryItem.className = 'image-gallery-item';
-                            galleryItem.innerHTML = `
-                                <img src="${img}" class="image-gallery-img" onclick="UI.openFullscreen('${document.getElementById('i-id').value || 'new'}', ${idx})">
-                                <button type="button" class="remove-image-btn" onclick="App.imovel.removeGalleryImage(${idx})">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            `;
-                            gallery.appendChild(galleryItem);
-                        });
-                        
-                        // Sempre adicionar botão "Adicionar Foto" se houver menos de 15 imagens
-                        if(currentImages.length < 15) {
-                            const addButton = document.createElement('div');
-                            addButton.className = 'image-gallery-item add-image-btn';
-                            addButton.onclick = () => document.getElementById('i-imagem-input').click();
-                            addButton.innerHTML = `
-                                <i class="fas fa-plus"></i>
-                                <span>Adicionar Foto</span>
-                            `;
-                            gallery.appendChild(addButton);
-                        }
-                        
-                        // Atualizar dados
-                        document.getElementById('i-imagens-data').value = JSON.stringify(currentImages);
-                        document.getElementById('image-counter').innerText = currentImages.length;
-                        
-                        Utils.toast('Foto removida!');
-                    }
+                    currentImages.splice(index, 1);
+                    
+                    // Atualizar galeria
+                    const gallery = document.getElementById('image-gallery');
+                    gallery.innerHTML = '';
+                    
+                    currentImages.forEach((img, idx) => {
+                        const item = document.createElement('div');
+                        item.className = 'image-gallery-item';
+                        item.innerHTML = `
+                            <img src="${img}" class="image-gallery-img">
+                            <button class="remove-image-btn" onclick="App.imovel.removeImage(${idx})">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        `;
+                        gallery.appendChild(item);
+                    });
+                    
+                    const addBtn = document.createElement('div');
+                    addBtn.className = 'image-gallery-item add-image-btn';
+                    addBtn.onclick = () => document.getElementById('i-imagem-input').click();
+                    addBtn.innerHTML = `
+                        <i class="fas fa-plus"></i>
+                        <span>Adicionar Foto</span>
+                    `;
+                    gallery.appendChild(addBtn);
+                    
+                    document.getElementById('image-counter').innerText = currentImages.length;
+                    document.getElementById('i-imagens-data').value = JSON.stringify(currentImages);
                 },
                 toggleAluguelFields: () => {
                     const transacao = document.getElementById('i-transacao').value;
@@ -5215,16 +5167,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         aluguelGroup.style.display = 'none';
                         document.getElementById('i-preco-aluguel').required = false;
                     }
-                },
-                delete: (id) => {
-                    if(confirm('Excluir este imóvel?')) {
-                        UI.data.imoveis = UI.data.imoveis.filter(i => i.id !== id);
-                        Storage.set('imoveis', UI.data.imoveis);
-                        UI.renderDashboard();
-                        UI.renderImoveis();
-                        UI.renderRelatorios();
-                        Utils.toast('Imóvel excluído!', 'success');
-                    }
                 }
             },
 
@@ -5232,85 +5174,49 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 save: (e) => {
                     e.preventDefault();
                     const id = document.getElementById('v-id').value || Utils.id();
-                    const tipo = document.getElementById('v-tipo').value;
                     
                     const visita = {
                         id,
-                        tipo: tipo,
-                        clienteId: tipo === 'visita' || tipo === 'documentacao' ? document.getElementById('v-cliente').value : null,
-                        imovelId: tipo === 'visita' ? document.getElementById('v-imovel').value : null,
+                        tipo: document.getElementById('v-tipo').value,
+                        clienteId: document.getElementById('v-cliente').value || null,
+                        imovelId: document.getElementById('v-imovel').value || null,
                         data: document.getElementById('v-data').value,
                         horario: document.getElementById('v-horario').value,
-                        observacoes: document.getElementById('v-observacoes').value,
                         status: document.getElementById('v-status').value,
+                        observacoes: document.getElementById('v-observacoes').value,
+                        
+                        // Campos específicos por tipo
+                        localVisita: document.getElementById('v-local-visita')?.value || '',
+                        construtorNome: document.getElementById('v-construtor-nome')?.value || '',
+                        construtorEmpreendimento: document.getElementById('v-construtor-empreendimento')?.value || '',
+                        construtorAssuntos: document.getElementById('v-construtor-assuntos')?.value || '',
+                        equipeTipo: document.getElementById('v-equipe-tipo')?.value || '',
+                        equipeParticipantes: document.getElementById('v-equipe-participantes')?.value || '',
+                        equipeAssuntos: document.getElementById('v-equipe-assuntos')?.value || '',
+                        plantaoLocal: document.getElementById('v-plantao-local')?.value || '',
+                        detalhesPlantoes: document.getElementById('v-detalhes-plantoes')?.value || '',
+                        clientesAtendidos: document.getElementById('v-clientes-atendidos')?.value || '',
+                        negociosGerados: document.getElementById('v-negocios-gerados')?.value || '',
+                        genericoTitulo: document.getElementById('v-generico-titulo')?.value || '',
+                        genericoLocal: document.getElementById('v-generico-local')?.value || '',
+                        genericoDescricao: document.getElementById('v-generico-descricao')?.value || '',
+                        outroDescricao: document.getElementById('v-outro-descricao')?.value || '',
                         dataCriacao: new Date().toISOString()
                     };
-
-                    // Campos específicos por tipo
-                    switch(tipo) {
-                        case 'visita':
-                            visita.localVisita = document.getElementById('v-local-visita').value;
-                            break;
-                            
-                        case 'reuniao-construtor':
-                            visita.construtorNome = document.getElementById('v-construtor-nome').value;
-                            visita.construtorEmpreendimento = document.getElementById('v-construtor-empreendimento').value;
-                            visita.construtorAssuntos = document.getElementById('v-construtor-assuntos').value;
-                            break;
-                            
-                        case 'reuniao-equipe':
-                            visita.equipeTipo = document.getElementById('v-equipe-tipo').value;
-                            visita.equipeParticipantes = document.getElementById('v-equipe-participantes').value;
-                            visita.equipeAssuntos = document.getElementById('v-equipe-assuntos').value;
-                            break;
-                            
-                        case 'plantao':
-                            visita.plantaoLocal = document.getElementById('v-plantao-local').value;
-                            visita.detalhesPlantoes = document.getElementById('v-detalhes-plantoes').value;
-                            visita.clientesAtendidos = document.getElementById('v-clientes-atendidos').value;
-                            visita.negociosGerados = document.getElementById('v-negocios-gerados').value;
-                            break;
-                            
-                        case 'generico':
-                            visita.genericoTitulo = document.getElementById('v-generico-titulo').value;
-                            visita.genericoLocal = document.getElementById('v-generico-local').value;
-                            visita.genericoDescricao = document.getElementById('v-generico-descricao').value;
-                            break;
-                            
-                        case 'outro':
-                            visita.outroDescricao = document.getElementById('v-outro-descricao').value;
-                            visita.outroDetalhes = document.getElementById('v-outro-detalhes').value;
-                            break;
-                    }
 
                     const idx = UI.data.visitas.findIndex(v => v.id === id);
                     if(idx >= 0) UI.data.visitas[idx] = visita;
                     else UI.data.visitas.push(visita);
 
                     Storage.set('visitas', UI.data.visitas);
-                    Utils.toast(`${Utils.getTipoVisitaText(tipo)} salvo!`);
+                    Utils.toast('Agendamento salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
-                    UI.renderAgenda();
-                    UI.renderRelatorios();
+                    UI.renderAgenda(UI.currentAgendaFilter);
                 },
                 edit: (id) => {
                     const v = UI.data.visitas.find(x => x.id === id);
                     if(!v) return;
-                    
-                    // Popular selects
-                    const clienteSelect = document.getElementById('v-cliente');
-                    const imovelSelect = document.getElementById('v-imovel');
-                    
-                    clienteSelect.innerHTML = '<option value="">Selecione...</option>';
-                    UI.data.clientes.forEach(c => {
-                        clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
-                    });
-                    
-                    imovelSelect.innerHTML = '<option value="">Selecione...</option>';
-                    UI.data.imoveis.forEach(i => {
-                        imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 30)}...</option>`;
-                    });
                     
                     document.getElementById('v-id').value = v.id;
                     document.getElementById('v-tipo').value = v.tipo;
@@ -5318,79 +5224,64 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('v-imovel').value = v.imovelId || '';
                     document.getElementById('v-data').value = v.data;
                     document.getElementById('v-horario').value = v.horario;
-                    document.getElementById('v-observacoes').value = v.observacoes || '';
                     document.getElementById('v-status').value = v.status;
+                    document.getElementById('v-observacoes').value = v.observacoes || '';
                     
-                    // Campos específicos por tipo
-                    switch(v.tipo) {
-                        case 'visita':
-                            document.getElementById('v-local-visita').value = v.localVisita || '';
-                            break;
-                            
-                        case 'reuniao-construtor':
-                            document.getElementById('v-construtor-nome').value = v.construtorNome || '';
-                            document.getElementById('v-construtor-empreendimento').value = v.construtorEmpreendimento || '';
-                            document.getElementById('v-construtor-assuntos').value = v.construtorAssuntos || '';
-                            break;
-                            
-                        case 'reuniao-equipe':
-                            document.getElementById('v-equipe-tipo').value = v.equipeTipo || '';
-                            document.getElementById('v-equipe-participantes').value = v.equipeParticipantes || '';
-                            document.getElementById('v-equipe-assuntos').value = v.equipeAssuntos || '';
-                            break;
-                            
-                        case 'plantao':
-                            document.getElementById('v-plantao-local').value = v.plantaoLocal || '';
-                            document.getElementById('v-detalhes-plantoes').value = v.detalhesPlantoes || '';
-                            document.getElementById('v-clientes-atendidos').value = v.clientesAtendidos || '';
-                            document.getElementById('v-negocios-gerados').value = v.negociosGerados || '';
-                            break;
-                            
-                        case 'generico':
-                            document.getElementById('v-generico-titulo').value = v.genericoTitulo || '';
-                            document.getElementById('v-generico-local').value = v.genericoLocal || '';
-                            document.getElementById('v-generico-descricao').value = v.genericoDescricao || '';
-                            break;
-                            
-                        case 'outro':
-                            document.getElementById('v-outro-descricao').value = v.outroDescricao || '';
-                            document.getElementById('v-outro-detalhes').value = v.outroDetalhes || '';
-                            break;
-                    }
+                    // Preencher campos específicos
+                    if(document.getElementById('v-local-visita')) document.getElementById('v-local-visita').value = v.localVisita || '';
+                    if(document.getElementById('v-construtor-nome')) document.getElementById('v-construtor-nome').value = v.construtorNome || '';
+                    if(document.getElementById('v-construtor-empreendimento')) document.getElementById('v-construtor-empreendimento').value = v.construtorEmpreendimento || '';
+                    if(document.getElementById('v-construtor-assuntos')) document.getElementById('v-construtor-assuntos').value = v.construtorAssuntos || '';
+                    if(document.getElementById('v-equipe-tipo')) document.getElementById('v-equipe-tipo').value = v.equipeTipo || '';
+                    if(document.getElementById('v-equipe-participantes')) document.getElementById('v-equipe-participantes').value = v.equipeParticipantes || '';
+                    if(document.getElementById('v-equipe-assuntos')) document.getElementById('v-equipe-assuntos').value = v.equipeAssuntos || '';
+                    if(document.getElementById('v-plantao-local')) document.getElementById('v-plantao-local').value = v.plantaoLocal || '';
+                    if(document.getElementById('v-detalhes-plantoes')) document.getElementById('v-detalhes-plantoes').value = v.detalhesPlantoes || '';
+                    if(document.getElementById('v-clientes-atendidos')) document.getElementById('v-clientes-atendidos').value = v.clientesAtendidos || '';
+                    if(document.getElementById('v-negocios-gerados')) document.getElementById('v-negocios-gerados').value = v.negociosGerados || '';
+                    if(document.getElementById('v-generico-titulo')) document.getElementById('v-generico-titulo').value = v.genericoTitulo || '';
+                    if(document.getElementById('v-generico-local')) document.getElementById('v-generico-local').value = v.genericoLocal || '';
+                    if(document.getElementById('v-generico-descricao')) document.getElementById('v-generico-descricao').value = v.genericoDescricao || '';
+                    if(document.getElementById('v-outro-descricao')) document.getElementById('v-outro-descricao').value = v.outroDescricao || '';
                     
-                    document.getElementById('title-visita').innerText = `Editar ${Utils.getTipoVisitaText(v.tipo)}`;
+                    // Popular clientes e imóveis
+                    const clienteSelect = document.getElementById('v-cliente');
+                    clienteSelect.innerHTML = '<option value="">Selecione...</option>';
+                    UI.data.clientes.forEach(c => {
+                        clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+                    });
                     
-                    // Configurar campos visíveis
+                    const imovelSelect = document.getElementById('v-imovel');
+                    imovelSelect.innerHTML = '<option value="">Selecione...</option>';
+                    UI.data.imoveis.filter(i => i.status === 'disponivel').forEach(i => {
+                        imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 30)}...</option>`;
+                    });
+                    
+                    // Atualizar campos dependentes do tipo
                     UI.toggleVisitaFields();
                     
+                    document.getElementById('title-visita').innerText = 'Editar Agendamento';
                     UI.openModal('visita');
-                },
-                delete: (id) => {
-                    if(confirm('Excluir este agendamento?')) {
-                        UI.data.visitas = UI.data.visitas.filter(v => v.id !== id);
-                        Storage.set('visitas', UI.data.visitas);
-                        UI.renderDashboard();
-                        UI.renderAgenda();
-                        UI.renderRelatorios();
-                        Utils.toast('Agendamento excluído!', 'success');
-                    }
                 }
             },
 
             settings: {
                 save: (e) => {
                     e.preventDefault();
-                    const s = Storage.getSettings();
-                    s.nome = document.getElementById('s-nome').value;
-                    s.creci = document.getElementById('s-creci').value;
-                    s.telefone = document.getElementById('s-telefone').value;
-                    s.email = document.getElementById('s-email').value;
-                    s.imobiliaria = document.getElementById('s-imobiliaria').value;
-                    s.comissao = parseFloat(document.getElementById('s-comissao').value) || 5;
                     
-                    Storage.saveSettings(s);
-                    Utils.toast('Configurações salvas');
+                    const settings = {
+                        nome: document.getElementById('s-nome').value,
+                        creci: document.getElementById('s-creci').value,
+                        telefone: document.getElementById('s-telefone').value,
+                        email: document.getElementById('s-email').value,
+                        imobiliaria: document.getElementById('s-imobiliaria').value,
+                        comissao: parseFloat(document.getElementById('s-comissao').value) || 5
+                    };
+                    
+                    Storage.saveSettings(settings);
+                    Utils.toast('Configurações salvas!');
                     UI.closeModals();
+                    UI.renderDashboard();
                 }
             },
 
@@ -5400,39 +5291,29 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if(!i) return;
                     
                     const settings = Storage.getSettings();
-                    let msg = `🏠 *${i.titulo}*\n\n`;
-                    msg += `📍 ${i.endereco}\n\n`;
                     
-                    if(i.precoVenda) {
-                        msg += `💰 *Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-                    }
-                    if(i.precoAluguel) {
-                        msg += `🏠 *Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-                    }
+                    let message = `🏠 *${i.titulo}*\n\n`;
+                    message += `*Endereço:* ${i.endereco}\n`;
+                    message += `*Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+                    message += `*Área:* ${i.area || 0}m²\n`;
+                    message += `*Quartos:* ${i.quartos || 0}\n`;
+                    message += `*Banheiros:* ${i.banheiros || 0}\n`;
+                    message += `*Vagas:* ${i.vagas || 0}\n\n`;
                     
-                    msg += `\n📐 ${i.area || '---'}m² | 🛏️ ${i.quartos || 0} quartos | 🚿 ${i.banheiros || 0} banheiros | 🚗 ${i.vagas || 0} vagas\n\n`;
+                    if(i.precoVenda) message += `*Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+                    if(i.precoAluguel) message += `*Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
                     
-                    // Adicionar informações adicionais
-                    if(i.dataEntrega) {
-                        msg += `📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
-                    }
-                    if(i.construtora) {
-                        msg += `🏗️ *Construtora:* ${i.construtora}\n`;
-                    }
-                    if(i.condominio) {
-                        msg += `🏢 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n`;
-                    }
-                    if(i.gasEncanado === 'sim') {
-                        msg += `🔥 *Gás Encanado:* Sim\n`;
-                    }
+                    message += `\n*Descrição:* ${i.descricao || 'Sem descrição'}\n\n`;
+                    message += `*Corretor:* ${settings.nome || ''}\n`;
+                    message += `*Telefone:* ${settings.telefone || ''}\n`;
+                    message += `*Imobiliária:* ${settings.imobiliaria || ''}\n`;
+                    message += `*CRECI:* ${settings.creci || ''}\n\n`;
+                    message += `_Para mais informações, entre em contato!_`;
                     
-                    msg += `\n📞 Entre em contato: ${settings.telefone}\n`;
-                    msg += `👨‍💼 ${settings.nome} | CRECI ${settings.creci}\n`;
-                    msg += `🏢 ${settings.imobiliaria}\n\n`;
-                    msg += `⚠️ *Os valores informados podem sofrer alteração sem aviso prévio.*`;
+                    // Abrir WhatsApp com a mensagem
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
                     
-                    const encodedMsg = encodeURIComponent(msg);
-                    window.open(`https://wa.me/?text=${encodedMsg}`, '_blank');
+                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
                 }
             },
 
@@ -5440,6 +5321,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 save: (e) => {
                     e.preventDefault();
                     const id = document.getElementById('l-id').value || Utils.id();
+                    
                     const link = {
                         id,
                         titulo: document.getElementById('l-titulo').value,
@@ -5448,151 +5330,143 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         descricao: document.getElementById('l-descricao').value,
                         dataCriacao: new Date().toISOString()
                     };
-                    
+
                     const idx = UI.data.links.findIndex(l => l.id === id);
-                    if(idx >= 0) {
-                        UI.data.links[idx] = link;
-                    } else {
-                        UI.data.links.push(link);
-                    }
-                    
+                    if(idx >= 0) UI.data.links[idx] = link;
+                    else UI.data.links.push(link);
+
                     Storage.saveLinks(UI.data.links);
                     Utils.toast('Link salvo!');
                     UI.closeModals();
                     UI.renderLinks();
                 },
                 edit: (id) => {
-                    const link = UI.data.links.find(l => l.id === id);
-                    if(!link) return;
+                    const l = UI.data.links.find(x => x.id === id);
+                    if(!l) return;
                     
-                    document.getElementById('l-id').value = link.id;
-                    document.getElementById('l-titulo').value = link.titulo;
-                    document.getElementById('l-url').value = link.url;
-                    document.getElementById('l-categoria').value = link.categoria || 'outros';
-                    document.getElementById('l-descricao').value = link.descricao || '';
+                    document.getElementById('l-id').value = l.id;
+                    document.getElementById('l-titulo').value = l.titulo;
+                    document.getElementById('l-url').value = l.url;
+                    document.getElementById('l-categoria').value = l.categoria;
+                    document.getElementById('l-descricao').value = l.descricao || '';
+                    
                     document.getElementById('title-link').innerText = 'Editar Link';
-                    
                     UI.openModal('link');
                 },
                 open: (id) => {
-                    const link = UI.data.links.find(l => l.id === id);
-                    if(link && link.url) {
-                        window.open(link.url, '_blank');
-                    }
+                    const l = UI.data.links.find(x => x.id === id);
+                    if(!l) return;
+                    
+                    window.open(l.url, '_blank');
+                    Utils.toast('Abrindo link...');
                 },
                 copy: (id) => {
-                    const link = UI.data.links.find(l => l.id === id);
-                    if(link && link.url) {
-                        navigator.clipboard.writeText(link.url)
-                            .then(() => Utils.toast('URL copiada para a área de transferência!'))
-                            .catch(() => {
-                                // Fallback para navegadores mais antigos
-                                const textArea = document.createElement('textarea');
-                                textArea.value = link.url;
-                                document.body.appendChild(textArea);
-                                textArea.select();
-                                document.execCommand('copy');
-                                document.body.removeChild(textArea);
-                                Utils.toast('URL copiada para a área de transferência!');
-                            });
-                    }
+                    const l = UI.data.links.find(x => x.id === id);
+                    if(!l) return;
+                    
+                    navigator.clipboard.writeText(l.url).then(() => {
+                        Utils.toast('Link copiado!');
+                    });
                 },
                 delete: (id) => {
-                    if(confirm('Excluir este link?')) {
-                        UI.data.links = UI.data.links.filter(l => l.id !== id);
-                        Storage.saveLinks(UI.data.links);
-                        UI.renderLinks();
-                        Utils.toast('Link excluído!', 'success');
-                    }
+                    if(!confirm('Tem certeza que deseja excluir este link?')) return;
+                    
+                    UI.data.links = UI.data.links.filter(l => l.id !== id);
+                    Storage.saveLinks(UI.data.links);
+                    Utils.toast('Link excluído!');
+                    UI.renderLinks();
                 }
             },
 
             backup: {
-                exportData: () => {
+                exportData: function() {
                     const data = {
-                        clientes: UI.data.clientes,
-                        imoveis: UI.data.imoveis,
-                        visitas: UI.data.visitas,
-                        links: UI.data.links,
-                        funilEtapas: UI.data.funilEtapas,
-                        settings: Storage.getSettings()
+                        clientes: Storage.get('clientes'),
+                        imoveis: Storage.get('imoveis'),
+                        visitas: Storage.get('visitas'),
+                        links: Storage.getLinks(),
+                        settings: Storage.getSettings(),
+                        funilEtapas: Storage.getFunilEtapas()
                     };
-                    const blob = new Blob([JSON.stringify(data)], {type: 'application/json'});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `backup_imobipro_${new Date().toISOString().split('T')[0]}.json`;
-                    a.click();
-                    Utils.toast('Backup exportado!');
+
+                    const dataStr = JSON.stringify(data, null, 2);
+                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+
+                    const exportFileDefaultName = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
+
+                    const linkElement = document.createElement('a');
+                    linkElement.setAttribute('href', dataUri);
+                    linkElement.setAttribute('download', exportFileDefaultName);
+                    linkElement.click();
+
+                    Utils.toast('Backup exportado com sucesso!');
                 },
-                importTrigger: () => document.getElementById('import-file').click(),
-                importData: (input) => {
+
+                importTrigger: function() {
+                    document.getElementById('import-file').click();
+                },
+
+                importData: function(input) {
                     const file = input.files[0];
-                    if(!file) return;
+                    if (!file) {
+                        return;
+                    }
+
                     const reader = new FileReader();
-                    reader.onload = (e) => {
+                    reader.onload = function(e) {
                         try {
                             const data = JSON.parse(e.target.result);
-                            if(data.clientes) Storage.set('clientes', data.clientes);
-                            if(data.imoveis) Storage.set('imoveis', data.imoveis);
-                            if(data.visitas) Storage.set('visitas', data.visitas);
-                            if(data.links) Storage.saveLinks(data.links);
-                            if(data.funilEtapas) Storage.saveFunilEtapas(data.funilEtapas);
-                            if(data.settings) Storage.saveSettings(data.settings);
-                            location.reload();
-                        } catch(err) {
-                            Utils.toast('Erro no arquivo de backup', 'error');
+
+                            // Validar se o JSON tem a estrutura esperada
+                            if (data.clientes && data.imoveis && data.visitas && data.links && data.settings && data.funilEtapas) {
+                                // Restaurar dados
+                                Storage.set('clientes', data.clientes);
+                                Storage.set('imoveis', data.imoveis);
+                                Storage.set('visitas', data.visitas);
+                                Storage.saveLinks(data.links);
+                                Storage.saveSettings(data.settings);
+                                Storage.saveFunilEtapas(data.funilEtapas);
+
+                                // Atualizar a UI
+                                UI.data.clientes = data.clientes;
+                                UI.data.imoveis = data.imoveis;
+                                UI.data.visitas = data.visitas;
+                                UI.data.links = data.links;
+                                UI.data.funilEtapas = data.funilEtapas;
+
+                                // Re-renderizar tudo
+                                UI.renderDashboard();
+                                UI.renderClientes();
+                                UI.renderImoveis();
+                                UI.renderAgenda();
+                                UI.renderFunil();
+                                UI.renderLinks();
+                                UI.renderRelatorios();
+
+                                Utils.toast('Backup importado com sucesso!');
+                            } else {
+                                Utils.toast('Arquivo de backup inválido', 'error');
+                            }
+                        } catch (error) {
+                            console.error(error);
+                            Utils.toast('Erro ao importar backup', 'error');
                         }
                     };
                     reader.readAsText(file);
                 },
-                clearData: () => {
-                    if(confirm('Tem certeza? Isso apagará TODOS os dados!')) {
+
+                clearData: function() {
+                    if (confirm('Tem certeza que deseja resetar todos os dados? Essa ação não pode ser desfeita.')) {
                         localStorage.clear();
+                        // Recarregar a página para refletir o reset
                         location.reload();
                     }
                 }
             }
         };
 
-        // Event listeners
-        document.querySelectorAll('.modal-overlay').forEach(overlay => {
-            overlay.addEventListener('click', (e) => {
-                if(e.target === overlay) UI.closeModals();
-            });
-        });
-
-        // Listener para mostrar/ocultar campo de aluguel
-        document.getElementById('i-transacao').addEventListener('change', function() {
-            App.imovel.toggleAluguelFields();
-        });
-
-        // Listener para mostrar/ocultar campos específicos de agendamento
-        document.getElementById('v-tipo').addEventListener('change', function() {
-            UI.toggleVisitaFields();
-        });
-
-        // Listener para fechar fullscreen com clique no overlay
-        document.getElementById('fullscreen-viewer').addEventListener('click', function(e) {
-            if(e.target === this) {
-                UI.closeFullscreen();
-            }
-        });
-
-        // Listener para teclado no visualizador de fotos
-        document.addEventListener('keydown', function(e) {
-            if(document.getElementById('fullscreen-viewer').classList.contains('active')) {
-                if(e.key === 'Escape') {
-                    UI.closeFullscreen();
-                } else if(e.key === 'ArrowRight') {
-                    UI.nextFullscreenImage();
-                } else if(e.key === 'ArrowLeft') {
-                    UI.prevFullscreenImage();
-                }
-            }
-        });
-
-        document.addEventListener('DOMContentLoaded', UI.init);
+        // Inicializar a aplicação
+        UI.init();
     </script>
 </body>
 </html>
