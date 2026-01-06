@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2123,8 +2122,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // --- UTILITÁRIOS ---
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
-            formatCurrency: (val) => val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-            parseCurrency: (str) => parseFloat(str.replace('R$', '').replace('.', '').replace(',', '.').trim()) || 0,
+            formatCurrency: (val) => {
+                if (!val) return 'R$ 0,00';
+                return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            },
+            parseCurrency: (str) => {
+                if (!str || str.trim() === '') return 0;
+                // Remove "R$", pontos e substitui vírgula por ponto
+                const cleaned = str.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+                return parseFloat(cleaned) || 0;
+            },
             formatDate: (dateStr) => {
                 if(!dateStr) return '-';
                 const [y, m, d] = dateStr.split('-');
@@ -2153,9 +2160,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             maskMoney: (input) => {
                 let v = input.value.replace(/\D/g, "");
-                v = (v / 100).toFixed(2) + "";
-                v = v.replace(".", ",");
                 v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+                if (v === "") {
+                    input.value = "";
+                    return;
+                }
+                // Garantir 2 casas decimais
+                if (v.length === 1) v = "0,0" + v;
+                else if (v.length === 2) v = "0," + v;
+                else {
+                    const cents = v.slice(-2);
+                    const rest = v.slice(0, -2);
+                    v = rest + "," + cents;
+                }
                 input.value = v;
             },
             toast: (msg, type = 'success') => {
@@ -2200,11 +2217,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             getToday: () => {
                 const today = new Date();
-                return today.toISOString().split('T')[0];
+                const year = today.getFullYear();
+                const month = String(today.getMonth() + 1).padStart(2, '0');
+                const day = String(today.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
             },
             getTodayTime: () => {
                 const today = new Date();
-                return today.toISOString().split('T')[1].substring(0, 5);
+                const hours = String(today.getHours()).padStart(2, '0');
+                const minutes = String(today.getMinutes()).padStart(2, '0');
+                return `${hours}:${minutes}`;
             },
             isToday: (dateStr) => {
                 if(!dateStr) return false;
@@ -2847,15 +2869,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
         // --- STORAGE MANAGER ---
         const Storage = {
-            get: (key) => JSON.parse(localStorage.getItem(`imobipro_${key}`)) || [],
-            set: (key, data) => localStorage.setItem(`imobipro_${key}`, JSON.stringify(data)),
-            getSettings: () => JSON.parse(localStorage.getItem('imobipro_settings')) || { 
-                nome: 'Seu Nome',
-                creci: '12345-SP',
-                telefone: '(11) 99999-9999',
-                email: 'seuemail@imobiliaria.com',
-                imobiliaria: 'Imobiliária Exemplo',
-                comissao: 5
+            get: (key) => {
+                const data = localStorage.getItem(`imobipro_${key}`);
+                return data ? JSON.parse(data) : [];
+            },
+            set: (key, data) => {
+                localStorage.setItem(`imobipro_${key}`, JSON.stringify(data));
+            },
+            getSettings: () => {
+                const data = localStorage.getItem('imobipro_settings');
+                return data ? JSON.parse(data) : { 
+                    nome: 'Seu Nome',
+                    creci: '12345-SP',
+                    telefone: '(11) 99999-9999',
+                    email: 'seuemail@imobiliaria.com',
+                    imobiliaria: 'Imobiliária Exemplo',
+                    comissao: 5
+                };
             },
             saveSettings: (data) => localStorage.setItem('imobipro_settings', JSON.stringify(data)),
             getFunilEtapas: () => {
@@ -2869,10 +2899,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
                     { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
                 ];
-                return JSON.parse(localStorage.getItem('imobipro_funil_etapas')) || etapasPadrao;
+                const data = localStorage.getItem('imobipro_funil_etapas');
+                return data ? JSON.parse(data) : etapasPadrao;
             },
             saveFunilEtapas: (etapas) => localStorage.setItem('imobipro_funil_etapas', JSON.stringify(etapas)),
-            getLinks: () => JSON.parse(localStorage.getItem('imobipro_links')) || [],
+            getLinks: () => {
+                const data = localStorage.getItem('imobipro_links');
+                return data ? JSON.parse(data) : [];
+            },
             saveLinks: (links) => localStorage.setItem('imobipro_links', JSON.stringify(links))
         };
 
@@ -2898,7 +2932,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.data.clientes = Storage.get('clientes');
                 UI.data.imoveis = Storage.get('imoveis');
                 UI.data.visitas = Storage.get('visitas');
-                UI.data.links = Storage.get('links');
+                UI.data.links = Storage.getLinks();
                 UI.data.funilEtapas = Storage.getFunilEtapas();
                 
                 // Garantir que todos os clientes tenham etapa no funil
@@ -3012,7 +3046,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const porcentagem = totalClientes > 0 ? Math.round((clientes.length / totalClientes) * 100) : 0;
                     
                     html += `
-                        <div class="funnel-stage stage-${etapa.id}" onclick="UI.toggleFunnelStage('${etapa.id}')">
+                        <div class="funnel-stage stage-${etapa.id}" onclick="UI.toggleFunnelStage('${etapa.id}')" 
+                             ondragover="event.preventDefault()" 
+                             ondrop="UI.dropOnStage(event, '${etapa.id}')">
                             <div class="funnel-stage-header">
                                 <div class="funnel-stage-title">
                                     <i class="fas fa-${UI.getFunnelIcon(etapa.id)}"></i>
@@ -3027,9 +3063,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 ${clientes.map(cliente => `
                                     <div class="funnel-client-item" draggable="true" 
                                          data-cliente-id="${cliente.id}"
-                                         ondragstart="UI.startDrag(event, '${cliente.id}')"
-                                         ondrop="UI.dropOnClient(event, '${etapa.id}')"
-                                         ondragover="event.preventDefault()">
+                                         ondragstart="UI.startDrag(event, '${cliente.id}')">
                                         <div class="funnel-client-name">${cliente.nome}</div>
                                         <div class="funnel-client-days">
                                             ${cliente.dataEntradaFunil ? `${Utils.calculateDaysInStage(cliente.dataEntradaFunil)} dias` : 'Novo'}
@@ -3097,10 +3131,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 event.target.classList.add('dragging');
             },
             
-            allowDrop: (event) => {
-                event.preventDefault();
-            },
-            
             dropOnStage: (event, etapaId) => {
                 event.preventDefault();
                 const clienteId = event.dataTransfer.getData('text/plain');
@@ -3120,11 +3150,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 // Remover classe dragging
                 document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
                 UI.draggingClient = null;
-            },
-            
-            dropOnClient: (event, etapaId) => {
-                event.preventDefault();
-                UI.dropOnStage(event, etapaId);
             },
             
             renderClientesFunil: (filterEtapa = 'todos') => {
@@ -3556,7 +3581,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(filter) {
                     filtered = filtered.filter(c => 
                         c.nome.toLowerCase().includes(filter.toLowerCase()) ||
-                        c.email.toLowerCase().includes(filter.toLowerCase()) ||
+                        (c.email && c.email.toLowerCase().includes(filter.toLowerCase())) ||
                         c.telefone.toLowerCase().includes(filter.toLowerCase())
                     );
                 }
@@ -3620,7 +3645,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     filtered = filtered.filter(i => 
                         i.titulo.toLowerCase().includes(filter.toLowerCase()) ||
                         i.endereco.toLowerCase().includes(filter.toLowerCase()) ||
-                        i.construtora?.toLowerCase().includes(filter.toLowerCase())
+                        (i.construtora && i.construtora.toLowerCase().includes(filter.toLowerCase()))
                     );
                 }
                 
@@ -4757,7 +4782,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     </div>
                 `;
                 document.getElementById('image-counter').innerText = '0';
-                document.getElementById('i-imagens-data').value = '';
+                document.getElementById('i-imagens-data').value = '[]';
                 
                 // Set today as default for data de entrega
                 const hoje = Utils.getToday();
@@ -4961,17 +4986,22 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const imagensData = document.getElementById('i-imagens-data').value;
                     const imagens = imagensData ? JSON.parse(imagensData) : [];
 
+                    // Parse dos valores monetários corretamente
+                    const precoVenda = Utils.parseCurrency(document.getElementById('i-preco-venda').value);
+                    const precoAluguel = Utils.parseCurrency(document.getElementById('i-preco-aluguel').value);
+                    const condominio = Utils.parseCurrency(document.getElementById('i-condominio').value);
+
                     const imovel = {
                         id,
                         titulo: document.getElementById('i-titulo').value,
                         tipo: document.getElementById('i-tipo').value,
                         transacao: document.getElementById('i-transacao').value,
-                        precoVenda: Utils.parseCurrency(document.getElementById('i-preco-venda').value) || null,
-                        precoAluguel: Utils.parseCurrency(document.getElementById('i-preco-aluguel').value) || null,
+                        precoVenda: precoVenda || null,
+                        precoAluguel: precoAluguel || null,
                         dataEntrega: document.getElementById('i-data-entrega').value || null,
                         construtora: document.getElementById('i-construtora').value || '',
                         formaPagamento: document.getElementById('i-forma-pagamento').value || '',
-                        condominio: Utils.parseCurrency(document.getElementById('i-condominio').value) || null,
+                        condominio: condominio || null,
                         gasEncanado: document.getElementById('i-gas-encanado').value || 'nao',
                         endereco: document.getElementById('i-endereco').value,
                         area: parseInt(document.getElementById('i-area').value) || null,
@@ -5066,7 +5096,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     gallery.appendChild(addBtn);
                     
                     document.getElementById('image-counter').innerText = i.imagens ? i.imagens.length : 0;
-                    document.getElementById('i-imagens-data').value = i.imagens ? JSON.stringify(i.imagens) : '';
+                    document.getElementById('i-imagens-data').value = i.imagens ? JSON.stringify(i.imagens) : '[]';
                     
                     // Toggle aluguel fields
                     App.imovel.toggleAluguelFields();
