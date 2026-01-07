@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -111,7 +112,6 @@
             background: none; border: none; font-size: 1.2rem;
             color: var(--secondary); padding: 8px;
             border-radius: 50%; transition: 0.2s;
-            cursor: pointer;
         }
         .icon-btn:active { background: #f1f5f9; color: var(--primary); transform: scale(0.95); }
 
@@ -396,7 +396,6 @@
             color: #94a3b8; text-decoration: none;
             font-size: 0.7rem; font-weight: 500;
             gap: 4px; transition: 0.2s;
-            cursor: pointer;
         }
         .nav-item i { font-size: 1.25rem; margin-bottom: 2px; }
         .nav-item.active { color: var(--primary); }
@@ -416,7 +415,6 @@
             z-index: 40;
             border: none;
             transition: transform 0.2s;
-            cursor: pointer;
         }
         .fab:active { transform: scale(0.9) rotate(90deg); }
 
@@ -442,7 +440,7 @@
             overflow-y: auto;
             z-index: 101;
         }
-        .modal-overlay.active ~ .modal-sheet { transform: translateY(0); }
+        .modal-overlay.active + .modal-sheet { transform: translateY(0); }
 
         .sheet-handle {
             width: 40px; height: 4px; background: #cbd5e1;
@@ -478,7 +476,6 @@
             font-size: 1rem; font-weight: 700;
             background: var(--primary); color: white;
             margin-top: 10px;
-            cursor: pointer;
         }
 
         /* --- Property Details --- */
@@ -2115,7 +2112,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </div>
             <div class="form-group">
                 <label class="form-label">Descrição</label>
-                <textarea id="l-descricao" class="form-control" placeholder="Descrição o link..."></textarea>
+                <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
             </div>
             <button type="submit" class="btn-block">Salvar Link</button>
             <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
@@ -3928,7 +3925,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-secondary" onclick="UI.openNewVisitaFromImovel('${i.id}')">
                                 <i class="fas fa-calendar-plus"></i> Agendar Visita
                             </button>
-                            <button class="btn-details btn-pdf" onclick="Utils.generatePDF(i)">
+                            <button class="btn-details btn-pdf" onclick="Utils.generatePDF(${JSON.stringify(i).replace(/"/g, '&quot;')})">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
@@ -4741,22 +4738,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
             // --- MODALS ---
             openModal: (type) => {
-                const overlay = document.getElementById(`overlay-${type}`);
-                const sheet = document.getElementById(`sheet-${type}`);
-                
-                if (overlay) {
-                    overlay.classList.add('active');
-                }
-                if (sheet) {
-                    sheet.classList.add('active');
-                }
-                
-                document.body.style.overflow = 'hidden';
+                document.getElementById(`overlay-${type}`).classList.add('active');
+                requestAnimationFrame(() => {
+                    document.getElementById(`overlay-${type}`).classList.add('active');
+                });
             },
             closeModals: () => {
                 document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
-                document.querySelectorAll('.modal-sheet').forEach(el => el.classList.remove('active'));
-                document.body.style.overflow = 'auto';
             },
 
             openNewCliente: (fromVisita = false) => {
