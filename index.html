@@ -1879,7 +1879,7 @@
             <!-- Campos para tipos que precisam de imóvel -->
             <div class="form-group imovel-dependent-group">
                 <label class="form-label">Imóvel</label>
-                <select id="v-imovel" class="form-control">
+                    <select id="v-imovel" class="form-control">
                     <option value="">Selecione...</option>
                 </select>
             </div>
@@ -2055,7 +2055,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </div>
             <div class="form-group">
                 <label class="form-label">Taxa de Comissão (%)</label>
-                    <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
+                <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
@@ -2124,13 +2124,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
             formatCurrency: (val) => {
-                if (!val) return 'R$ 0,00';
+                if (!val && val !== 0) return 'R$ 0,00';
                 return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
             },
             parseCurrency: (str) => {
                 if (!str || str.trim() === '') return 0;
-                // Remove "R$", pontos e substitui vírgula por ponto
-                const cleaned = str.replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+                // Remove "R$", pontos, espaços e substitui vírgula por ponto
+                const cleaned = str.replace(/[^\d,]/g, '').replace(',', '.');
                 return parseFloat(cleaned) || 0;
             },
             formatDate: (dateStr) => {
@@ -2161,20 +2161,44 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             maskMoney: (input) => {
                 let v = input.value.replace(/\D/g, "");
-                v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
+                
                 if (v === "") {
                     input.value = "";
                     return;
                 }
-                // Garantir 2 casas decimais
-                if (v.length === 1) v = "0,0" + v;
-                else if (v.length === 2) v = "0," + v;
-                else {
-                    const cents = v.slice(-2);
-                    const rest = v.slice(0, -2);
-                    v = rest + "," + cents;
+                
+                // Remove zeros à esquerda, exceto se for apenas "0"
+                v = v.replace(/^0+/, '') || '0';
+                
+                // Adicionar zeros à esquerda se necessário para centavos
+                if (v.length === 1) v = '0' + v;
+                if (v.length === 2) v = '0' + v;
+                
+                // Separar reais e centavos
+                const reais = v.slice(0, -2);
+                const centavos = v.slice(-2);
+                
+                // Formatar reais com pontos
+                let reaisFormatado = '';
+                if (reais === '' || reais === '0') {
+                    reaisFormatado = '0';
+                } else {
+                    for (let i = reais.length - 1, count = 0; i >= 0; i--, count++) {
+                        if (count > 0 && count % 3 === 0) {
+                            reaisFormatado = '.' + reaisFormatado;
+                        }
+                        reaisFormatado = reais[i] + reaisFormatado;
+                    }
                 }
-                input.value = v;
+                
+                // Juntar tudo
+                const resultado = reaisFormatado + ',' + centavos;
+                input.value = resultado;
+                
+                // Manter cursor no final
+                setTimeout(() => {
+                    input.selectionStart = input.selectionEnd = resultado.length;
+                }, 0);
             },
             toast: (msg, type = 'success') => {
                 const t = document.getElementById('toast');
@@ -2865,6 +2889,40 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 message += `\n👨‍💼 ${settings.nome || ''} | CRECI: ${settings.creci || ''}`;
                 
                 return message;
+            },
+            // Melhor função para download em dispositivos móveis
+            downloadFile: function(filename, text) {
+                // Criar um blob
+                const blob = new Blob([text], { type: 'application/json' });
+                
+                // Verificar se é iOS
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                
+                if (isIOS) {
+                    // Para iOS, usar uma abordagem diferente
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const url = reader.result;
+                        window.location.href = url;
+                    };
+                    reader.readAsDataURL(blob);
+                } else {
+                    // Para outros dispositivos
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    
+                    // Disparar o clique
+                    document.body.appendChild(a);
+                    a.click();
+                    
+                    // Limpar
+                    setTimeout(() => {
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, 100);
+                }
             }
         };
 
@@ -2953,6 +3011,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 // Inicializar funil
                 UI.renderFunil();
+                
+                // Adicionar listener para carregamento de imagens
+                document.addEventListener('DOMContentLoaded', () => {
+                    // Prevenir comportamento padrão de input file
+                    document.getElementById('i-imagem-input').addEventListener('click', (e) => {
+                        e.stopPropagation();
+                    });
+                });
             },
 
             switchTab: (el) => {
@@ -5421,15 +5487,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     };
 
                     const dataStr = JSON.stringify(data, null, 2);
-                    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-
-                    const exportFileDefaultName = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
-
-                    const linkElement = document.createElement('a');
-                    linkElement.setAttribute('href', dataUri);
-                    linkElement.setAttribute('download', exportFileDefaultName);
-                    linkElement.click();
-
+                    const filename = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    
+                    // Usar a função melhorada para download
+                    Utils.downloadFile(filename, dataStr);
+                    
                     Utils.toast('Backup exportado com sucesso!');
                 },
 
