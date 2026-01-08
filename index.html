@@ -195,6 +195,46 @@
             color: var(--secondary);
         }
 
+        /* --- Advanced Search Panel --- */
+        .advanced-search-panel {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .advanced-search-panel.active {
+            max-height: 500px;
+        }
+        
+        .toggle-advanced-search {
+            width: 100%;
+            padding: 12px;
+            background: var(--light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--primary);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+        
+        .toggle-advanced-search i {
+            transition: transform 0.3s;
+        }
+        
+        .toggle-advanced-search.active i {
+            transform: rotate(180deg);
+        }
+
         /* --- Property Card --- */
         .property-card {
             background: var(--surface);
@@ -1428,22 +1468,113 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="search-input" placeholder="Buscar imóveis..." oninput="UI.renderImoveis(this.value)">
             </div>
-            <div class="form-row" style="margin-bottom: 16px;">
-                <select class="form-control" onchange="UI.filterImoveis(this.value, document.getElementById('filter-status').value)">
-                    <option value="">Todos os tipos</option>
-                    <option value="apartamento">Apartamento</option>
-                    <option value="casa">Casa</option>
-                    <option value="terreno">Terreno</option>
-                    <option value="comercial">Comercial</option>
-                </select>
-                <select class="form-control" id="filter-status" onchange="UI.filterImoveis(document.querySelector('select').value, this.value)">
-                    <option value="">Todos os status</option>
-                    <option value="disponivel">Disponível</option>
-                    <option value="vendido">Vendido</option>
-                    <option value="alugado">Alugado</option>
-                    <option value="reservado">Reservado</option>
-                </select>
+            
+            <!-- Botão para busca avançada -->
+            <button class="toggle-advanced-search" onclick="UI.toggleAdvancedSearch()">
+                <i class="fas fa-filter"></i>
+                Busca Avançada
+                <i class="fas fa-chevron-down"></i>
+            </button>
+            
+            <!-- Painel de busca avançada -->
+            <div class="advanced-search-panel" id="advanced-search-panel">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-control" id="search-tipo" onchange="UI.advancedSearch()">
+                            <option value="">Todos os tipos</option>
+                            <option value="apartamento">Apartamento</option>
+                            <option value="casa">Casa</option>
+                            <option value="terreno">Terreno</option>
+                            <option value="comercial">Comercial</option>
+                            <option value="kitnet">Kitnet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-control" id="search-status" onchange="UI.advancedSearch()">
+                            <option value="">Todos os status</option>
+                            <option value="disponivel">Disponível</option>
+                            <option value="vendido">Vendido</option>
+                            <option value="alugado">Alugado</option>
+                            <option value="reservado">Reservado</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Quartos (min)</label>
+                        <input type="number" class="form-control" id="search-quartos-min" min="0" placeholder="Mínimo" oninput="UI.advancedSearch()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quartos (max)</label>
+                        <input type="number" class="form-control" id="search-quartos-max" min="0" placeholder="Máximo" oninput="UI.advancedSearch()">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Área (min m²)</label>
+                        <input type="number" class="form-control" id="search-area-min" min="0" placeholder="Mínimo" oninput="UI.advancedSearch()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Área (max m²)</label>
+                        <input type="number" class="form-control" id="search-area-max" min="0" placeholder="Máximo" oninput="UI.advancedSearch()">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Preço Venda (min)</label>
+                        <input type="text" class="form-control" id="search-preco-venda-min" placeholder="R$ 0,00" oninput="Utils.maskMoney(this); UI.advancedSearch()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Preço Venda (max)</label>
+                        <input type="text" class="form-control" id="search-preco-venda-max" placeholder="R$ 0,00" oninput="Utils.maskMoney(this); UI.advancedSearch()">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Preço Aluguel (min)</label>
+                        <input type="text" class="form-control" id="search-preco-aluguel-min" placeholder="R$ 0,00" oninput="Utils.maskMoney(this); UI.advancedSearch()">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Preço Aluguel (max)</label>
+                        <input type="text" class="form-control" id="search-preco-aluguel-max" placeholder="R$ 0,00" oninput="Utils.maskMoney(this); UI.advancedSearch()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Localização</label>
+                    <input type="text" class="form-control" id="search-localizacao" placeholder="Bairro, cidade, região..." oninput="UI.advancedSearch()">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Data de Entrega</label>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="search-data-entrega-inicio" onchange="UI.advancedSearch()">
+                            <small class="form-label">Data início</small>
+                        </div>
+                        <div class="form-group">
+                            <input type="date" class="form-control" id="search-data-entrega-fim" onchange="UI.advancedSearch()">
+                            <small class="form-label">Data fim</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Construtora</label>
+                    <input type="text" class="form-control" id="search-construtora" placeholder="Nome da construtora" oninput="UI.advancedSearch()">
+                </div>
+                
+                <button class="btn-block" onclick="UI.clearAdvancedSearch()" style="background: var(--light); color: var(--secondary);">
+                    <i class="fas fa-times"></i> Limpar Filtros
+                </button>
             </div>
+            
             <div id="imoveis-list"></div>
         </div>
 
@@ -3197,6 +3328,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             fullscreenCurrentIndex: 0,
             currentAgendaFilter: 'todos',
             draggingClient: null,
+            advancedSearchActive: false,
             
             init: () => {
                 UI.data.clientes = Storage.get('clientes');
@@ -3271,6 +3403,136 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             navigate: (tabName) => {
                 const el = document.querySelector(`.nav-item[data-target="${tabName}-view"]`);
                 if(el) UI.switchTab(el);
+            },
+
+            // --- BUSCA AVANÇADA ---
+            toggleAdvancedSearch: () => {
+                const panel = document.getElementById('advanced-search-panel');
+                const button = document.querySelector('.toggle-advanced-search');
+                
+                UI.advancedSearchActive = !UI.advancedSearchActive;
+                
+                if (UI.advancedSearchActive) {
+                    panel.classList.add('active');
+                    button.classList.add('active');
+                    button.innerHTML = '<i class="fas fa-filter"></i> Busca Avançada <i class="fas fa-chevron-up"></i>';
+                } else {
+                    panel.classList.remove('active');
+                    button.classList.remove('active');
+                    button.innerHTML = '<i class="fas fa-filter"></i> Busca Avançada <i class="fas fa-chevron-down"></i>';
+                }
+            },
+            
+            advancedSearch: () => {
+                const searchTerm = document.querySelector('.search-input').value.toLowerCase();
+                const tipo = document.getElementById('search-tipo').value;
+                const status = document.getElementById('search-status').value;
+                const quartosMin = parseInt(document.getElementById('search-quartos-min').value) || 0;
+                const quartosMax = parseInt(document.getElementById('search-quartos-max').value) || Infinity;
+                const areaMin = parseInt(document.getElementById('search-area-min').value) || 0;
+                const areaMax = parseInt(document.getElementById('search-area-max').value) || Infinity;
+                const precoVendaMin = Utils.parseCurrency(document.getElementById('search-preco-venda-min').value) || 0;
+                const precoVendaMax = Utils.parseCurrency(document.getElementById('search-preco-venda-max').value) || Infinity;
+                const precoAluguelMin = Utils.parseCurrency(document.getElementById('search-preco-aluguel-min').value) || 0;
+                const precoAluguelMax = Utils.parseCurrency(document.getElementById('search-preco-aluguel-max').value) || Infinity;
+                const localizacao = document.getElementById('search-localizacao').value.toLowerCase();
+                const dataEntregaInicio = document.getElementById('search-data-entrega-inicio').value;
+                const dataEntregaFim = document.getElementById('search-data-entrega-fim').value;
+                const construtora = document.getElementById('search-construtora').value.toLowerCase();
+                
+                let filtered = UI.data.imoveis.filter(imovel => {
+                    // Filtro por termo de busca
+                    if (searchTerm && 
+                        !imovel.titulo.toLowerCase().includes(searchTerm) && 
+                        !imovel.endereco.toLowerCase().includes(searchTerm) &&
+                        !(imovel.descricao && imovel.descricao.toLowerCase().includes(searchTerm))) {
+                        return false;
+                    }
+                    
+                    // Filtro por tipo
+                    if (tipo && imovel.tipo !== tipo) return false;
+                    
+                    // Filtro por status
+                    if (status && imovel.status !== status) return false;
+                    
+                    // Filtro por quartos
+                    const quartos = imovel.quartos || 0;
+                    if (quartos < quartosMin || quartos > quartosMax) return false;
+                    
+                    // Filtro por área
+                    const area = imovel.area || 0;
+                    if (area < areaMin || area > areaMax) return false;
+                    
+                    // Filtro por preço de venda
+                    const precoVenda = imovel.precoVenda || 0;
+                    if (precoVenda < precoVendaMin || precoVenda > precoVendaMax) return false;
+                    
+                    // Filtro por preço de aluguel
+                    const precoAluguel = imovel.precoAluguel || 0;
+                    if (precoAluguel < precoAluguelMin || precoAluguel > precoAluguelMax) return false;
+                    
+                    // Filtro por localização
+                    if (localizacao && 
+                        !imovel.endereco.toLowerCase().includes(localizacao) &&
+                        !(imovel.construtora && imovel.construtora.toLowerCase().includes(localizacao))) {
+                        return false;
+                    }
+                    
+                    // Filtro por data de entrega
+                    if (imovel.dataEntrega) {
+                        if (dataEntregaInicio && imovel.dataEntrega < dataEntregaInicio) return false;
+                        if (dataEntregaFim && imovel.dataEntrega > dataEntregaFim) return false;
+                    }
+                    
+                    // Filtro por construtora
+                    if (construtora && imovel.construtora && !imovel.construtora.toLowerCase().includes(construtora)) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+                
+                // Ordenar por data de criação (mais recentes primeiro)
+                filtered.sort((a,b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+                
+                // Renderizar resultados
+                const list = document.getElementById('imoveis-list');
+                if(filtered.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-home"></i><p>Nenhum imóvel encontrado com os filtros aplicados.</p></div>`;
+                } else {
+                    list.innerHTML = filtered.map(i => UI.createImovelCard(i)).join('');
+                }
+                
+                // Mostrar contagem de resultados
+                const searchButton = document.querySelector('.toggle-advanced-search');
+                searchButton.innerHTML = `<i class="fas fa-filter"></i> Busca Avançada (${filtered.length} resultados) <i class="fas fa-${UI.advancedSearchActive ? 'chevron-up' : 'chevron-down'}"></i>`;
+            },
+            
+            clearAdvancedSearch: () => {
+                // Limpar todos os campos
+                document.getElementById('search-tipo').value = '';
+                document.getElementById('search-status').value = '';
+                document.getElementById('search-quartos-min').value = '';
+                document.getElementById('search-quartos-max').value = '';
+                document.getElementById('search-area-min').value = '';
+                document.getElementById('search-area-max').value = '';
+                document.getElementById('search-preco-venda-min').value = '';
+                document.getElementById('search-preco-venda-max').value = '';
+                document.getElementById('search-preco-aluguel-min').value = '';
+                document.getElementById('search-preco-aluguel-max').value = '';
+                document.getElementById('search-localizacao').value = '';
+                document.getElementById('search-data-entrega-inicio').value = '';
+                document.getElementById('search-data-entrega-fim').value = '';
+                document.getElementById('search-construtora').value = '';
+                
+                // Atualizar resultados
+                UI.renderImoveis();
+                
+                // Atualizar botão
+                const button = document.querySelector('.toggle-advanced-search');
+                button.innerHTML = '<i class="fas fa-filter"></i> Busca Avançada <i class="fas fa-chevron-down"></i>';
+                
+                Utils.toast('Filtros limpos!');
             },
 
             // --- FUNIL DE VENDAS ---
@@ -3917,40 +4179,30 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }).join('');
             },
 
-            renderImoveis: (filter = '', tipoFilter = '', statusFilter = '') => {
+            renderImoveis: (filter = '') => {
                 const list = document.getElementById('imoveis-list');
                 let filtered = UI.data.imoveis;
                 
-                // Aplicar filtros
+                // Aplicar filtro de busca rápida
                 if(filter) {
                     filtered = filtered.filter(i => 
                         i.titulo.toLowerCase().includes(filter.toLowerCase()) ||
                         i.endereco.toLowerCase().includes(filter.toLowerCase()) ||
-                        (i.construtora && i.construtora.toLowerCase().includes(filter.toLowerCase()))
+                        (i.descricao && i.descricao.toLowerCase().includes(filter.toLowerCase())) ||
+                        (i.construtora && i.construtora.toLowerCase().includes(filter.toLowerCase())) ||
+                        (i.formaPagamento && i.formaPagamento.toLowerCase().includes(filter.toLowerCase()))
                     );
-                }
-                
-                if(tipoFilter) {
-                    filtered = filtered.filter(i => i.tipo === tipoFilter);
-                }
-                
-                if(statusFilter) {
-                    filtered = filtered.filter(i => i.status === statusFilter);
                 }
                 
                 // Ordenar por data de criação (mais recentes primeiro)
                 filtered.sort((a,b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
 
                 if(filtered.length === 0) {
-                    list.innerHTML = `<div class="empty-state"><i class="fas fa-home"></i><p>Nenhum imóvel encontrado.</p></div>`;
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-home"></i><p>${filter ? 'Nenhum imóvel encontrado.' : 'Nenhum imóvel cadastrado ainda.'}</p></div>`;
                     return;
                 }
 
                 list.innerHTML = filtered.map(i => UI.createImovelCard(i)).join('');
-            },
-
-            filterImoveis: (tipo, status) => {
-                UI.renderImoveis(document.querySelector('.search-input').value, tipo, status);
             },
 
             createImovelCard: (i) => {
@@ -5364,6 +5616,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const i = UI.data.imoveis.find(x => x.id === id);
                     if(!i) return;
 
+                    // CORREÇÃO: Agora está passando o ID corretamente
                     document.getElementById('i-id').value = i.id;
                     document.getElementById('i-titulo').value = i.titulo;
                     document.getElementById('i-tipo').value = i.tipo;
