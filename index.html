@@ -3082,54 +3082,58 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             // FUNÇÃO CORRIGIDA PARA DOWNLOAD EM DISPOSITIVOS MÓVEIS
             downloadFile: function(filename, text) {
-                // Verificar se é iOS
+                // Verificar se é iOS Safari
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
                 
-                if (isIOS) {
-                    // Para iOS, usar uma abordagem diferente
-                    // Criar um elemento de texto temporário
+                if (isIOS && isSafari) {
+                    // Para iOS Safari - usar abordagem alternativa
                     const textArea = document.createElement('textarea');
                     textArea.value = text;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
                     document.body.appendChild(textArea);
+                    textArea.focus();
                     textArea.select();
                     
                     try {
-                        // Tentar copiar para área de transferência
-                        document.execCommand('copy');
-                        Utils.toast('Conteúdo copiado para área de transferência! Cole em um editor de texto e salve como arquivo .json');
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            Utils.toast('Backup copiado para a área de transferência! Cole em um editor de texto e salve como .json');
+                        } else {
+                            throw new Error('Falha ao copiar');
+                        }
                     } catch (err) {
-                        Utils.toast('Erro ao copiar conteúdo', 'error');
+                        Utils.toast('Erro ao copiar backup', 'error');
                     }
                     
                     document.body.removeChild(textArea);
                 } else {
-                    // Para Android e outros dispositivos - usar a abordagem antiga
-                    const blob = new Blob([text], { type: 'application/json' });
+                    // Para Android e outros navegadores - usar download normal
+                    const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    a.style.display = 'none';
+                    const link = document.createElement('a');
                     
-                    // Adicionar ao body
-                    document.body.appendChild(a);
+                    link.href = url;
+                    link.download = filename;
+                    link.style.display = 'none';
                     
-                    // Disparar o clique
-                    a.click();
+                    document.body.appendChild(link);
                     
-                    // Limpar
+                    // Usar setTimeout para garantir que o DOM foi atualizado
                     setTimeout(() => {
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
+                        link.click();
+                        
+                        // Limpar
+                        setTimeout(() => {
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(url);
+                        }, 100);
                     }, 100);
+                    
+                    Utils.toast('Backup baixado com sucesso!');
                 }
-                
-                // Mostrar toast de confirmação
-                setTimeout(() => {
-                    if (!isIOS) {
-                        Utils.toast('Backup baixado com sucesso!');
-                    }
-                }, 500);
             }
         };
 
