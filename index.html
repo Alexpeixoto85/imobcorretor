@@ -1322,7 +1322,7 @@
             <span>Imobi</span>Pro
         </div>
         <div class="header-actions">
-            <button class="icon-btn" onclick="App.backup.exportData()"><i class="fas fa-cloud-download-alt"></i></button>
+            <!-- Botão de backup removido do header -->
             <button class="icon-btn" onclick="UI.openSettings()"><i class="fas fa-cog"></i></button>
         </div>
     </header>
@@ -1429,20 +1429,24 @@
                 <input type="text" class="search-input" placeholder="Buscar imóveis..." oninput="UI.renderImoveis(this.value)">
             </div>
             <div class="form-row" style="margin-bottom: 16px;">
-                <select class="form-control" onchange="UI.filterImoveis(this.value, document.getElementById('filter-status').value)">
+                <select class="form-control" onchange="UI.filterImoveis(this.value, document.getElementById('filter-status').value, document.getElementById('filter-data-entrega').value)">
                     <option value="">Todos os tipos</option>
                     <option value="apartamento">Apartamento</option>
                     <option value="casa">Casa</option>
                     <option value="terreno">Terreno</option>
                     <option value="comercial">Comercial</option>
                 </select>
-                <select class="form-control" id="filter-status" onchange="UI.filterImoveis(document.querySelector('select').value, this.value)">
+                <select class="form-control" id="filter-status" onchange="UI.filterImoveis(document.querySelector('select').value, this.value, document.getElementById('filter-data-entrega').value)">
                     <option value="">Todos os status</option>
                     <option value="disponivel">Disponível</option>
                     <option value="vendido">Vendido</option>
                     <option value="alugado">Alugado</option>
                     <option value="reservado">Reservado</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Data de Entrega</label>
+                <input type="date" id="filter-data-entrega" class="form-control" onchange="UI.filterImoveis(document.querySelector('select').value, document.getElementById('filter-status').value, this.value)">
             </div>
             <div id="imoveis-list"></div>
         </div>
@@ -2059,14 +2063,26 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </div>
 
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+            
+            <!-- Backup e Restauração movidos para aqui -->
+            <div class="section-title" style="margin-top: 20px;">Backup e Restauração</div>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
+                    <i class="fas fa-cloud-download-alt"></i> Exportar Backup
+                </button>
+                <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
+                    <i class="fas fa-cloud-upload-alt"></i> Importar Backup
+                </button>
+            </div>
+            <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
+            
             <button type="button" class="btn-block" style="background: var(--danger);" onclick="App.backup.clearData()">
                 <i class="fas fa-trash"></i> Resetar Tudo
             </button>
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">Importar Backup</button>
-                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
-                <button type="submit" class="btn-block" style="background: var(--primary); margin: 0;">Salvar Configurações</button>
-            </div>
+            
+            <button type="submit" class="btn-block" style="background: var(--primary); margin-top: 10px;">Salvar Configurações</button>
+            
+            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </form>
     </div>
 
@@ -2120,6 +2136,190 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
     </div>
 
     <script>
+        // --- IndexedDB CONFIGURATION ---
+        const DB_NAME = 'ImobiProDB';
+        const DB_VERSION = 1;
+        let db = null;
+
+        // Initialize IndexedDB
+        const initDB = () => {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                
+                request.onerror = (event) => {
+                    console.error('Erro ao abrir IndexedDB:', event.target.error);
+                    reject(event.target.error);
+                };
+                
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    
+                    // Create object stores if they don't exist
+                    if (!db.objectStoreNames.contains('clientes')) {
+                        const clientesStore = db.createObjectStore('clientes', { keyPath: 'id' });
+                        clientesStore.createIndex('nome', 'nome', { unique: false });
+                        clientesStore.createIndex('etapaFunil', 'etapaFunil', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('imoveis')) {
+                        const imoveisStore = db.createObjectStore('imoveis', { keyPath: 'id' });
+                        imoveisStore.createIndex('titulo', 'titulo', { unique: false });
+                        imoveisStore.createIndex('status', 'status', { unique: false });
+                        imoveisStore.createIndex('dataEntrega', 'dataEntrega', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('visitas')) {
+                        const visitasStore = db.createObjectStore('visitas', { keyPath: 'id' });
+                        visitasStore.createIndex('data', 'data', { unique: false });
+                        visitasStore.createIndex('tipo', 'tipo', { unique: false });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('links')) {
+                        db.createObjectStore('links', { keyPath: 'id' });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('settings')) {
+                        db.createObjectStore('settings', { keyPath: 'id' });
+                    }
+                    
+                    if (!db.objectStoreNames.contains('funilEtapas')) {
+                        db.createObjectStore('funilEtapas', { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+            });
+        };
+
+        // --- IndexedDB OPERATIONS ---
+        const DB = {
+            // Generic operations
+            add: (storeName, item) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(item);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            put: (storeName, item) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(item);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            get: (storeName, id) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(id);
+                    
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            getAll: (storeName) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = () => resolve(request.result || []);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            delete: (storeName, id) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(id);
+                    
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            clear: (storeName) => {
+                return new Promise((resolve, reject) => {
+                    const transaction = db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (event) => reject(event.target.error);
+                });
+            },
+            
+            // Migration from localStorage to IndexedDB
+            migrateFromLocalStorage: async () => {
+                try {
+                    // Check if migration is needed
+                    const checkMigration = await DB.get('settings', 'migration_complete');
+                    if (checkMigration) {
+                        console.log('Migration already completed');
+                        return;
+                    }
+                    
+                    console.log('Starting migration from localStorage to IndexedDB...');
+                    
+                    // Migrate clientes
+                    const oldClientes = JSON.parse(localStorage.getItem('imobipro_clientes') || '[]');
+                    for (const cliente of oldClientes) {
+                        await DB.put('clientes', cliente);
+                    }
+                    
+                    // Migrate imoveis
+                    const oldImoveis = JSON.parse(localStorage.getItem('imobipro_imoveis') || '[]');
+                    for (const imovel of oldImoveis) {
+                        await DB.put('imoveis', imovel);
+                    }
+                    
+                    // Migrate visitas
+                    const oldVisitas = JSON.parse(localStorage.getItem('imobipro_visitas') || '[]');
+                    for (const visita of oldVisitas) {
+                        await DB.put('visitas', visita);
+                    }
+                    
+                    // Migrate links
+                    const oldLinks = JSON.parse(localStorage.getItem('imobipro_links') || '[]');
+                    for (const link of oldLinks) {
+                        await DB.put('links', link);
+                    }
+                    
+                    // Migrate settings
+                    const oldSettings = JSON.parse(localStorage.getItem('imobipro_settings') || '{}');
+                    await DB.put('settings', { id: 'config', ...oldSettings });
+                    
+                    // Migrate funil etapas
+                    const oldFunilEtapas = JSON.parse(localStorage.getItem('imobipro_funil_etapas') || '[]');
+                    for (const etapa of oldFunilEtapas) {
+                        await DB.put('funilEtapas', etapa);
+                    }
+                    
+                    // Mark migration as complete
+                    await DB.put('settings', { id: 'migration_complete', value: true, date: new Date().toISOString() });
+                    
+                    console.log('Migration completed successfully!');
+                    
+                } catch (error) {
+                    console.error('Error during migration:', error);
+                }
+            }
+        };
+
         // --- UTILITÁRIOS ---
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
@@ -2306,13 +2506,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return statuses[status] || status;
             },
             getEtapaFunilText: (etapa) => {
-                const etapas = Storage.getFunilEtapas();
-                return etapas.find(e => e.id === etapa)?.nome || etapa;
+                // Will be updated after data is loaded
+                return etapa;
             },
             getEtapaFunilColor: (etapa) => {
-                const etapas = Storage.getFunilEtapas();
-                const etapaObj = etapas.find(e => e.id === etapa);
-                return etapaObj?.cor || '#93c5fd';
+                // Will be updated after data is loaded
+                return '#93c5fd';
             },
             // Verificar se é aniversário
             isBirthdayToday: (birthdate) => {
@@ -2565,7 +2764,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     let yPos = margin;
                     
                     // Configurações
-                    const settings = Storage.getSettings();
+                    const settings = await DB.get('settings', 'config') || {};
                     
                     // Cabeçalho
                     doc.setFontSize(20);
@@ -2752,7 +2951,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     let yPos = margin;
                     
                     // Configurações do corretor
-                    const settings = Storage.getSettings();
+                    const settings = await DB.get('settings', 'config') || {};
                     
                     // --- CABEÇALHO ---
                     doc.setFillColor(37, 99, 235); // Azul primário
@@ -3137,49 +3336,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // --- STORAGE MANAGER ---
-        const Storage = {
-            get: (key) => {
-                const data = localStorage.getItem(`imobipro_${key}`);
-                return data ? JSON.parse(data) : [];
-            },
-            set: (key, data) => {
-                localStorage.setItem(`imobipro_${key}`, JSON.stringify(data));
-            },
-            getSettings: () => {
-                const data = localStorage.getItem('imobipro_settings');
-                return data ? JSON.parse(data) : { 
-                    nome: 'Seu Nome',
-                    creci: '12345-SP',
-                    telefone: '(11) 99999-9999',
-                    email: 'seuemail@imobiliaria.com',
-                    imobiliaria: 'Imobiliária Exemplo',
-                    comissao: 5
-                };
-            },
-            saveSettings: (data) => localStorage.setItem('imobipro_settings', JSON.stringify(data)),
-            getFunilEtapas: () => {
-                const etapasPadrao = [
-                    { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
-                    { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
-                    { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
-                    { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
-                    { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
-                    { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
-                    { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
-                    { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
-                ];
-                const data = localStorage.getItem('imobipro_funil_etapas');
-                return data ? JSON.parse(data) : etapasPadrao;
-            },
-            saveFunilEtapas: (etapas) => localStorage.setItem('imobipro_funil_etapas', JSON.stringify(etapas)),
-            getLinks: () => {
-                const data = localStorage.getItem('imobipro_links');
-                return data ? JSON.parse(data) : [];
-            },
-            saveLinks: (links) => localStorage.setItem('imobipro_links', JSON.stringify(links))
-        };
-
         // --- UI MANAGER ---
         const UI = {
             data: { 
@@ -3198,38 +3354,93 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             currentAgendaFilter: 'todos',
             draggingClient: null,
             
-            init: () => {
-                UI.data.clientes = Storage.get('clientes');
-                UI.data.imoveis = Storage.get('imoveis');
-                UI.data.visitas = Storage.get('visitas');
-                UI.data.links = Storage.getLinks();
-                UI.data.funilEtapas = Storage.getFunilEtapas();
-                
-                // Garantir que todos os clientes tenham etapa no funil
-                UI.data.clientes.forEach(cliente => {
-                    if (!cliente.etapaFunil) {
-                        cliente.etapaFunil = 'lead';
-                        cliente.dataEntradaFunil = cliente.dataEntradaFunil || new Date().toISOString().split('T')[0];
+            init: async () => {
+                try {
+                    // Initialize IndexedDB
+                    await initDB();
+                    
+                    // Migrate data from localStorage if needed
+                    await DB.migrateFromLocalStorage();
+                    
+                    // Load all data from IndexedDB
+                    UI.data.clientes = await DB.getAll('clientes');
+                    UI.data.imoveis = await DB.getAll('imoveis');
+                    UI.data.visitas = await DB.getAll('visitas');
+                    UI.data.links = await DB.getAll('links');
+                    UI.data.funilEtapas = await DB.getAll('funilEtapas');
+                    
+                    // Load settings
+                    const settings = await DB.get('settings', 'config') || {};
+                    
+                    // Update utility functions with loaded funil etapas
+                    Utils.getEtapaFunilText = (etapa) => {
+                        const etapaObj = UI.data.funilEtapas.find(e => e.id === etapa);
+                        return etapaObj?.nome || etapa;
+                    };
+                    
+                    Utils.getEtapaFunilColor = (etapa) => {
+                        const etapaObj = UI.data.funilEtapas.find(e => e.id === etapa);
+                        return etapaObj?.cor || '#93c5fd';
+                    };
+                    
+                    // Set default funil etapas if none exist
+                    if (UI.data.funilEtapas.length === 0) {
+                        UI.data.funilEtapas = [
+                            { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
+                            { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
+                            { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
+                            { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
+                            { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
+                            { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
+                            { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
+                            { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
+                        ];
+                        
+                        // Save default etapas to IndexedDB
+                        for (const etapa of UI.data.funilEtapas) {
+                            await DB.put('funilEtapas', etapa);
+                        }
                     }
-                });
-                
-                UI.renderDashboard();
-                
-                // Tabs listeners
-                document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
-                    el.addEventListener('click', (e) => e.preventDefault());
-                });
-                
-                // Inicializar funil
-                UI.renderFunil();
-                
-                // Adicionar listener para carregamento de imagens
-                document.addEventListener('DOMContentLoaded', () => {
-                    // Prevenir comportamento padrão de input file
-                    document.getElementById('i-imagem-input').addEventListener('click', (e) => {
-                        e.stopPropagation();
+                    
+                    // Garantir que todos os clientes tenham etapa no funil
+                    let needsUpdate = false;
+                    UI.data.clientes.forEach(cliente => {
+                        if (!cliente.etapaFunil) {
+                            cliente.etapaFunil = 'lead';
+                            cliente.dataEntradaFunil = cliente.dataEntradaFunil || new Date().toISOString().split('T')[0];
+                            needsUpdate = true;
+                        }
                     });
-                });
+                    
+                    if (needsUpdate) {
+                        // Save updated clientes back to IndexedDB
+                        for (const cliente of UI.data.clientes) {
+                            await DB.put('clientes', cliente);
+                        }
+                    }
+                    
+                    UI.renderDashboard();
+                    
+                    // Tabs listeners
+                    document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
+                        el.addEventListener('click', (e) => e.preventDefault());
+                    });
+                    
+                    // Inicializar funil
+                    UI.renderFunil();
+                    
+                    // Adicionar listener para carregamento de imagens
+                    document.addEventListener('DOMContentLoaded', () => {
+                        // Prevenir comportamento padrão de input file
+                        document.getElementById('i-imagem-input').addEventListener('click', (e) => {
+                            e.stopPropagation();
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error initializing UI:', error);
+                    Utils.toast('Erro ao inicializar aplicação', 'error');
+                }
             },
 
             switchTab: (el) => {
@@ -3409,7 +3620,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 event.target.classList.add('dragging');
             },
             
-            dropOnStage: (event, etapaId) => {
+            dropOnStage: async (event, etapaId) => {
                 event.preventDefault();
                 const clienteId = event.dataTransfer.getData('text/plain');
                 
@@ -3418,7 +3629,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (cliente && cliente.etapaFunil !== etapaId) {
                         cliente.etapaFunil = etapaId;
                         cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
-                        Storage.set('clientes', UI.data.clientes);
+                        
+                        // Save to IndexedDB
+                        await DB.put('clientes', cliente);
+                        
                         UI.renderFunil();
                         UI.renderClientes();
                         Utils.toast(`${cliente.nome} movido para ${Utils.getEtapaFunilText(etapaId)}`);
@@ -3527,13 +3741,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.openModal('funil-settings');
             },
             
-            updateEtapaFunil: (index, campo, valor) => {
+            updateEtapaFunil: async (index, campo, valor) => {
                 UI.data.funilEtapas[index][campo] = valor;
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                await DB.put('funilEtapas', UI.data.funilEtapas[index]);
                 UI.renderFunil();
             },
             
-            moveEtapaFunil: (index, direcao) => {
+            moveEtapaFunil: async (index, direcao) => {
                 if (direcao === 'up' && index > 0) {
                     const temp = UI.data.funilEtapas[index];
                     UI.data.funilEtapas[index] = UI.data.funilEtapas[index - 1];
@@ -3549,12 +3763,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     etapa.ordem = idx + 1;
                 });
                 
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                // Save all etapas to IndexedDB
+                for (const etapa of UI.data.funilEtapas) {
+                    await DB.put('funilEtapas', etapa);
+                }
+                
                 UI.openFunilSettings();
                 UI.renderFunil();
             },
             
-            addEtapaFunil: () => {
+            addEtapaFunil: async () => {
                 const novaEtapa = {
                     id: `etapa-${Date.now()}`,
                     nome: 'Nova Etapa',
@@ -3563,12 +3781,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
                 
                 UI.data.funilEtapas.push(novaEtapa);
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                await DB.put('funilEtapas', novaEtapa);
                 UI.openFunilSettings();
                 UI.renderFunil();
             },
             
-            removeEtapaFunil: (index) => {
+            removeEtapaFunil: async (index) => {
                 if (UI.data.funilEtapas.length <= 1) {
                     Utils.toast('O funil deve ter pelo menos uma etapa', 'error');
                     return;
@@ -3577,13 +3795,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const etapaRemovida = UI.data.funilEtapas[index];
                 
                 // Mover clientes desta etapa para a primeira etapa
+                let needsUpdate = false;
                 UI.data.clientes.forEach(cliente => {
                     if (cliente.etapaFunil === etapaRemovida.id) {
                         cliente.etapaFunil = UI.data.funilEtapas[0].id;
+                        needsUpdate = true;
                     }
                 });
                 
-                Storage.set('clientes', UI.data.clientes);
+                if (needsUpdate) {
+                    // Save updated clientes to IndexedDB
+                    for (const cliente of UI.data.clientes) {
+                        await DB.put('clientes', cliente);
+                    }
+                }
+                
+                // Remove etapa from IndexedDB
+                await DB.delete('funilEtapas', etapaRemovida.id);
                 UI.data.funilEtapas.splice(index, 1);
                 
                 // Reordenar
@@ -3591,7 +3819,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     etapa.ordem = idx + 1;
                 });
                 
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                // Save updated ordens to IndexedDB
+                for (const etapa of UI.data.funilEtapas) {
+                    await DB.put('funilEtapas', etapa);
+                }
+                
                 UI.openFunilSettings();
                 UI.renderFunil();
                 UI.renderClientes();
@@ -3917,7 +4149,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }).join('');
             },
 
-            renderImoveis: (filter = '', tipoFilter = '', statusFilter = '') => {
+            renderImoveis: (filter = '', tipoFilter = '', statusFilter = '', dataEntregaFilter = '') => {
                 const list = document.getElementById('imoveis-list');
                 let filtered = UI.data.imoveis;
                 
@@ -3938,6 +4170,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     filtered = filtered.filter(i => i.status === statusFilter);
                 }
                 
+                if(dataEntregaFilter) {
+                    filtered = filtered.filter(i => i.dataEntrega === dataEntregaFilter);
+                }
+                
                 // Ordenar por data de criação (mais recentes primeiro)
                 filtered.sort((a,b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
 
@@ -3949,8 +4185,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 list.innerHTML = filtered.map(i => UI.createImovelCard(i)).join('');
             },
 
-            filterImoveis: (tipo, status) => {
-                UI.renderImoveis(document.querySelector('.search-input').value, tipo, status);
+            filterImoveis: (tipo, status, dataEntrega) => {
+                UI.renderImoveis(document.querySelector('.search-input').value, tipo, status, dataEntrega);
             },
 
             createImovelCard: (i) => {
@@ -4656,7 +4892,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     .reduce((acc, i) => acc + (i.precoAluguel || 0), 0);
                 
                 // Configurações para cálculo de comissão
-                const settings = Storage.getSettings();
+                const settings = UI.data.settings;
                 const taxaComissao = settings.comissao || 5;
                 const comissaoVendas = (totalVendas * taxaComissao) / 100;
                 const comissaoAlugueis = (totalAlugueis * taxaComissao) / 100;
@@ -5152,8 +5388,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }, 100);
             },
 
-            openSettings: () => {
-                const s = Storage.getSettings();
+            openSettings: async () => {
+                const s = await DB.get('settings', 'config') || {};
                 document.getElementById('s-nome').value = s.nome || '';
                 document.getElementById('s-creci').value = s.creci || '';
                 document.getElementById('s-telefone').value = s.telefone || '';
@@ -5168,7 +5404,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // --- APP LOGIC ---
         const App = {
             cliente: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('c-id').value || Utils.id();
                     const nome = document.getElementById('c-nome').value;
@@ -5200,7 +5436,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         UI.data.clientes.push(newClient);
                     }
 
-                    Storage.set('clientes', UI.data.clientes);
+                    // Save to IndexedDB
+                    await DB.put('clientes', newClient);
+                    
                     Utils.toast('Cliente salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5247,52 +5485,55 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         return;
                     }
                     
-                    const settings = Storage.getSettings();
-                    let message = '';
-                    
-                    // Verificar se o cliente tem imóvel de interesse
-                    if (c.imovelInteresseId) {
-                        const imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
-                        if (imovel) {
-                            message = Utils.generateWhatsAppMessageImovelInteresse(c, imovel, settings);
+                    // Get settings from IndexedDB
+                    DB.get('settings', 'config').then(settings => {
+                        let message = '';
+                        
+                        // Verificar se o cliente tem imóvel de interesse
+                        if (c.imovelInteresseId) {
+                            const imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
+                            if (imovel) {
+                                message = Utils.generateWhatsAppMessageImovelInteresse(c, imovel, settings || {});
+                            } else {
+                                message = Utils.generateWhatsAppMessagePadrao(c, settings || {});
+                            }
                         } else {
-                            message = Utils.generateWhatsAppMessagePadrao(c, settings);
+                            message = Utils.generateWhatsAppMessagePadrao(c, settings || {});
                         }
-                    } else {
-                        message = Utils.generateWhatsAppMessagePadrao(c, settings);
-                    }
-                    
-                    Utils.openWhatsApp(c.telefone, message);
-                    
-                    Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
+                        
+                        Utils.openWhatsApp(c.telefone, message);
+                        Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
+                    });
                 },
                 email: (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c) return;
                     
-                    const settings = Storage.getSettings();
-                    let emailData;
-                    
-                    // Verificar se o cliente tem imóvel de interesse
-                    if (c.imovelInteresseId) {
-                        const imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
-                        if (imovel) {
-                            emailData = Utils.generateEmailMessageImovelInteresse(c, imovel, settings);
+                    // Get settings from IndexedDB
+                    DB.get('settings', 'config').then(settings => {
+                        let emailData;
+                        
+                        // Verificar se o cliente tem imóvel de interesse
+                        if (c.imovelInteresseId) {
+                            const imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
+                            if (imovel) {
+                                emailData = Utils.generateEmailMessageImovelInteresse(c, imovel, settings || {});
+                            } else {
+                                emailData = Utils.generateEmailMessagePadrao(c, settings || {});
+                            }
                         } else {
-                            emailData = Utils.generateEmailMessagePadrao(c, settings);
+                            emailData = Utils.generateEmailMessagePadrao(c, settings || {});
                         }
-                    } else {
-                        emailData = Utils.generateEmailMessagePadrao(c, settings);
-                    }
-                    
-                    if (Utils.sendEmail(c.email, emailData.subject, emailData.body)) {
-                        Utils.toast(`Abrindo email para ${c.nome.split(' ')[0]}`);
-                    }
+                        
+                        if (Utils.sendEmail(c.email, emailData.subject, emailData.body)) {
+                            Utils.toast(`Abrindo email para ${c.nome.split(' ')[0]}`);
+                        }
+                    });
                 }
             },
 
             imovel: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('i-id').value || Utils.id();
                     
@@ -5346,19 +5587,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                     else UI.data.imoveis.push(imovel);
 
-                    Storage.set('imoveis', UI.data.imoveis);
+                    // Save to IndexedDB
+                    await DB.put('imoveis', imovel);
+                    
                     Utils.toast('Imóvel salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
                     UI.renderImoveis();
                     UI.renderRelatorios();
-                    
-                    // Atualizar clientes que têm este imóvel como interesse
-                    UI.data.clientes.forEach(cliente => {
-                        if(cliente.imovelInteresseId === id) {
-                            // O imóvel foi atualizado, pode-se enviar notificação se necessário
-                        }
-                    });
                 },
                 edit: (id) => {
                     const i = UI.data.imoveis.find(x => x.id === id);
@@ -5517,7 +5753,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             agenda: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('v-id').value || Utils.id();
                     
@@ -5554,7 +5790,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if(idx >= 0) UI.data.visitas[idx] = visita;
                     else UI.data.visitas.push(visita);
 
-                    Storage.set('visitas', UI.data.visitas);
+                    // Save to IndexedDB
+                    await DB.put('visitas', visita);
+                    
                     Utils.toast('Agendamento salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5612,10 +5850,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             settings: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     
                     const settings = {
+                        id: 'config',
                         nome: document.getElementById('s-nome').value,
                         creci: document.getElementById('s-creci').value,
                         telefone: document.getElementById('s-telefone').value,
@@ -5624,7 +5863,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         comissao: parseFloat(document.getElementById('s-comissao').value) || 5
                     };
                     
-                    Storage.saveSettings(settings);
+                    // Save to IndexedDB
+                    await DB.put('settings', settings);
+                    
                     Utils.toast('Configurações salvas!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5636,35 +5877,36 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const i = UI.data.imoveis.find(x => x.id === id);
                     if(!i) return;
                     
-                    const settings = Storage.getSettings();
-                    
-                    let message = `🏠 *${i.titulo}*\n\n`;
-                    message += `*Endereço:* ${i.endereco}\n`;
-                    message += `*Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-                    message += `*Área:* ${i.area || 0}m²\n`;
-                    message += `*Quartos:* ${i.quartos || 0}\n`;
-                    message += `*Banheiros:* ${i.banheiros || 0}\n`;
-                    message += `*Vagas:* ${i.vagas || 0}\n\n`;
-                    
-                    if(i.precoVenda) message += `*Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-                    if(i.precoAluguel) message += `*Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-                    
-                    message += `\n*Descrição:* ${i.descricao || 'Sem descrição'}\n\n`;
-                    message += `*Corretor:* ${settings.nome || ''}\n`;
-                    message += `*Telefone:* ${settings.telefone || ''}\n`;
-                    message += `*Imobiliária:* ${settings.imobiliaria || ''}\n`;
-                    message += `*CRECI:* ${settings.creci || ''}\n\n`;
-                    message += `_Para mais informações, entre em contato!_`;
-                    
-                    // Abrir WhatsApp com a mensagem
-                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-                    
-                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+                    // Get settings from IndexedDB
+                    DB.get('settings', 'config').then(settings => {
+                        let message = `🏠 *${i.titulo}*\n\n`;
+                        message += `*Endereço:* ${i.endereco}\n`;
+                        message += `*Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+                        message += `*Área:* ${i.area || 0}m²\n`;
+                        message += `*Quartos:* ${i.quartos || 0}\n`;
+                        message += `*Banheiros:* ${i.banheiros || 0}\n`;
+                        message += `*Vagas:* ${i.vagas || 0}\n\n`;
+                        
+                        if(i.precoVenda) message += `*Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+                        if(i.precoAluguel) message += `*Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+                        
+                        message += `\n*Descrição:* ${i.descricao || 'Sem descrição'}\n\n`;
+                        message += `*Corretor:* ${settings.nome || ''}\n`;
+                        message += `*Telefone:* ${settings.telefone || ''}\n`;
+                        message += `*Imobiliária:* ${settings.imobiliaria || ''}\n`;
+                        message += `*CRECI:* ${settings.creci || ''}\n\n`;
+                        message += `_Para mais informações, entre em contato!_`;
+                        
+                        // Abrir WhatsApp com a mensagem
+                        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                        
+                        Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+                    });
                 }
             },
 
             link: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('l-id').value || Utils.id();
                     
@@ -5681,7 +5923,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if(idx >= 0) UI.data.links[idx] = link;
                     else UI.data.links.push(link);
 
-                    Storage.saveLinks(UI.data.links);
+                    // Save to IndexedDB
+                    await DB.put('links', link);
+                    
                     Utils.toast('Link salvo!');
                     UI.closeModals();
                     UI.renderLinks();
@@ -5714,58 +5958,93 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         Utils.toast('Link copiado!');
                     });
                 },
-                delete: (id) => {
+                delete: async (id) => {
                     if(!confirm('Tem certeza que deseja excluir este link?')) return;
                     
                     UI.data.links = UI.data.links.filter(l => l.id !== id);
-                    Storage.saveLinks(UI.data.links);
+                    
+                    // Delete from IndexedDB
+                    await DB.delete('links', id);
+                    
                     Utils.toast('Link excluído!');
                     UI.renderLinks();
                 }
             },
 
             backup: {
-                exportData: function() {
-                    const data = {
-                        clientes: Storage.get('clientes'),
-                        imoveis: Storage.get('imoveis'),
-                        visitas: Storage.get('visitas'),
-                        links: Storage.getLinks(),
-                        settings: Storage.getSettings(),
-                        funilEtapas: Storage.getFunilEtapas()
-                    };
+                exportData: async function() {
+                    try {
+                        const data = {
+                            clientes: await DB.getAll('clientes'),
+                            imoveis: await DB.getAll('imoveis'),
+                            visitas: await DB.getAll('visitas'),
+                            links: await DB.getAll('links'),
+                            settings: await DB.get('settings', 'config') || {},
+                            funilEtapas: await DB.getAll('funilEtapas')
+                        };
 
-                    const dataStr = JSON.stringify(data, null, 2);
-                    const filename = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
-                    
-                    // Usar a função corrigida para download
-                    Utils.downloadFile(filename, dataStr);
+                        const dataStr = JSON.stringify(data, null, 2);
+                        const filename = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
+                        
+                        // Usar a função corrigida para download
+                        Utils.downloadFile(filename, dataStr);
+                    } catch (error) {
+                        console.error('Erro ao exportar backup:', error);
+                        Utils.toast('Erro ao exportar backup', 'error');
+                    }
                 },
 
                 importTrigger: function() {
                     document.getElementById('import-file').click();
                 },
 
-                importData: function(input) {
+                importData: async function(input) {
                     const file = input.files[0];
                     if (!file) {
                         return;
                     }
 
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = async function(e) {
                         try {
                             const data = JSON.parse(e.target.result);
 
                             // Validar se o JSON tem a estrutura esperada
                             if (data.clientes && data.imoveis && data.visitas && data.links && data.settings && data.funilEtapas) {
-                                // Restaurar dados
-                                Storage.set('clientes', data.clientes);
-                                Storage.set('imoveis', data.imoveis);
-                                Storage.set('visitas', data.visitas);
-                                Storage.saveLinks(data.links);
-                                Storage.saveSettings(data.settings);
-                                Storage.saveFunilEtapas(data.funilEtapas);
+                                // Clear existing data
+                                await DB.clear('clientes');
+                                await DB.clear('imoveis');
+                                await DB.clear('visitas');
+                                await DB.clear('links');
+                                await DB.clear('funilEtapas');
+                                
+                                // Import clientes
+                                for (const cliente of data.clientes) {
+                                    await DB.put('clientes', cliente);
+                                }
+                                
+                                // Import imoveis
+                                for (const imovel of data.imoveis) {
+                                    await DB.put('imoveis', imovel);
+                                }
+                                
+                                // Import visitas
+                                for (const visita of data.visitas) {
+                                    await DB.put('visitas', visita);
+                                }
+                                
+                                // Import links
+                                for (const link of data.links) {
+                                    await DB.put('links', link);
+                                }
+                                
+                                // Import settings
+                                await DB.put('settings', { id: 'config', ...data.settings });
+                                
+                                // Import funil etapas
+                                for (const etapa of data.funilEtapas) {
+                                    await DB.put('funilEtapas', etapa);
+                                }
 
                                 // Atualizar a UI
                                 UI.data.clientes = data.clientes;
@@ -5795,18 +6074,50 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     reader.readAsText(file);
                 },
 
-                clearData: function() {
+                clearData: async function() {
                     if (confirm('Tem certeza que deseja resetar todos os dados? Essa ação não pode ser desfeita.')) {
-                        localStorage.clear();
-                        // Recarregar a página para refletir o reset
-                        location.reload();
+                        try {
+                            // Clear all IndexedDB data
+                            await DB.clear('clientes');
+                            await DB.clear('imoveis');
+                            await DB.clear('visitas');
+                            await DB.clear('links');
+                            await DB.clear('settings');
+                            await DB.clear('funilEtapas');
+                            
+                            // Clear UI data
+                            UI.data = { 
+                                clientes: [], 
+                                imoveis: [], 
+                                visitas: [],
+                                links: [],
+                                funilEtapas: []
+                            };
+                            
+                            // Re-render everything
+                            UI.renderDashboard();
+                            UI.renderClientes();
+                            UI.renderImoveis();
+                            UI.renderAgenda();
+                            UI.renderFunil();
+                            UI.renderLinks();
+                            UI.renderRelatorios();
+                            
+                            Utils.toast('Todos os dados foram resetados!');
+                            
+                        } catch (error) {
+                            console.error('Erro ao resetar dados:', error);
+                            Utils.toast('Erro ao resetar dados', 'error');
+                        }
                     }
                 }
             }
         };
 
         // Inicializar a aplicação
-        UI.init();
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+        });
     </script>
 </body>
 </html>
