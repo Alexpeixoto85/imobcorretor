@@ -915,8 +915,6 @@
             object-fit: cover;
         }
 
-        /* REMOVIDO: .whatsapp-quick - WhatsApp duplicado */
-
         .plantoes-info {
             background: #f3e8ff;
             border-radius: 8px;
@@ -1276,780 +1274,1123 @@
         .drop-zone:hover {
             background: rgba(37, 99, 235, 0.1);
         }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .loading i {
+            margin-right: 10px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="brand">
-            <i class="fas fa-home" style="color: var(--primary);"></i>
-            <span>Imobi</span>Pro
-        </div>
-        <div class="header-actions">
-            <button class="icon-btn" onclick="UI.openSettings()"><i class="fas fa-cog"></i></button>
-        </div>
-    </header>
-
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle"></i> <span>Ação realizada!</span>
+    <div id="loading" class="loading">
+        <i class="fas fa-spinner"></i> Inicializando sistema...
     </div>
 
-    <div class="fullscreen-viewer" id="fullscreen-viewer">
-        <button class="fullscreen-close" onclick="UI.closeFullscreen()">
-            <i class="fas fa-times"></i>
-        </button>
-        
-        <div class="fullscreen-image-container">
-            <img id="fullscreen-current-image" class="fullscreen-image" src="" alt="Imagem em tela cheia">
+    <div id="app" style="display: none;">
+        <header>
+            <div class="brand">
+                <i class="fas fa-home" style="color: var(--primary);"></i>
+                <span>Imobi</span>Pro
+            </div>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="UI.openSettings()"><i class="fas fa-cog"></i></button>
+            </div>
+        </header>
+
+        <div id="toast" class="toast">
+            <i class="fas fa-check-circle"></i> <span>Ação realizada!</span>
+        </div>
+
+        <div class="fullscreen-viewer" id="fullscreen-viewer">
+            <button class="fullscreen-close" onclick="UI.closeFullscreen()">
+                <i class="fas fa-times"></i>
+            </button>
             
-            <div class="fullscreen-nav">
-                <button onclick="UI.prevFullscreenImage()">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button onclick="UI.nextFullscreenImage()">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-        
-        <div class="fullscreen-counter">
-            <span id="fullscreen-counter">1</span> / <span id="fullscreen-total">1</span>
-        </div>
-        
-        <div class="fullscreen-thumbnails" id="fullscreen-thumbnails">
-        </div>
-    </div>
-
-    <main>
-        <div id="dashboard-view" class="view active">
-            <div class="section-title">Visão Geral</div>
-            <div class="stats-grid">
-                <div class="stat-card" onclick="UI.navigate('imoveis')">
-                    <div class="stat-icon bg-blue"><i class="fas fa-building"></i></div>
-                    <div class="stat-value" id="dash-total-imoveis">0</div>
-                    <div class="stat-label">Imóveis</div>
+            <div class="fullscreen-image-container">
+                <img id="fullscreen-current-image" class="fullscreen-image" src="" alt="Imagem em tela cheia">
+                
+                <div class="fullscreen-nav">
+                    <button onclick="UI.prevFullscreenImage()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button onclick="UI.nextFullscreenImage()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-                <div class="stat-card" onclick="UI.navigate('clientes')">
-                    <div class="stat-icon bg-green"><i class="fas fa-users"></i></div>
-                    <div class="stat-value" id="dash-total-clientes">0</div>
-                    <div class="stat-label">Clientes</div>
-                </div>
-                <div class="stat-card" onclick="UI.navigate('agenda')">
-                    <div class="stat-icon bg-orange"><i class="fas fa-calendar-alt"></i></div>
-                    <div class="stat-value" id="dash-visitas">0</div>
-                    <div class="stat-label">Visitas Hoje</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-red"><i class="fas fa-chart-line"></i></div>
-                    <div class="stat-value" id="dash-vendas">R$ 0</div>
-                    <div class="stat-label">Vendas Mês</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-cyan"><i class="fas fa-handshake"></i></div>
-                    <div class="stat-value" id="dash-negociacoes">0</div>
-                    <div class="stat-label">Negociações</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-purple"><i class="fas fa-star"></i></div>
-                    <div class="stat-value" id="dash-destaques">0</div>
-                    <div class="stat-label">Destaques</div>
-                </div>
-            </div>
-
-            <div class="section-title">
-                Aniversariantes Hoje
-                <span class="badge badge-pink" id="aniversariantes-badge" style="display:none">!</span>
-            </div>
-            <div id="aniversariantes-list">
-            </div>
-
-            <div class="section-title">
-                Próximas Visitas
-                <span class="badge badge-primary" id="visitas-badge" style="display:none">!</span>
-            </div>
-            <div id="visitas-list">
             </div>
             
-            <div class="section-title">
-                Negociações Recentes
-                <span class="badge badge-warning" id="negociacoes-badge" style="display:none">!</span>
-            </div>
-            <div id="negociacoes-list">
-            </div>
-        </div>
-
-        <div id="imoveis-view" class="view">
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Buscar imóveis (título, endereço, construtora, data entrega)..." oninput="UI.searchImoveis(this.value)">
-            </div>
-            <div class="form-row" style="margin-bottom: 16px;">
-                <select class="form-control" onchange="UI.filterImoveis(this.value, document.getElementById('filter-status').value)">
-                    <option value="">Todos os tipos</option>
-                    <option value="apartamento">Apartamento</option>
-                    <option value="casa">Casa</option>
-                    <option value="terreno">Terreno</option>
-                    <option value="comercial">Comercial</option>
-                </select>
-                <select class="form-control" id="filter-status" onchange="UI.filterImoveis(document.querySelector('select').value, this.value)">
-                    <option value="">Todos os status</option>
-                    <option value="disponivel">Disponível</option>
-                    <option value="vendido">Vendido</option>
-                    <option value="alugado">Alugado</option>
-                    <option value="reservado">Reservado</option>
-                </select>
-            </div>
-            <div id="imoveis-list"></div>
-        </div>
-
-        <div id="clientes-view" class="view">
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Buscar clientes..." oninput="UI.renderClientes(this.value)">
-            </div>
-            <div id="clientes-list"></div>
-        </div>
-
-        <div id="agenda-view" class="view">
-            <div class="section-title">
-                Agenda
-                <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openNewVisita()">
-                    <i class="fas fa-plus"></i>
-                </button>
+            <div class="fullscreen-counter">
+                <span id="fullscreen-counter">1</span> / <span id="fullscreen-total">1</span>
             </div>
             
-            <div class="agenda-filters" id="agenda-filters">
-                <div class="filter-chip active" data-type="todos" onclick="UI.filterAgenda('todos')">Todos</div>
-                <div class="filter-chip visita" data-type="visita" onclick="UI.filterAgenda('visita')">Visitas</div>
-                <div class="filter-chip reuniao-construtor" data-type="reuniao-construtor" onclick="UI.filterAgenda('reuniao-construtor')">Reunião Construtor</div>
-                <div class="filter-chip reuniao-equipe" data-type="reuniao-equipe" onclick="UI.filterAgenda('reuniao-equipe')">Reunião Equipe</div>
-                <div class="filter-chip documentacao" data-type="documentacao" onclick="UI.filterAgenda('documentacao')">Documentação</div>
-                <div class="filter-chip plantao" data-type="plantao" onclick="UI.filterAgenda('plantao')">Plantões</div>
-                <div class="filter-chip generico" data-type="generico" onclick="UI.filterAgenda('generico')">Genéricos</div>
-                <div class="filter-chip outro" data-type="outro" onclick="UI.filterAgenda('outro')">Outros</div>
+            <div class="fullscreen-thumbnails" id="fullscreen-thumbnails">
             </div>
-            
-            <div id="agenda-list"></div>
         </div>
 
-        <div id="funil-view" class="view">
-            <div class="section-title">
-                Funil de Vendas
-                <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openFunilSettings()">
-                    <i class="fas fa-cog"></i>
-                </button>
-            </div>
-            
-            <div class="stats-grid">
-                <div class="stat-card" onclick="UI.filterFunil('lead')">
-                    <div class="stat-icon" style="background: var(--funnel-lead); color: #1e3a8a;">
-                        <i class="fas fa-user-plus"></i>
+        <main>
+            <div id="dashboard-view" class="view active">
+                <div class="section-title">Visão Geral</div>
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="UI.navigate('imoveis')">
+                        <div class="stat-icon bg-blue"><i class="fas fa-building"></i></div>
+                        <div class="stat-value" id="dash-total-imoveis">0</div>
+                        <div class="stat-label">Imóveis</div>
                     </div>
-                    <div class="stat-value" id="funil-lead">0</div>
-                    <div class="stat-label">Leads</div>
-                </div>
-                <div class="stat-card" onclick="UI.filterFunil('venda')">
-                    <div class="stat-icon" style="background: var(--funnel-venda); color: white;">
-                        <i class="fas fa-trophy"></i>
+                    <div class="stat-card" onclick="UI.navigate('clientes')">
+                        <div class="stat-icon bg-green"><i class="fas fa-users"></i></div>
+                        <div class="stat-value" id="dash-total-clientes">0</div>
+                        <div class="stat-label">Clientes</div>
                     </div>
-                    <div class="stat-value" id="funil-venda">0</div>
-                    <div class="stat-label">Vendas</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-purple">
-                        <i class="fas fa-chart-line"></i>
+                    <div class="stat-card" onclick="UI.navigate('agenda')">
+                        <div class="stat-icon bg-orange"><i class="fas fa-calendar-alt"></i></div>
+                        <div class="stat-value" id="dash-visitas">0</div>
+                        <div class="stat-label">Visitas Hoje</div>
                     </div>
-                    <div class="stat-value" id="funil-taxa">0%</div>
-                    <div class="stat-label">Conversão</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-cyan">
-                        <i class="fas fa-clock"></i>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-red"><i class="fas fa-chart-line"></i></div>
+                        <div class="stat-value" id="dash-vendas">R$ 0</div>
+                        <div class="stat-label">Vendas Mês</div>
                     </div>
-                    <div class="stat-value" id="funil-tempo">0d</div>
-                    <div class="stat-label">Tempo Médio</div>
-                </div>
-            </div>
-            
-            <div class="funnel-container">
-                <div class="section-title" style="margin-bottom: 16px;">
-                    Progresso do Funil
-                    <span class="badge badge-primary" id="funil-total">0 clientes</span>
-                </div>
-                <div id="funil-stages-container">
-                </div>
-            </div>
-            
-            <div class="section-title">
-                Clientes no Funil
-                <select class="form-control" style="width: auto; padding: 4px 12px; font-size: 0.85rem;" onchange="UI.filterClientesFunil(this.value)">
-                    <option value="todos">Todos os estágios</option>
-                </select>
-            </div>
-            <div id="funil-clientes-list"></div>
-        </div>
-
-        <div id="links-view" class="view">
-            <div class="section-title">
-                Links Úteis
-                <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openNewLink()">
-                    <i class="fas fa-plus"></i>
-                </button>
-            </div>
-            
-            <div class="search-container">
-                <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Buscar links..." oninput="UI.renderLinks(this.value)">
-            </div>
-            
-            <div class="links-grid" id="links-grid">
-            </div>
-        </div>
-
-        <div id="relatorios-view" class="view">
-            <div class="section-title">Desempenho Mensal</div>
-            <div class="chart-container">
-                <canvas id="performanceChart"></canvas>
-            </div>
-
-            <div class="section-title">Resumo Financeiro</div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-icon bg-green"><i class="fas fa-money-bill-wave"></i></div>
-                    <div class="stat-value" id="rel-vendas-mes">R$ 0</div>
-                    <div class="stat-label">Vendas Mês</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-blue"><i class="fas fa-hand-holding-usd"></i></div>
-                    <div class="stat-value" id="rel-alugueis-mes">R$ 0</div>
-                    <div class="stat-label">Aluguéis Mês</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-orange"><i class="fas fa-chart-pie"></i></div>
-                    <div class="stat-value" id="rel-comissao">R$ 0</div>
-                    <div class="stat-label">Comissão</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-icon bg-purple"><i class="fas fa-bullseye"></i></div>
-                    <div class="stat-value" id="rel-conversao">0%</div>
-                    <div class="stat-label">Conversão</div>
-                </div>
-            </div>
-
-            <div class="section-title">
-                Relatório de Agendamentos
-                <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px;" onclick="UI.generateAgendaReport()">
-                    <i class="fas fa-file-pdf"></i>
-                </button>
-            </div>
-            <div class="chart-container">
-                <canvas id="agendaChart"></canvas>
-            </div>
-            <div id="agenda-report">
-            </div>
-        </div>
-    </main>
-
-    <button class="fab" onclick="UI.openNewImovel()" id="main-fab">
-        <i class="fas fa-plus"></i>
-    </button>
-
-    <nav class="bottom-nav">
-        <a href="#" class="nav-item active" data-target="dashboard-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-home"></i> <span>Início</span>
-        </a>
-        <a href="#" class="nav-item" data-target="imoveis-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-building"></i> <span>Imóveis</span>
-        </a>
-        <a href="#" class="nav-item" data-target="clientes-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-users"></i> <span>Clientes</span>
-        </a>
-        <a href="#" class="nav-item" data-target="funil-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-filter"></i> <span>Funil</span>
-        </a>
-        <a href="#" class="nav-item" data-target="agenda-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-calendar-alt"></i> <span>Agenda</span>
-        </a>
-        <a href="#" class="nav-item" data-target="links-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-link"></i> <span>Links</span>
-        </a>
-        <a href="#" class="nav-item" data-target="relatorios-view" onclick="UI.switchTab(this)">
-            <i class="fas fa-chart-bar"></i> <span>Relatórios</span>
-        </a>
-    </nav>
-
-    <div class="modal-overlay" id="overlay-imovel-details"></div>
-    <div class="modal-sheet" id="sheet-imovel-details">
-        <div class="sheet-handle"></div>
-        <div id="imovel-details-content">
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="overlay-cliente"></div>
-    <div class="modal-sheet" id="sheet-cliente">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-cliente">Novo Cliente</h3>
-        <form id="form-cliente" onsubmit="App.cliente.save(event)">
-            <input type="hidden" id="c-id">
-            <div class="form-group">
-                <label class="form-label">Nome Completo</label>
-                <input type="text" id="c-nome" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Tipo de Cliente</label>
-                <select id="c-tipo" class="form-control" required>
-                    <option value="comprador">Comprador</option>
-                    <option value="vendedor">Vendedor</option>
-                    <option value="ambos">Comprador/Vendedor</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Etapa no Funil</label>
-                <select id="c-etapa-funil" class="form-control" required>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Telefone (WhatsApp)</label>
-                <input type="tel" id="c-telefone" class="form-control" placeholder="(00) 00000-0000" required oninput="Utils.maskPhone(this)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" id="c-email" class="form-control">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Imóvel de Interesse</label>
-                <select id="c-imovel-interesse" class="form-control">
-                    <option value="">Selecione um imóvel...</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Data de Nascimento</label>
-                <input type="date" id="c-data-nascimento" class="form-control">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Faixa de Preço (Interesse)</label>
-                <input type="text" id="c-faixa-preco" class="form-control" placeholder="Ex: R$ 300.000 - 500.000">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Observações</label>
-                <textarea id="c-observacoes" class="form-control" placeholder="Anotações sobre o cliente..."></textarea>
-            </div>
-            <button type="submit" class="btn-block">Salvar Cliente</button>
-            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
-        </form>
-    </div>
-
-    <div class="modal-overlay" id="overlay-imovel"></div>
-    <div class="modal-sheet" id="sheet-imovel">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-imovel">Novo Imóvel</h3>
-        <form id="form-imovel" onsubmit="App.imovel.save(event)">
-            <input type="hidden" id="i-id">
-            
-            <div class="form-group">
-                <label class="form-label">Fotos do Imóvel (Máx. 15)</label>
-                <div class="image-counter">Fotos adicionadas: <span id="image-counter">0</span>/15</div>
-                <div class="image-gallery" id="image-gallery">
-                    <div class="image-gallery-item add-image-btn" onclick="document.getElementById('i-imagem-input').click()">
-                        <i class="fas fa-plus"></i>
-                        <span>Adicionar Foto</span>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-cyan"><i class="fas fa-handshake"></i></div>
+                        <div class="stat-value" id="dash-negociacoes">0</div>
+                        <div class="stat-label">Negociações</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-purple"><i class="fas fa-star"></i></div>
+                        <div class="stat-value" id="dash-destaques">0</div>
+                        <div class="stat-label">Destaques</div>
                     </div>
                 </div>
-                <input type="file" id="i-imagem-input" accept="image/*" multiple style="display: none;" onchange="App.imovel.handleMultipleImages(this)">
-                <input type="hidden" id="i-imagens-data">
+
+                <div class="section-title">
+                    Aniversariantes Hoje
+                    <span class="badge badge-pink" id="aniversariantes-badge" style="display:none">!</span>
+                </div>
+                <div id="aniversariantes-list">
+                </div>
+
+                <div class="section-title">
+                    Próximas Visitas
+                    <span class="badge badge-primary" id="visitas-badge" style="display:none">!</span>
+                </div>
+                <div id="visitas-list">
+                </div>
+                
+                <div class="section-title">
+                    Negociações Recentes
+                    <span class="badge badge-warning" id="negociacoes-badge" style="display:none">!</span>
+                </div>
+                <div id="negociacoes-list">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Título do Anúncio</label>
-                <input type="text" id="i-titulo" class="form-control" placeholder="Ex: Apartamento 3 quartos com vista..." required>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Tipo</label>
-                    <select id="i-tipo" class="form-control" required>
+            <div id="imoveis-view" class="view">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar imóveis (título, endereço, construtora, data entrega)..." oninput="UI.searchImoveis(this.value)">
+                </div>
+                <div class="form-row" style="margin-bottom: 16px;">
+                    <select class="form-control" onchange="UI.filterImoveis(this.value, document.getElementById('filter-status').value)">
+                        <option value="">Todos os tipos</option>
                         <option value="apartamento">Apartamento</option>
                         <option value="casa">Casa</option>
                         <option value="terreno">Terreno</option>
                         <option value="comercial">Comercial</option>
-                        <option value="kitnet">Kitnet</option>
+                    </select>
+                    <select class="form-control" id="filter-status" onchange="UI.filterImoveis(document.querySelector('select').value, this.value)">
+                        <option value="">Todos os status</option>
+                        <option value="disponivel">Disponível</option>
+                        <option value="vendido">Vendido</option>
+                        <option value="alugado">Alugado</option>
+                        <option value="reservado">Reservado</option>
+                    </select>
+                </div>
+                <div id="imoveis-list"></div>
+            </div>
+
+            <div id="clientes-view" class="view">
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar clientes..." oninput="UI.renderClientes(this.value)">
+                </div>
+                <div id="clientes-list"></div>
+            </div>
+
+            <div id="agenda-view" class="view">
+                <div class="section-title">
+                    Agenda
+                    <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openNewVisita()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <div class="agenda-filters" id="agenda-filters">
+                    <div class="filter-chip active" data-type="todos" onclick="UI.filterAgenda('todos')">Todos</div>
+                    <div class="filter-chip visita" data-type="visita" onclick="UI.filterAgenda('visita')">Visitas</div>
+                    <div class="filter-chip reuniao-construtor" data-type="reuniao-construtor" onclick="UI.filterAgenda('reuniao-construtor')">Reunião Construtor</div>
+                    <div class="filter-chip reuniao-equipe" data-type="reuniao-equipe" onclick="UI.filterAgenda('reuniao-equipe')">Reunião Equipe</div>
+                    <div class="filter-chip documentacao" data-type="documentacao" onclick="UI.filterAgenda('documentacao')">Documentação</div>
+                    <div class="filter-chip plantao" data-type="plantao" onclick="UI.filterAgenda('plantao')">Plantões</div>
+                    <div class="filter-chip generico" data-type="generico" onclick="UI.filterAgenda('generico')">Genéricos</div>
+                    <div class="filter-chip outro" data-type="outro" onclick="UI.filterAgenda('outro')">Outros</div>
+                </div>
+                
+                <div id="agenda-list"></div>
+            </div>
+
+            <div id="funil-view" class="view">
+                <div class="section-title">
+                    Funil de Vendas
+                    <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openFunilSettings()">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card" onclick="UI.filterFunil('lead')">
+                        <div class="stat-icon" style="background: var(--funnel-lead); color: #1e3a8a;">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <div class="stat-value" id="funil-lead">0</div>
+                        <div class="stat-label">Leads</div>
+                    </div>
+                    <div class="stat-card" onclick="UI.filterFunil('venda')">
+                        <div class="stat-icon" style="background: var(--funnel-venda); color: white;">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="stat-value" id="funil-venda">0</div>
+                        <div class="stat-label">Vendas</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-purple">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="stat-value" id="funil-taxa">0%</div>
+                        <div class="stat-label">Conversão</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-cyan">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-value" id="funil-tempo">0d</div>
+                        <div class="stat-label">Tempo Médio</div>
+                    </div>
+                </div>
+                
+                <div class="funnel-container">
+                    <div class="section-title" style="margin-bottom: 16px;">
+                        Progresso do Funil
+                        <span class="badge badge-primary" id="funil-total">0 clientes</span>
+                    </div>
+                    <div id="funil-stages-container">
+                    </div>
+                </div>
+                
+                <div class="section-title">
+                    Clientes no Funil
+                    <select class="form-control" style="width: auto; padding: 4px 12px; font-size: 0.85rem;" onchange="UI.filterClientesFunil(this.value)">
+                        <option value="todos">Todos os estágios</option>
+                    </select>
+                </div>
+                <div id="funil-clientes-list"></div>
+            </div>
+
+            <div id="links-view" class="view">
+                <div class="section-title">
+                    Links Úteis
+                    <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px;" onclick="UI.openNewLink()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar links..." oninput="UI.renderLinks(this.value)">
+                </div>
+                
+                <div class="links-grid" id="links-grid">
+                </div>
+            </div>
+
+            <div id="relatorios-view" class="view">
+                <div class="section-title">Desempenho Mensal</div>
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+
+                <div class="section-title">Resumo Financeiro</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon bg-green"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="stat-value" id="rel-vendas-mes">R$ 0</div>
+                        <div class="stat-label">Vendas Mês</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-blue"><i class="fas fa-hand-holding-usd"></i></div>
+                        <div class="stat-value" id="rel-alugueis-mes">R$ 0</div>
+                        <div class="stat-label">Aluguéis Mês</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-orange"><i class="fas fa-chart-pie"></i></div>
+                        <div class="stat-value" id="rel-comissao">R$ 0</div>
+                        <div class="stat-label">Comissão</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon bg-purple"><i class="fas fa-bullseye"></i></div>
+                        <div class="stat-value" id="rel-conversao">0%</div>
+                        <div class="stat-label">Conversão</div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    Relatório de Agendamentos
+                    <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px;" onclick="UI.generateAgendaReport()">
+                        <i class="fas fa-file-pdf"></i>
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="agendaChart"></canvas>
+                </div>
+                <div id="agenda-report">
+                </div>
+            </div>
+        </main>
+
+        <button class="fab" onclick="UI.openNewImovel()" id="main-fab">
+            <i class="fas fa-plus"></i>
+        </button>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" data-target="dashboard-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-home"></i> <span>Início</span>
+            </a>
+            <a href="#" class="nav-item" data-target="imoveis-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-building"></i> <span>Imóveis</span>
+            </a>
+            <a href="#" class="nav-item" data-target="clientes-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-users"></i> <span>Clientes</span>
+            </a>
+            <a href="#" class="nav-item" data-target="funil-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-filter"></i> <span>Funil</span>
+            </a>
+            <a href="#" class="nav-item" data-target="agenda-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-calendar-alt"></i> <span>Agenda</span>
+            </a>
+            <a href="#" class="nav-item" data-target="links-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-link"></i> <span>Links</span>
+            </a>
+            <a href="#" class="nav-item" data-target="relatorios-view" onclick="UI.switchTab(this)">
+                <i class="fas fa-chart-bar"></i> <span>Relatórios</span>
+            </a>
+        </nav>
+
+        <div class="modal-overlay" id="overlay-imovel-details"></div>
+        <div class="modal-sheet" id="sheet-imovel-details">
+            <div class="sheet-handle"></div>
+            <div id="imovel-details-content">
+            </div>
+        </div>
+
+        <div class="modal-overlay" id="overlay-cliente"></div>
+        <div class="modal-sheet" id="sheet-cliente">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-cliente">Novo Cliente</h3>
+            <form id="form-cliente" onsubmit="App.cliente.save(event)">
+                <input type="hidden" id="c-id">
+                <div class="form-group">
+                    <label class="form-label">Nome Completo</label>
+                    <input type="text" id="c-nome" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo de Cliente</label>
+                    <select id="c-tipo" class="form-control" required>
+                        <option value="comprador">Comprador</option>
+                        <option value="vendedor">Vendedor</option>
+                        <option value="ambos">Comprador/Vendedor</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Transação</label>
-                    <select id="i-transacao" class="form-control" required onchange="App.imovel.toggleAluguelFields()">
-                        <option value="venda">Venda</option>
-                        <option value="aluguel">Aluguel</option>
-                        <option value="ambos">Venda/Aluguel</option>
+                    <label class="form-label">Etapa no Funil</label>
+                    <select id="c-etapa-funil" class="form-control" required>
                     </select>
                 </div>
-            </div>
-
-            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Preço de Venda (R$)</label>
-                    <input type="text" id="i-preco-venda" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
-                </div>
-                <div class="form-group" id="i-aluguel-group" style="display: none;">
-                    <label class="form-label">Preço de Aluguel (R$)</label>
-                    <input type="text" id="i-preco-aluguel" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Data de Entrega</label>
-                <input type="date" id="i-data-entrega" class="form-control">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Construtora</label>
-                <input type="text" id="i-construtora" class="form-control" placeholder="Nome da construtora">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Forma de Pagamento</label>
-                <input type="text" id="i-forma-pagamento" class="form-control" placeholder="Ex: Financiamento, entrada + parcelas, etc.">
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Valor do Condomínio (R$)</label>
-                    <input type="text" id="i-condominio" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                    <label class="form-label">Telefone (WhatsApp)</label>
+                    <input type="tel" id="c-telefone" class="form-control" placeholder="(00) 00000-0000" required oninput="Utils.maskPhone(this)">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Gás Encanado</label>
-                    <select id="i-gas-encanado" class="form-control">
-                        <option value="sim">Sim</option>
-                        <option value="nao">Não</option>
+                    <label class="form-label">Email</label>
+                    <input type="email" id="c-email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Imóvel de Interesse</label>
+                    <select id="c-imovel-interesse" class="form-control">
+                        <option value="">Selecione um imóvel...</option>
                     </select>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Endereço Completo</label>
-                <input type="text" id="i-endereco" class="form-control" placeholder="Rua, número, bairro, cidade" required>
-            </div>
-
-            <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label">Área (m²)</label>
-                    <input type="number" id="i-area" class="form-control" placeholder="Ex: 120">
+                    <label class="form-label">Data de Nascimento</label>
+                    <input type="date" id="c-data-nascimento" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Quartos</label>
-                    <input type="number" id="i-quartos" class="form-control" placeholder="Ex: 3">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Banheiros</label>
-                    <input type="number" id="i-banheiros" class="form-control" placeholder="Ex: 2">
+                    <label class="form-label">Faixa de Preço (Interesse)</label>
+                    <input type="text" id="c-faixa-preco" class="form-control" placeholder="Ex: R$ 300.000 - 500.000">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Vagas</label>
-                    <input type="number" id="i-vagas" class="form-control" placeholder="Ex: 2">
+                    <label class="form-label">Observações</label>
+                    <textarea id="c-observacoes" class="form-control" placeholder="Anotações sobre o cliente..."></textarea>
                 </div>
-            </div>
+                <button type="submit" class="btn-block">Salvar Cliente</button>
+                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
+        </div>
 
-            <div class="form-group">
-                <label class="form-label">Status</label>
-                <select id="i-status" class="form-control">
-                    <option value="disponivel">Disponível</option>
-                    <option value="reservado">Reservado</option>
-                    <option value="vendido">Vendido</option>
-                    <option value="alugado">Alugado</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Descrição</label>
-                <textarea id="i-descricao" class="form-control" placeholder="Descreva o imóvel, comodidades, localização..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Observações Internas</label>
-                <textarea id="i-observacoes" class="form-control" placeholder="Informações privadas sobre o imóvel..."></textarea>
-            </div>
-
-            <div class="warning-note">
-                <i class="fas fa-exclamation-triangle"></i> Os valores informados podem sofrer alteração sem aviso prévio.
-            </div>
-
-            <button type="submit" class="btn-block">Salvar Imóvel</button>
-            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
-        </form>
-    </div>
-
-    <div class="modal-overlay" id="overlay-visita"></div>
-    <div class="modal-sheet" id="sheet-visita">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-visita">Novo Agendamento</h3>
-        <form id="form-visita" onsubmit="App.agenda.save(event)">
-            <input type="hidden" id="v-id">
-            
-            <div class="form-group">
-                <label class="form-label">Tipo de Agendamento</label>
-                <select id="v-tipo" class="form-control" required onchange="UI.toggleVisitaFields()">
-                    <option value="visita">Visita ao Imóvel</option>
-                    <option value="reuniao-construtor">Reunião com Construtor</option>
-                    <option value="reuniao-equipe">Reunião de Equipe</option>
-                    <option value="documentacao">Assinatura de Documentos</option>
-                    <option value="plantao">Plantão</option>
-                    <option value="generico">Agendamento Genérico</option>
-                    <option value="outro">Outro</option>
-                </select>
-            </div>
-
-            <div class="form-group cliente-dependent-group">
-                <label class="form-label">Cliente</label>
-                <select id="v-cliente" class="form-control">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-group imovel-dependent-group">
-                <label class="form-label">Imóvel</label>
-                    <select id="v-imovel" class="form-control">
-                    <option value="">Selecione...</option>
-                </select>
-            </div>
-
-            <div class="form-row">
+        <div class="modal-overlay" id="overlay-imovel"></div>
+        <div class="modal-sheet" id="sheet-imovel">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-imovel">Novo Imóvel</h3>
+            <form id="form-imovel" onsubmit="App.imovel.save(event)">
+                <input type="hidden" id="i-id">
+                
                 <div class="form-group">
-                    <label class="form-label">Data</label>
-                    <input type="date" id="v-data" class="form-control" required>
+                    <label class="form-label">Fotos do Imóvel (Máx. 15)</label>
+                    <div class="image-counter">Fotos adicionadas: <span id="image-counter">0</span>/15</div>
+                    <div class="image-gallery" id="image-gallery">
+                        <div class="image-gallery-item add-image-btn" onclick="document.getElementById('i-imagem-input').click()">
+                            <i class="fas fa-plus"></i>
+                            <span>Adicionar Foto</span>
+                        </div>
+                    </div>
+                    <input type="file" id="i-imagem-input" accept="image/*" multiple style="display: none;" onchange="App.imovel.handleMultipleImages(this)">
+                    <input type="hidden" id="i-imagens-data">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Horário</label>
-                    <input type="time" id="v-horario" class="form-control" required>
-                </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-visita">
                 <div class="form-group">
-                    <label class="form-label">Local/Endereço da Visita</label>
-                    <input type="text" id="v-local-visita" class="form-control" placeholder="Endereço da visita">
+                    <label class="form-label">Título do Anúncio</label>
+                    <input type="text" id="i-titulo" class="form-control" placeholder="Ex: Apartamento 3 quartos com vista..." required>
                 </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-reuniao-construtor" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Nome do Construtor/Incorporadora</label>
-                    <input type="text" id="v-construtor-nome" class="form-control" placeholder="Nome da construtora">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select id="i-tipo" class="form-control" required>
+                            <option value="apartamento">Apartamento</option>
+                            <option value="casa">Casa</option>
+                            <option value="terreno">Terreno</option>
+                            <option value="comercial">Comercial</option>
+                            <option value="kitnet">Kitnet</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Transação</label>
+                        <select id="i-transacao" class="form-control" required onchange="App.imovel.toggleAluguelFields()">
+                            <option value="venda">Venda</option>
+                            <option value="aluguel">Aluguel</option>
+                            <option value="ambos">Venda/Aluguel</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Empreendimento/Lançamento</label>
-                    <input type="text" id="v-construtor-empreendimento" class="form-control" placeholder="Nome do empreendimento">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Assuntos da Reunião</label>
-                    <textarea id="v-construtor-assuntos" class="form-control" placeholder="Ex: Lançamentos, condições comerciais, parcerias..."></textarea>
-                </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-reuniao-equipe" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Preço de Venda (R$)</label>
+                        <input type="text" id="i-preco-venda" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                    </div>
+                    <div class="form-group" id="i-aluguel-group" style="display: none;">
+                        <label class="form-label">Preço de Aluguel (R$)</label>
+                        <input type="text" id="i-preco-aluguel" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label class="form-label">Tipo de Reunião</label>
-                    <select id="v-equipe-tipo" class="form-control">
-                        <option value="estrategia">Reunião Estratégica</option>
-                        <option value="metas">Definição de Metas</option>
-                        <option value="resultados">Análise de Resultados</option>
-                        <option value="treinamento">Treinamento</option>
+                    <label class="form-label">Data de Entrega</label>
+                    <input type="date" id="i-data-entrega" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Construtora</label>
+                    <input type="text" id="i-construtora" class="form-control" placeholder="Nome da construtora">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Forma de Pagamento</label>
+                    <input type="text" id="i-forma-pagamento" class="form-control" placeholder="Ex: Financiamento, entrada + parcelas, etc.">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Valor do Condomínio (R$)</label>
+                        <input type="text" id="i-condominio" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Gás Encanado</label>
+                        <select id="i-gas-encanado" class="form-control">
+                            <option value="sim">Sim</option>
+                            <option value="nao">Não</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Endereço Completo</label>
+                    <input type="text" id="i-endereco" class="form-control" placeholder="Rua, número, bairro, cidade" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Área (m²)</label>
+                        <input type="number" id="i-area" class="form-control" placeholder="Ex: 120">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quartos</label>
+                        <input type="number" id="i-quartos" class="form-control" placeholder="Ex: 3">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Banheiros</label>
+                        <input type="number" id="i-banheiros" class="form-control" placeholder="Ex: 2">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Vagas</label>
+                        <input type="number" id="i-vagas" class="form-control" placeholder="Ex: 2">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select id="i-status" class="form-control">
+                        <option value="disponivel">Disponível</option>
+                        <option value="reservado">Reservado</option>
+                        <option value="vendido">Vendido</option>
+                        <option value="alugado">Alugado</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea id="i-descricao" class="form-control" placeholder="Descreva o imóvel, comodidades, localização..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Observações Internas</label>
+                    <textarea id="i-observacoes" class="form-control" placeholder="Informações privadas sobre o imóvel..."></textarea>
+                </div>
+
+                <div class="warning-note">
+                    <i class="fas fa-exclamation-triangle"></i> Os valores informados podem sofrer alteração sem aviso prévio.
+                </div>
+
+                <button type="submit" class="btn-block">Salvar Imóvel</button>
+                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
+        </div>
+
+        <div class="modal-overlay" id="overlay-visita"></div>
+        <div class="modal-sheet" id="sheet-visita">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-visita">Novo Agendamento</h3>
+            <form id="form-visita" onsubmit="App.agenda.save(event)">
+                <input type="hidden" id="v-id">
+                
+                <div class="form-group">
+                    <label class="form-label">Tipo de Agendamento</label>
+                    <select id="v-tipo" class="form-control" required onchange="UI.toggleVisitaFields()">
+                        <option value="visita">Visita ao Imóvel</option>
+                        <option value="reuniao-construtor">Reunião com Construtor</option>
+                        <option value="reuniao-equipe">Reunião de Equipe</option>
+                        <option value="documentacao">Assinatura de Documentos</option>
+                        <option value="plantao">Plantão</option>
+                        <option value="generico">Agendamento Genérico</option>
                         <option value="outro">Outro</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Participantes</label>
-                    <input type="text" id="v-equipe-participantes" class="form-control" placeholder="Nomes dos participantes">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Pauta/Assuntos</label>
-                    <textarea id="v-equipe-assuntos" class="form-control" placeholder="Tópicos da reunião..."></textarea>
-                </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-documentacao" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Tipo de Documento</label>
-                    <select id="v-documentacao-tipo" class="form-control">
-                        <option value="contrato-venda">Contrato de Venda</option>
-                        <option value="contrato-aluguel">Contrato de Aluguel</option>
-                        <option value="proposta">Proposta</option>
-                        <option value="financiamento">Documentos de Financiamento</option>
-                        <option value="outro">Outro</option>
+                <div class="form-group cliente-dependent-group">
+                    <label class="form-label">Cliente</label>
+                    <select id="v-cliente" class="form-control">
+                        <option value="">Selecione...</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Local da Assinatura</label>
-                    <input type="text" id="v-documentacao-local" class="form-control" placeholder="Local da assinatura">
-                </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-plantao" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Local do Plantão</label>
-                    <input type="text" id="v-plantao-local" class="form-control" placeholder="Endereço do plantão">
+                <div class="form-group imovel-dependent-group">
+                    <label class="form-label">Imóvel</label>
+                        <select id="v-imovel" class="form-control">
+                        <option value="">Selecione...</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Detalhes do Plantão</label>
-                    <textarea id="v-detalhes-plantoes" class="form-control" placeholder="Descreva as atividades do plantão..."></textarea>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Data</label>
+                        <input type="date" id="v-data" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Horário</label>
+                        <input type="time" id="v-horario" class="form-control" required>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Clientes Atendidos</label>
-                    <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
+
+                <div class="tipo-specific-group" id="grupo-visita">
+                    <div class="form-group">
+                        <label class="form-label">Local/Endereço da Visita</label>
+                        <input type="text" id="v-local-visita" class="form-control" placeholder="Endereço da visita">
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-reuniao-construtor" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Nome do Construtor/Incorporadora</label>
+                        <input type="text" id="v-construtor-nome" class="form-control" placeholder="Nome da construtora">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Empreendimento/Lançamento</label>
+                        <input type="text" id="v-construtor-empreendimento" class="form-control" placeholder="Nome do empreendimento">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assuntos da Reunião</label>
+                        <textarea id="v-construtor-assuntos" class="form-control" placeholder="Ex: Lançamentos, condições comerciais, parcerias..."></textarea>
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-reuniao-equipe" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Reunião</label>
+                        <select id="v-equipe-tipo" class="form-control">
+                            <option value="estrategia">Reunião Estratégica</option>
+                            <option value="metas">Definição de Metas</option>
+                            <option value="resultados">Análise de Resultados</option>
+                            <option value="treinamento">Treinamento</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Participantes</label>
+                        <input type="text" id="v-equipe-participantes" class="form-control" placeholder="Nomes dos participantes">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pauta/Assuntos</label>
+                        <textarea id="v-equipe-assuntos" class="form-control" placeholder="Tópicos da reunião..."></textarea>
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-documentacao" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Tipo de Documento</label>
+                        <select id="v-documentacao-tipo" class="form-control">
+                            <option value="contrato-venda">Contrato de Venda</option>
+                            <option value="contrato-aluguel">Contrato de Aluguel</option>
+                            <option value="proposta">Proposta</option>
+                            <option value="financiamento">Documentos de Financiamento</option>
+                            <option value="outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Local da Assinatura</label>
+                        <input type="text" id="v-documentacao-local" class="form-control" placeholder="Local da assinatura">
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-plantao" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Local do Plantão</label>
+                        <input type="text" id="v-plantao-local" class="form-control" placeholder="Endereço do plantão">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Detalhes do Plantão</label>
+                        <textarea id="v-detalhes-plantoes" class="form-control" placeholder="Descreva as atividades do plantão..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Clientes Atendidos</label>
+                        <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
 Exemplo:
 João Silva - (11) 99999-9999 - Interessado em apartamento 2 quartos
 Maria Santos - (11) 88888-8888 - Agendou visita para amanhã
 Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Negócios Gerados</label>
+                        <input type="text" id="v-negocios-gerados" class="form-control" placeholder="Ex: 2 visitas agendadas, 1 proposta enviada">
+                    </div>
                 </div>
+
+                <div class="tipo-specific-group" id="grupo-generico" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Título do Agendamento</label>
+                        <input type="text" id="v-generico-titulo" class="form-control" placeholder="Título descritivo">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Local</label>
+                        <input type="text" id="v-generico-local" class="form-control" placeholder="Local do compromisso">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Descrição Detalhada</label>
+                        <textarea id="v-generico-descricao" class="form-control" placeholder="Descreva o propósito deste agendamento..."></textarea>
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-outro" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Descrição do Compromisso</label>
+                        <input type="text" id="v-outro-descricao" class="form-control" placeholder="Descreva brevemente">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Detalhes</label>
+                        <textarea id="v-outro-detalhes" class="form-control" placeholder="Informações adicionais..."></textarea>
+                    </div>
+                </div>
+
                 <div class="form-group">
-                    <label class="form-label">Negócios Gerados</label>
-                    <input type="text" id="v-negocios-gerados" class="form-control" placeholder="Ex: 2 visitas agendadas, 1 proposta enviada">
+                    <label class="form-label">Observações Gerais</label>
+                    <textarea id="v-observacoes" class="form-control" placeholder="Observações adicionais..."></textarea>
                 </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-generico" style="display: none;">
                 <div class="form-group">
-                    <label class="form-label">Título do Agendamento</label>
-                    <input type="text" id="v-generico-titulo" class="form-control" placeholder="Título descritivo">
+                    <label class="form-label">Status</label>
+                    <select id="v-status" class="form-control">
+                        <option value="agendado">Agendado</option>
+                        <option value="confirmado">Confirmado</option>
+                        <option value="realizado">Realizado</option>
+                        <option value="cancelado">Cancelado</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Local</label>
-                    <input type="text" id="v-generico-local" class="form-control" placeholder="Local do compromisso">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Descrição Detalhada</label>
-                    <textarea id="v-generico-descricao" class="form-control" placeholder="Descreva o propósito deste agendamento..."></textarea>
-                </div>
-            </div>
 
-            <div class="tipo-specific-group" id="grupo-outro" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Descrição do Compromisso</label>
-                    <input type="text" id="v-outro-descricao" class="form-control" placeholder="Descreva brevemente">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Detalhes</label>
-                    <textarea id="v-outro-detalhes" class="form-control" placeholder="Informações adicionais..."></textarea>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Observações Gerais</label>
-                <textarea id="v-observacoes" class="form-control" placeholder="Observações adicionais..."></textarea>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">Status</label>
-                <select id="v-status" class="form-control">
-                    <option value="agendado">Agendado</option>
-                    <option value="confirmado">Confirmado</option>
-                    <option value="realizado">Realizado</option>
-                    <option value="cancelado">Cancelado</option>
-                </select>
-            </div>
-
-            <button type="submit" class="btn-block">Salvar Agendamento</button>
-            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
-        </form>
-    </div>
-
-    <div class="modal-overlay" id="overlay-settings"></div>
-    <div class="modal-sheet" id="sheet-settings">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title">Configurações</h3>
-        <form id="form-settings" onsubmit="App.settings.save(event)">
-            
-            <div class="form-group">
-                <label class="form-label">Nome do Corretor</label>
-                <input type="text" id="s-nome" class="form-control" placeholder="Seu nome completo">
-            </div>
-            <div class="form-group">
-                <label class="form-label">CRECI</label>
-                <input type="text" id="s-creci" class="form-control" placeholder="Número do CRECI">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Telefone</label>
-                <input type="tel" id="s-telefone" class="form-control" oninput="Utils.maskPhone(this)">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Email</label>
-                <input type="email" id="s-email" class="form-control">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Imobiliária</label>
-                <input type="text" id="s-imobiliaria" class="form-control" placeholder="Nome da imobiliária">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Taxa de Comissão (%)</label>
-                <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
-            </div>
-
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
-                    <i class="fas fa-file-import"></i> Importar Backup
-                </button>
-                <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
-                <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
-                    <i class="fas fa-file-export"></i> Exportar Backup
-                </button>
-            </div>
-            <button type="button" class="btn-block" style="background: var(--danger); margin-top: 10px;" onclick="App.backup.clearData()">
-                <i class="fas fa-trash"></i> Resetar Tudo
-            </button>
-            <button type="submit" class="btn-block" style="background: var(--success); margin-top: 10px;">Salvar Configurações</button>
-        </form>
-    </div>
-
-    <div class="modal-overlay" id="overlay-funil-settings"></div>
-    <div class="modal-sheet" id="sheet-funil-settings">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title">Configurar Etapas do Funil</h3>
-        <div id="funil-etapas-list">
+                <button type="submit" class="btn-block">Salvar Agendamento</button>
+                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
         </div>
-        <button class="btn-block" style="background: var(--success); margin-top: 16px;" onclick="UI.addEtapaFunil()">
-            <i class="fas fa-plus"></i> Adicionar Etapa
-        </button>
-        <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
-    </div>
 
-    <div class="modal-overlay" id="overlay-link"></div>
-    <div class="modal-sheet" id="sheet-link">
-        <div class="sheet-handle"></div>
-        <h3 class="section-title" id="title-link">Novo Link Útil</h3>
-        <form id="form-link" onsubmit="App.link.save(event)">
-            <input type="hidden" id="l-id">
-            <div class="form-group">
-                <label class="form-label">Título</label>
-                <input type="text" id="l-titulo" class="form-control" placeholder="Ex: Site da Construtora..." required>
+        <div class="modal-overlay" id="overlay-settings"></div>
+        <div class="modal-sheet" id="sheet-settings">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title">Configurações</h3>
+            <form id="form-settings" onsubmit="App.settings.save(event)">
+                
+                <div class="form-group">
+                    <label class="form-label">Nome do Corretor</label>
+                    <input type="text" id="s-nome" class="form-control" placeholder="Seu nome completo">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CRECI</label>
+                    <input type="text" id="s-creci" class="form-control" placeholder="Número do CRECI">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Telefone</label>
+                    <input type="tel" id="s-telefone" class="form-control" oninput="Utils.maskPhone(this)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="s-email" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Imobiliária</label>
+                    <input type="text" id="s-imobiliaria" class="form-control" placeholder="Nome da imobiliária">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Taxa de Comissão (%)</label>
+                    <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
+                        <i class="fas fa-file-import"></i> Importar Backup
+                    </button>
+                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
+                    <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
+                        <i class="fas fa-file-export"></i> Exportar Backup
+                    </button>
+                </div>
+                <button type="button" class="btn-block" style="background: var(--danger); margin-top: 10px;" onclick="App.backup.clearData()">
+                    <i class="fas fa-trash"></i> Resetar Tudo
+                </button>
+                <button type="submit" class="btn-block" style="background: var(--success); margin-top: 10px;">Salvar Configurações</button>
+            </form>
+        </div>
+
+        <div class="modal-overlay" id="overlay-funil-settings"></div>
+        <div class="modal-sheet" id="sheet-funil-settings">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title">Configurar Etapas do Funil</h3>
+            <div id="funil-etapas-list">
             </div>
-            <div class="form-group">
-                <label class="form-label">URL</label>
-                <input type="url" id="l-url" class="form-control" placeholder="https://exemplo.com" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Categoria</label>
-                <select id="l-categoria" class="form-control">
-                    <option value="construtora">Construtora</option>
-                    <option value="documentos">Documentos</option>
-                    <option value="financiamento">Financiamento</option>
-                    <option value="noticias">Notícias</option>
-                    <option value="ferramentas">Ferramentas</option>
-                    <option value="outros">Outros</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Descrição</label>
-                    <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
-            </div>
-            <button type="submit" class="btn-block">Salvar Link</button>
-            <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
-        </form>
+            <button class="btn-block" style="background: var(--success); margin-top: 16px;" onclick="UI.addEtapaFunil()">
+                <i class="fas fa-plus"></i> Adicionar Etapa
+            </button>
+            <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
+        </div>
+
+        <div class="modal-overlay" id="overlay-link"></div>
+        <div class="modal-sheet" id="sheet-link">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-link">Novo Link Útil</h3>
+            <form id="form-link" onsubmit="App.link.save(event)">
+                <input type="hidden" id="l-id">
+                <div class="form-group">
+                    <label class="form-label">Título</label>
+                    <input type="text" id="l-titulo" class="form-control" placeholder="Ex: Site da Construtora..." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL</label>
+                    <input type="url" id="l-url" class="form-control" placeholder="https://exemplo.com" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Categoria</label>
+                    <select id="l-categoria" class="form-control">
+                        <option value="construtora">Construtora</option>
+                        <option value="documentos">Documentos</option>
+                        <option value="financiamento">Financiamento</option>
+                        <option value="noticias">Notícias</option>
+                        <option value="ferramentas">Ferramentas</option>
+                        <option value="outros">Outros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                        <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
+                </div>
+                <button type="submit" class="btn-block">Salvar Link</button>
+                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
+        </div>
     </div>
 
     <script>
+        const DB = {
+            name: 'ImobiProDB',
+            version: 3,
+            db: null,
+            
+            init: function() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.name, this.version);
+                    
+                    request.onerror = (event) => {
+                        console.error('Erro ao abrir IndexedDB:', event);
+                        reject(event);
+                    };
+                    
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        console.log('IndexedDB aberto com sucesso');
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        
+                        // Criar object stores
+                        if (!db.objectStoreNames.contains('clientes')) {
+                            const clientesStore = db.createObjectStore('clientes', { keyPath: 'id' });
+                            clientesStore.createIndex('nome', 'nome', { unique: false });
+                            clientesStore.createIndex('etapaFunil', 'etapaFunil', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('imoveis')) {
+                            const imoveisStore = db.createObjectStore('imoveis', { keyPath: 'id' });
+                            imoveisStore.createIndex('titulo', 'titulo', { unique: false });
+                            imoveisStore.createIndex('tipo', 'tipo', { unique: false });
+                            imoveisStore.createIndex('status', 'status', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('visitas')) {
+                            const visitasStore = db.createObjectStore('visitas', { keyPath: 'id' });
+                            visitasStore.createIndex('data', 'data', { unique: false });
+                            visitasStore.createIndex('tipo', 'tipo', { unique: false });
+                            visitasStore.createIndex('status', 'status', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('links')) {
+                            const linksStore = db.createObjectStore('links', { keyPath: 'id' });
+                            linksStore.createIndex('titulo', 'titulo', { unique: false });
+                            linksStore.createIndex('categoria', 'categoria', { unique: false });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('settings')) {
+                            db.createObjectStore('settings', { keyPath: 'id' });
+                        }
+                        
+                        if (!db.objectStoreNames.contains('funilEtapas')) {
+                            const etapasStore = db.createObjectStore('funilEtapas', { keyPath: 'id' });
+                            etapasStore.createIndex('ordem', 'ordem', { unique: false });
+                        }
+                        
+                        console.log('Object stores criados com sucesso');
+                    };
+                });
+            },
+            
+            // Métodos CRUD genéricos
+            getAll: function(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.getAll();
+                    
+                    request.onsuccess = (event) => resolve(event.target.result);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            get: function(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    
+                    request.onsuccess = (event) => resolve(event.target.result);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            add: function(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.add(data);
+                    
+                    request.onsuccess = () => resolve(data);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            put: function(storeName, data) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put(data);
+                    
+                    request.onsuccess = () => resolve(data);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            delete: function(storeName, key) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(key);
+                    
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            clear: function(storeName) {
+                return new Promise((resolve, reject) => {
+                    const transaction = this.db.transaction([storeName], 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.clear();
+                    
+                    request.onsuccess = () => resolve(true);
+                    request.onerror = (event) => reject(event);
+                });
+            },
+            
+            // Métodos específicos
+            migrateFromLocalStorage: async function() {
+                console.log('Iniciando migração do localStorage para IndexedDB...');
+                
+                try {
+                    // Verificar se já existe dados no IndexedDB
+                    const existingData = await this.getAll('clientes');
+                    if (existingData.length > 0) {
+                        console.log('Dados já existem no IndexedDB, pulando migração');
+                        return;
+                    }
+                    
+                    // Migrar dados do localStorage
+                    const oldData = {
+                        clientes: localStorage.getItem('imobipro_clientes'),
+                        imoveis: localStorage.getItem('imobipro_imoveis'),
+                        visitas: localStorage.getItem('imobipro_visitas'),
+                        links: localStorage.getItem('imobipro_links'),
+                        settings: localStorage.getItem('imobipro_settings'),
+                        funilEtapas: localStorage.getItem('imobipro_funil_etapas'),
+                        
+                        // Verificar formato antigo
+                        clientesOld: localStorage.getItem('clientes'),
+                        imoveisOld: localStorage.getItem('imoveis'),
+                        visitasOld: localStorage.getItem('visitas'),
+                        linksOld: localStorage.getItem('links'),
+                        settingsOld: localStorage.getItem('settings'),
+                        funilEtapasOld: localStorage.getItem('funil_etapas')
+                    };
+                    
+                    let migrated = false;
+                    
+                    // Migrar clientes (novo formato)
+                    if (oldData.clientes) {
+                        const clientes = JSON.parse(oldData.clientes);
+                        for (const cliente of clientes) {
+                            await this.put('clientes', cliente);
+                        }
+                        migrated = true;
+                        console.log('Clientes migrados (novo formato)');
+                    }
+                    // Migrar clientes (formato antigo)
+                    else if (oldData.clientesOld) {
+                        const clientes = JSON.parse(oldData.clientesOld);
+                        for (const cliente of clientes) {
+                            await this.put('clientes', cliente);
+                        }
+                        migrated = true;
+                        console.log('Clientes migrados (formato antigo)');
+                    }
+                    
+                    // Migrar imóveis (novo formato)
+                    if (oldData.imoveis) {
+                        const imoveis = JSON.parse(oldData.imoveis);
+                        for (const imovel of imoveis) {
+                            await this.put('imoveis', imovel);
+                        }
+                        migrated = true;
+                        console.log('Imóveis migrados (novo formato)');
+                    }
+                    // Migrar imóveis (formato antigo)
+                    else if (oldData.imoveisOld) {
+                        const imoveis = JSON.parse(oldData.imoveisOld);
+                        for (const imovel of imoveis) {
+                            await this.put('imoveis', imovel);
+                        }
+                        migrated = true;
+                        console.log('Imóveis migrados (formato antigo)');
+                    }
+                    
+                    // Migrar visitas (novo formato)
+                    if (oldData.visitas) {
+                        const visitas = JSON.parse(oldData.visitas);
+                        for (const visita of visitas) {
+                            await this.put('visitas', visita);
+                        }
+                        migrated = true;
+                        console.log('Visitas migradas (novo formato)');
+                    }
+                    // Migrar visitas (formato antigo)
+                    else if (oldData.visitasOld) {
+                        const visitas = JSON.parse(oldData.visitasOld);
+                        for (const visita of visitas) {
+                            await this.put('visitas', visita);
+                        }
+                        migrated = true;
+                        console.log('Visitas migradas (formato antigo)');
+                    }
+                    
+                    // Migrar links (novo formato)
+                    if (oldData.links) {
+                        const links = JSON.parse(oldData.links);
+                        for (const link of links) {
+                            await this.put('links', link);
+                        }
+                        migrated = true;
+                        console.log('Links migrados (novo formato)');
+                    }
+                    // Migrar links (formato antigo)
+                    else if (oldData.linksOld) {
+                        const links = JSON.parse(oldData.linksOld);
+                        for (const link of links) {
+                            await this.put('links', link);
+                        }
+                        migrated = true;
+                        console.log('Links migrados (formato antigo)');
+                    }
+                    
+                    // Migrar settings
+                    if (oldData.settings) {
+                        const settings = JSON.parse(oldData.settings);
+                        await this.put('settings', { id: 'main', ...settings });
+                        migrated = true;
+                        console.log('Settings migrados (novo formato)');
+                    } else if (oldData.settingsOld) {
+                        const settings = JSON.parse(oldData.settingsOld);
+                        await this.put('settings', { id: 'main', ...settings });
+                        migrated = true;
+                        console.log('Settings migrados (formato antigo)');
+                    } else {
+                        // Settings padrão
+                        await this.put('settings', {
+                            id: 'main',
+                            nome: 'Seu Nome',
+                            creci: '12345-SP',
+                            telefone: '(11) 99999-9999',
+                            email: 'seuemail@imobiliaria.com',
+                            imobiliaria: 'Imobiliária Exemplo',
+                            comissao: 5
+                        });
+                    }
+                    
+                    // Migrar etapas do funil
+                    if (oldData.funilEtapas) {
+                        const etapas = JSON.parse(oldData.funilEtapas);
+                        for (const etapa of etapas) {
+                            await this.put('funilEtapas', etapa);
+                        }
+                        migrated = true;
+                        console.log('Etapas do funil migradas (novo formato)');
+                    } else if (oldData.funilEtapasOld) {
+                        const etapas = JSON.parse(oldData.funilEtapasOld);
+                        for (const etapa of etapas) {
+                            await this.put('funilEtapas', etapa);
+                        }
+                        migrated = true;
+                        console.log('Etapas do funil migradas (formato antigo)');
+                    } else {
+                        // Etapas padrão
+                        const etapasPadrao = [
+                            { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
+                            { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
+                            { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
+                            { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
+                            { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
+                            { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
+                            { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
+                            { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
+                        ];
+                        for (const etapa of etapasPadrao) {
+                            await this.put('funilEtapas', etapa);
+                        }
+                    }
+                    
+                    if (migrated) {
+                        // Limpar localStorage após migração
+                        localStorage.removeItem('imobipro_clientes');
+                        localStorage.removeItem('imobipro_imoveis');
+                        localStorage.removeItem('imobipro_visitas');
+                        localStorage.removeItem('imobipro_links');
+                        localStorage.removeItem('imobipro_settings');
+                        localStorage.removeItem('imobipro_funil_etapas');
+                        localStorage.removeItem('clientes');
+                        localStorage.removeItem('imoveis');
+                        localStorage.removeItem('visitas');
+                        localStorage.removeItem('links');
+                        localStorage.removeItem('settings');
+                        localStorage.removeItem('funil_etapas');
+                        
+                        console.log('Migração concluída e localStorage limpo');
+                    }
+                    
+                } catch (error) {
+                    console.error('Erro durante migração:', error);
+                }
+            }
+        };
+
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
             formatCurrency: (val) => {
@@ -2228,13 +2569,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return statuses[status] || status;
             },
             getEtapaFunilText: (etapa) => {
-                const etapas = Storage.getFunilEtapas();
-                return etapas.find(e => e.id === etapa)?.nome || etapa;
+                return etapa?.nome || etapa;
             },
             getEtapaFunilColor: (etapa) => {
-                const etapas = Storage.getFunilEtapas();
-                const etapaObj = etapas.find(e => e.id === etapa);
-                return etapaObj?.cor || '#93c5fd';
+                return etapa?.cor || '#93c5fd';
             },
             isBirthdayToday: (birthdate) => {
                 if (!birthdate) return false;
@@ -2269,7 +2607,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     let yPos = margin;
                     
-                    const settings = Storage.getSettings();
+                    const settings = await DB.get('settings', 'main') || {};
                     
                     doc.setFontSize(20);
                     doc.setTextColor(37, 99, 235);
@@ -2441,7 +2779,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     let yPos = margin;
                     
-                    const settings = Storage.getSettings();
+                    const settings = await DB.get('settings', 'main') || {};
                     
                     doc.setFillColor(37, 99, 235);
                     doc.rect(0, 0, pageWidth, 40, 'F');
@@ -2749,7 +3087,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 window.open(whatsappUrl, '_blank');
             },
             
-            // FUNÇÃO MODIFICADA: Gerar mensagem WhatsApp formatada conforme especificado
             generateWhatsAppMessage: (cliente, imovel, settings) => {
                 const horaAtual = new Date().getHours();
                 let saudacao = "Boa tarde";
@@ -2767,7 +3104,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 let message = `${saudacao}, ${nomeCliente}! Tudo bem?\n\n`;
                 message += `Aqui é ${nomeCorretor} da ${nomeImobiliaria}.\n\n`;
                 
-                // APENAS se houver imóvel de interesse selecionado
                 if (imovel) {
                     message += `Vi que seu interesse inicial foi no *${imovel.titulo}*.\n\n`;
                     
@@ -2808,7 +3144,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message += `🏗️ Construtora: ${imovel.construtora}\n`;
                     }
                 } else {
-                    // Mensagem genérica quando não há imóvel selecionado
                     message += `Estou entrando em contato para dar seguimento ao seu interesse em imóveis.\n\n`;
                 }
                 
@@ -2823,7 +3158,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return message;
             },
             
-            // NOVA FUNÇÃO: Enviar email
             sendEmail: (cliente, imovel, settings) => {
                 if (!cliente.email) {
                     Utils.toast('Cliente não tem email cadastrado', 'error');
@@ -2906,29 +3240,22 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 Utils.toast('Abrindo email...');
             },
             
-            // FUNÇÃO CORRIGIDA PARA BACKUP EM DISPOSITIVOS MÓVEIS
             downloadBackup: function(dataStr, filename) {
-                // Criar um blob
                 const blob = new Blob([dataStr], { type: 'application/json' });
                 
-                // Verificar se é iOS
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 
                 if (isIOS) {
-                    // Para iOS, usar abordagem que funciona
                     const reader = new FileReader();
                     reader.onload = function() {
                         const url = reader.result;
-                        // Criar um link temporário
                         const a = document.createElement('a');
                         a.href = url;
                         a.download = filename;
                         a.style.display = 'none';
                         
-                        // Adicionar ao body e clicar
                         document.body.appendChild(a);
                         
-                        // Disparar o clique
                         const clickEvent = new MouseEvent('click', {
                             view: window,
                             bubbles: true,
@@ -2936,34 +3263,28 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         });
                         a.dispatchEvent(clickEvent);
                         
-                        // Limpar
                         setTimeout(() => {
                             document.body.removeChild(a);
                         }, 100);
                     };
                     reader.readAsDataURL(blob);
                 } else {
-                    // Para Android e outros dispositivos
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = url;
                     a.download = filename;
                     a.style.display = 'none';
                     
-                    // Adicionar ao body
                     document.body.appendChild(a);
                     
-                    // Disparar o clique
                     a.click();
                     
-                    // Limpar
                     setTimeout(() => {
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
                     }, 100);
                 }
                 
-                // Mostrar toast de confirmação
                 setTimeout(() => {
                     Utils.toast('Backup baixado com sucesso!');
                 }, 500);
@@ -2971,16 +3292,27 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         };
 
         const Storage = {
-            get: (key) => {
-                const data = localStorage.getItem(`imobipro_${key}`);
-                return data ? JSON.parse(data) : [];
+            // Métodos para acessar dados do IndexedDB
+            async getClientes() {
+                return await DB.getAll('clientes');
             },
-            set: (key, data) => {
-                localStorage.setItem(`imobipro_${key}`, JSON.stringify(data));
+            
+            async getImoveis() {
+                return await DB.getAll('imoveis');
             },
-            getSettings: () => {
-                const data = localStorage.getItem('imobipro_settings');
-                return data ? JSON.parse(data) : { 
+            
+            async getVisitas() {
+                return await DB.getAll('visitas');
+            },
+            
+            async getLinks() {
+                return await DB.getAll('links');
+            },
+            
+            async getSettings() {
+                const settings = await DB.get('settings', 'main');
+                return settings || { 
+                    id: 'main',
                     nome: 'Seu Nome',
                     creci: '12345-SP',
                     telefone: '(11) 99999-9999',
@@ -2989,96 +3321,31 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     comissao: 5
                 };
             },
-            saveSettings: (data) => localStorage.setItem('imobipro_settings', JSON.stringify(data)),
-            getFunilEtapas: () => {
-                const etapasPadrao = [
-                    { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
-                    { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
-                    { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
-                    { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
-                    { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
-                    { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
-                    { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
-                    { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
-                ];
-                const data = localStorage.getItem('imobipro_funil_etapas');
-                return data ? JSON.parse(data) : etapasPadrao;
-            },
-            saveFunilEtapas: (etapas) => localStorage.setItem('imobipro_funil_etapas', JSON.stringify(etapas)),
-            getLinks: () => {
-                const data = localStorage.getItem('imobipro_links');
-                return data ? JSON.parse(data) : [];
-            },
-            saveLinks: (links) => localStorage.setItem('imobipro_links', JSON.stringify(links)),
             
-            // NOVA FUNÇÃO: Migrar dados da versão anterior
-            migrateOldData: function() {
-                console.log("Verificando migração de dados da versão anterior...");
-                
-                // Verificar se há dados no formato antigo
-                const oldClients = localStorage.getItem('clientes');
-                const oldProperties = localStorage.getItem('imoveis');
-                const oldAppointments = localStorage.getItem('visitas');
-                const oldLinks = localStorage.getItem('links');
-                const oldSettings = localStorage.getItem('settings');
-                const oldFunil = localStorage.getItem('funil_etapas');
-                
-                let migrated = false;
-                
-                // Migrar clientes
-                if (oldClients && !localStorage.getItem('imobipro_clientes')) {
-                    localStorage.setItem('imobipro_clientes', oldClients);
-                    console.log("Clientes migrados da versão anterior");
-                    migrated = true;
+            async getFunilEtapas() {
+                const etapas = await DB.getAll('funilEtapas');
+                if (etapas.length === 0) {
+                    // Etapas padrão
+                    const etapasPadrao = [
+                        { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
+                        { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
+                        { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
+                        { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
+                        { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
+                        { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
+                        { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
+                        { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
+                    ];
+                    
+                    // Salvar etapas padrão
+                    for (const etapa of etapasPadrao) {
+                        await DB.put('funilEtapas', etapa);
+                    }
+                    
+                    return etapasPadrao;
                 }
                 
-                // Migrar imóveis
-                if (oldProperties && !localStorage.getItem('imobipro_imoveis')) {
-                    localStorage.setItem('imobipro_imoveis', oldProperties);
-                    console.log("Imóveis migrados da versão anterior");
-                    migrated = true;
-                }
-                
-                // Migrar visitas
-                if (oldAppointments && !localStorage.getItem('imobipro_visitas')) {
-                    localStorage.setItem('imobipro_visitas', oldAppointments);
-                    console.log("Visitas migradas da versão anterior");
-                    migrated = true;
-                }
-                
-                // Migrar links
-                if (oldLinks && !localStorage.getItem('imobipro_links')) {
-                    localStorage.setItem('imobipro_links', oldLinks);
-                    console.log("Links migrados da versão anterior");
-                    migrated = true;
-                }
-                
-                // Migrar settings
-                if (oldSettings && !localStorage.getItem('imobipro_settings')) {
-                    localStorage.setItem('imobipro_settings', oldSettings);
-                    console.log("Configurações migradas da versão anterior");
-                    migrated = true;
-                }
-                
-                // Migrar funil etapas
-                if (oldFunil && !localStorage.getItem('imobipro_funil_etapas')) {
-                    localStorage.setItem('imobipro_funil_etapas', oldFunil);
-                    console.log("Etapas do funil migradas da versão anterior");
-                    migrated = true;
-                }
-                
-                // Limpar dados antigos após migração
-                if (migrated) {
-                    localStorage.removeItem('clientes');
-                    localStorage.removeItem('imoveis');
-                    localStorage.removeItem('visitas');
-                    localStorage.removeItem('links');
-                    localStorage.removeItem('settings');
-                    localStorage.removeItem('funil_etapas');
-                    console.log("Dados antigos removidos após migração");
-                }
-                
-                return migrated;
+                return etapas.sort((a, b) => a.ordem - b.ordem);
             }
         };
 
@@ -3099,36 +3366,46 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             currentAgendaFilter: 'todos',
             draggingClient: null,
             
-            init: () => {
-                // Migrar dados da versão anterior automaticamente
-                Storage.migrateOldData();
-                
-                UI.data.clientes = Storage.get('clientes');
-                UI.data.imoveis = Storage.get('imoveis');
-                UI.data.visitas = Storage.get('visitas');
-                UI.data.links = Storage.getLinks();
-                UI.data.funilEtapas = Storage.getFunilEtapas();
-                
-                UI.data.clientes.forEach(cliente => {
-                    if (!cliente.etapaFunil) {
-                        cliente.etapaFunil = 'lead';
-                        cliente.dataEntradaFunil = cliente.dataEntradaFunil || new Date().toISOString().split('T')[0];
+            init: async () => {
+                try {
+                    // Inicializar IndexedDB
+                    await DB.init();
+                    
+                    // Migrar dados do localStorage (se existirem)
+                    await DB.migrateFromLocalStorage();
+                    
+                    // Carregar dados do IndexedDB
+                    UI.data.clientes = await Storage.getClientes();
+                    UI.data.imoveis = await Storage.getImoveis();
+                    UI.data.visitas = await Storage.getVisitas();
+                    UI.data.links = await Storage.getLinks();
+                    UI.data.funilEtapas = await Storage.getFunilEtapas();
+                    
+                    // Garantir que clientes tenham etapaFunil
+                    for (const cliente of UI.data.clientes) {
+                        if (!cliente.etapaFunil) {
+                            cliente.etapaFunil = 'lead';
+                            cliente.dataEntradaFunil = cliente.dataEntradaFunil || new Date().toISOString().split('T')[0];
+                            await DB.put('clientes', cliente);
+                        }
                     }
-                });
-                
-                UI.renderDashboard();
-                
-                document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
-                    el.addEventListener('click', (e) => e.preventDefault());
-                });
-                
-                UI.renderFunil();
-                
-                document.addEventListener('DOMContentLoaded', () => {
-                    document.getElementById('i-imagem-input').addEventListener('click', (e) => {
-                        e.stopPropagation();
+                    
+                    // Mostrar aplicação
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    
+                    UI.renderDashboard();
+                    
+                    document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
+                        el.addEventListener('click', (e) => e.preventDefault());
                     });
-                });
+                    
+                    UI.renderFunil();
+                    
+                } catch (error) {
+                    console.error('Erro ao inicializar:', error);
+                    Utils.toast('Erro ao inicializar o sistema', 'error');
+                }
             },
 
             switchTab: (el) => {
@@ -3171,14 +3448,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(el) UI.switchTab(el);
             },
 
-            // NOVA FUNÇÃO: Busca avançada de imóveis
             searchImoveis: function(searchTerm) {
                 const tipoFilter = document.querySelector('#imoveis-view select').value;
                 const statusFilter = document.getElementById('filter-status').value;
                 UI.renderImoveis(searchTerm, tipoFilter, statusFilter);
             },
 
-            renderFunil: () => {
+            renderFunil: async () => {
                 const etapas = UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem);
                 
                 const totalClientes = UI.data.clientes.length;
@@ -3304,7 +3580,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 event.target.classList.add('dragging');
             },
             
-            dropOnStage: (event, etapaId) => {
+            dropOnStage: async (event, etapaId) => {
                 event.preventDefault();
                 const clienteId = event.dataTransfer.getData('text/plain');
                 
@@ -3313,7 +3589,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (cliente && cliente.etapaFunil !== etapaId) {
                         cliente.etapaFunil = etapaId;
                         cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
-                        Storage.set('clientes', UI.data.clientes);
+                        await DB.put('clientes', cliente);
                         UI.renderFunil();
                         UI.renderClientes();
                         Utils.toast(`${cliente.nome} movido para ${Utils.getEtapaFunilText(etapaId)}`);
@@ -3420,13 +3696,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.openModal('funil-settings');
             },
             
-            updateEtapaFunil: (index, campo, valor) => {
+            updateEtapaFunil: async (index, campo, valor) => {
                 UI.data.funilEtapas[index][campo] = valor;
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                await DB.put('funilEtapas', UI.data.funilEtapas[index]);
                 UI.renderFunil();
             },
             
-            moveEtapaFunil: (index, direcao) => {
+            moveEtapaFunil: async (index, direcao) => {
                 if (direcao === 'up' && index > 0) {
                     const temp = UI.data.funilEtapas[index];
                     UI.data.funilEtapas[index] = UI.data.funilEtapas[index - 1];
@@ -3441,12 +3717,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     etapa.ordem = idx + 1;
                 });
                 
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                // Salvar todas as etapas
+                for (const etapa of UI.data.funilEtapas) {
+                    await DB.put('funilEtapas', etapa);
+                }
+                
                 UI.openFunilSettings();
                 UI.renderFunil();
             },
             
-            addEtapaFunil: () => {
+            addEtapaFunil: async () => {
                 const novaEtapa = {
                     id: `etapa-${Date.now()}`,
                     nome: 'Nova Etapa',
@@ -3455,12 +3735,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
                 
                 UI.data.funilEtapas.push(novaEtapa);
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
+                await DB.put('funilEtapas', novaEtapa);
                 UI.openFunilSettings();
                 UI.renderFunil();
             },
             
-            removeEtapaFunil: (index) => {
+            removeEtapaFunil: async (index) => {
                 if (UI.data.funilEtapas.length <= 1) {
                     Utils.toast('O funil deve ter pelo menos uma etapa', 'error');
                     return;
@@ -3468,20 +3748,24 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const etapaRemovida = UI.data.funilEtapas[index];
                 
-                UI.data.clientes.forEach(cliente => {
+                // Atualizar clientes que estavam na etapa removida
+                for (const cliente of UI.data.clientes) {
                     if (cliente.etapaFunil === etapaRemovida.id) {
                         cliente.etapaFunil = UI.data.funilEtapas[0].id;
+                        await DB.put('clientes', cliente);
                     }
-                });
+                }
                 
-                Storage.set('clientes', UI.data.clientes);
+                // Remover etapa
                 UI.data.funilEtapas.splice(index, 1);
+                await DB.delete('funilEtapas', etapaRemovida.id);
                 
+                // Atualizar ordens
                 UI.data.funilEtapas.forEach((etapa, idx) => {
                     etapa.ordem = idx + 1;
+                    DB.put('funilEtapas', etapa);
                 });
                 
-                Storage.saveFunilEtapas(UI.data.funilEtapas);
                 UI.openFunilSettings();
                 UI.renderFunil();
                 UI.renderClientes();
@@ -3794,7 +4078,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }).join('');
             },
 
-            // FUNÇÃO MODIFICADA: Busca avançada de imóveis incluindo data de entrega
             renderImoveis: (filter = '', tipoFilter = '', statusFilter = '') => {
                 const list = document.getElementById('imoveis-list');
                 let filtered = UI.data.imoveis;
@@ -3805,9 +4088,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         i.titulo.toLowerCase().includes(termo) ||
                         i.endereco.toLowerCase().includes(termo) ||
                         (i.construtora && i.construtora.toLowerCase().includes(termo)) ||
-                        // NOVO: Buscar por data de entrega formatada
                         (i.dataEntrega && Utils.formatDate(i.dataEntrega).toLowerCase().includes(termo)) ||
-                        // Buscar também pela data no formato original
                         (i.dataEntrega && i.dataEntrega.toLowerCase().includes(termo))
                     );
                 }
@@ -3862,7 +4143,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const mainImageClick = i.imagens && i.imagens.length > 0 ? 
                     `onclick="event.stopPropagation(); UI.openFullscreen('${i.id}', 0)"` : '';
                 
-                // Adicionar data de entrega se existir
                 const dataEntregaInfo = i.dataEntrega ? 
                     `<div style="font-size: 0.75rem; color: var(--secondary); margin-top: 4px;">
                         <i class="far fa-calendar"></i> Entrega: ${Utils.formatDate(i.dataEntrega)}
@@ -4989,8 +5269,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }, 100);
             },
 
-            openSettings: () => {
-                const s = Storage.getSettings();
+            openSettings: async () => {
+                const s = await Storage.getSettings();
                 document.getElementById('s-nome').value = s.nome || '';
                 document.getElementById('s-creci').value = s.creci || '';
                 document.getElementById('s-telefone').value = s.telefone || '';
@@ -5004,7 +5284,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
         const App = {
             cliente: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('c-id').value || Utils.id();
                     const nome = document.getElementById('c-nome').value;
@@ -5031,11 +5311,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             newClient.dataEntradaFunil = UI.data.clientes[existingIdx].dataEntradaFunil;
                         }
                         UI.data.clientes[existingIdx] = newClient;
+                        await DB.put('clientes', newClient);
                     } else {
                         UI.data.clientes.push(newClient);
+                        await DB.add('clientes', newClient);
                     }
 
-                    Storage.set('clientes', UI.data.clientes);
                     Utils.toast('Cliente salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5083,7 +5364,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const settings = Storage.getSettings();
                     let imovel = null;
                     
-                    // APENAS se o cliente tiver um imóvel de interesse selecionado
                     if (c.imovelInteresseId) {
                         imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
                     }
@@ -5094,14 +5374,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
                 },
-                email: (id) => {
+                email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.email) {
                         Utils.toast('Cliente sem email cadastrado', 'error');
                         return;
                     }
                     
-                    const settings = Storage.getSettings();
+                    const settings = await Storage.getSettings();
                     let imovel = null;
                     
                     if (c.imovelInteresseId) {
@@ -5113,7 +5393,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             imovel: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('i-id').value || Utils.id();
                     
@@ -5160,10 +5440,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             imovel.dataVenda = UI.data.imoveis[idx].dataVenda;
                         }
                         UI.data.imoveis[idx] = imovel;
+                        await DB.put('imoveis', imovel);
                     }
-                    else UI.data.imoveis.push(imovel);
+                    else {
+                        UI.data.imoveis.push(imovel);
+                        await DB.add('imoveis', imovel);
+                    }
 
-                    Storage.set('imoveis', UI.data.imoveis);
                     Utils.toast('Imóvel salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5322,7 +5605,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             agenda: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('v-id').value || Utils.id();
                     
@@ -5355,10 +5638,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     };
 
                     const idx = UI.data.visitas.findIndex(v => v.id === id);
-                    if(idx >= 0) UI.data.visitas[idx] = visita;
-                    else UI.data.visitas.push(visita);
+                    if(idx >= 0) {
+                        UI.data.visitas[idx] = visita;
+                        await DB.put('visitas', visita);
+                    }
+                    else {
+                        UI.data.visitas.push(visita);
+                        await DB.add('visitas', visita);
+                    }
 
-                    Storage.set('visitas', UI.data.visitas);
                     Utils.toast('Agendamento salvo!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5413,10 +5701,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             settings: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     
                     const settings = {
+                        id: 'main',
                         nome: document.getElementById('s-nome').value,
                         creci: document.getElementById('s-creci').value,
                         telefone: document.getElementById('s-telefone').value,
@@ -5425,7 +5714,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         comissao: parseFloat(document.getElementById('s-comissao').value) || 5
                     };
                     
-                    Storage.saveSettings(settings);
+                    await DB.put('settings', settings);
                     Utils.toast('Configurações salvas!');
                     UI.closeModals();
                     UI.renderDashboard();
@@ -5433,11 +5722,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             whatsapp: {
-                shareImovel: (id) => {
+                shareImovel: async (id) => {
                     const i = UI.data.imoveis.find(x => x.id === id);
                     if(!i) return;
                     
-                    const settings = Storage.getSettings();
+                    const settings = await Storage.getSettings();
                     
                     let message = `🏠 *${i.titulo}*\n\n`;
                     message += `*Endereço:* ${i.endereco}\n`;
@@ -5464,7 +5753,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             link: {
-                save: (e) => {
+                save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('l-id').value || Utils.id();
                     
@@ -5478,10 +5767,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     };
 
                     const idx = UI.data.links.findIndex(l => l.id === id);
-                    if(idx >= 0) UI.data.links[idx] = link;
-                    else UI.data.links.push(link);
+                    if(idx >= 0) {
+                        UI.data.links[idx] = link;
+                        await DB.put('links', link);
+                    }
+                    else {
+                        UI.data.links.push(link);
+                        await DB.add('links', link);
+                    }
 
-                    Storage.saveLinks(UI.data.links);
                     Utils.toast('Link salvo!');
                     UI.closeModals();
                     UI.renderLinks();
@@ -5514,31 +5808,30 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         Utils.toast('Link copiado!');
                     });
                 },
-                delete: (id) => {
+                delete: async (id) => {
                     if(!confirm('Tem certeza que deseja excluir este link?')) return;
                     
                     UI.data.links = UI.data.links.filter(l => l.id !== id);
-                    Storage.saveLinks(UI.data.links);
+                    await DB.delete('links', id);
                     Utils.toast('Link excluído!');
                     UI.renderLinks();
                 }
             },
 
             backup: {
-                exportData: function() {
+                exportData: async function() {
                     const data = {
-                        clientes: Storage.get('clientes'),
-                        imoveis: Storage.get('imoveis'),
-                        visitas: Storage.get('visitas'),
-                        links: Storage.getLinks(),
-                        settings: Storage.getSettings(),
-                        funilEtapas: Storage.getFunilEtapas()
+                        clientes: UI.data.clientes,
+                        imoveis: UI.data.imoveis,
+                        visitas: UI.data.visitas,
+                        links: UI.data.links,
+                        settings: await Storage.getSettings(),
+                        funilEtapas: UI.data.funilEtapas
                     };
 
                     const dataStr = JSON.stringify(data, null, 2);
                     const filename = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
                     
-                    // Usar a função corrigida para backup
                     Utils.downloadBackup(dataStr, filename);
                 },
 
@@ -5546,25 +5839,54 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('import-file').click();
                 },
 
-                importData: function(input) {
+                importData: async function(input) {
                     const file = input.files[0];
                     if (!file) {
                         return;
                     }
 
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = async function(e) {
                         try {
                             const data = JSON.parse(e.target.result);
 
                             if (data.clientes && data.imoveis && data.visitas && data.links && data.settings && data.funilEtapas) {
-                                Storage.set('clientes', data.clientes);
-                                Storage.set('imoveis', data.imoveis);
-                                Storage.set('visitas', data.visitas);
-                                Storage.saveLinks(data.links);
-                                Storage.saveSettings(data.settings);
-                                Storage.saveFunilEtapas(data.funilEtapas);
+                                // Limpar dados existentes
+                                await DB.clear('clientes');
+                                await DB.clear('imoveis');
+                                await DB.clear('visitas');
+                                await DB.clear('links');
+                                await DB.clear('funilEtapas');
+                                
+                                // Importar clientes
+                                for (const cliente of data.clientes) {
+                                    await DB.add('clientes', cliente);
+                                }
+                                
+                                // Importar imóveis
+                                for (const imovel of data.imoveis) {
+                                    await DB.add('imoveis', imovel);
+                                }
+                                
+                                // Importar visitas
+                                for (const visita of data.visitas) {
+                                    await DB.add('visitas', visita);
+                                }
+                                
+                                // Importar links
+                                for (const link of data.links) {
+                                    await DB.add('links', link);
+                                }
+                                
+                                // Importar settings
+                                await DB.put('settings', data.settings);
+                                
+                                // Importar etapas do funil
+                                for (const etapa of data.funilEtapas) {
+                                    await DB.add('funilEtapas', etapa);
+                                }
 
+                                // Atualizar UI
                                 UI.data.clientes = data.clientes;
                                 UI.data.imoveis = data.imoveis;
                                 UI.data.visitas = data.visitas;
@@ -5591,17 +5913,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     reader.readAsText(file);
                 },
 
-                clearData: function() {
+                clearData: async function() {
                     if (confirm('Tem certeza que deseja resetar todos os dados? Essa ação não pode ser desfeita.')) {
-                        localStorage.clear();
+                        await DB.clear('clientes');
+                        await DB.clear('imoveis');
+                        await DB.clear('visitas');
+                        await DB.clear('links');
+                        await DB.clear('funilEtapas');
+                        
+                        // Recarregar página
                         location.reload();
                     }
                 }
             }
         };
 
-        // Inicializar o sistema
-        UI.init();
+        // Inicializar o sistema quando a página carregar
+        window.addEventListener('DOMContentLoaded', UI.init);
     </script>
 </body>
 </html>
