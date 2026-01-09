@@ -2141,23 +2141,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 <div class="form-group">
                     <label class="form-label">Nome do Corretor</label>
-                    <input type="text" id="s-nome" class="form-control" placeholder="Seu nome completo">
+                    <input type="text" id="s-nome" class="form-control" placeholder="Alex Peixoto">
                 </div>
                 <div class="form-group">
                     <label class="form-label">CRECI</label>
-                    <input type="text" id="s-creci" class="form-control" placeholder="Número do CRECI">
+                    <input type="text" id="s-creci" class="form-control" placeholder="5794-AL">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Telefone</label>
-                    <input type="tel" id="s-telefone" class="form-control" oninput="Utils.maskPhone(this)">
+                    <input type="tel" id="s-telefone" class="form-control" value="(82) 99662-2036" oninput="Utils.maskPhone(this)">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input type="email" id="s-email" class="form-control">
+                    <input type="email" id="s-email" class="form-control" placeholder="alex@resende.com">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Imobiliária</label>
-                    <input type="text" id="s-imobiliaria" class="form-control" placeholder="Nome da imobiliária">
+                    <input type="text" id="s-imobiliaria" class="form-control" placeholder="Resende" value="Resende">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Taxa de Comissão (%)</label>
@@ -2235,7 +2235,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // Objeto principal do banco de dados IndexedDB
         const DB = {
             name: 'ImobiProDB',
-            version: 5,
+            version: 6,
             db: null,
             
             init: function() {
@@ -2352,6 +2352,27 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         }
                     } catch (error) {
                         console.error('Erro ao adicionar etapas padrão:', error);
+                    }
+                }
+                
+                if (oldVersion < 6) {
+                    console.log('Migrando para versão 6: Configurações padrão');
+                    try {
+                        const settings = await this.get('settings', 'main');
+                        if (!settings) {
+                            const defaultSettings = {
+                                id: 'main',
+                                nome: 'Alex Peixoto',
+                                creci: '5794-AL',
+                                telefone: '(82) 99662-2036',
+                                email: '',
+                                imobiliaria: 'Resende',
+                                comissao: 5
+                            };
+                            await this.put('settings', defaultSettings);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao adicionar configurações padrão:', error);
                     }
                 }
             },
@@ -2875,6 +2896,60 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     console.error('Erro ao gerar PDF:', err);
                     Utils.toast('Erro ao gerar PDF', 'error');
                 }
+            },
+            
+            getGreeting: () => {
+                const hour = new Date().getHours();
+                if (hour >= 5 && hour < 12) return "Bom dia";
+                if (hour >= 12 && hour < 18) return "Boa tarde";
+                return "Boa noite";
+            },
+            
+            generateWhatsAppMessage: async (cliente, imovel = null) => {
+                const greeting = Utils.getGreeting();
+                const clienteFirstName = cliente.nome.split(' ')[0];
+                
+                let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
+                
+                if (imovel) {
+                    message += `Vi que seu interesse inicial foi no *${imovel.titulo}*.\n\n`;
+                    
+                    message += `*Sobre o imóvel:*\n`;
+                    message += `• Tipo: ${Utils.getTipoText(imovel.tipo)}\n`;
+                    if (imovel.area) message += `• Área: ${imovel.area}m²\n`;
+                    if (imovel.quartos) message += `• Quartos: ${imovel.quartos}\n`;
+                    if (imovel.banheiros) message += `• Banheiros: ${imovel.banheiros}\n`;
+                    if (imovel.vagas) message += `• Vagas: ${imovel.vagas}\n`;
+                    if (imovel.gasEncanado === 'sim') message += `• Gás encanado: Sim\n`;
+                    if (imovel.condominio) message += `• Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês\n`;
+                    
+                    message += `\n*Sobre o condomínio:*\n`;
+                    message += `Localizado em ${imovel.endereco.split(',')[0]}, o condomínio oferece uma excelente localização e infraestrutura completa para sua família.\n\n`;
+                    
+                    if (imovel.formaPagamento) {
+                        message += `*Forma de pagamento:*\n`;
+                        message += `${imovel.formaPagamento}\n\n`;
+                    }
+                    
+                    if (imovel.precoVenda) {
+                        message += `*Valor:* ${Utils.formatCurrency(imovel.precoVenda)}\n\n`;
+                    } else if (imovel.precoAluguel) {
+                        message += `*Valor do aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n\n`;
+                    }
+                } else {
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar.\n\n`;
+                }
+                
+                const settings = await DB.get('settings', 'main');
+                
+                message += `Todas essas informações são necessárias para sua tomada de decisão, e caso tenha alguma dúvida, estou à sua inteira disposição.\n\n`;
+                message += `Caso queira, podemos marcar uma reunião para conhecer melhor o imóvel e tirar todas as suas dúvidas.\n\n`;
+                message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel!\n\n`;
+                message += `📞 ${settings.telefone || '(82) 99662-2036'}\n`;
+                message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+                message += `👨‍💼 ${settings.nome || 'Alex Peixoto'} | CRECI: ${settings.creci || '5794-AL'}`;
+                
+                return message;
             }
         };
 
@@ -2900,11 +2975,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const settings = await DB.get('settings', 'main');
                 return settings || { 
                     id: 'main',
-                    nome: 'Seu Nome',
-                    creci: '12345-SP',
-                    telefone: '(11) 99999-9999',
-                    email: 'seuemail@imobiliaria.com',
-                    imobiliaria: 'Imobiliária Exemplo',
+                    nome: 'Alex Peixoto',
+                    creci: '5794-AL',
+                    telefone: '(82) 99662-2036',
+                    email: '',
+                    imobiliaria: 'Resende',
                     comissao: 5
                 };
             },
@@ -3677,7 +3752,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
                             <div class="client-actions">
-                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${c.id}')">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${c.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${c.id}')">
@@ -4768,6 +4843,24 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
                 },
                 
+                whatsappPersonalizado: async (id) => {
+                    const c = UI.data.clientes.find(x => x.id === id);
+                    if(!c || !c.telefone) {
+                        Utils.toast('Cliente sem número de telefone', 'error');
+                        return;
+                    }
+                    
+                    const imovel = c.imovelInteresseId ? 
+                        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
+                    
+                    const message = await Utils.generateWhatsAppMessage(c, imovel);
+                    const cleanNumber = c.telefone.replace(/\D/g, '');
+                    const whatsappUrl = `https://wa.me/55${cleanNumber}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappUrl, '_blank');
+                    
+                    Utils.toast(`Abrindo WhatsApp personalizado para ${c.nome.split(' ')[0]}`);
+                },
+                
                 email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.email) {
@@ -4822,7 +4915,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         dataCriacao: new Date().toISOString()
                     };
 
-                    if((imovel.status === 'vendido' || imovel.status === 'alugado') && isNew) {
+                    if((imovel.status === 'vendido' || imovel.status === 'aluguel') && isNew) {
                         imovel.dataVenda = new Date().toISOString().split('T')[0];
                     }
 
@@ -5159,10 +5252,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if(i.precoAluguel) message += `*Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
                     
                     message += `\n*Descrição:* ${i.descricao || 'Sem descrição'}\n\n`;
-                    message += `*Corretor:* ${settings.nome || ''}\n`;
-                    message += `*Telefone:* ${settings.telefone || ''}\n`;
-                    message += `*Imobiliária:* ${settings.imobiliaria || ''}\n`;
-                    message += `*CRECI:* ${settings.creci || ''}\n\n`;
+                    message += `*Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
+                    message += `*Telefone:* ${settings.telefone || '(82) 99662-2036'}\n`;
+                    message += `*Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
+                    message += `*CRECI:* ${settings.creci || '5794-AL'}\n\n`;
                     message += `_Para mais informações, entre em contato!_`;
                     
                     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
