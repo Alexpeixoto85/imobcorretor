@@ -2950,6 +2950,30 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 message += `👨‍💼 ${settings.nome || 'Alex Peixoto'} | CRECI: ${settings.creci || '5794-AL'}`;
                 
                 return message;
+            },
+            
+            // NOVA FUNÇÃO: Preparar URL do WhatsApp com mensagem pré-definida
+            prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
+                const cliente = UI.data.clientes.find(x => x.id === clienteId);
+                if(!cliente || !cliente.telefone) {
+                    Utils.toast('Cliente sem número de telefone', 'error');
+                    return null;
+                }
+                
+                const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
+                const message = await Utils.generateWhatsAppMessage(cliente, imovel);
+                
+                // Limpar número de telefone
+                const cleanNumber = cliente.telefone.replace(/\D/g, '');
+                
+                // Se começar com 0, remover
+                const finalNumber = cleanNumber.startsWith('0') ? cleanNumber.substring(1) : cleanNumber;
+                
+                // Codificar mensagem para URL
+                const encodedMessage = encodeURIComponent(message);
+                
+                // Retornar URL completa
+                return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
             }
         };
 
@@ -3214,7 +3238,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     ${cliente.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(cliente.dataNascimento)}</div>` : ''}
                                 </div>
                                 <div class="client-actions">
-                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${cliente.id}')">
+                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
                                         <i class="fab fa-whatsapp"></i> Parabéns!
                                     </button>
                                 </div>
@@ -3420,7 +3444,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 ${cliente.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${cliente.faixaPreco}</div>` : ''}
                             </div>
                             <div class="client-actions">
-                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsapp('${cliente.id}')">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${cliente.id}')">
@@ -4843,6 +4867,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
                 },
                 
+                // FUNÇÃO MELHORADA: WhatsApp Personalizado
                 whatsappPersonalizado: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.telefone) {
@@ -4850,15 +4875,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         return;
                     }
                     
-                    const imovel = c.imovelInteresseId ? 
-                        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
-                    
-                    const message = await Utils.generateWhatsAppMessage(c, imovel);
-                    const cleanNumber = c.telefone.replace(/\D/g, '');
-                    const whatsappUrl = `https://wa.me/55${cleanNumber}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappUrl, '_blank');
-                    
-                    Utils.toast(`Abrindo WhatsApp personalizado para ${c.nome.split(' ')[0]}`);
+                    try {
+                        // Preparar URL do WhatsApp com mensagem
+                        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
+                        
+                        if (whatsappUrl) {
+                            // Abrir WhatsApp em uma nova janela/aba
+                            window.open(whatsappUrl, '_blank');
+                            
+                            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
+                        }
+                    } catch (error) {
+                        console.error('Erro ao abrir WhatsApp:', error);
+                        Utils.toast('Erro ao abrir WhatsApp', 'error');
+                    }
                 },
                 
                 email: async (id) => {
