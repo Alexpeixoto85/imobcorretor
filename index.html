@@ -355,6 +355,7 @@
         
         .btn-whatsapp-client:active {
             transform: scale(0.95);
+            background: #1da851;
         }
 
         .btn-email-client {
@@ -1448,6 +1449,12 @@
                 background: #334155;
                 color: #cbd5e1;
             }
+        }
+
+        /* Estilos adicionais para ícones do WhatsApp */
+        .btn-whatsapp-client i,
+        .btn-whatsapp i {
+            font-size: 1.1rem;
         }
     </style>
 </head>
@@ -2842,6 +2849,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             },
             
+            // FUNÇÃO MELHORADA: Gerar PDF Profissional
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -2853,41 +2861,187 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     const settings = await DB.get('settings', 'main') || {};
                     
+                    // Header com cor de fundo
+                    doc.setFillColor(37, 99, 235);
+                    doc.rect(0, 0, pageWidth, 25, 'F');
+                    
+                    // Logo/Título
+                    doc.setTextColor(255, 255, 255);
                     doc.setFontSize(20);
-                    doc.setTextColor(37, 99, 235);
-                    doc.text('FICHA TÉCNICA DO IMÓVEL', pageWidth/2, yPos, {align: 'center'});
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('FICHA TÉCNICA DO IMÓVEL', pageWidth/2, 15, {align: 'center'});
+                    
+                    // Informações da imobiliária
+                    doc.setFontSize(10);
+                    doc.text(`${settings.imobiliaria || 'Imobiliária'} | CRECI: ${settings.creci || '---'}`, pageWidth/2, 22, {align: 'center'});
+                    
+                    yPos = 35;
+                    
+                    // Título do imóvel
+                    doc.setFontSize(16);
+                    doc.setTextColor(15, 23, 42);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(imovel.titulo.substring(0, 70), margin, yPos);
+                    yPos += 8;
+                    
+                    // Endereço
+                    doc.setFontSize(11);
+                    doc.setTextColor(100, 116, 139);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(`📍 ${imovel.endereco}`, margin, yPos);
                     yPos += 10;
                     
-                    doc.setFontSize(12);
-                    doc.setTextColor(100, 116, 139);
-                    doc.text(`${settings.imobiliaria || 'Imobiliária'} | CRECI: ${settings.creci || '---'}`, pageWidth/2, yPos, {align: 'center'});
-                    yPos += 15;
-                    
+                    // Linha divisória
                     doc.setDrawColor(37, 99, 235);
                     doc.setLineWidth(0.5);
                     doc.line(margin, yPos, pageWidth - margin, yPos);
-                    yPos += 10;
+                    yPos += 12;
                     
-                    doc.setFontSize(16);
-                    doc.setTextColor(15, 23, 42);
-                    doc.text(imovel.titulo, margin, yPos);
+                    // Seção: VALORES
+                    doc.setFontSize(14);
+                    doc.setTextColor(37, 99, 235);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('💰 VALORES', margin, yPos);
                     yPos += 8;
                     
-                    doc.setFontSize(12);
-                    doc.setTextColor(100, 116, 139);
-                    doc.text(`Endereço: ${imovel.endereco}`, margin, yPos);
+                    doc.setFontSize(11);
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFont('helvetica', 'normal');
+                    
+                    let valorText = '';
+                    if(imovel.precoVenda) valorText += `Preço de Venda: ${Utils.formatCurrency(imovel.precoVenda)}`;
+                    if(imovel.precoAluguel) {
+                        if(valorText) valorText += '\n';
+                        valorText += `Preço de Aluguel: ${Utils.formatCurrency(imovel.precoAluguel)}/mês`;
+                    }
+                    
+                    const valoresLines = doc.splitTextToSize(valorText, pageWidth - 2*margin);
+                    valoresLines.forEach(line => {
+                        doc.text(line, margin, yPos);
+                        yPos += 6;
+                    });
+                    
+                    if(imovel.condominio) {
+                        doc.text(`Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês`, margin, yPos);
+                        yPos += 6;
+                    }
+                    
+                    yPos += 4;
+                    
+                    // Seção: CARACTERÍSTICAS
+                    doc.setFontSize(14);
+                    doc.setTextColor(37, 99, 235);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('🏠 CARACTERÍSTICAS', margin, yPos);
                     yPos += 8;
+                    
+                    doc.setFontSize(11);
+                    doc.setTextColor(30, 41, 59);
+                    
+                    const caracteristicas = [
+                        `Tipo: ${Utils.getTipoText(imovel.tipo)}`,
+                        `Transação: ${imovel.transacao === 'venda' ? 'Venda' : imovel.transacao === 'aluguel' ? 'Aluguel' : 'Venda/Aluguel'}`,
+                        `Área útil: ${imovel.area || 0}m²`,
+                        `Quartos: ${imovel.quartos || 0}`,
+                        `Banheiros: ${imovel.banheiros || 0}`,
+                        `Vagas de garagem: ${imovel.vagas || 0}`,
+                        `Gás encanado: ${imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'}`,
+                        `Status: ${Utils.getStatusText(imovel.status)}`
+                    ];
+                    
+                    caracteristicas.forEach(item => {
+                        doc.text(`• ${item}`, margin, yPos);
+                        yPos += 6;
+                    });
+                    
+                    yPos += 4;
+                    
+                    // Seção: INFORMAÇÕES ADICIONAIS
+                    if(imovel.dataEntrega || imovel.construtora || imovel.formaPagamento) {
+                        doc.setFontSize(14);
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('📋 INFORMAÇÕES ADICIONAIS', margin, yPos);
+                        yPos += 8;
+                        
+                        doc.setFontSize(11);
+                        doc.setTextColor(30, 41, 59);
+                        
+                        if(imovel.dataEntrega) {
+                            doc.text(`📅 Data de Entrega: ${Utils.formatDate(imovel.dataEntrega)}`, margin, yPos);
+                            yPos += 6;
+                        }
+                        
+                        if(imovel.construtora) {
+                            doc.text(`🏗️ Construtora: ${imovel.construtora}`, margin, yPos);
+                            yPos += 6;
+                        }
+                        
+                        if(imovel.formaPagamento) {
+                            const pagamentoLines = doc.splitTextToSize(`💳 Forma de Pagamento: ${imovel.formaPagamento}`, pageWidth - 2*margin);
+                            pagamentoLines.forEach(line => {
+                                doc.text(line, margin, yPos);
+                                yPos += 6;
+                            });
+                        }
+                        
+                        yPos += 4;
+                    }
+                    
+                    // Seção: DESCRIÇÃO
+                    if(imovel.descricao) {
+                        doc.setFontSize(14);
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text('📝 DESCRIÇÃO', margin, yPos);
+                        yPos += 8;
+                        
+                        doc.setFontSize(11);
+                        doc.setTextColor(30, 41, 59);
+                        
+                        const descLines = doc.splitTextToSize(imovel.descricao, pageWidth - 2*margin);
+                        descLines.forEach(line => {
+                            if(yPos > pageHeight - 20) {
+                                doc.addPage();
+                                yPos = margin;
+                            }
+                            doc.text(line, margin, yPos);
+                            yPos += 6;
+                        });
+                        
+                        yPos += 4;
+                    }
+                    
+                    // Seção: CONTATO
+                    if(yPos > pageHeight - 40) {
+                        doc.addPage();
+                        yPos = margin;
+                    }
                     
                     doc.setFontSize(14);
                     doc.setTextColor(37, 99, 235);
-                    let precoText = '';
-                    if(imovel.precoVenda) precoText += `Venda: ${Utils.formatCurrency(imovel.precoVenda)} `;
-                    if(imovel.precoAluguel) precoText += `Aluguel: ${Utils.formatCurrency(imovel.precoAluguel)}/mês`;
-                    doc.text(precoText, margin, yPos);
-                    yPos += 10;
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('📞 CONTATO', margin, yPos);
+                    yPos += 8;
+                    
+                    doc.setFontSize(11);
+                    doc.setTextColor(30, 41, 59);
+                    
+                    doc.text(`👨‍💼 Corretor: ${settings.nome || 'Alex Peixoto'}`, margin, yPos);
+                    yPos += 6;
+                    doc.text(`📋 CRECI: ${settings.creci || '5794-AL'}`, margin, yPos);
+                    yPos += 6;
+                    doc.text(`📞 Telefone: ${settings.telefone || '(82) 99662-2036'}`, margin, yPos);
+                    yPos += 6;
+                    doc.text(`🏢 Imobiliária: ${settings.imobiliaria || 'Resende'}`, margin, yPos);
+                    
+                    // Rodapé
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}`, pageWidth/2, pageHeight - 10, {align: 'center'});
                     
                     // Salvar arquivo
-                    const fileName = `ficha_imovel_${imovel.titulo.substring(0, 20).replace(/[^a-z0-9]/gi, '_')}.pdf`;
+                    const fileName = `ficha_tecnica_${imovel.titulo.substring(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().getTime()}.pdf`;
                     doc.save(fileName);
                     
                     Utils.toast('PDF gerado com sucesso!');
@@ -2905,49 +3059,82 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return "Boa noite";
             },
             
+            // NOVA FUNÇÃO: Limpar número de telefone
+            cleanPhoneNumber: (phone) => {
+                if(!phone) return '';
+                // Remove tudo exceto números
+                let clean = phone.replace(/\D/g, '');
+                // Remove o 0 inicial se houver
+                if(clean.startsWith('0')) {
+                    clean = clean.substring(1);
+                }
+                // Se começar com 55, remove (já vamos adicionar)
+                if(clean.startsWith('55')) {
+                    clean = clean.substring(2);
+                }
+                return clean;
+            },
+            
+            // FUNÇÃO MELHORADA: Gerar mensagem do WhatsApp com emojis
             generateWhatsAppMessage: async (cliente, imovel = null) => {
-                const greeting = Utils.getGreeting();
+                const hour = new Date().getHours();
+                let greeting = "Boa noite";
+                if (hour >= 5 && hour < 12) greeting = "Bom dia";
+                if (hour >= 12 && hour < 18) greeting = "Boa tarde";
+                
                 const clienteFirstName = cliente.nome.split(' ')[0];
                 
                 let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
+                message += `Aqui é ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} da ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
                 
                 if (imovel) {
                     message += `Vi que seu interesse inicial foi no *${imovel.titulo}*.\n\n`;
                     
-                    message += `*Sobre o imóvel:*\n`;
-                    message += `• Tipo: ${Utils.getTipoText(imovel.tipo)}\n`;
-                    if (imovel.area) message += `• Área: ${imovel.area}m²\n`;
-                    if (imovel.quartos) message += `• Quartos: ${imovel.quartos}\n`;
-                    if (imovel.banheiros) message += `• Banheiros: ${imovel.banheiros}\n`;
-                    if (imovel.vagas) message += `• Vagas: ${imovel.vagas}\n`;
-                    if (imovel.gasEncanado === 'sim') message += `• Gás encanado: Sim\n`;
-                    if (imovel.condominio) message += `• Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês\n`;
-                    
-                    message += `\n*Sobre o condomínio:*\n`;
-                    message += `Localizado em ${imovel.endereco.split(',')[0]}, o condomínio oferece uma excelente localização e infraestrutura completa para sua família.\n\n`;
-                    
-                    if (imovel.formaPagamento) {
-                        message += `*Forma de pagamento:*\n`;
-                        message += `${imovel.formaPagamento}\n\n`;
-                    }
+                    message += `*🏠 Sobre o imóvel:*\n`;
+                    message += `📍 *Endereço:* ${imovel.endereco}\n`;
+                    message += `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n`;
+                    if (imovel.area) message += `📐 *Área:* ${imovel.area}m²\n`;
+                    if (imovel.quartos) message += `🛏️ *Quartos:* ${imovel.quartos}\n`;
+                    if (imovel.banheiros) message += `🛁 *Banheiros:* ${imovel.banheiros}\n`;
+                    if (imovel.vagas) message += `🚗 *Vagas:* ${imovel.vagas}\n`;
+                    if (imovel.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+                    if (imovel.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(imovel.condominio)}/mês\n\n`;
                     
                     if (imovel.precoVenda) {
-                        message += `*Valor:* ${Utils.formatCurrency(imovel.precoVenda)}\n\n`;
+                        message += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
                     } else if (imovel.precoAluguel) {
-                        message += `*Valor do aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n\n`;
+                        message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
+                    }
+                    
+                    if (imovel.formaPagamento) {
+                        message += `\n💳 *Forma de Pagamento:*\n${imovel.formaPagamento}\n`;
+                    }
+                    
+                    if (imovel.dataEntrega) {
+                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(imovel.dataEntrega)}\n`;
+                    }
+                    
+                    if (imovel.construtora) {
+                        message += `\n🏗️ *Construtora:* ${imovel.construtora}\n`;
+                    }
+                    
+                    if (imovel.descricao) {
+                        message += `\n📝 *Descrição:*\n${imovel.descricao.substring(0, 150)}${imovel.descricao.length > 150 ? '...' : ''}\n`;
                     }
                 } else {
-                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar.\n\n`;
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar. Podemos conversar?\n`;
                 }
                 
                 const settings = await DB.get('settings', 'main');
                 
-                message += `Todas essas informações são necessárias para sua tomada de decisão, e caso tenha alguma dúvida, estou à sua inteira disposição.\n\n`;
-                message += `Caso queira, podemos marcar uma reunião para conhecer melhor o imóvel e tirar todas as suas dúvidas.\n\n`;
+                message += `\nTodas essas informações são necessárias para sua tomada de decisão.\n`;
+                message += `Caso tenha alguma dúvida, estou à sua inteira disposição.\n`;
+                message += `Caso queira, podemos marcar uma reunião para conversarmos melhor.\n\n`;
                 message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel!\n\n`;
-                message += `📞 ${settings.telefone || '(82) 99662-2036'}\n`;
-                message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
-                message += `👨‍💼 ${settings.nome || 'Alex Peixoto'} | CRECI: ${settings.creci || '5794-AL'}`;
+                message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
+                message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
+                message += `👨‍💼 *Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
+                message += `📋 *CRECI:* ${settings.creci || '5794-AL'}`;
                 
                 return message;
             },
@@ -2963,16 +3150,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
                 const message = await Utils.generateWhatsAppMessage(cliente, imovel);
                 
-                // Limpar número de telefone
-                const cleanNumber = cliente.telefone.replace(/\D/g, '');
+                // Limpar número de telefone usando a nova função
+                const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
                 
-                // Se começar com 0, remover
-                const finalNumber = cleanNumber.startsWith('0') ? cleanNumber.substring(1) : cleanNumber;
+                if(!finalNumber) {
+                    Utils.toast('Número de telefone inválido', 'error');
+                    return null;
+                }
                 
                 // Codificar mensagem para URL
                 const encodedMessage = encodeURIComponent(message);
                 
-                // Retornar URL completa
+                // Retornar URL completa para WhatsApp (isso abrirá o app diretamente)
                 return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
             }
         };
@@ -4880,8 +5069,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
                         
                         if (whatsappUrl) {
-                            // Abrir WhatsApp em uma nova janela/aba
-                            window.open(whatsappUrl, '_blank');
+                            // Abrir WhatsApp diretamente (isso abrirá o app se instalado)
+                            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                            
+                            // Fallback para web WhatsApp após 2 segundos
+                            setTimeout(() => {
+                                if(!document.hidden) {
+                                    // Se a janela não abriu, tenta abrir web WhatsApp
+                                    const cleanNumber = c.telefone.replace(/\D/g, '');
+                                    const fallbackUrl = `https://web.whatsapp.com/send?phone=55${cleanNumber}`;
+                                    window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+                                }
+                            }, 2000);
                             
                             Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
                         }
@@ -5264,6 +5463,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             whatsapp: {
+                // FUNÇÃO MELHORADA: Compartilhar imóvel no WhatsApp
                 shareImovel: async (id) => {
                     const i = UI.data.imoveis.find(x => x.id === id);
                     if(!i) return;
@@ -5271,24 +5471,36 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const settings = await Storage.getSettings();
                     
                     let message = `🏠 *${i.titulo}*\n\n`;
-                    message += `*Endereço:* ${i.endereco}\n`;
-                    message += `*Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-                    message += `*Área:* ${i.area || 0}m²\n`;
-                    message += `*Quartos:* ${i.quartos || 0}\n`;
-                    message += `*Banheiros:* ${i.banheiros || 0}\n`;
-                    message += `*Vagas:* ${i.vagas || 0}\n\n`;
+                    message += `📍 *Endereço:* ${i.endereco}\n`;
+                    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+                    message += `📐 *Área:* ${i.area || 0}m²\n`;
+                    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
+                    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
+                    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
+                    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+                    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
                     
-                    if(i.precoVenda) message += `*Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-                    if(i.precoAluguel) message += `*Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+                    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+                    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
                     
-                    message += `\n*Descrição:* ${i.descricao || 'Sem descrição'}\n\n`;
-                    message += `*Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
-                    message += `*Telefone:* ${settings.telefone || '(82) 99662-2036'}\n`;
-                    message += `*Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
-                    message += `*CRECI:* ${settings.creci || '5794-AL'}\n\n`;
-                    message += `_Para mais informações, entre em contato!_`;
+                    if(i.dataEntrega) {
+                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
+                    }
                     
-                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+                    if(i.construtora) {
+                        message += `🏗️ *Construtora:* ${i.construtora}\n`;
+                    }
+                    
+                    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
+                    message += `*Para mais informações:*\n`;
+                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
+                    message += `_Entre em contato para agendar uma visita!_`;
+                    
+                    // Abrir WhatsApp diretamente
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
                     
                     Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
                 }
