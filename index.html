@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>ImobiPro - Gestão Imobiliária</title>
+    <title>ImobiPro - Gestão Completa</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,112 +16,62 @@
 
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --secondary: #64748b;
-            --accent: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --dark: #0f172a;
-            --light: #f8fafc;
-            --surface: #ffffff;
-            --border: #e2e8f0;
+            --primary: #2563eb; --primary-dark: #1d4ed8; --secondary: #64748b;
+            --accent: #8b5cf6; --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --dark: #0f172a; --light: #f8fafc; --surface: #ffffff; --border: #e2e8f0;
+            --property-sale: #3b82f6; --property-rent: #10b981; --property-featured: #f59e0b;
             
-            --property-sale: #3b82f6;
-            --property-rent: #10b981;
-            --property-featured: #f59e0b;
+            --type-visita: #3b82f6; --type-reuniao-construtor: #8b5cf6; --type-reuniao-equipe: #0ea5e9;
+            --type-documentacao: #10b981; --type-plantao: #7c3aed; --type-generico: #f59e0b; --type-outro: #64748b;
             
-            --type-visita: #3b82f6;
-            --type-reuniao-construtor: #8b5cf6;
-            --type-reuniao-equipe: #0ea5e9;
-            --type-documentacao: #10b981;
-            --type-plantao: #7c3aed;
-            --type-generico: #f59e0b;
-            --type-outro: #64748b;
+            --funnel-lead: #93c5fd; --funnel-contato: #60a5fa; --funnel-cpf: #3b82f6;
+            --funnel-sem-restricao: #1d4ed8; --funnel-documentacao: #7c3aed; --funnel-aprovado: #10b981;
+            --funnel-contrato: #059669; --funnel-venda: #047857;
             
-            --funnel-lead: #93c5fd;
-            --funnel-contato: #60a5fa;
-            --funnel-cpf: #3b82f6;
-            --funnel-sem-restricao: #1d4ed8;
-            --funnel-documentacao: #7c3aed;
-            --funnel-aprovado: #10b981;
-            --funnel-contrato: #059669;
-            --funnel-venda: #047857;
-            
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
-            --header-height: calc(60px + var(--safe-top));
-            --nav-height: calc(65px + var(--safe-bottom));
-            --radius-lg: 16px;
-            --radius-md: 12px;
+            --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom);
+            --header-height: calc(60px + var(--safe-top)); --nav-height: calc(65px + var(--safe-bottom));
+            --radius-lg: 16px; --radius-md: 12px;
             --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
             --shadow-float: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
-            color: var(--dark);
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            user-select: none;
-            position: fixed;
-            width: 100%;
-            top: 0; left: 0;
+            font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: var(--dark);
+            height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
+            user-select: none; position: fixed; width: 100%; top: 0; left: 0;
         }
 
-        /* Estrutura Principal */
         header {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: var(--safe-top) 16px 10px;
-            height: var(--header-height);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 50;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            box-shadow: var(--shadow-sm);
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
+            padding: var(--safe-top) 16px 10px; height: var(--header-height);
+            display: flex; align-items: center; justify-content: space-between;
+            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+            border-bottom: 1px solid rgba(0,0,0,0.05); box-shadow: var(--shadow-sm);
         }
 
-        .brand { font-size: 1.25rem; font-weight: 800; color: var(--dark); letter-spacing: -0.5px; display: flex; align-items: center; gap: 8px; }
+        .brand { font-size: 1.25rem; font-weight: 800; color: var(--dark); display: flex; align-items: center; gap: 8px; }
         .brand span { color: var(--primary); }
         .icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--secondary); padding: 8px; border-radius: 50%; cursor: pointer; }
 
         main {
-            flex: 1;
-            overflow-y: auto;
-            overflow-x: hidden;
+            flex: 1; overflow-y: auto; overflow-x: hidden;
             padding: calc(var(--header-height) + 16px) 16px calc(var(--nav-height) + 80px);
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-            width: 100%;
+            scroll-behavior: smooth; -webkit-overflow-scrolling: touch; width: 100%;
         }
 
         .view { display: none; animation: fadeIn 0.3s ease; width: 100%; }
         .view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Componentes de UI */
-        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; width: 100%; }
-        .stat-card { background: var(--surface); padding: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px; cursor: pointer; border: 1px solid var(--border); min-height: 90px; }
+        /* Grids e Cards */
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); padding: 16px; border-radius: var(--radius-md); box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); min-height: 90px; }
         .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
-        .stat-value { font-size: 1.5rem; font-weight: 700; color: var(--dark); line-height: 1; }
+        .stat-value { font-size: 1.5rem; font-weight: 700; }
         .stat-label { font-size: 0.8rem; color: var(--secondary); font-weight: 500; }
 
-        /* Cores de Fundo */
         .bg-blue { background: #dbeafe; color: var(--primary); }
         .bg-green { background: #d1fae5; color: var(--success); }
         .bg-orange { background: #ffedd5; color: var(--warning); }
@@ -129,109 +79,92 @@
         .bg-purple { background: #f3e8ff; color: #8b5cf6; }
         .bg-cyan { background: #cffafe; color: #06b6d4; }
 
-        /* Inputs e Pesquisa */
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
         .search-container { position: relative; margin-bottom: 16px; width: 100%; }
-        .search-input { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); font-size: 1rem; outline: none; -webkit-appearance: none; }
-        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--secondary); pointer-events: none; }
+        .search-input { width: 100%; padding: 12px 12px 12px 40px; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); outline: none; }
+        .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--secondary); }
 
-        /* Cards */
-        .property-card, .client-card, .schedule-card, .link-card { background: var(--surface); border-radius: var(--radius-md); margin-bottom: 16px; box-shadow: var(--shadow-sm); position: relative; overflow: hidden; border: 1px solid var(--border); width: 100%; transition: transform 0.2s; cursor: pointer; }
-        .property-card:active, .client-card:active, .schedule-card:active { transform: scale(0.98); }
-
-        .property-image { width: 100%; height: 180px; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: var(--secondary); position: relative; }
-        .property-badge { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; z-index: 2; }
-        .badge-sale { background: var(--property-sale); color: white; }
-        .badge-rent { background: var(--property-rent); color: white; }
-        .badge-featured { background: var(--property-featured); color: white; }
-        .badge-success { background: var(--success); color: white; }
-        .badge-warning { background: var(--warning); color: white; }
-        .badge-danger { background: var(--danger); color: white; }
-        .badge-primary { background: var(--primary); color: white; }
-
+        /* Property Card */
+        .property-card { background: var(--surface); border-radius: var(--radius-md); margin-bottom: 16px; box-shadow: var(--shadow-sm); overflow: hidden; border: 1px solid var(--border); cursor: pointer; }
+        .property-image { width: 100%; height: 180px; object-fit: cover; background: #e2e8f0; display: flex; align-items: center; justify-content: center; position: relative; }
+        .property-badge { position: absolute; top: 12px; left: 12px; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; z-index: 2; color: white; }
+        .badge-sale { background: var(--property-sale); }
+        .badge-rent { background: var(--property-rent); }
         .property-content { padding: 16px; }
-        .property-title { font-weight: 700; font-size: 1rem; color: var(--dark); margin-bottom: 4px; }
-        .property-address { font-size: 0.85rem; color: var(--secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 4px; }
-        .property-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+        .property-title { font-weight: 700; margin-bottom: 4px; }
+        .property-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); margin-top: 8px; }
+        .property-features { display: flex; gap: 12px; margin: 12px 0; }
+        .feature { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: var(--secondary); }
         
-        .property-features { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .feature { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; color: var(--secondary); min-width: 50px; }
-        .feature i { font-size: 1rem; margin-bottom: 2px; color: var(--primary); }
+        /* Client Card */
+        .client-card { background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border: 1px solid var(--border); }
+        .client-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .client-name { font-weight: 700; }
+        .client-type { font-size: 0.7rem; padding: 3px 8px; border-radius: 99px; background: #e2e8f0; }
 
-        /* Clientes */
-        .client-card { padding: 16px; margin-bottom: 12px; }
-        .client-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .client-name { font-weight: 700; font-size: 1rem; color: var(--dark); }
-        .client-type { font-size: 0.7rem; padding: 3px 8px; border-radius: 99px; font-weight: 600; }
-        .client-info { display: flex; flex-direction: column; gap: 6px; }
-        .client-row { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--secondary); }
+        /* Funnel */
+        .funnel-container { background: var(--surface); border-radius: var(--radius-md); padding: 16px; margin-bottom: 24px; border: 1px solid var(--border); }
+        .funnel-stage { border-left: 4px solid; background: #f8fafc; margin-bottom: 8px; border-radius: 8px; overflow: hidden; }
+        .funnel-stage-header { padding: 12px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: rgba(255,255,255,0.8); }
+        .funnel-stage-clients { max-height: 0; overflow: hidden; transition: max-height 0.3s; padding: 0 12px; }
+        .funnel-stage.expanded .funnel-stage-clients { max-height: 1000px; padding-bottom: 12px; }
+        .funnel-client-item { background: white; padding: 10px; margin-top: 8px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--border); cursor: grab; }
+        .funnel-client-item:active { cursor: grabbing; }
+
+        /* Carousel */
+        .carousel-container { position: relative; width: 100%; height: 250px; margin-bottom: 20px; border-radius: 12px; overflow: hidden; background: #000; }
+        .carousel-slide { width: 100%; height: 100%; object-fit: contain; display: none; }
+        .carousel-slide.active { display: block; }
+        .carousel-arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; z-index: 2; }
+        .carousel-arrow.prev { left: 10px; }
+        .carousel-arrow.next { right: 10px; }
 
         /* Agenda */
-        .schedule-card { padding: 16px; margin-bottom: 12px; border-left: 4px solid var(--type-visita); }
-        .schedule-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
-        .schedule-type { font-size: 0.75rem; padding: 3px 8px; border-radius: 4px; font-weight: 600; background: var(--type-visita); color: white; }
-        .schedule-time { font-size: 0.85rem; color: var(--secondary); display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
-        .schedule-title { font-weight: 600; color: var(--dark); margin-bottom: 4px; }
+        .schedule-card { background: var(--surface); padding: 16px; border-radius: var(--radius-md); margin-bottom: 12px; border-left: 4px solid var(--type-visita); border-right: 1px solid var(--border); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
         
-        /* Navegação Inferior */
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(255,255,255,0.98); backdrop-filter: blur(10px); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-bottom: var(--safe-bottom); z-index: 50; }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; font-weight: 500; gap: 4px; padding: 8px 4px; }
+        /* Links */
+        .links-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .link-card { background: var(--surface); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border); text-align: center; cursor: pointer; }
+        .link-icon { font-size: 1.5rem; color: var(--primary); margin-bottom: 8px; }
+
+        /* Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: var(--nav-height); background: rgba(255,255,255,0.98); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding-bottom: var(--safe-bottom); z-index: 50; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #94a3b8; text-decoration: none; font-size: 0.7rem; }
         .nav-item.active { color: var(--primary); }
-        .nav-item i { font-size: 1.25rem; }
+        .nav-item i { font-size: 1.25rem; margin-bottom: 2px; }
 
-        /* FAB */
-        .fab { position: fixed; bottom: calc(var(--nav-height) + 16px); right: 16px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-float); z-index: 40; border: none; cursor: pointer; transition: transform 0.2s; }
-        .fab:active { transform: scale(0.9) rotate(90deg); }
+        .fab { position: fixed; bottom: calc(var(--nav-height) + 16px); right: 16px; width: 56px; height: 56px; background: var(--primary); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: var(--shadow-float); z-index: 40; border: none; cursor: pointer; }
 
-        /* Modais */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s; }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 16px calc(24px + var(--safe-bottom)); transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); max-height: 90vh; overflow-y: auto; z-index: 101; width: 100%; }
+        /* Modals & Forms */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; }
+        .modal-overlay.active { display: block; }
+        .modal-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-radius: 20px 20px 0 0; padding: 24px 16px; transform: translateY(100%); transition: transform 0.3s; z-index: 101; max-height: 90vh; overflow-y: auto; }
         .modal-overlay.active + .modal-sheet { transform: translateY(0); }
-        .sheet-handle { width: 40px; height: 4px; background: #cbd5e1; border-radius: 2px; margin: 0 auto 20px; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-control { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #f8fafc; font-size: 16px; } /* font-size 16px prevents iOS zoom */
+        .btn-block { width: 100%; padding: 16px; border: none; border-radius: 12px; background: var(--primary); color: white; font-weight: 700; margin-top: 10px; }
+        
+        .image-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .image-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; }
+        .add-image-btn { border: 2px dashed var(--border); display: flex; align-items: center; justify-content: center; height: 80px; border-radius: 8px; color: var(--secondary); cursor: pointer; }
 
-        /* Formulários */
-        .form-group { margin-bottom: 16px; width: 100%; }
-        .form-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; color: var(--dark); }
-        .form-control { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; background: #f8fafc; -webkit-appearance: none; }
-        .btn-block { width: 100%; padding: 16px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; background: var(--primary); color: white; margin-top: 10px; cursor: pointer; }
-        .form-row { display: flex; gap: 12px; width: 100%; }
-        .form-row .form-group { flex: 1; }
-
-        /* Ações */
-        .property-actions, .client-actions, .details-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); width: 100%; flex-wrap: wrap; }
-        .btn-sm { flex: 1; padding: 8px; border-radius: 8px; border: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; min-height: 36px; }
-        .btn-light { background: #f1f5f9; color: var(--secondary); }
-        .btn-primary-soft { background: #dbeafe; color: var(--primary); }
-        .btn-whatsapp { background: #dcfce7; color: #16a34a; }
-        .btn-whatsapp-client { background: #25D366; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; flex: 1; justify-content: center; min-height: 36px; }
-        .btn-email-client { background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; flex: 1; justify-content: center; min-height: 36px; }
-
-        /* Toast */
-        .toast { position: fixed; top: var(--header-height); left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--dark); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 500; box-shadow: var(--shadow-float); z-index: 200; transition: transform 0.4s; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        .toast.show { transform: translateX(-50%) translateY(20px); }
-
-        /* Loading */
-        .loading { display: flex; justify-content: center; align-items: center; height: 100vh; font-size: 1.2rem; color: var(--primary); width: 100%; position: fixed; top: 0; left: 0; z-index: 999; background: #f1f5f9; }
-        .loading i { margin-right: 10px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Responsividade e Mobile */
-        @media (max-width: 360px) { .stats-grid, .details-info-grid { grid-template-columns: 1fr; } }
-        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        /* Responsividade */
+        @media (min-width: 768px) { .stats-grid { grid-template-columns: repeat(4, 1fr); } }
     </style>
 </head>
 <body>
-    <div id="loading" class="loading">
-        <i class="fas fa-spinner"></i> Inicializando sistema...
+    <div id="loading" style="position:fixed; inset:0; background:#f1f5f9; display:flex; justify-content:center; align-items:center; z-index:999; color:var(--primary); font-weight:bold;">
+        <i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Carregando Sistema Completo...
     </div>
 
-    <div id="app" style="display: none; width: 100%; height: 100%;">
+    <div id="app" style="display: none;">
         <header>
             <div class="brand"><i class="fas fa-home" style="color: var(--primary);"></i><span>Imobi</span>Pro</div>
             <button class="icon-btn" onclick="UI.openSettings()"><i class="fas fa-cog"></i></button>
         </header>
 
-        <div id="toast" class="toast"><i class="fas fa-check-circle"></i> <span>Ação realizada!</span></div>
+        <div id="toast" style="position:fixed; top:80px; left:50%; transform:translateX(-50%); background:#0f172a; color:white; padding:12px 24px; border-radius:50px; z-index:200; display:none;">Ação realizada!</div>
 
         <main>
             <div id="dashboard-view" class="view active">
@@ -239,12 +172,12 @@
                 <div class="stats-grid">
                     <div class="stat-card" onclick="UI.navigate('imoveis')">
                         <div class="stat-icon bg-blue"><i class="fas fa-building"></i></div>
-                        <div class="stat-value" id="dash-total-imoveis">0</div>
+                        <div class="stat-value" id="dash-imoveis">0</div>
                         <div class="stat-label">Imóveis</div>
                     </div>
                     <div class="stat-card" onclick="UI.navigate('clientes')">
                         <div class="stat-icon bg-green"><i class="fas fa-users"></i></div>
-                        <div class="stat-value" id="dash-total-clientes">0</div>
+                        <div class="stat-value" id="dash-clientes">0</div>
                         <div class="stat-label">Clientes</div>
                     </div>
                     <div class="stat-card" onclick="UI.navigate('agenda')">
@@ -252,21 +185,21 @@
                         <div class="stat-value" id="dash-visitas">0</div>
                         <div class="stat-label">Visitas Hoje</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-red"><i class="fas fa-chart-line"></i></div>
-                        <div class="stat-value" id="dash-vendas">R$ 0</div>
-                        <div class="stat-label">Vendas Mês</div>
+                    <div class="stat-card" onclick="UI.navigate('funil')">
+                        <div class="stat-icon bg-purple"><i class="fas fa-filter"></i></div>
+                        <div class="stat-value" id="dash-leads">0</div>
+                        <div class="stat-label">Leads</div>
                     </div>
                 </div>
-                
-                <div class="section-title">Próximas Visitas</div>
-                <div id="visitas-list"></div>
+
+                <div class="section-title">Atividades Recentes</div>
+                <div id="dashboard-activities"></div>
             </div>
 
             <div id="imoveis-view" class="view">
                 <div class="search-container">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" class="search-input" placeholder="Buscar imóveis..." oninput="UI.searchImoveis(this.value)">
+                    <input type="text" class="search-input" placeholder="Buscar imóveis..." oninput="UI.renderImoveis(this.value)">
                 </div>
                 <div id="imoveis-list"></div>
             </div>
@@ -282,514 +215,781 @@
             <div id="agenda-view" class="view">
                 <div class="section-title">
                     Agenda
-                    <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px; padding: 8px;" onclick="UI.openNewVisita()"><i class="fas fa-plus"></i></button>
+                    <button class="icon-btn" style="background:var(--primary); color:white; border-radius:8px; padding:5px 10px;" onclick="UI.openNewVisita()"><i class="fas fa-plus"></i></button>
                 </div>
                 <div id="agenda-list"></div>
             </div>
+
+            <div id="funil-view" class="view">
+                <div class="section-title">Funil de Vendas</div>
+                <div id="funil-container" class="funnel-container"></div>
+            </div>
+
+            <div id="links-view" class="view">
+                <div class="section-title">
+                    Links Úteis
+                    <button class="icon-btn" onclick="UI.openNewLink()"><i class="fas fa-plus"></i></button>
+                </div>
+                <div id="links-list" class="links-grid"></div>
+            </div>
+
+            <div id="relatorios-view" class="view">
+                <div class="section-title">Desempenho Financeiro</div>
+                <div class="chart-container" style="height:300px; background:white; padding:10px; border-radius:12px; margin-bottom:20px;">
+                    <canvas id="financeChart"></canvas>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Vendas (Mês)</div>
+                        <div class="stat-value" id="rel-vendas">R$ 0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Comissão Est.</div>
+                        <div class="stat-value" id="rel-comissao">R$ 0</div>
+                    </div>
+                </div>
+            </div>
         </main>
 
-        <button class="fab" onclick="UI.openNewImovel()" id="main-fab"><i class="fas fa-plus"></i></button>
+        <button class="fab" id="main-fab" onclick="UI.handleFab()"><i class="fas fa-plus"></i></button>
 
         <nav class="bottom-nav">
-            <a href="#" class="nav-item active" data-target="dashboard-view" onclick="UI.switchTab(this); return false;"><i class="fas fa-home"></i> <span>Início</span></a>
-            <a href="#" class="nav-item" data-target="imoveis-view" onclick="UI.switchTab(this); return false;"><i class="fas fa-building"></i> <span>Imóveis</span></a>
-            <a href="#" class="nav-item" data-target="clientes-view" onclick="UI.switchTab(this); return false;"><i class="fas fa-users"></i> <span>Clientes</span></a>
-            <a href="#" class="nav-item" data-target="agenda-view" onclick="UI.switchTab(this); return false;"><i class="fas fa-calendar-alt"></i> <span>Agenda</span></a>
+            <a href="#" class="nav-item active" onclick="UI.switchTab('dashboard', this)"><i class="fas fa-home"></i> <span>Início</span></a>
+            <a href="#" class="nav-item" onclick="UI.switchTab('imoveis', this)"><i class="fas fa-building"></i> <span>Imóveis</span></a>
+            <a href="#" class="nav-item" onclick="UI.switchTab('funil', this)"><i class="fas fa-filter"></i> <span>Funil</span></a>
+            <a href="#" class="nav-item" onclick="UI.switchTab('agenda', this)"><i class="fas fa-calendar-alt"></i> <span>Agenda</span></a>
+            <a href="#" class="nav-item" onclick="UI.switchTab('relatorios', this)"><i class="fas fa-chart-pie"></i> <span>Relat.</span></a>
         </nav>
 
-        <div class="modal-overlay" id="overlay-imovel-details"></div>
-        <div class="modal-sheet" id="sheet-imovel-details">
-            <div class="sheet-handle"></div>
-            <div id="imovel-details-content"></div>
+        <div class="modal-overlay" id="overlay-details"></div>
+        <div class="modal-sheet" id="sheet-details">
+            <div style="width:40px; height:4px; background:#cbd5e1; border-radius:2px; margin:0 auto 20px;"></div>
+            <div id="details-content"></div>
         </div>
 
         <div class="modal-overlay" id="overlay-imovel"></div>
         <div class="modal-sheet" id="sheet-imovel">
-            <div class="sheet-handle"></div>
-            <h3 class="section-title" id="title-imovel">Novo Imóvel</h3>
+            <h3 class="section-title">Gerenciar Imóvel</h3>
             <form id="form-imovel" onsubmit="App.imovel.save(event)">
                 <input type="hidden" id="i-id">
+                <div class="form-group"><label class="form-label">Título</label><input type="text" id="i-titulo" class="form-control" required></div>
+                
                 <div class="form-group">
-                    <label class="form-label">Título</label>
-                    <input type="text" id="i-titulo" class="form-control" required>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Preço (R$)</label>
-                        <input type="text" id="i-preco-venda" class="form-control" oninput="Utils.maskMoney(this)">
+                    <label class="form-label">Imagens</label>
+                    <div class="image-gallery" id="i-gallery">
+                        <div class="add-image-btn" onclick="document.getElementById('i-file').click()">
+                            <i class="fas fa-camera"></i>
+                        </div>
                     </div>
+                    <input type="file" id="i-file" accept="image/*" multiple style="display:none" onchange="App.imovel.handleImages(this)">
+                    <input type="hidden" id="i-images-data" value="[]">
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Endereço</label>
-                    <input type="text" id="i-endereco" class="form-control" required>
+
+                <div class="form-group"><label class="form-label">Preço Venda</label><input type="text" id="i-preco" class="form-control" oninput="Utils.maskMoney(this)"></div>
+                <div class="form-group"><label class="form-label">Preço Aluguel</label><input type="text" id="i-aluguel" class="form-control" oninput="Utils.maskMoney(this)"></div>
+                <div class="form-group"><label class="form-label">Endereço</label><input type="text" id="i-endereco" class="form-control"></div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div class="form-group"><label class="form-label">Quartos</label><input type="number" id="i-quartos" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Vagas</label><input type="number" id="i-vagas" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Área (m²)</label><input type="number" id="i-area" class="form-control"></div>
+                    <div class="form-group"><label class="form-label">Condomínio</label><input type="text" id="i-condominio" class="form-control" oninput="Utils.maskMoney(this)"></div>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">Descrição</label>
-                    <textarea id="i-descricao" class="form-control"></textarea>
-                </div>
-                <button type="submit" class="btn-block">Salvar</button>
-                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary);" onclick="UI.closeModals()">Cancelar</button>
+
+                <div class="form-group"><label class="form-label">Descrição</label><textarea id="i-descricao" class="form-control" rows="3"></textarea></div>
+                <button type="submit" class="btn-block">Salvar Imóvel</button>
+                <button type="button" class="btn-block" style="background:var(--secondary)" onclick="UI.closeModals()">Cancelar</button>
             </form>
         </div>
 
-        <div class="modal-overlay" id="overlay-cliente"></div>
-        <div class="modal-sheet" id="sheet-cliente">
-            <div class="sheet-handle"></div>
-            <h3 class="section-title" id="title-cliente">Novo Cliente</h3>
-            <form id="form-cliente" onsubmit="App.cliente.save(event)">
-                <input type="hidden" id="c-id">
-                <div class="form-group">
-                    <label class="form-label">Nome</label>
-                    <input type="text" id="c-nome" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Telefone</label>
-                    <input type="tel" id="c-telefone" class="form-control" oninput="Utils.maskPhone(this)" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Email</label>
-                    <input type="email" id="c-email" class="form-control">
-                </div>
-                <button type="submit" class="btn-block">Salvar</button>
-                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary);" onclick="UI.closeModals()">Cancelar</button>
-            </form>
-        </div>
-        
-        <div class="modal-overlay" id="overlay-settings"></div>
-        <div class="modal-sheet" id="sheet-settings">
-            <div class="sheet-handle"></div>
-            <h3 class="section-title">Configurações</h3>
-            <form id="form-settings" onsubmit="App.settings.save(event)">
-                <div class="form-group">
-                    <label class="form-label">Nome do Corretor</label>
-                    <input type="text" id="s-nome" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">CRECI</label>
-                    <input type="text" id="s-creci" class="form-control">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Telefone</label>
-                    <input type="tel" id="s-telefone" class="form-control" oninput="Utils.maskPhone(this)">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Imobiliária</label>
-                    <input type="text" id="s-imobiliaria" class="form-control">
-                </div>
-                <button type="submit" class="btn-block">Salvar</button>
-                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary);" onclick="UI.closeModals()">Cancelar</button>
-            </form>
+        <div class="modal-overlay" id="overlay-generic"></div>
+        <div class="modal-sheet" id="sheet-generic">
+            <div id="generic-content"></div>
         </div>
     </div>
 
     <script>
-        // Banco de Dados
+        // --- BANCO DE DADOS COMPLETO ---
         const DB = {
-            name: 'ImobiProDB',
-            version: 1,
+            name: 'ImobiProFullDB',
+            version: 2,
             db: null,
             init: function() {
                 return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.name, this.version);
-                    request.onerror = (e) => reject(e);
-                    request.onsuccess = (e) => { this.db = e.target.result; resolve(); };
-                    request.onupgradeneeded = (e) => {
+                    const req = indexedDB.open(this.name, this.version);
+                    req.onerror = e => reject(e);
+                    req.onsuccess = e => { this.db = e.target.result; resolve(); };
+                    req.onupgradeneeded = e => {
                         const db = e.target.result;
                         if (!db.objectStoreNames.contains('clientes')) db.createObjectStore('clientes', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('imoveis')) db.createObjectStore('imoveis', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('visitas')) db.createObjectStore('visitas', { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains('links')) db.createObjectStore('links', { keyPath: 'id' });
                         if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings', { keyPath: 'id' });
+                        
+                        // Inicializar etapas do funil se não existir
+                        if (!localStorage.getItem('funnelInit')) {
+                            const etapasPadrao = [
+                                {id: 'lead', nome: 'Lead', color: '#93c5fd'},
+                                {id: 'contato', nome: 'Contato', color: '#60a5fa'},
+                                {id: 'visita', nome: 'Visita', color: '#3b82f6'},
+                                {id: 'proposta', nome: 'Proposta', color: '#8b5cf6'},
+                                {id: 'fechamento', nome: 'Fechamento', color: '#10b981'}
+                            ];
+                            localStorage.setItem('funnelConfig', JSON.stringify(etapasPadrao));
+                            localStorage.setItem('funnelInit', 'true');
+                        }
                     };
                 });
             },
             getAll: function(store) {
-                return new Promise((resolve) => {
-                    if(!this.db) return resolve([]);
+                return new Promise(resolve => {
                     const tx = this.db.transaction([store], 'readonly');
                     const req = tx.objectStore(store).getAll();
-                    req.onsuccess = (e) => resolve(e.target.result || []);
-                    req.onerror = () => resolve([]);
+                    req.onsuccess = e => resolve(e.target.result || []);
                 });
             },
             put: function(store, data) {
-                return new Promise((resolve, reject) => {
+                return new Promise(resolve => {
                     const tx = this.db.transaction([store], 'readwrite');
-                    const req = tx.objectStore(store).put(data);
-                    req.onsuccess = () => resolve(data);
-                    req.onerror = reject;
+                    tx.objectStore(store).put(data);
+                    tx.oncomplete = () => resolve(data);
                 });
             },
-            get: function(store, key) {
-                return new Promise((resolve) => {
-                    const tx = this.db.transaction([store], 'readonly');
-                    const req = tx.objectStore(store).get(key);
-                    req.onsuccess = (e) => resolve(e.target.result || null);
-                    req.onerror = () => resolve(null);
+            delete: function(store, key) {
+                 return new Promise(resolve => {
+                    const tx = this.db.transaction([store], 'readwrite');
+                    tx.objectStore(store).delete(key);
+                    tx.oncomplete = () => resolve();
                 });
             }
         };
 
-        // Utilitários
+        // --- UTILITÁRIOS ---
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
-            formatCurrency: (val) => {
-                if (!val && val !== 0) return 'R$ 0,00';
-                return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            formatMoney: (v) => {
+                if(!v) return 'R$ 0,00';
+                return Number(v).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
             },
-            parseCurrency: (str) => {
-                if (!str) return 0;
-                return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+            parseMoney: (v) => {
+                if(!v) return 0;
+                if(typeof v === 'number') return v;
+                return parseFloat(v.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
             },
-            maskMoney: (input) => {
-                let v = input.value.replace(/\D/g, "");
-                if (!v) { input.value = ""; return; }
-                v = (parseInt(v) / 100).toFixed(2) + '';
+            maskMoney: (el) => {
+                let v = el.value.replace(/\D/g, "");
+                v = (v/100).toFixed(2) + "";
                 v = v.replace(".", ",");
                 v = v.replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1.");
-                input.value = v;
+                el.value = v;
             },
-            maskPhone: (input) => {
-                let v = input.value.replace(/\D/g, "").substring(0, 11);
-                if (v.length > 10) v = v.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
-                else if (v.length > 5) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/, "($1) $2-$3");
-                else if (v.length > 2) v = v.replace(/^(\d{2})(\d{0,5})/, "($1) $2");
-                else v = v.replace(/^(\d*)/, "($1");
-                input.value = v;
+            readImage: (file) => {
+                return new Promise(resolve => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result);
+                    reader.readAsDataURL(file);
+                });
             },
-            toast: (msg) => {
-                const t = document.getElementById('toast');
-                t.innerHTML = `<i class="fas fa-check-circle"></i> <span>${msg}</span>`;
-                t.classList.add('show');
-                setTimeout(() => t.classList.remove('show'), 3000);
+            cleanTextForPDF: (text) => {
+                if(!text) return "";
+                // Remove emojis e caracteres não suportados pela fonte padrão do PDF
+                return text.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
             },
-            
-            // CORREÇÃO PDF: Remove emojis e formata texto limpo
             generatePDF: async (imovel) => {
-                try {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    
-                    const settings = await DB.get('settings', 'main') || {};
-                    
-                    // Cabeçalho (Azul)
-                    doc.setFillColor(37, 99, 235);
-                    doc.rect(0, 0, pageWidth, 25, 'F');
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(18);
-                    doc.text("FICHA DO IMOVEL", pageWidth/2, 17, {align: 'center'});
-                    
-                    let y = 40;
-                    const margin = 15;
-                    
-                    // Detalhes Principais
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFontSize(14);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(imovel.titulo, margin, y);
-                    
-                    y += 10;
-                    doc.setFontSize(11);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(100, 100, 100);
-                    // Substituindo emoji por texto "Endereço:"
-                    doc.text(`Local: ${imovel.endereco}`, margin, y);
-                    
-                    y += 15;
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(margin, y, pageWidth-margin, y);
-                    y += 10;
-                    
-                    // Valores
-                    doc.setTextColor(37, 99, 235);
-                    doc.setFontSize(12);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text("VALORES E CARACTERISTICAS", margin, y);
-                    y += 8;
-                    
-                    doc.setTextColor(0, 0, 0);
-                    doc.setFont('helvetica', 'normal');
-                    const preco = imovel.precoVenda ? Utils.formatCurrency(imovel.precoVenda) : "Consulte";
-                    doc.text(`Preco: ${preco}`, margin, y);
-                    y += 6;
-                    
-                    if(imovel.descricao) {
-                        y += 10;
-                        doc.setTextColor(37, 99, 235);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text("DESCRICAO", margin, y);
-                        y += 8;
-                        doc.setTextColor(0, 0, 0);
-                        doc.setFont('helvetica', 'normal');
-                        const splitDesc = doc.splitTextToSize(imovel.descricao, pageWidth - (margin*2));
-                        doc.text(splitDesc, margin, y);
-                        y += (splitDesc.length * 6) + 10;
-                    }
-                    
-                    // Rodapé com contato
-                    doc.setFontSize(10);
-                    doc.setTextColor(100, 100, 100);
-                    doc.text(`Corretor: ${settings.nome || 'Nao informado'} | Tel: ${settings.telefone || ''}`, margin, y + 10);
-                    doc.text(`CRECI: ${settings.creci || ''}`, margin, y + 15);
-                    
-                    doc.save(`imovel_${imovel.titulo.substring(0,10)}.pdf`);
-                    Utils.toast('PDF Gerado com sucesso!');
-                } catch(e) {
-                    console.error(e);
-                    alert("Erro ao gerar PDF. Verifique o console.");
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Cabeçalho
+                doc.setFillColor(37, 99, 235);
+                doc.rect(0, 0, 210, 30, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.text("FICHA DO IMÓVEL", 105, 20, { align: "center" });
+                
+                let y = 40;
+                
+                // Título
+                doc.setTextColor(0,0,0);
+                doc.setFontSize(14);
+                doc.setFont("helvetica", "bold");
+                doc.text(Utils.cleanTextForPDF(imovel.titulo), 15, y);
+                y+=10;
+                
+                // Endereço e Detalhes
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+                doc.text(`Endereço: ${Utils.cleanTextForPDF(imovel.endereco)}`, 15, y);
+                y+=7;
+                doc.text(`Preço Venda: ${Utils.formatMoney(imovel.precoVenda)}`, 15, y);
+                y+=7;
+                if(imovel.precoAluguel) {
+                    doc.text(`Aluguel: ${Utils.formatMoney(imovel.precoAluguel)}`, 15, y);
+                    y+=7;
                 }
+                
+                // Características
+                let carac = [];
+                if(imovel.quartos) carac.push(`Quartos: ${imovel.quartos}`);
+                if(imovel.vagas) carac.push(`Vagas: ${imovel.vagas}`);
+                if(imovel.area) carac.push(`Area: ${imovel.area}m2`);
+                
+                doc.text(carac.join(" | "), 15, y);
+                y+=10;
+                
+                // Descrição
+                doc.setFont("helvetica", "bold");
+                doc.text("Descrição:", 15, y);
+                y+=7;
+                doc.setFont("helvetica", "normal");
+                const descLines = doc.splitTextToSize(Utils.cleanTextForPDF(imovel.descricao || "Sem descrição"), 180);
+                doc.text(descLines, 15, y);
+                
+                doc.save(`imovel_${imovel.id}.pdf`);
+                UI.toast("PDF Gerado!");
             }
         };
 
-        // UI Controller
+        // --- UI CONTROLLER ---
         const UI = {
-            data: { clientes: [], imoveis: [], visitas: [] },
+            activeTab: 'dashboard',
+            data: { clientes: [], imoveis: [], visitas: [], links: [] },
             
             init: async () => {
-                try {
-                    await DB.init();
-                    UI.data.clientes = await DB.getAll('clientes');
-                    UI.data.imoveis = await DB.getAll('imoveis');
-                    UI.data.visitas = await DB.getAll('visitas');
-                    
-                    UI.renderDashboard();
-                    
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('app').style.display = 'flex';
-                } catch (e) {
-                    console.error("Erro fatal:", e);
-                    // Fallback para não travar a tela
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('app').style.display = 'flex';
-                    alert("Erro ao carregar banco de dados. Algumas funções podem não funcionar.");
-                }
+                await DB.init();
+                await UI.loadData();
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('app').style.display = 'block';
+                UI.renderDashboard();
+            },
+            
+            loadData: async () => {
+                UI.data.clientes = await DB.getAll('clientes');
+                UI.data.imoveis = await DB.getAll('imoveis');
+                UI.data.visitas = await DB.getAll('visitas');
+                UI.data.links = await DB.getAll('links');
             },
 
-            switchTab: (el) => {
-                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            switchTab: (tabName, el) => {
+                UI.activeTab = tabName;
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-                el.classList.add('active');
-                const target = el.getAttribute('data-target');
-                document.getElementById(target).classList.add('active');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 
+                document.getElementById(`${tabName}-view`).classList.add('active');
+                if(el) el.classList.add('active');
+                else document.querySelector(`a[onclick*="'${tabName}'"]`).classList.add('active');
+
+                // Atualizar FAB e Views
                 const fab = document.getElementById('main-fab');
-                if (target === 'dashboard-view' || target === 'imoveis-view') {
-                    fab.style.display = 'flex'; fab.onclick = UI.openNewImovel;
-                } else if (target === 'clientes-view') {
-                    fab.style.display = 'flex'; fab.onclick = () => UI.openNewCliente();
-                } else if (target === 'agenda-view') {
-                    fab.style.display = 'flex'; fab.onclick = UI.openNewVisita;
-                }
-                
-                if(target === 'imoveis-view') UI.renderImoveis();
-                if(target === 'clientes-view') UI.renderClientes();
+                fab.style.display = (tabName === 'relatorios') ? 'none' : 'flex';
+
+                if(tabName === 'imoveis') UI.renderImoveis();
+                if(tabName === 'clientes') UI.renderClientes();
+                if(tabName === 'funil') UI.renderFunil();
+                if(tabName === 'agenda') UI.renderAgenda();
+                if(tabName === 'links') UI.renderLinks();
+                if(tabName === 'relatorios') UI.renderRelatorios();
             },
 
-            navigate: (tab) => {
-                const el = document.querySelector(`.nav-item[data-target="${tab}-view"]`);
-                if(el) UI.switchTab(el);
+            handleFab: () => {
+                if(UI.activeTab === 'dashboard' || UI.activeTab === 'imoveis') UI.openNewImovel();
+                if(UI.activeTab === 'clientes' || UI.activeTab === 'funil') App.cliente.create();
+                if(UI.activeTab === 'agenda') UI.openNewVisita();
+                if(UI.activeTab === 'links') UI.openNewLink();
             },
 
+            // --- RENDERS ---
             renderDashboard: () => {
-                document.getElementById('dash-total-imoveis').innerText = UI.data.imoveis.length;
-                document.getElementById('dash-total-clientes').innerText = UI.data.clientes.length;
+                document.getElementById('dash-imoveis').innerText = UI.data.imoveis.length;
+                document.getElementById('dash-clientes').innerText = UI.data.clientes.length;
+                document.getElementById('dash-leads').innerText = UI.data.clientes.filter(c => c.etapa === 'lead').length;
                 
-                // Visitas hoje
                 const hoje = new Date().toISOString().split('T')[0];
-                const visitasHoje = UI.data.visitas.filter(v => v.data === hoje);
-                document.getElementById('dash-visitas').innerText = visitasHoje.length;
-                
-                const list = document.getElementById('visitas-list');
-                list.innerHTML = visitasHoje.length ? visitasHoje.map(v => 
-                    `<div class="schedule-card">
-                        <div class="schedule-title">${v.titulo || 'Visita'}</div>
-                        <div class="schedule-time"><i class="far fa-clock"></i> ${v.horario}</div>
-                    </div>`
-                ).join('') : '<div style="text-align:center;color:#999;padding:20px;">Sem visitas hoje</div>';
+                document.getElementById('dash-visitas').innerText = UI.data.visitas.filter(v => v.data === hoje).length;
             },
 
-            renderImoveis: (filter = '') => {
+            renderImoveis: (filter = "") => {
                 const list = document.getElementById('imoveis-list');
                 const filtered = UI.data.imoveis.filter(i => i.titulo.toLowerCase().includes(filter.toLowerCase()));
                 
-                if(!filtered.length) {
-                    list.innerHTML = '<div style="text-align:center;padding:20px;color:#999">Nenhum imóvel encontrado</div>';
-                    return;
-                }
-
-                list.innerHTML = filtered.map(i => `
-                    <div class="property-card" onclick="UI.showImovelDetails('${i.id}')">
+                list.innerHTML = filtered.map(i => {
+                    const img = (i.imagens && i.imagens.length > 0) ? i.imagens[0] : null;
+                    const imgHtml = img ? `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">` : `<i class="fas fa-home" style="font-size:3rem; color:#ccc;"></i>`;
+                    
+                    return `
+                    <div class="property-card" onclick="UI.showDetails('${i.id}')">
                         <div class="property-image">
-                            <i class="fas fa-home" style="font-size:3rem;"></i>
-                            <div class="property-badge badge-sale">VENDA</div>
+                            ${imgHtml}
+                            <span class="property-badge badge-sale">VENDA</span>
                         </div>
                         <div class="property-content">
                             <div class="property-title">${i.titulo}</div>
-                            <div class="property-address"><i class="fas fa-map-marker-alt"></i> ${i.endereco}</div>
-                            <div class="property-price">${Utils.formatCurrency(i.precoVenda)}</div>
-                            <div class="property-actions">
-                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.imovel.edit('${i.id}')">Editar</button>
-                                <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); App.whatsapp('${i.id}')"><i class="fab fa-whatsapp"></i></button>
+                            <div style="font-size:0.8rem; color:#666;">${i.endereco}</div>
+                            <div class="property-features">
+                                <div class="feature"><i class="fas fa-bed"></i> ${i.quartos||0}</div>
+                                <div class="feature"><i class="fas fa-bath"></i> 1</div>
+                                <div class="feature"><i class="fas fa-car"></i> ${i.vagas||0}</div>
+                                <div class="feature"><i class="fas fa-ruler"></i> ${i.area||0}m²</div>
                             </div>
+                            <div class="property-price">${Utils.formatMoney(i.precoVenda)}</div>
                         </div>
-                    </div>
-                `).join('');
+                    </div>`;
+                }).join('');
             },
 
-            renderClientes: (filter = '') => {
+            showDetails: (id) => {
+                const i = UI.data.imoveis.find(x => x.id === id);
+                if(!i) return;
+
+                // Construir Carrossel
+                let carouselHtml = '';
+                if(i.imagens && i.imagens.length > 0) {
+                    carouselHtml = `
+                    <div class="carousel-container">
+                        ${i.imagens.map((src, idx) => `<img src="${src}" class="carousel-slide ${idx===0?'active':''}" id="slide-${idx}">`).join('')}
+                        ${i.imagens.length > 1 ? `
+                        <button class="carousel-arrow prev" onclick="UI.moveSlide(-1)">❮</button>
+                        <button class="carousel-arrow next" onclick="UI.moveSlide(1)">❯</button>` : ''}
+                    </div>`;
+                }
+
+                const html = `
+                    <div style="padding-bottom:80px;">
+                        ${carouselHtml}
+                        <h2>${i.titulo}</h2>
+                        <h3 style="color:var(--primary); margin:10px 0;">${Utils.formatMoney(i.precoVenda)}</h3>
+                        <p style="color:gray; font-size:0.9rem; margin-bottom:15px;"><i class="fas fa-map-marker-alt"></i> ${i.endereco}</p>
+                        
+                        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                            <div style="text-align:center;"><i class="fas fa-bed"></i><br><small>${i.quartos||0} Qts</small></div>
+                            <div style="text-align:center;"><i class="fas fa-car"></i><br><small>${i.vagas||0} Vgs</small></div>
+                            <div style="text-align:center;"><i class="fas fa-ruler"></i><br><small>${i.area||0} m²</small></div>
+                            <div style="text-align:center;"><i class="fas fa-building"></i><br><small>${Utils.formatMoney(i.condominio)}</small></div>
+                        </div>
+                        
+                        <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+                        <h4>Descrição</h4>
+                        <p style="margin-top:10px; line-height:1.6; color:#444;">${i.descricao || "Sem descrição."}</p>
+                        
+                        <div style="margin-top:30px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-block" style="flex:1; margin:0;" onclick="App.imovel.edit('${i.id}')">Editar</button>
+                            <button class="btn-block" style="flex:1; margin:0; background:#25D366;" onclick="App.whatsapp.share('${i.id}')"><i class="fab fa-whatsapp"></i></button>
+                            <button class="btn-block" style="flex:1; margin:0; background:#ef4444;" onclick="Utils.generatePDF(${JSON.stringify(i).replace(/"/g, "&quot;")})">PDF</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('details-content').innerHTML = html;
+                document.getElementById('overlay-details').classList.add('active');
+                document.getElementById('sheet-details').style.transform = "translateY(0)";
+            },
+
+            moveSlide: (dir) => {
+                const slides = document.querySelectorAll('.carousel-slide');
+                let activeIdx = Array.from(slides).findIndex(s => s.classList.contains('active'));
+                slides[activeIdx].classList.remove('active');
+                
+                let nextIdx = activeIdx + dir;
+                if(nextIdx < 0) nextIdx = slides.length - 1;
+                if(nextIdx >= slides.length) nextIdx = 0;
+                
+                slides[nextIdx].classList.add('active');
+            },
+
+            renderFunil: () => {
+                const stages = JSON.parse(localStorage.getItem('funnelConfig'));
+                const container = document.getElementById('funil-container');
+                container.innerHTML = '';
+
+                stages.forEach(stage => {
+                    const clientsInStage = UI.data.clientes.filter(c => c.etapa === stage.id);
+                    const div = document.createElement('div');
+                    div.className = 'funnel-stage';
+                    div.style.borderLeftColor = stage.color;
+                    div.innerHTML = `
+                        <div class="funnel-stage-header" onclick="this.parentElement.classList.toggle('expanded')">
+                            <strong>${stage.nome} (${clientsInStage.length})</strong>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="funnel-stage-clients" ondrop="App.funnel.drop(event, '${stage.id}')" ondragover="event.preventDefault()">
+                            ${clientsInStage.map(c => `
+                                <div class="funnel-client-item" draggable="true" ondragstart="App.funnel.drag(event, '${c.id}')">
+                                    <div style="font-weight:600;">${c.nome}</div>
+                                    <div style="font-size:0.8rem; color:#666;">${c.telefone}</div>
+                                </div>
+                            `).join('')}
+                            <div style="height:30px;"></div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+                // Expandir o primeiro por padrão
+                if(container.firstChild) container.firstChild.classList.add('expanded');
+            },
+
+            renderAgenda: () => {
+                const list = document.getElementById('agenda-list');
+                // Ordenar por data
+                const sorted = UI.data.visitas.sort((a,b) => new Date(a.data + ' ' + a.hora) - new Date(b.data + ' ' + b.hora));
+                
+                list.innerHTML = sorted.map(v => {
+                    const cliente = UI.data.clientes.find(c => c.id === v.clienteId)?.nome || 'Cliente não encontrado';
+                    return `
+                    <div class="schedule-card" onclick="App.agenda.edit('${v.id}')">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span style="font-weight:bold; color:var(--primary);">${v.tipo.toUpperCase()}</span>
+                            <small>${v.data.split('-').reverse().join('/')} às ${v.hora}</small>
+                        </div>
+                        <div style="font-weight:600; font-size:1.1rem;">${cliente}</div>
+                        <div style="color:#666; font-size:0.9rem;">${v.obs || ''}</div>
+                    </div>`;
+                }).join('');
+            },
+
+            renderClientes: (filter="") => {
                 const list = document.getElementById('clientes-list');
                 const filtered = UI.data.clientes.filter(c => c.nome.toLowerCase().includes(filter.toLowerCase()));
-                
                 list.innerHTML = filtered.map(c => `
                     <div class="client-card" onclick="App.cliente.edit('${c.id}')">
                         <div class="client-header">
                             <div class="client-name">${c.nome}</div>
-                            <span class="client-type bg-blue">Cliente</span>
+                            <a href="https://wa.me/55${c.telefone.replace(/\D/g,'')}" onclick="event.stopPropagation()" style="color:#25D366; font-size:1.5rem;"><i class="fab fa-whatsapp"></i></a>
                         </div>
-                        <div class="client-info">
-                            <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
-                            ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
-                        </div>
-                        <div class="client-actions">
-                            <button class="btn-whatsapp-client" onclick="event.stopPropagation(); window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}')">
-                                <i class="fab fa-whatsapp"></i> WhatsApp
-                            </button>
-                        </div>
+                        <div style="color:#666; font-size:0.9rem;">${c.email || ''}</div>
                     </div>
                 `).join('');
             },
 
-            showImovelDetails: (id) => {
-                const i = UI.data.imoveis.find(x => x.id === id);
-                if(!i) return;
-                
-                const html = `
-                    <div class="property-content">
-                        <h2>${i.titulo}</h2>
-                        <div class="property-price" style="margin-top:10px">${Utils.formatCurrency(i.precoVenda)}</div>
-                        <p style="color:#666;margin:10px 0">${i.endereco}</p>
-                        <hr style="border:0;border-top:1px solid #eee;margin:15px 0">
-                        <p>${i.descricao || 'Sem descrição.'}</p>
-                        
-                        <div class="details-actions" style="margin-top:20px">
-                            <button class="btn-block" style="background:#ef4444" onclick="Utils.generatePDF(${JSON.stringify(i).replace(/"/g, "&quot;")})">
-                                <i class="fas fa-file-pdf"></i> Gerar PDF
-                            </button>
-                        </div>
+            renderLinks: () => {
+                const list = document.getElementById('links-list');
+                list.innerHTML = UI.data.links.map(l => `
+                    <div class="link-card" onclick="window.open('${l.url}', '_blank')">
+                        <div class="link-icon"><i class="fas fa-link"></i></div>
+                        <div style="font-weight:600; font-size:0.9rem;">${l.titulo}</div>
                     </div>
-                    <button class="btn-block" style="background:var(--light);color:var(--secondary)" onclick="UI.closeModals()">Fechar</button>
-                `;
-                document.getElementById('imovel-details-content').innerHTML = html;
-                document.getElementById('overlay-imovel-details').classList.add('active');
+                `).join('');
             },
 
+            renderRelatorios: () => {
+                const totalVendas = UI.data.imoveis.reduce((acc, i) => acc + (i.vendido ? i.precoVenda : 0), 0);
+                const comissao = totalVendas * 0.05; // 5%
+                document.getElementById('rel-vendas').innerText = Utils.formatMoney(totalVendas);
+                document.getElementById('rel-comissao').innerText = Utils.formatMoney(comissao);
+
+                // Gráfico Chart.js
+                const ctx = document.getElementById('financeChart').getContext('2d');
+                if(window.myChart) window.myChart.destroy();
+                
+                // Dados fictícios de exemplo baseados no número de imóveis vs clientes
+                window.myChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Imóveis', 'Leads', 'Visitas'],
+                        datasets: [{
+                            data: [UI.data.imoveis.length, UI.data.clientes.length, UI.data.visitas.length],
+                            backgroundColor: ['#3b82f6', '#10b981', '#f59e0b']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            },
+
+            // --- MODALS ---
             openNewImovel: () => {
                 document.getElementById('form-imovel').reset();
                 document.getElementById('i-id').value = '';
-                document.getElementById('title-imovel').innerText = 'Novo Imóvel';
+                document.getElementById('i-gallery').innerHTML = '<div class="add-image-btn" onclick="document.getElementById(\'i-file\').click()"><i class="fas fa-camera"></i></div>';
                 document.getElementById('overlay-imovel').classList.add('active');
+                document.getElementById('sheet-imovel').style.transform = "translateY(0)";
             },
-
-            openNewCliente: () => {
-                document.getElementById('form-cliente').reset();
-                document.getElementById('c-id').value = '';
-                document.getElementById('title-cliente').innerText = 'Novo Cliente';
-                document.getElementById('overlay-cliente').classList.add('active');
-            },
-            
-            openSettings: async () => {
-                const s = await DB.get('settings', 'main') || {};
-                document.getElementById('s-nome').value = s.nome || '';
-                document.getElementById('s-creci').value = s.creci || '';
-                document.getElementById('s-telefone').value = s.telefone || '';
-                document.getElementById('s-imobiliaria').value = s.imobiliaria || '';
-                document.getElementById('overlay-settings').classList.add('active');
-            },
-
+            openNewVisita: () => App.agenda.create(),
+            openNewLink: () => App.link.create(),
             closeModals: () => {
-                document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.modal-overlay').classList.remove('active');
+                document.querySelectorAll('.modal-sheet').forEach(s => s.style.transform = "translateY(100%)");
+                setTimeout(() => {
+                    document.querySelectorAll('.modal-overlay').forEach(o => o.classList.remove('active'));
+                }, 300);
+            },
+            toast: (msg) => {
+                const t = document.getElementById('toast');
+                t.innerText = msg;
+                t.style.display = 'block';
+                setTimeout(()=>t.style.display='none', 3000);
             }
         };
 
-        // App Logic
+        // --- APP LOGIC ---
         const App = {
             imovel: {
+                handleImages: async (input) => {
+                    const gallery = document.getElementById('i-gallery');
+                    const hiddenInput = document.getElementById('i-images-data');
+                    let currentImages = JSON.parse(hiddenInput.value);
+
+                    for (const file of input.files) {
+                        const base64 = await Utils.readImage(file);
+                        currentImages.push(base64);
+                        const img = document.createElement('img');
+                        img.src = base64;
+                        img.className = 'image-thumb';
+                        gallery.insertBefore(img, gallery.lastElementChild);
+                    }
+                    hiddenInput.value = JSON.stringify(currentImages);
+                },
                 save: async (e) => {
                     e.preventDefault();
                     const id = document.getElementById('i-id').value || Utils.id();
                     const data = {
                         id,
                         titulo: document.getElementById('i-titulo').value,
-                        precoVenda: Utils.parseCurrency(document.getElementById('i-preco-venda').value),
+                        precoVenda: Utils.parseMoney(document.getElementById('i-preco').value),
+                        precoAluguel: Utils.parseMoney(document.getElementById('i-aluguel').value),
+                        condominio: Utils.parseMoney(document.getElementById('i-condominio').value),
                         endereco: document.getElementById('i-endereco').value,
-                        descricao: document.getElementById('i-descricao').value
+                        quartos: document.getElementById('i-quartos').value,
+                        vagas: document.getElementById('i-vagas').value,
+                        area: document.getElementById('i-area').value,
+                        descricao: document.getElementById('i-descricao').value,
+                        imagens: JSON.parse(document.getElementById('i-images-data').value)
                     };
                     await DB.put('imoveis', data);
-                    UI.data.imoveis = await DB.getAll('imoveis');
+                    await UI.loadData();
                     UI.closeModals();
-                    UI.renderImoveis();
-                    Utils.toast('Imóvel salvo!');
+                    UI.switchTab('imoveis');
+                    UI.toast('Imóvel salvo!');
                 },
                 edit: (id) => {
                     const i = UI.data.imoveis.find(x => x.id === id);
-                    document.getElementById('i-id').value = i.id;
-                    document.getElementById('i-titulo').value = i.titulo;
-                    document.getElementById('i-preco-venda').value = (i.precoVenda/100).toFixed(2).replace('.', ','); // Ajuste simples
-                    document.getElementById('i-endereco').value = i.endereco;
-                    document.getElementById('i-descricao').value = i.descricao || '';
-                    document.getElementById('title-imovel').innerText = 'Editar Imóvel';
-                    document.getElementById('overlay-imovel').classList.add('active');
+                    UI.closeModals(); // Fecha modal de detalhes
+                    setTimeout(() => {
+                        document.getElementById('i-id').value = i.id;
+                        document.getElementById('i-titulo').value = i.titulo;
+                        document.getElementById('i-preco').value = (i.precoVenda/100).toFixed(2).replace('.', ',');
+                        document.getElementById('i-aluguel').value = i.precoAluguel ? (i.precoAluguel/100).toFixed(2).replace('.', ',') : '';
+                        document.getElementById('i-endereco').value = i.endereco;
+                        document.getElementById('i-quartos').value = i.quartos;
+                        document.getElementById('i-vagas').value = i.vagas;
+                        document.getElementById('i-area').value = i.area;
+                        document.getElementById('i-descricao').value = i.descricao;
+                        document.getElementById('i-images-data').value = JSON.stringify(i.imagens || []);
+                        
+                        // Renderizar imagens existentes
+                        const gallery = document.getElementById('i-gallery');
+                        gallery.innerHTML = '<div class="add-image-btn" onclick="document.getElementById(\'i-file\').click()"><i class="fas fa-camera"></i></div>';
+                        if(i.imagens) {
+                            i.imagens.forEach(src => {
+                                const img = document.createElement('img');
+                                img.src = src;
+                                img.className = 'image-thumb';
+                                gallery.insertBefore(img, gallery.lastElementChild);
+                            });
+                        }
+                        
+                        document.getElementById('overlay-imovel').classList.add('active');
+                        document.getElementById('sheet-imovel').style.transform = "translateY(0)";
+                    }, 350);
                 }
             },
+            
             cliente: {
+                create: () => {
+                    const html = `
+                        <h3 class="section-title">Novo Cliente</h3>
+                        <form onsubmit="App.cliente.save(event)">
+                            <div class="form-group"><label class="form-label">Nome</label><input type="text" id="c-nome" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Telefone</label><input type="tel" id="c-tel" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Email</label><input type="email" id="c-email" class="form-control"></div>
+                            <button type="submit" class="btn-block">Salvar</button>
+                            <button type="button" class="btn-block" style="background:var(--secondary)" onclick="UI.closeModals()">Cancelar</button>
+                        </form>
+                    `;
+                    App.openGenericModal(html);
+                },
                 save: async (e) => {
                     e.preventDefault();
-                    const id = document.getElementById('c-id').value || Utils.id();
                     const data = {
-                        id,
+                        id: Utils.id(),
                         nome: document.getElementById('c-nome').value,
-                        telefone: document.getElementById('c-telefone').value,
-                        email: document.getElementById('c-email').value
+                        telefone: document.getElementById('c-tel').value,
+                        email: document.getElementById('c-email').value,
+                        etapa: 'lead' // padrão
                     };
                     await DB.put('clientes', data);
-                    UI.data.clientes = await DB.getAll('clientes');
+                    await UI.loadData();
                     UI.closeModals();
                     UI.renderClientes();
-                    Utils.toast('Cliente salvo!');
+                    UI.toast('Cliente salvo!');
                 },
                 edit: (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
-                    document.getElementById('c-id').value = c.id;
-                    document.getElementById('c-nome').value = c.nome;
-                    document.getElementById('c-telefone').value = c.telefone;
-                    document.getElementById('c-email').value = c.email || '';
-                    document.getElementById('title-cliente').innerText = 'Editar Cliente';
-                    document.getElementById('overlay-cliente').classList.add('active');
+                    const html = `
+                        <h3 class="section-title">Editar Cliente</h3>
+                        <form onsubmit="App.cliente.update(event, '${id}')">
+                            <div class="form-group"><label class="form-label">Nome</label><input type="text" id="c-nome" class="form-control" value="${c.nome}" required></div>
+                            <div class="form-group"><label class="form-label">Telefone</label><input type="tel" id="c-tel" class="form-control" value="${c.telefone}" required></div>
+                            <div class="form-group"><label class="form-label">Etapa Funil</label>
+                                <select id="c-etapa" class="form-control">
+                                    <option value="lead" ${c.etapa==='lead'?'selected':''}>Lead</option>
+                                    <option value="contato" ${c.etapa==='contato'?'selected':''}>Contato</option>
+                                    <option value="visita" ${c.etapa==='visita'?'selected':''}>Visita</option>
+                                    <option value="proposta" ${c.etapa==='proposta'?'selected':''}>Proposta</option>
+                                    <option value="fechamento" ${c.etapa==='fechamento'?'selected':''}>Fechamento</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-block">Salvar Alterações</button>
+                            <button type="button" class="btn-block" style="background:#ef4444" onclick="App.cliente.delete('${id}')">Excluir</button>
+                        </form>
+                    `;
+                    App.openGenericModal(html);
+                },
+                update: async (e, id) => {
+                    e.preventDefault();
+                    const c = UI.data.clientes.find(x => x.id === id);
+                    c.nome = document.getElementById('c-nome').value;
+                    c.telefone = document.getElementById('c-tel').value;
+                    c.etapa = document.getElementById('c-etapa').value;
+                    await DB.put('clientes', c);
+                    await UI.loadData();
+                    UI.closeModals();
+                    UI.switchTab(UI.activeTab); // Refresh
+                },
+                delete: async (id) => {
+                    if(confirm("Excluir cliente?")) {
+                        await DB.delete('clientes', id);
+                        await UI.loadData();
+                        UI.closeModals();
+                        UI.switchTab(UI.activeTab);
+                    }
                 }
             },
-            settings: {
+
+            agenda: {
+                create: () => {
+                    const html = `
+                        <h3 class="section-title">Novo Agendamento</h3>
+                        <form onsubmit="App.agenda.save(event)">
+                            <div class="form-group"><label class="form-label">Tipo</label>
+                                <select id="a-tipo" class="form-control">
+                                    <option value="visita">Visita</option>
+                                    <option value="reuniao">Reunião</option>
+                                    <option value="outro">Outro</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Cliente</label>
+                                <select id="a-cliente" class="form-control">
+                                    <option value="">Selecione...</option>
+                                    ${UI.data.clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group"><label class="form-label">Data</label><input type="date" id="a-data" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Hora</label><input type="time" id="a-hora" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">Obs</label><input type="text" id="a-obs" class="form-control"></div>
+                            <button type="submit" class="btn-block">Agendar</button>
+                        </form>
+                    `;
+                    App.openGenericModal(html);
+                },
                 save: async (e) => {
                     e.preventDefault();
                     const data = {
-                        id: 'main',
-                        nome: document.getElementById('s-nome').value,
-                        creci: document.getElementById('s-creci').value,
-                        telefone: document.getElementById('s-telefone').value,
-                        imobiliaria: document.getElementById('s-imobiliaria').value
+                        id: Utils.id(),
+                        tipo: document.getElementById('a-tipo').value,
+                        clienteId: document.getElementById('a-cliente').value,
+                        data: document.getElementById('a-data').value,
+                        hora: document.getElementById('a-hora').value,
+                        obs: document.getElementById('a-obs').value
                     };
-                    await DB.put('settings', data);
+                    await DB.put('visitas', data);
+                    await UI.loadData();
                     UI.closeModals();
-                    Utils.toast('Configurações salvas!');
+                    UI.renderAgenda();
+                },
+                edit: (id) => {
+                     const v = UI.data.visitas.find(x => x.id === id);
+                     if(confirm("Deseja excluir este agendamento?")) {
+                         DB.delete('visitas', id).then(async () => {
+                             await UI.loadData();
+                             UI.renderAgenda();
+                         });
+                     }
                 }
             },
-            whatsapp: (id) => {
-                const i = UI.data.imoveis.find(x => x.id === id);
-                const text = `Olhe este imóvel: ${i.titulo} - ${Utils.formatCurrency(i.precoVenda)}`;
-                window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+
+            funnel: {
+                drag: (ev, id) => {
+                    ev.dataTransfer.setData("text", id);
+                },
+                drop: async (ev, newStage) => {
+                    ev.preventDefault();
+                    const id = ev.dataTransfer.getData("text");
+                    const client = UI.data.clientes.find(c => c.id === id);
+                    if(client) {
+                        client.etapa = newStage;
+                        await DB.put('clientes', client);
+                        UI.renderFunil();
+                    }
+                }
+            },
+            
+            link: {
+                create: () => {
+                     const html = `
+                        <h3 class="section-title">Novo Link</h3>
+                        <form onsubmit="App.link.save(event)">
+                            <div class="form-group"><label class="form-label">Título</label><input type="text" id="l-titulo" class="form-control" required></div>
+                            <div class="form-group"><label class="form-label">URL</label><input type="url" id="l-url" class="form-control" placeholder="https://..." required></div>
+                            <button type="submit" class="btn-block">Salvar</button>
+                        </form>
+                    `;
+                    App.openGenericModal(html);
+                },
+                save: async (e) => {
+                    e.preventDefault();
+                    const data = {
+                        id: Utils.id(),
+                        titulo: document.getElementById('l-titulo').value,
+                        url: document.getElementById('l-url').value
+                    };
+                    await DB.put('links', data);
+                    await UI.loadData();
+                    UI.closeModals();
+                    UI.renderLinks();
+                }
+            },
+            
+            whatsapp: {
+                share: (id) => {
+                    const i = UI.data.imoveis.find(x => x.id === id);
+                    const text = `Confira este imóvel: ${i.titulo} - ${Utils.formatMoney(i.precoVenda)}. Local: ${i.endereco}`;
+                    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+                }
+            },
+
+            openGenericModal: (html) => {
+                document.getElementById('generic-content').innerHTML = html;
+                document.getElementById('overlay-generic').classList.add('active');
+                document.getElementById('sheet-generic').style.transform = "translateY(0)";
             }
         };
 
-        // Inicializar
+        // UI Helpers
+        UI.openSettings = () => {
+            const html = `
+                <h3 class="section-title">Configurações</h3>
+                <button class="btn-block" style="background:#ef4444" onclick="App.resetDB()">Resetar Sistema</button>
+                <button class="btn-block" style="background:var(--secondary); margin-top:10px;" onclick="UI.closeModals()">Fechar</button>
+            `;
+            App.openGenericModal(html);
+        };
+        
+        App.resetDB = async () => {
+            if(confirm("ATENÇÃO: Isso apagará TODOS os dados. Continuar?")) {
+                const req = indexedDB.deleteDatabase(DB.name);
+                req.onsuccess = () => location.reload();
+            }
+        };
+
+        // Inicialização
         window.addEventListener('DOMContentLoaded', UI.init);
     </script>
 </body>
