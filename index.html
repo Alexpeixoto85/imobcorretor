@@ -1376,6 +1376,101 @@
             100% { transform: rotate(360deg); }
         }
 
+        .video-thumbnail {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+        }
+
+        .video-thumbnail i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .video-url-display {
+            background: #f1f5f9;
+            border-radius: 6px;
+            padding: 8px;
+            font-size: 0.75rem;
+            word-break: break-all;
+            margin-top: 4px;
+            border: 1px dashed #cbd5e1;
+        }
+
+        .btn-video {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-video:hover {
+            opacity: 0.9;
+        }
+
+        .btn-video-secondary {
+            background: #f3e8ff;
+            color: #7c3aed;
+        }
+
+        .report-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .report-date-input {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .report-summary {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+        }
+
+        .report-table th {
+            background: #f8fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--dark);
+            border-bottom: 2px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .report-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+
+        .report-table tr:hover {
+            background: #f8fafc;
+        }
+
         /* Responsividade adicional para mobile */
         @media (max-width: 360px) {
             .stats-grid {
@@ -1448,6 +1543,10 @@
             .btn-details-secondary {
                 background: #334155;
                 color: #cbd5e1;
+            }
+            
+            .report-table th {
+                background: #334155;
             }
         }
 
@@ -1691,45 +1790,33 @@
             </div>
 
             <div id="relatorios-view" class="view">
-                <div class="section-title">Desempenho Mensal</div>
-                <div class="chart-container">
-                    <canvas id="performanceChart"></canvas>
+                <div class="section-title">Relatórios</div>
+                
+                <div class="report-filters">
+                    <input type="date" id="report-date-start" class="form-control report-date-input" value="">
+                    <input type="date" id="report-date-end" class="form-control report-date-input" value="">
+                    <select id="report-type" class="form-control" style="flex: 1;">
+                        <option value="clientes">Relatório de Clientes</option>
+                        <option value="agendamentos">Relatório de Agendamentos</option>
+                        <option value="vendas">Relatório de Vendas</option>
+                        <option value="performance">Performance</option>
+                    </select>
                 </div>
-
-                <div class="section-title">Resumo Financeiro</div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-green"><i class="fas fa-money-bill-wave"></i></div>
-                        <div class="stat-value" id="rel-vendas-mes">R$ 0</div>
-                        <div class="stat-label">Vendas Mês</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-blue"><i class="fas fa-hand-holding-usd"></i></div>
-                        <div class="stat-value" id="rel-alugueis-mes">R$ 0</div>
-                        <div class="stat-label">Aluguéis Mês</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-orange"><i class="fas fa-chart-pie"></i></div>
-                        <div class="stat-value" id="rel-comissao">R$ 0</div>
-                        <div class="stat-label">Comissão</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon bg-purple"><i class="fas fa-bullseye"></i></div>
-                        <div class="stat-value" id="rel-conversao">0%</div>
-                        <div class="stat-label">Conversão</div>
-                    </div>
-                </div>
-
-                <div class="section-title">
-                    Relatório de Agendamentos
-                    <button class="icon-btn" style="background: #7c3aed; color: white; border-radius: 8px; padding: 8px;" onclick="UI.generateAgendaReport()">
-                        <i class="fas fa-file-pdf"></i>
+                
+                <div class="report-actions">
+                    <button class="btn-block" style="background: var(--primary);" onclick="UI.generateReport()">
+                        <i class="fas fa-chart-bar"></i> Gerar Relatório
+                    </button>
+                    <button class="btn-block" style="background: var(--success);" onclick="UI.exportReport()">
+                        <i class="fas fa-file-pdf"></i> Exportar PDF
                     </button>
                 </div>
-                <div class="chart-container">
-                    <canvas id="agendaChart"></canvas>
-                </div>
-                <div id="agenda-report">
+                
+                <div id="report-content">
+                    <div class="empty-state">
+                        <i class="fas fa-chart-line"></i>
+                        <p>Selecione um período e tipo de relatório para gerar</p>
+                    </div>
                 </div>
             </div>
         </main>
@@ -1842,6 +1929,23 @@
                     </div>
                     <input type="file" id="i-imagem-input" accept="image/*" multiple style="display: none;" onchange="App.imovel.handleMultipleImages(this)">
                     <input type="hidden" id="i-imagens-data">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Vídeos do Imóvel (Links do YouTube/Vimeo)</label>
+                    <div class="image-counter">Vídeos adicionados: <span id="video-counter">0</span>/5</div>
+                    <div id="videos-container">
+                        <div class="form-group" id="video-input-group">
+                            <div class="form-row">
+                                <input type="url" id="i-video-url" class="form-control" placeholder="https://youtube.com/watch?v=..." style="flex: 1;">
+                                <button type="button" class="btn-sm btn-video" onclick="App.imovel.addVideo()">
+                                    <i class="fas fa-plus"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                        <div id="videos-list"></div>
+                    </div>
+                    <input type="hidden" id="i-videos-data">
                 </div>
 
                 <div class="form-group">
@@ -2242,7 +2346,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // Objeto principal do banco de dados IndexedDB
         const DB = {
             name: 'ImobiProDB',
-            version: 6,
+            version: 7,
             db: null,
             
             init: function() {
@@ -2282,6 +2386,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     clientesStore.createIndex('nome', 'nome', { unique: false });
                     clientesStore.createIndex('etapaFunil', 'etapaFunil', { unique: false });
                     clientesStore.createIndex('dataEntradaFunil', 'dataEntradaFunil', { unique: false });
+                    clientesStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                 }
                 
                 if (!db.objectStoreNames.contains('imoveis')) {
@@ -2289,6 +2394,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imoveisStore.createIndex('titulo', 'titulo', { unique: false });
                     imoveisStore.createIndex('tipo', 'tipo', { unique: false });
                     imoveisStore.createIndex('status', 'status', { unique: false });
+                    imoveisStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                 }
                 
                 if (!db.objectStoreNames.contains('visitas')) {
@@ -2296,6 +2402,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     visitasStore.createIndex('data', 'data', { unique: false });
                     visitasStore.createIndex('tipo', 'tipo', { unique: false });
                     visitasStore.createIndex('status', 'status', { unique: false });
+                    visitasStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                 }
                 
                 if (!db.objectStoreNames.contains('links')) {
@@ -2380,6 +2487,21 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         }
                     } catch (error) {
                         console.error('Erro ao adicionar configurações padrão:', error);
+                    }
+                }
+                
+                if (oldVersion < 7) {
+                    console.log('Migrando para versão 7: Adicionando campo vídeos aos imóveis');
+                    try {
+                        const imoveis = await this.getAll('imoveis');
+                        for (const imovel of imoveis) {
+                            if (!imovel.videos) {
+                                imovel.videos = [];
+                                await this.put('imoveis', imovel);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro na migração para versão 7:', error);
                     }
                 }
             },
@@ -2550,6 +2672,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 
                                 if (key.includes('imoveis') && Array.isArray(parsedData)) {
                                     for (const imovel of parsedData) {
+                                        if (!imovel.videos) {
+                                            imovel.videos = [];
+                                        }
                                         await this.put('imoveis', imovel);
                                     }
                                     migrated = true;
@@ -2993,6 +3118,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         yPos += 4;
                     }
                     
+                    // Seção: VÍDEOS
+                    if(imovel.videos && imovel.videos.length > 0) {
+                        doc.setFontSize(14);
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("🎥 VÍDEOS DO IMÓVEL", margin, yPos);
+                        yPos += 8;
+                        
+                        doc.setFontSize(11);
+                        doc.setTextColor(30, 41, 59);
+                        
+                        imovel.videos.forEach((video, index) => {
+                            doc.text(`• Vídeo ${index + 1}: ${video.url.substring(0, 60)}...`, margin, yPos);
+                            yPos += 6;
+                        });
+                        
+                        yPos += 4;
+                    }
+                    
                     // Seção: DESCRIÇÃO
                     if(imovel.descricao) {
                         doc.setFontSize(14);
@@ -3057,6 +3201,118 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
             
+            // FUNÇÃO CORRIGIDA: Gerar relatório PDF
+            generateReportPDF: async (reportData, reportType) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const margin = 15;
+                    let yPos = margin;
+                    
+                    const settings = await DB.get('settings', 'main') || {};
+                    
+                    // Header
+                    doc.setFillColor(37, 99, 235);
+                    doc.rect(0, 0, pageWidth, 25, 'F');
+                    
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20);
+                    doc.setFont("helvetica", "bold");
+                    
+                    let reportTitle = "RELATÓRIO DE ";
+                    switch(reportType) {
+                        case 'clientes': reportTitle += "CLIENTES"; break;
+                        case 'agendamentos': reportTitle += "AGENDAMENTOS"; break;
+                        case 'vendas': reportTitle += "VENDAS"; break;
+                        case 'performance': reportTitle += "PERFORMANCE"; break;
+                        default: reportTitle += "GERAL";
+                    }
+                    
+                    doc.text(reportTitle, pageWidth/2, 15, {align: "center"});
+                    
+                    doc.setFontSize(10);
+                    doc.text(`${settings.imobiliaria || "Imobiliária"} | ${new Date().toLocaleDateString("pt-BR")}`, pageWidth/2, 22, {align: "center"});
+                    
+                    yPos = 35;
+                    
+                    // Informações do relatório
+                    doc.setFontSize(12);
+                    doc.setTextColor(30, 41, 59);
+                    doc.text(`Período: ${reportData.periodo}`, margin, yPos);
+                    yPos += 8;
+                    doc.text(`Total: ${reportData.total} registros`, margin, yPos);
+                    yPos += 12;
+                    
+                    // Tabela de dados
+                    if (reportData.dados && reportData.dados.length > 0) {
+                        doc.setFontSize(14);
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("DETALHES", margin, yPos);
+                        yPos += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(30, 41, 59);
+                        doc.setFont("helvetica", "normal");
+                        
+                        const headers = reportData.headers || [];
+                        const rows = reportData.dados.map(item => 
+                            headers.map(header => item[header] || '')
+                        );
+                        
+                        doc.autoTable({
+                            startY: yPos,
+                            head: [headers],
+                            body: rows,
+                            margin: { left: margin, right: margin },
+                            styles: { fontSize: 9, cellPadding: 3 },
+                            headStyles: { fillColor: [37, 99, 235] }
+                        });
+                    }
+                    
+                    // Resumo estatístico
+                    if (reportData.resumo) {
+                        yPos = doc.lastAutoTable.finalY + 10;
+                        
+                        if (yPos > doc.internal.pageSize.getHeight() - 20) {
+                            doc.addPage();
+                            yPos = margin;
+                        }
+                        
+                        doc.setFontSize(14);
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFont("helvetica", "bold");
+                        doc.text("RESUMO ESTATÍSTICO", margin, yPos);
+                        yPos += 10;
+                        
+                        doc.setFontSize(10);
+                        doc.setTextColor(30, 41, 59);
+                        
+                        for (const [key, value] of Object.entries(reportData.resumo)) {
+                            doc.text(`${key}: ${value}`, margin, yPos);
+                            yPos += 6;
+                        }
+                    }
+                    
+                    // Rodapé
+                    const finalY = doc.internal.pageSize.getHeight() - 10;
+                    doc.setFontSize(9);
+                    doc.setTextColor(100, 116, 139);
+                    doc.text(`Gerado por ${settings.nome || "ImobiPro"} - ${settings.creci || ""}`, pageWidth/2, finalY, {align: "center"});
+                    
+                    // Salvar arquivo
+                    const fileName = `relatorio_${reportType}_${new Date().toISOString().split('T')[0]}.pdf`;
+                    doc.save(fileName);
+                    
+                    Utils.toast("Relatório PDF gerado com sucesso!");
+                    
+                } catch(err) {
+                    console.error("Erro ao gerar relatório PDF:", err);
+                    Utils.toast("Erro ao gerar relatório PDF", "error");
+                }
+            },
+            
             getGreeting: () => {
                 const hour = new Date().getHours();
                 if (hour >= 5 && hour < 12) return "Bom dia";
@@ -3089,7 +3345,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const clienteFirstName = cliente.nome.split(' ')[0];
                 
-                let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
+                let message = `${greeting}, ${clienteFirstName}! Tudo bem? 😊\n\n`;
                 message += `Aqui é ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} da ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
                 
                 if (imovel) {
@@ -3123,19 +3379,28 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message += `\n🏗️ *Construtora:* ${imovel.construtora}\n`;
                     }
                     
+                    // Adicionar informações sobre vídeos
+                    if (imovel.videos && imovel.videos.length > 0) {
+                        message += `\n🎥 *Vídeos disponíveis:*\n`;
+                        imovel.videos.forEach((video, index) => {
+                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+                        });
+                        message += `\n`;
+                    }
+                    
                     if (imovel.descricao) {
                         message += `\n📝 *Descrição:*\n${imovel.descricao.substring(0, 150)}${imovel.descricao.length > 150 ? '...' : ''}\n`;
                     }
                 } else {
-                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar. Podemos conversar?\n`;
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar. Podemos conversar? 🤝\n`;
                 }
                 
                 const settings = await DB.get('settings', 'main');
                 
-                message += `\nTodas essas informações são necessárias para sua tomada de decisão.\n`;
-                message += `Caso tenha alguma dúvida, estou à sua inteira disposição.\n`;
-                message += `Caso queira, podemos marcar uma reunião para conversarmos melhor.\n\n`;
-                message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel!\n\n`;
+                message += `\nTodas essas informações são necessárias para sua tomada de decisão. 💡\n`;
+                message += `Caso tenha alguma dúvida, estou à sua inteira disposição. 📞\n`;
+                message += `Caso queira, podemos marcar uma reunião para conversarmos melhor. 📅\n\n`;
+                message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel! 🎉\n\n`;
                 message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
                 message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
                 message += `👨‍💼 *Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
@@ -3168,6 +3433,49 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 // Retornar URL completa para WhatsApp (isso abrirá o app diretamente)
                 return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
+            },
+            
+            // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
+            extractVideoId: (url) => {
+                if (!url) return null;
+                
+                // YouTube
+                if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+                    const match = url.match(youtubeRegex);
+                    return match ? match[1] : null;
+                }
+                
+                // Vimeo
+                if (url.includes('vimeo.com')) {
+                    const vimeoRegex = /vimeo\.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)/;
+                    const match = url.match(vimeoRegex);
+                    return match ? match[2] : null;
+                }
+                
+                return null;
+            },
+            
+            // FUNÇÃO NOVA: Gerar thumbnail do vídeo
+            generateVideoThumbnail: (url) => {
+                const videoId = Utils.extractVideoId(url);
+                if (!videoId) return null;
+                
+                if (url.includes('youtube') || url.includes('youtu.be')) {
+                    return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+                } else if (url.includes('vimeo')) {
+                    return `https://vumbnail.com/${videoId}.jpg`;
+                }
+                
+                return null;
+            },
+            
+            // FUNÇÃO NOVA: Validar URL de vídeo
+            isValidVideoUrl: (url) => {
+                if (!url) return false;
+                return url.includes('youtube.com') || 
+                       url.includes('youtu.be') || 
+                       url.includes('vimeo.com');
             }
         };
 
@@ -3246,6 +3554,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             fullscreenCurrentIndex: 0,
             currentAgendaFilter: 'todos',
             draggingClient: null,
+            currentReport: null,
             
             init: async () => {
                 try {
@@ -3272,12 +3581,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         etapas: UI.data.funilEtapas.length
                     });
                     
+                    // Configurar datas padrão para relatórios
+                    const today = new Date();
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    
+                    document.getElementById('report-date-start').value = firstDay.toISOString().split('T')[0];
+                    document.getElementById('report-date-end').value = today.toISOString().split('T')[0];
+                    
                     // Mostrar aplicação
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('app').style.display = 'flex';
                     
                     UI.renderDashboard();
-                    
                     UI.renderFunil();
                     
                     console.log('Sistema inicializado com sucesso');
@@ -3323,7 +3638,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if(target === 'clientes-view') UI.renderClientes();
                 if(target === 'imoveis-view') UI.renderImoveis();
                 if(target === 'agenda-view') UI.renderAgenda();
-                if(target === 'relatorios-view') UI.renderRelatorios();
+                if(target === 'relatorios-view') UI.renderReport();
                 if(target === 'links-view') UI.renderLinks();
                 
                 // Scroll para o topo
@@ -3421,7 +3736,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     aniversariantesList.innerHTML = aniversariantes.map(cliente => {
                         const idade = Utils.calculateAge(cliente.dataNascimento);
                         return `
-                            <div class="client-card" onclick="UI.showClienteDetails('${cliente.id}')">
+                            <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
                                 <div class="client-header">
                                     <div class="client-name">${cliente.nome} <span class="badge badge-pink">🎂 ${idade ? idade + ' anos' : 'Aniversário'}</span></div>
                                     <span class="client-type type-${cliente.tipo}">${Utils.getTipoClienteText(cliente.tipo)}</span>
@@ -3508,7 +3823,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     <div class="funnel-client-item" 
                                          draggable="true" 
                                          data-cliente-id="${cliente.id}"
-                                         ondragstart="UI.startDrag(event, '${cliente.id}')">
+                                         ondragstart="UI.startDrag(event, '${cliente.id}')"
+                                         onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
                                         <div class="funnel-client-name">${cliente.nome}</div>
                                         <div class="funnel-client-days">
                                             ${cliente.dataEntradaFunil ? `${Utils.calculateDaysInStage(cliente.dataEntradaFunil)} dias` : 'Novo'}
@@ -3624,7 +3940,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const dias = cliente.dataEntradaFunil ? Utils.calculateDaysInStage(cliente.dataEntradaFunil) : 0;
                     
                     return `
-                        <div class="client-card" onclick="UI.showClienteDetails('${cliente.id}')">
+                        <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
                             <div class="client-header">
                                 <div class="client-name">${cliente.nome}</div>
                                 <span class="client-type" style="background: ${etapa?.cor || '#93c5fd'}; color: white;">
@@ -3870,7 +4186,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
                 
                 return `
-                    <div class="schedule-card ${tipoClass} ${isUrgent ? 'schedule-urgent' : ''}" onclick="UI.showVisitaDetails('${v.id}')">
+                    <div class="schedule-card ${tipoClass} ${isUrgent ? 'schedule-urgent' : ''}" onclick="App.agenda.edit('${v.id}')">
                         <div class="schedule-header">
                             <div class="schedule-type ${tipoClass}">${Utils.getTipoVisitaText(v.tipo)}</div>
                             <span class="badge ${v.status === 'realizado' ? 'badge-success' : v.status === 'cancelado' ? 'badge-danger' : v.status === 'confirmado' ? 'badge-cyan' : 'badge-primary'}">
@@ -3955,7 +4271,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
                     
                     return `
-                        <div class="client-card" onclick="UI.showClienteDetails('${c.id}')">
+                        <div class="client-card" onclick="App.cliente.edit('${c.id}')">
                             ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
                             <div class="client-header">
                                 <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''}</div>
@@ -4059,6 +4375,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         <i class="far fa-calendar"></i> Entrega: ${Utils.formatDate(i.dataEntrega)}
                     </div>` : '';
                 
+                // Verificar se tem vídeos
+                const hasVideos = i.videos && i.videos.length > 0;
+                const videoBadge = hasVideos ? `<div class="property-badge" style="top: 40px; left: 12px; background: #8b5cf6;">🎥 VÍDEO</div>` : '';
+                
                 return `
                     <div class="property-card" onclick="UI.showImovelDetails('${i.id}')">
                         <div class="property-image">
@@ -4067,6 +4387,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 `<i class="fas fa-home" style="font-size:3rem;"></i>`
                             }
                             <div class="property-badge ${badgeClass}">${badgeText}</div>
+                            ${videoBadge}
                         </div>
                         <div class="property-content">
                             <div class="property-title">${i.titulo}</div>
@@ -4125,6 +4446,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const dataEntrega = i.dataEntrega ? Utils.formatDate(i.dataEntrega) : '-';
                 const gasEncanado = i.gasEncanado === 'sim' ? 'Sim' : 'Não';
                 
+                // Carrossel de imagens
                 let carouselHTML = '';
                 if(i.imagens && i.imagens.length > 0) {
                     UI.currentCarouselImages = i.imagens;
@@ -4149,8 +4471,50 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     `;
                 }
                 
-                // CORREÇÃO AQUI: Criar uma função auxiliar para gerar o PDF
-                const safeImovelJson = JSON.stringify(i).replace(/"/g, '\"');
+                // Seção de vídeos
+                let videosHTML = '';
+                if(i.videos && i.videos.length > 0) {
+                    videosHTML = `
+                        <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-video"></i> VÍDEOS DO IMÓVEL</div>
+                            <div class="image-gallery">
+                                ${i.videos.map((video, index) => {
+                                    const thumbnail = Utils.generateVideoThumbnail(video.url);
+                                    return `
+                                        <div class="video-thumbnail" onclick="window.open('${video.url}', '_blank')">
+                                            <i class="fas fa-play-circle"></i>
+                                            <span>Vídeo ${index + 1}</span>
+                                            <div class="video-url-display">${video.url.substring(0, 30)}...</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // CORREÇÃO: Criar uma cópia segura do objeto imóvel para o PDF
+                const safeImovel = {
+                    ...i,
+                    titulo: i.titulo || '',
+                    endereco: i.endereco || '',
+                    tipo: i.tipo || '',
+                    transacao: i.transacao || '',
+                    status: i.status || '',
+                    descricao: i.descricao || '',
+                    precoVenda: i.precoVenda || 0,
+                    precoAluguel: i.precoAluguel || 0,
+                    condominio: i.condominio || 0,
+                    area: i.area || 0,
+                    quartos: i.quartos || 0,
+                    banheiros: i.banheiros || 0,
+                    vagas: i.vagas || 0,
+                    gasEncanado: i.gasEncanado || 'nao',
+                    dataEntrega: i.dataEntrega || '',
+                    construtora: i.construtora || '',
+                    formaPagamento: i.formaPagamento || '',
+                    videos: i.videos || []
+                };
                 
                 const detailsContent = `
                     <div class="details-card">
@@ -4160,6 +4524,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         </div>
                         
                         ${carouselHTML}
+                        ${videosHTML}
                         
                         <div class="details-section">
                             <div class="details-section-title"><i class="fas fa-money-bill-wave"></i> VALORES</div>
@@ -4287,7 +4652,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-secondary" onclick="UI.openNewVisitaFromImovel('${i.id}')">
                                 <i class="fas fa-calendar-plus"></i> Agendar Visita
                             </button>
-                            <button class="btn-details btn-pdf" onclick="Utils.generatePDF(${safeImovelJson})">
+                            <button class="btn-details btn-pdf" onclick="Utils.generatePDF(${JSON.stringify(safeImovel).replace(/"/g, '\"')})">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
@@ -4412,20 +4777,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 });
             },
 
-            showClienteDetails: (id) => {
-                const c = UI.data.clientes.find(x => x.id === id);
-                if(!c) return;
-                
-                App.cliente.edit(id);
-            },
-
-            showVisitaDetails: (id) => {
-                const v = UI.data.visitas.find(x => x.id === id);
-                if(!v) return;
-                
-                App.agenda.edit(id);
-            },
-
             renderAgenda: (filterType = null) => {
                 const list = document.getElementById('agenda-list');
                 if (!list) return;
@@ -4485,324 +4836,711 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.renderAgenda(type === 'todos' ? null : type);
             },
 
-            renderRelatorios: () => {
-                const imoveis = UI.data.imoveis;
-                const visitas = UI.data.visitas;
-                const hoje = new Date();
-                const mesAtual = hoje.getMonth();
-                const anoAtual = hoje.getFullYear();
+            renderReport: () => {
+                const container = document.getElementById('report-content');
+                if (!container) return;
                 
-                // Calcular vendas do mês
-                const transacoesMes = imoveis.filter(i => 
-                    (i.status === 'vendido' || i.status === 'alugado') &&
-                    i.dataVenda
-                ).filter(i => {
-                    const dataVenda = new Date(i.dataVenda);
-                    return dataVenda.getMonth() === mesAtual && dataVenda.getFullYear() === anoAtual;
-                });
-                
-                const totalVendas = transacoesMes.filter(i => i.status === 'vendido')
-                    .reduce((acc, i) => acc + (i.precoVenda || 0), 0);
-                
-                const totalAlugueis = transacoesMes.filter(i => i.status === 'alugado')
-                    .reduce((acc, i) => acc + (i.precoAluguel || 0), 0);
-                
-                // Obter configurações
-                Storage.getSettings().then(settings => {
-                    const taxaComissao = settings.comissao || 5;
-                    const comissaoVendas = (totalVendas * taxaComissao) / 100;
-                    const comissaoAlugueis = (totalAlugueis * taxaComissao) / 100;
-                    const comissaoTotal = comissaoVendas + comissaoAlugueis;
-                    
-                    const imoveisDisponiveis = imoveis.filter(i => i.status === 'disponivel').length;
-                    const imoveisVendidosAlugados = imoveis.filter(i => i.status === 'vendido' || i.status === 'alugado').length;
-                    const totalImoveis = imoveis.length;
-                    const taxaConversao = totalImoveis > 0 ? ((imoveisVendidosAlugados / totalImoveis) * 100).toFixed(1) : 0;
-                    
-                    document.getElementById('rel-vendas-mes').innerText = Utils.formatCurrency(totalVendas);
-                    document.getElementById('rel-alugueis-mes').innerText = Utils.formatCurrency(totalAlugueis);
-                    document.getElementById('rel-comissao').innerText = Utils.formatCurrency(comissaoTotal);
-                    document.getElementById('rel-conversao').innerText = `${taxaConversao}%`;
-                });
-                
-                UI.renderChart();
-                UI.renderAgendaReport();
-            },
-
-            renderChart: () => {
-                const ctx = document.getElementById('performanceChart');
-                if (!ctx) return;
-                
-                const ctx2d = ctx.getContext('2d');
-                const imoveis = UI.data.imoveis;
-                
-                const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                const hoje = new Date();
-                const anoAtual = hoje.getFullYear();
-                
-                const dadosVendas = new Array(12).fill(0);
-                const dadosAlugueis = new Array(12).fill(0);
-                
-                imoveis.filter(i => i.dataVenda).forEach(i => {
-                    const data = new Date(i.dataVenda);
-                    if(data.getFullYear() === anoAtual) {
-                        const mes = data.getMonth();
-                        if(i.status === 'vendido') {
-                            dadosVendas[mes] += (i.precoVenda || 0);
-                        } else if(i.status === 'alugado') {
-                            dadosAlugueis[mes] += (i.precoAluguel || 0);
-                        }
-                    }
-                });
-                
-                if (UI.chartInstance) {
-                    UI.chartInstance.destroy();
-                }
-
-                UI.chartInstance = new Chart(ctx2d, {
-                    type: 'bar',
-                    data: {
-                        labels: meses,
-                        datasets: [
-                            {
-                                label: 'Vendas',
-                                data: dadosVendas,
-                                backgroundColor: '#3b82f6',
-                                borderRadius: 4,
-                            },
-                            {
-                                label: 'Aluguéis',
-                                data: dadosAlugueis,
-                                backgroundColor: '#10b981',
-                                borderRadius: 4,
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: { 
-                                display: true,
-                                position: 'bottom',
-                                labels: { boxWidth: 12, font: { size: 10 } }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) label += ': ';
-                                        if (context.parsed.y !== null) {
-                                            label += Utils.formatCurrency(context.parsed.y);
-                                        }
-                                        return label;
-                                    }
-                                }
-                            }
-                        },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                grid: { borderDash: [2, 4], color: '#e2e8f0' },
-                                ticks: {
-                                    callback: function(value) {
-                                        if(value >= 1000000) return 'R$ ' + (value / 1000000).toFixed(1) + 'M';
-                                        if(value >= 1000) return 'R$ ' + (value / 1000).toFixed(0) + 'k';
-                                        return 'R$ ' + value;
-                                    },
-                                    font: { size: 10 }
-                                }
-                            },
-                            x: {
-                                grid: { display: false },
-                                ticks: { font: { size: 10 } }
-                            }
-                        }
-                    }
-                });
-            },
-
-            renderAgendaReport: () => {
-                const visitas = UI.data.visitas;
-                const reportContainer = document.getElementById('agenda-report');
-                if (!reportContainer) return;
-                
-                if(visitas.length === 0) {
-                    reportContainer.innerHTML = `
+                if (!UI.currentReport) {
+                    container.innerHTML = `
                         <div class="empty-state">
-                            <i class="fas fa-calendar-alt" style="color: var(--primary);"></i>
-                            <p>Nenhum agendamento registrado ainda.</p>
+                            <i class="fas fa-chart-line"></i>
+                            <p>Selecione um período e tipo de relatório para gerar</p>
                         </div>
                     `;
-                    
                     return;
                 }
+                
+                container.innerHTML = UI.currentReport.html;
+            },
 
-                const tipos = ['visita', 'reuniao-construtor', 'reuniao-equipe', 'documentacao', 'plantao', 'generico', 'outro'];
-                const contagemPorTipo = {};
-                tipos.forEach(tipo => {
-                    contagemPorTipo[tipo] = visitas.filter(v => v.tipo === tipo).length;
-                });
+            generateReport: () => {
+                const startDate = document.getElementById('report-date-start').value;
+                const endDate = document.getElementById('report-date-end').value;
+                const reportType = document.getElementById('report-type').value;
                 
-                const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                const hoje = new Date();
-                const anoAtual = hoje.getFullYear();
-                
-                const visitasPorMes = new Array(12).fill(0);
-                
-                visitas.forEach(v => {
-                    if(v.data) {
-                        const data = new Date(v.data);
-                        if(data.getFullYear() === anoAtual) {
-                            const mes = data.getMonth();
-                            visitasPorMes[mes]++;
-                        }
-                    }
-                });
-                
-                const ctx = document.getElementById('agendaChart');
-                if (ctx) {
-                    const ctx2d = ctx.getContext('2d');
-                    
-                    if (UI.agendaChartInstance) {
-                        UI.agendaChartInstance.destroy();
-                    }
-
-                    UI.agendaChartInstance = new Chart(ctx2d, {
-                        type: 'bar',
-                        data: {
-                            labels: meses,
-                            datasets: [
-                                {
-                                    label: 'Agendamentos',
-                                    data: visitasPorMes,
-                                    backgroundColor: '#2563eb',
-                                    borderRadius: 4,
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { 
-                                    display: true,
-                                    position: 'bottom',
-                                    labels: { boxWidth: 12, font: { size: 10 } }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    grid: { borderDash: [2, 4], color: '#e2e8f0' },
-                                    ticks: { font: { size: 10 } }
-                                },
-                                x: {
-                                    grid: { display: false },
-                                    ticks: { font: { size: 10 } }
-                                }
-                            }
-                        }
-                    });
+                if (!startDate || !endDate) {
+                    Utils.toast('Selecione um período válido', 'error');
+                    return;
                 }
                 
-                const totalAgendamentos = visitas.length;
-                const realizados = visitas.filter(v => v.status === 'realizado').length;
-                const cancelados = visitas.filter(v => v.status === 'cancelado').length;
-                const confirmados = visitas.filter(v => v.status === 'confirmado').length;
+                const start = new Date(startDate);
+                const end = new Date(endDate);
                 
-                const agendamentosRecentes = visitas
-                    .sort((a,b) => new Date(b.data) - new Date(a.data))
-                    .slice(0, 5);
+                if (start > end) {
+                    Utils.toast('Data inicial não pode ser maior que data final', 'error');
+                    return;
+                }
+                
+                let reportData = null;
+                
+                switch(reportType) {
+                    case 'clientes':
+                        reportData = UI.generateClientReport(start, end);
+                        break;
+                    case 'agendamentos':
+                        reportData = UI.generateAgendaReport(start, end);
+                        break;
+                    case 'vendas':
+                        reportData = UI.generateSalesReport(start, end);
+                        break;
+                    case 'performance':
+                        reportData = UI.generatePerformanceReport(start, end);
+                        break;
+                }
+                
+                if (reportData) {
+                    UI.currentReport = reportData;
+                    UI.renderReport();
+                    Utils.toast('Relatório gerado com sucesso!');
+                }
+            },
+            
+            generateClientReport: (start, end) => {
+                const clientesFiltrados = UI.data.clientes.filter(cliente => {
+                    const dataCriacao = new Date(cliente.dataCriacao);
+                    return dataCriacao >= start && dataCriacao <= end;
+                });
+                
+                // Agrupar por data
+                const clientesPorData = {};
+                clientesFiltrados.forEach(cliente => {
+                    const data = cliente.dataCriacao.split('T')[0];
+                    if (!clientesPorData[data]) {
+                        clientesPorData[data] = [];
+                    }
+                    clientesPorData[data].push(cliente);
+                });
+                
+                // Ordenar datas
+                const datasOrdenadas = Object.keys(clientesPorData).sort();
                 
                 let html = `
+                    <div class="report-summary">
+                        <h3>Relatório de Clientes</h3>
+                        <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
+                        <p><strong>Total de Clientes:</strong> ${clientesFiltrados.length}</p>
+                        <p><strong>Dias com cadastros:</strong> ${datasOrdenadas.length}</p>
+                    </div>
+                `;
+                
+                if (datasOrdenadas.length > 0) {
+                    html += `
+                        <div class="section-title">Cadastros por Data</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Novos Clientes</th>
+                                    <th>Detalhes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    datasOrdenadas.forEach(data => {
+                        const clientesDoDia = clientesPorData[data];
+                        const compradores = clientesDoDia.filter(c => c.tipo === 'comprador').length;
+                        const vendedores = clientesDoDia.filter(c => c.tipo === 'vendedor').length;
+                        const ambos = clientesDoDia.filter(c => c.tipo === 'ambos').length;
+                        
+                        html += `
+                            <tr>
+                                <td>${Utils.formatDate(data)}</td>
+                                <td>${clientesDoDia.length}</td>
+                                <td>Compradores: ${compradores} | Vendedores: ${vendedores} | Ambos: ${ambos}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // Estatísticas
+                const compradoresTotal = clientesFiltrados.filter(c => c.tipo === 'comprador').length;
+                const vendedoresTotal = clientesFiltrados.filter(c => c.tipo === 'vendedor').length;
+                const ambosTotal = clientesFiltrados.filter(c => c.tipo === 'ambos').length;
+                
+                html += `
+                    <div class="section-title">Resumo Estatístico</div>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon bg-blue">
-                                <i class="fas fa-calendar-alt"></i>
-                            </div>
-                            <div class="stat-value">${totalAgendamentos}</div>
-                            <div class="stat-label">Total</div>
+                            <div class="stat-icon bg-blue"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="stat-value">${compradoresTotal}</div>
+                            <div class="stat-label">Compradores</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon bg-green">
-                                <i class="fas fa-check-circle"></i>
-                            </div>
-                            <div class="stat-value">${realizados}</div>
-                            <div class="stat-label">Realizados</div>
+                            <div class="stat-icon bg-green"><i class="fas fa-home"></i></div>
+                            <div class="stat-value">${vendedoresTotal}</div>
+                            <div class="stat-label">Vendedores</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon bg-red">
-                                <i class="fas fa-times-circle"></i>
-                            </div>
-                            <div class="stat-value">${cancelados}</div>
-                            <div class="stat-label">Cancelados</div>
+                            <div class="stat-icon bg-purple"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="stat-value">${ambosTotal}</div>
+                            <div class="stat-label">Ambos</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon bg-cyan">
-                                <i class="fas fa-check-double"></i>
-                            </div>
-                            <div class="stat-value">${confirmados}</div>
-                            <div class="stat-label">Confirmados</div>
+                            <div class="stat-icon bg-cyan"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-value">${clientesFiltrados.length > 0 ? ((compradoresTotal / clientesFiltrados.length) * 100).toFixed(1) : 0}%</div>
+                            <div class="stat-label">% Compradores</div>
                         </div>
                     </div>
-                    
-                    <div class="section-title" style="margin-top: 20px;">Distribuição por Tipo</div>
+                `;
+                
+                return {
+                    html,
+                    data: {
+                        periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
+                        total: clientesFiltrados.length,
+                        dados: datasOrdenadas.map(data => ({
+                            data: Utils.formatDate(data),
+                            total: clientesPorData[data].length,
+                            compradores: clientesPorData[data].filter(c => c.tipo === 'comprador').length,
+                            vendedores: clientesPorData[data].filter(c => c.tipo === 'vendedor').length,
+                            ambos: clientesPorData[data].filter(c => c.tipo === 'ambos').length
+                        })),
+                        headers: ['Data', 'Total', 'Compradores', 'Vendedores', 'Ambos'],
+                        resumo: {
+                            'Total de Clientes': clientesFiltrados.length,
+                            'Compradores': compradoresTotal,
+                            'Vendedores': vendedoresTotal,
+                            'Ambos': ambosTotal,
+                            'Média por Dia': (clientesFiltrados.length / datasOrdenadas.length).toFixed(1)
+                        }
+                    },
+                    type: 'clientes'
+                };
+            },
+            
+            generateAgendaReport: (start, end) => {
+                const visitasFiltradas = UI.data.visitas.filter(visita => {
+                    const dataVisita = new Date(visita.data);
+                    return dataVisita >= start && dataVisita <= end;
+                });
+                
+                // Agrupar por tipo
+                const visitasPorTipo = {};
+                const tipos = ['visita', 'reuniao-construtor', 'reuniao-equipe', 'documentacao', 'plantao', 'generico', 'outro'];
+                
+                tipos.forEach(tipo => {
+                    visitasPorTipo[tipo] = visitasFiltradas.filter(v => v.tipo === tipo);
+                });
+                
+                // Agrupar por status
+                const visitasPorStatus = {
+                    'agendado': visitasFiltradas.filter(v => v.status === 'agendado').length,
+                    'confirmado': visitasFiltradas.filter(v => v.status === 'confirmado').length,
+                    'realizado': visitasFiltradas.filter(v => v.status === 'realizado').length,
+                    'cancelado': visitasFiltradas.filter(v => v.status === 'cancelado').length
+                };
+                
+                let html = `
+                    <div class="report-summary">
+                        <h3>Relatório de Agendamentos</h3>
+                        <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
+                        <p><strong>Total de Agendamentos:</strong> ${visitasFiltradas.length}</p>
+                        <p><strong>Taxa de Realização:</strong> ${visitasFiltradas.length > 0 ? ((visitasPorStatus.realizado / visitasFiltradas.length) * 100).toFixed(1) : 0}%</p>
+                    </div>
+                `;
+                
+                html += `
+                    <div class="section-title">Distribuição por Tipo</div>
                     <div class="stats-grid">
                         <div class="stat-card">
                             <div class="stat-icon" style="background: var(--type-visita, 0.1); color: var(--type-visita);">
                                 <i class="fas fa-home"></i>
                             </div>
-                            <div class="stat-value">${contagemPorTipo.visita}</div>
+                            <div class="stat-value">${visitasPorTipo.visita.length}</div>
                             <div class="stat-label">Visitas</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon" style="background: var(--type-reuniao-construtor, 0.1); color: var(--type-reuniao-construtor);">
                                 <i class="fas fa-building"></i>
                             </div>
-                            <div class="stat-value">${contagemPorTipo['reuniao-construtor']}</div>
+                            <div class="stat-value">${visitasPorTipo['reuniao-construtor'].length}</div>
                             <div class="stat-label">Reuniões Construtor</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon" style="background: var(--type-reuniao-equipe, 0.1); color: var(--type-reuniao-equipe);">
                                 <i class="fas fa-users"></i>
                             </div>
-                            <div class="stat-value">${contagemPorTipo['reuniao-equipe']}</div>
+                            <div class="stat-value">${visitasPorTipo['reuniao-equipe'].length}</div>
                             <div class="stat-label">Reuniões Equipe</div>
                         </div>
                         <div class="stat-card">
                             <div class="stat-icon" style="background: var(--type-plantao, 0.1); color: var(--type-plantao);">
                                 <i class="fas fa-calendar-check"></i>
                             </div>
-                            <div class="stat-value">${contagemPorTipo.plantao}</div>
+                            <div class="stat-value">${visitasPorTipo.plantao.length}</div>
                             <div class="stat-label">Plantões</div>
                         </div>
                     </div>
-                    
-                    <div class="section-title" style="margin-top: 20px;">Agendamentos Recentes</div>
                 `;
                 
-                if(agendamentosRecentes.length === 0) {
-                    html += `<div class="empty-state"><i class="fas fa-calendar-alt"></i><p>Nenhum agendamento recente</p></div>`;
-                } else {
-                    agendamentosRecentes.forEach(v => {
-                        html += UI.createVisitaCard(v);
+                html += `
+                    <div class="section-title">Distribuição por Status</div>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Quantidade</th>
+                                <th>Porcentagem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                Object.entries(visitasPorStatus).forEach(([status, quantidade]) => {
+                    const porcentagem = visitasFiltradas.length > 0 ? ((quantidade / visitasFiltradas.length) * 100).toFixed(1) : 0;
+                    html += `
+                        <tr>
+                            <td>${Utils.getStatusVisitaText(status)}</td>
+                            <td>${quantidade}</td>
+                            <td>${porcentagem}%</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                // Últimos agendamentos
+                const ultimosAgendamentos = visitasFiltradas
+                    .sort((a, b) => new Date(b.data) - new Date(a.data))
+                    .slice(0, 10);
+                
+                if (ultimosAgendamentos.length > 0) {
+                    html += `
+                        <div class="section-title">Últimos Agendamentos</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Tipo</th>
+                                    <th>Status</th>
+                                    <th>Cliente/Descrição</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    ultimosAgendamentos.forEach(visita => {
+                        const cliente = UI.data.clientes.find(c => c.id === visita.clienteId);
+                        html += `
+                            <tr>
+                                <td>${Utils.formatDate(visita.data)} ${visita.horario}</td>
+                                <td>${Utils.getTipoVisitaText(visita.tipo)}</td>
+                                <td><span class="badge ${visita.status === 'realizado' ? 'badge-success' : visita.status === 'cancelado' ? 'badge-danger' : visita.status === 'confirmado' ? 'badge-cyan' : 'badge-primary'}">${Utils.getStatusVisitaText(visita.status)}</span></td>
+                                <td>${cliente ? cliente.nome : (visita.genericoTitulo || visita.outroDescricao || '-')}</td>
+                            </tr>
+                        `;
                     });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
                 }
                 
-                reportContainer.innerHTML = html;
+                return {
+                    html,
+                    data: {
+                        periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
+                        total: visitasFiltradas.length,
+                        dados: tipos.map(tipo => ({
+                            tipo: Utils.getTipoVisitaText(tipo),
+                            quantidade: visitasPorTipo[tipo].length,
+                            porcentagem: visitasFiltradas.length > 0 ? ((visitasPorTipo[tipo].length / visitasFiltradas.length) * 100).toFixed(1) + '%' : '0%'
+                        })),
+                        headers: ['Tipo', 'Quantidade', 'Porcentagem'],
+                        resumo: {
+                            'Total de Agendamentos': visitasFiltradas.length,
+                            'Visitas': visitasPorTipo.visita.length,
+                            'Reuniões Construtor': visitasPorTipo['reuniao-construtor'].length,
+                            'Plantões': visitasPorTipo.plantao.length,
+                            'Taxa de Realização': visitasFiltradas.length > 0 ? ((visitasPorStatus.realizado / visitasFiltradas.length) * 100).toFixed(1) + '%' : '0%'
+                        }
+                    },
+                    type: 'agendamentos'
+                };
+            },
+            
+            generateSalesReport: (start, end) => {
+                const imoveisVendidos = UI.data.imoveis.filter(imovel => {
+                    if (!imovel.dataVenda) return false;
+                    const dataVenda = new Date(imovel.dataVenda);
+                    return dataVenda >= start && dataVenda <= end && (imovel.status === 'vendido' || imovel.status === 'alugado');
+                });
+                
+                const vendas = imoveisVendidos.filter(i => i.status === 'vendido');
+                const alugueis = imoveisVendidos.filter(i => i.status === 'alugado');
+                
+                const totalVendas = vendas.reduce((acc, i) => acc + (i.precoVenda || 0), 0);
+                const totalAlugueis = alugueis.reduce((acc, i) => acc + (i.precoAluguel || 0), 0);
+                const totalGeral = totalVendas + totalAlugueis;
+                
+                // Agrupar por tipo
+                const vendasPorTipo = {};
+                imoveisVendidos.forEach(imovel => {
+                    const tipo = imovel.tipo;
+                    if (!vendasPorTipo[tipo]) {
+                        vendasPorTipo[tipo] = { quantidade: 0, valor: 0 };
+                    }
+                    vendasPorTipo[tipo].quantidade++;
+                    vendasPorTipo[tipo].valor += (imovel.precoVenda || imovel.precoAluguel || 0);
+                });
+                
+                let html = `
+                    <div class="report-summary">
+                        <h3>Relatório de Vendas</h3>
+                        <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
+                        <p><strong>Total de Transações:</strong> ${imoveisVendidos.length}</p>
+                        <p><strong>Valor Total:</strong> ${Utils.formatCurrency(totalGeral)}</p>
+                    </div>
+                `;
+                
+                html += `
+                    <div class="section-title">Resumo Financeiro</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="stat-value">${Utils.formatCurrency(totalVendas)}</div>
+                            <div class="stat-label">Vendas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue"><i class="fas fa-hand-holding-usd"></i></div>
+                            <div class="stat-value">${Utils.formatCurrency(totalAlugueis)}</div>
+                            <div class="stat-label">Aluguéis</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-orange"><i class="fas fa-chart-pie"></i></div>
+                            <div class="stat-value">${Utils.formatCurrency(totalGeral)}</div>
+                            <div class="stat-label">Total Geral</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-purple"><i class="fas fa-bullseye"></i></div>
+                            <div class="stat-value">${imoveisVendidos.length}</div>
+                            <div class="stat-label">Transações</div>
+                        </div>
+                    </div>
+                `;
+                
+                html += `
+                    <div class="section-title">Vendas por Tipo de Imóvel</div>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Quantidade</th>
+                                <th>Valor Total</th>
+                                <th>Valor Médio</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                Object.entries(vendasPorTipo).forEach(([tipo, dados]) => {
+                    const valorMedio = dados.quantidade > 0 ? dados.valor / dados.quantidade : 0;
+                    html += `
+                        <tr>
+                            <td>${Utils.getTipoText(tipo)}</td>
+                            <td>${dados.quantidade}</td>
+                            <td>${Utils.formatCurrency(dados.valor)}</td>
+                            <td>${Utils.formatCurrency(valorMedio)}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                        </tbody>
+                    </table>
+                `;
+                
+                // Últimas vendas
+                const ultimasVendas = imoveisVendidos
+                    .sort((a, b) => new Date(b.dataVenda) - new Date(a.dataVenda))
+                    .slice(0, 10);
+                
+                if (ultimasVendas.length > 0) {
+                    html += `
+                        <div class="section-title">Últimas Transações</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Imóvel</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    ultimasVendas.forEach(imovel => {
+                        html += `
+                            <tr>
+                                <td>${Utils.formatDate(imovel.dataVenda)}</td>
+                                <td>${imovel.titulo.substring(0, 30)}...</td>
+                                <td>${Utils.getTipoText(imovel.tipo)}</td>
+                                <td>${Utils.formatCurrency(imovel.precoVenda || imovel.precoAluguel || 0)}</td>
+                                <td><span class="badge ${imovel.status === 'vendido' ? 'badge-success' : 'badge-primary'}">${Utils.getStatusText(imovel.status)}</span></td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // Calcular comissão
+                Storage.getSettings().then(settings => {
+                    const taxaComissao = settings.comissao || 5;
+                    const comissao = (totalGeral * taxaComissao) / 100;
+                    
+                    html += `
+                        <div class="section-title">Projeção de Comissão</div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon bg-cyan"><i class="fas fa-percentage"></i></div>
+                                <div class="stat-value">${taxaComissao}%</div>
+                                <div class="stat-label">Taxa</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon bg-teal"><i class="fas fa-calculator"></i></div>
+                                <div class="stat-value">${Utils.formatCurrency(comissao)}</div>
+                                <div class="stat-label">Comissão</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                return {
+                    html,
+                    data: {
+                        periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
+                        total: imoveisVendidos.length,
+                        dados: Object.entries(vendasPorTipo).map(([tipo, dados]) => ({
+                            tipo: Utils.getTipoText(tipo),
+                            quantidade: dados.quantidade,
+                            valor: Utils.formatCurrency(dados.valor),
+                            valorMedio: Utils.formatCurrency(dados.quantidade > 0 ? dados.valor / dados.quantidade : 0)
+                        })),
+                        headers: ['Tipo', 'Quantidade', 'Valor Total', 'Valor Médio'],
+                        resumo: {
+                            'Total de Transações': imoveisVendidos.length,
+                            'Vendas': Utils.formatCurrency(totalVendas),
+                            'Aluguéis': Utils.formatCurrency(totalAlugueis),
+                            'Total Geral': Utils.formatCurrency(totalGeral),
+                            'Média por Transação': imoveisVendidos.length > 0 ? Utils.formatCurrency(totalGeral / imoveisVendidos.length) : 'R$ 0,00'
+                        }
+                    },
+                    type: 'vendas'
+                };
+            },
+            
+            generatePerformanceReport: (start, end) => {
+                // Esta função combina dados de várias fontes para uma visão geral
+                const clientes = UI.data.clientes.filter(c => {
+                    const dataCriacao = new Date(c.dataCriacao);
+                    return dataCriacao >= start && dataCriacao <= end;
+                }).length;
+                
+                const visitas = UI.data.visitas.filter(v => {
+                    const dataVisita = new Date(v.data);
+                    return dataVisita >= start && dataVisita <= end;
+                }).length;
+                
+                const imoveisVendidos = UI.data.imoveis.filter(i => {
+                    if (!i.dataVenda) return false;
+                    const dataVenda = new Date(i.dataVenda);
+                    return dataVenda >= start && dataVenda <= end && (i.status === 'vendido' || i.status === 'alugado');
+                }).length;
+                
+                const imoveisCadastrados = UI.data.imoveis.filter(i => {
+                    const dataCriacao = new Date(i.dataCriacao);
+                    return dataCriacao >= start && dataCriacao <= end;
+                }).length;
+                
+                const taxaConversao = clientes > 0 ? ((imoveisVendidos / clientes) * 100).toFixed(1) : 0;
+                const taxaVisitas = clientes > 0 ? ((visitas / clientes) * 100).toFixed(1) : 0;
+                
+                let html = `
+                    <div class="report-summary">
+                        <h3>Relatório de Performance</h3>
+                        <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
+                        <p><strong>Visão Geral:</strong> Análise completa do desempenho no período</p>
+                    </div>
+                `;
+                
+                html += `
+                    <div class="section-title">KPIs Principais</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue"><i class="fas fa-users"></i></div>
+                            <div class="stat-value">${clientes}</div>
+                            <div class="stat-label">Novos Clientes</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green"><i class="fas fa-calendar-alt"></i></div>
+                            <div class="stat-value">${visitas}</div>
+                            <div class="stat-label">Agendamentos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-orange"><i class="fas fa-home"></i></div>
+                            <div class="stat-value">${imoveisCadastrados}</div>
+                            <div class="stat-label">Imóveis Cadastrados</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-red"><i class="fas fa-handshake"></i></div>
+                            <div class="stat-value">${imoveisVendidos}</div>
+                            <div class="stat-label">Transações</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-purple"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-value">${taxaConversao}%</div>
+                            <div class="stat-label">Conversão</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-cyan"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-value">${taxaVisitas}%</div>
+                            <div class="stat-label">Visitas/Cliente</div>
+                        </div>
+                    </div>
+                `;
+                
+                // Evolução mensal
+                const meses = [];
+                const clientesPorMes = [];
+                const visitasPorMes = [];
+                const vendasPorMes = [];
+                
+                const dataAtual = new Date(start);
+                while (dataAtual <= end) {
+                    const mes = dataAtual.toLocaleString('pt-BR', { month: 'short' });
+                    const ano = dataAtual.getFullYear();
+                    const mesAno = `${mes}/${ano}`;
+                    
+                    const inicioMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1);
+                    const fimMes = new Date(dataAtual.getFullYear(), dataAtual.getMonth() + 1, 0);
+                    
+                    const clientesMes = UI.data.clientes.filter(c => {
+                        const dataCriacao = new Date(c.dataCriacao);
+                        return dataCriacao >= inicioMes && dataCriacao <= fimMes;
+                    }).length;
+                    
+                    const visitasMes = UI.data.visitas.filter(v => {
+                        const dataVisita = new Date(v.data);
+                        return dataVisita >= inicioMes && dataVisita <= fimMes;
+                    }).length;
+                    
+                    const vendasMes = UI.data.imoveis.filter(i => {
+                        if (!i.dataVenda) return false;
+                        const dataVenda = new Date(i.dataVenda);
+                        return dataVenda >= inicioMes && dataVenda <= fimMes && (i.status === 'vendido' || i.status === 'alugado');
+                    }).length;
+                    
+                    meses.push(mesAno);
+                    clientesPorMes.push(clientesMes);
+                    visitasPorMes.push(visitasMes);
+                    vendasPorMes.push(vendasMes);
+                    
+                    dataAtual.setMonth(dataAtual.getMonth() + 1);
+                }
+                
+                if (meses.length > 0) {
+                    html += `
+                        <div class="section-title">Evolução Mensal</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Mês</th>
+                                    <th>Clientes</th>
+                                    <th>Agendamentos</th>
+                                    <th>Transações</th>
+                                    <th>Taxa Conversão</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    meses.forEach((mes, index) => {
+                        const taxa = clientesPorMes[index] > 0 ? ((vendasPorMes[index] / clientesPorMes[index]) * 100).toFixed(1) : 0;
+                        html += `
+                            <tr>
+                                <td>${mes}</td>
+                                <td>${clientesPorMes[index]}</td>
+                                <td>${visitasPorMes[index]}</td>
+                                <td>${vendasPorMes[index]}</td>
+                                <td>${taxa}%</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                // Recomendações
+                const mediaClientesPorMes = clientesPorMes.length > 0 ? 
+                    (clientesPorMes.reduce((a, b) => a + b, 0) / clientesPorMes.length).toFixed(1) : 0;
+                const mediaVendasPorMes = vendasPorMes.length > 0 ? 
+                    (vendasPorMes.reduce((a, b) => a + b, 0) / vendasPorMes.length).toFixed(1) : 0;
+                
+                html += `
+                    <div class="section-title">Análise e Recomendações</div>
+                    <div class="report-summary">
+                        <p><strong>Média Mensal:</strong> ${mediaClientesPorMes} clientes novos, ${mediaVendasPorMes} transações</p>
+                        <p><strong>Taxa de Conversão:</strong> ${taxaConversao}% (${imoveisVendidos} transações / ${clientes} clientes)</p>
+                        <p><strong>Eficiência de Visitas:</strong> ${(visitas / clientes).toFixed(1)} visitas por cliente</p>
+                        ${taxaConversao < 10 ? '<p class="warning-note"><i class="fas fa-exclamation-triangle"></i> Taxa de conversão baixa. Considere melhorar o acompanhamento pós-visita.</p>' : ''}
+                        ${mediaClientesPorMes < 5 ? '<p class="warning-note"><i class="fas fa-exclamation-triangle"></i> Captação de clientes abaixo do ideal. Considere aumentar ações de marketing.</p>' : ''}
+                        ${(visitas / clientes) < 1.5 ? '<p class="warning-note"><i class="fas fa-exclamation-triangle"></i> Poucas visitas por cliente. Considere melhorar o processo de agendamento.</p>' : ''}
+                    </div>
+                `;
+                
+                return {
+                    html,
+                    data: {
+                        periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
+                        total: clientes + visitas + imoveisVendidos + imoveisCadastrados,
+                        dados: meses.map((mes, index) => ({
+                            mes,
+                            clientes: clientesPorMes[index],
+                            visitas: visitasPorMes[index],
+                            transacoes: vendasPorMes[index],
+                            taxaConversao: clientesPorMes[index] > 0 ? ((vendasPorMes[index] / clientesPorMes[index]) * 100).toFixed(1) + '%' : '0%'
+                        })),
+                        headers: ['Mês', 'Clientes', 'Agendamentos', 'Transações', 'Taxa Conversão'],
+                        resumo: {
+                            'Clientes Novos': clientes,
+                            'Agendamentos': visitas,
+                            'Imóveis Cadastrados': imoveisCadastrados,
+                            'Transações': imoveisVendidos,
+                            'Taxa de Conversão': taxaConversao + '%',
+                            'Média de Clientes/Mês': mediaClientesPorMes,
+                            'Média de Vendas/Mês': mediaVendasPorMes
+                        }
+                    },
+                    type: 'performance'
+                };
             },
 
-            generateAgendaReport: () => {
-                const visitas = UI.data.visitas;
-                
-                if(visitas.length === 0) {
-                    Utils.toast('Nenhum agendamento para gerar relatório', 'error');
+            exportReport: () => {
+                if (!UI.currentReport) {
+                    Utils.toast('Gere um relatório primeiro', 'error');
                     return;
                 }
                 
-                // Implementação simplificada
-                Utils.toast('Relatório gerado com sucesso!');
+                Utils.generateReportPDF(UI.currentReport.data, UI.currentReport.type);
             },
 
             openModal: (type) => {
@@ -4860,6 +5598,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         </div>
                     `;
                 }
+                
+                // Limpar vídeos
+                document.getElementById('videos-list').innerHTML = '';
+                document.getElementById('i-videos-data').value = '[]';
+                document.getElementById('video-counter').innerText = '0';
+                document.getElementById('i-video-url').value = '';
                 
                 document.getElementById('image-counter').innerText = '0';
                 document.getElementById('i-imagens-data').value = '[]';
@@ -5050,20 +5794,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.openModal('cliente');
                 },
                 
-                whatsapp: (id) => {
-                    const c = UI.data.clientes.find(x => x.id === id);
-                    if(!c || !c.telefone) {
-                        Utils.toast('Cliente sem número de telefone', 'error');
-                        return;
-                    }
-                    
-                    const cleanNumber = c.telefone.replace(/\D/g, '');
-                    const whatsappUrl = `https://wa.me/55${cleanNumber}`;
-                    window.open(whatsappUrl, '_blank');
-                    
-                    Utils.toast(`Abrindo WhatsApp com ${c.nome.split(' ')[0]}`);
-                },
-                
                 // FUNÇÃO CORRIGIDA: WhatsApp Personalizado
                 whatsappPersonalizado: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
@@ -5124,6 +5854,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const imagensData = document.getElementById('i-imagens-data').value;
                     const imagens = imagensData ? JSON.parse(imagensData) : [];
 
+                    const videosData = document.getElementById('i-videos-data').value;
+                    const videos = videosData ? JSON.parse(videosData) : [];
+
                     const precoVenda = Utils.parseCurrency(document.getElementById('i-preco-venda').value);
                     const precoAluguel = Utils.parseCurrency(document.getElementById('i-preco-aluguel').value);
                     const condominio = Utils.parseCurrency(document.getElementById('i-condominio').value);
@@ -5149,10 +5882,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         descricao: document.getElementById('i-descricao').value,
                         observacoes: document.getElementById('i-observacoes').value,
                         imagens: imagens,
+                        videos: videos,
                         dataCriacao: new Date().toISOString()
                     };
 
-                    if((imovel.status === 'vendido' || imovel.status === 'aluguel') && isNew) {
+                    if((imovel.status === 'vendido' || imovel.status === 'alugado') && isNew) {
                         imovel.dataVenda = new Date().toISOString().split('T')[0];
                     }
 
@@ -5176,7 +5910,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.closeModals();
                     UI.renderDashboard();
                     UI.renderImoveis();
-                    UI.renderRelatorios();
                 },
                 
                 edit: (id) => {
@@ -5203,6 +5936,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('i-descricao').value = i.descricao || '';
                     document.getElementById('i-observacoes').value = i.observacoes || '';
 
+                    // Configurar imagens
                     const gallery = document.getElementById('image-gallery');
                     if (gallery) {
                         gallery.innerHTML = '';
@@ -5233,6 +5967,32 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     document.getElementById('image-counter').innerText = i.imagens ? i.imagens.length : 0;
                     document.getElementById('i-imagens-data').value = i.imagens ? JSON.stringify(i.imagens) : '[]';
+                    
+                    // Configurar vídeos
+                    const videosList = document.getElementById('videos-list');
+                    if (videosList) {
+                        videosList.innerHTML = '';
+                        
+                        if(i.videos && i.videos.length > 0) {
+                            i.videos.forEach((video, index) => {
+                                const videoItem = document.createElement('div');
+                                videoItem.className = 'form-group';
+                                videoItem.innerHTML = `
+                                    <div class="form-row">
+                                        <input type="text" class="form-control" value="${video.url}" readonly style="flex: 1;">
+                                        <button type="button" class="btn-sm btn-video-secondary" onclick="App.imovel.removeVideo(${index})">
+                                            <i class="fas fa-trash"></i> Remover
+                                        </button>
+                                    </div>
+                                `;
+                                videosList.appendChild(videoItem);
+                            });
+                        }
+                    }
+                    
+                    document.getElementById('video-counter').innerText = i.videos ? i.videos.length : 0;
+                    document.getElementById('i-videos-data').value = i.videos ? JSON.stringify(i.videos) : '[]';
+                    document.getElementById('i-video-url').value = '';
                     
                     App.imovel.toggleAluguelFields();
                     
@@ -5323,6 +6083,90 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     document.getElementById('image-counter').innerText = currentImages.length;
                     document.getElementById('i-imagens-data').value = JSON.stringify(currentImages);
+                },
+                
+                addVideo: () => {
+                    const videoUrl = document.getElementById('i-video-url').value;
+                    
+                    if (!videoUrl) {
+                        Utils.toast('Digite uma URL de vídeo', 'error');
+                        return;
+                    }
+                    
+                    if (!Utils.isValidVideoUrl(videoUrl)) {
+                        Utils.toast('URL de vídeo inválida. Use links do YouTube ou Vimeo.', 'error');
+                        return;
+                    }
+                    
+                    const currentVideos = JSON.parse(document.getElementById('i-videos-data').value || '[]');
+                    
+                    if (currentVideos.length >= 5) {
+                        Utils.toast('Máximo de 5 vídeos permitido', 'error');
+                        return;
+                    }
+                    
+                    // Verificar se o vídeo já existe
+                    if (currentVideos.some(v => v.url === videoUrl)) {
+                        Utils.toast('Este vídeo já foi adicionado', 'error');
+                        return;
+                    }
+                    
+                    currentVideos.push({ url: videoUrl });
+                    
+                    const videosList = document.getElementById('videos-list');
+                    if (!videosList) return;
+                    
+                    // Limpar e reconstruir a lista
+                    videosList.innerHTML = '';
+                    
+                    currentVideos.forEach((video, index) => {
+                        const videoItem = document.createElement('div');
+                        videoItem.className = 'form-group';
+                        videoItem.innerHTML = `
+                            <div class="form-row">
+                                <input type="text" class="form-control" value="${video.url}" readonly style="flex: 1;">
+                                <button type="button" class="btn-sm btn-video-secondary" onclick="App.imovel.removeVideo(${index})">
+                                    <i class="fas fa-trash"></i> Remover
+                                </button>
+                            </div>
+                        `;
+                        videosList.appendChild(videoItem);
+                    });
+                    
+                    document.getElementById('video-counter').innerText = currentVideos.length;
+                    document.getElementById('i-videos-data').value = JSON.stringify(currentVideos);
+                    document.getElementById('i-video-url').value = '';
+                    
+                    Utils.toast('Vídeo adicionado com sucesso!');
+                },
+                
+                removeVideo: (index) => {
+                    const currentVideos = JSON.parse(document.getElementById('i-videos-data').value || '[]');
+                    currentVideos.splice(index, 1);
+                    
+                    const videosList = document.getElementById('videos-list');
+                    if (!videosList) return;
+                    
+                    videosList.innerHTML = '';
+                    
+                    currentVideos.forEach((video, idx) => {
+                        const videoItem = document.createElement('div');
+                        videoItem.className = 'form-group';
+                        videoItem.innerHTML = `
+                            <div class="form-row">
+                                <input type="text" class="form-control" value="${video.url}" readonly style="flex: 1;">
+                                <button type="button" class="btn-sm btn-video-secondary" onclick="App.imovel.removeVideo(${idx})">
+                                    <i class="fas fa-trash"></i> Remover
+                                </button>
+                            </div>
+                        `;
+                        videosList.appendChild(videoItem);
+                    });
+                    
+                    document.getElementById('video-counter').innerText = currentVideos.length;
+                    document.getElementById('i-videos-data').value = JSON.stringify(currentVideos);
+                    
+                    Utils.toast('Vídeo removido!');
                 },
                 
                 toggleAluguelFields: () => {
@@ -5496,7 +6340,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                     
                     if(i.construtora) {
-                        message += `🏗️ *Construtora:* ${i.construtora}\n`;
+                        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
+                    }
+                    
+                    // Adicionar informações sobre vídeos
+                    if(i.videos && i.videos.length > 0) {
+                        message += `\n🎥 *Vídeos disponíveis:*\n`;
+                        i.videos.forEach((video, index) => {
+                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+                        });
+                        message += `\n`;
                     }
                     
                     message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
@@ -5661,6 +6514,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 
                                 // Importar imóveis
                                 for (const imovel of data.imoveis) {
+                                    if (!imovel.videos) {
+                                        imovel.videos = [];
+                                    }
                                     await DB.add('imoveis', imovel);
                                 }
                                 
@@ -5695,7 +6551,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 UI.renderAgenda();
                                 UI.renderFunil();
                                 UI.renderLinks();
-                                UI.renderRelatorios();
+                                UI.renderReport();
 
                                 Utils.toast('Backup importado com sucesso!');
                             } else {
