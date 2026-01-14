@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2296,6 +2294,29 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         <i class="fab fa-apple"></i> iOS
                     </button>
                 </div>
+                <!-- INÍCIO DO NOVO BLOCO - BACKUP ESPECÍFICO DE IMÓVEIS -->
+<div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; border-top: 2px solid var(--border); padding-top: 20px;">
+    <div style="width: 100%; margin-bottom: 10px;">
+        <h4 style="color: var(--dark); margin: 0; font-size: 1rem;">
+            <i class="fas fa-home" style="color: var(--primary); margin-right: 8px;"></i>
+            Backup Específico dos Imóveis
+        </h4>
+        <p style="font-size: 0.85rem; color: var(--secondary); margin: 5px 0 0 0;">
+            Exporte ou importe apenas os imóveis, sem afetar clientes, agenda, etc.
+        </p>
+    </div>
+    
+    <button type="button" class="btn-block" style="background: var(--success); margin: 0;" onclick="App.backup.exportImoveis()">
+        <i class="fas fa-file-export"></i> Exportar Apenas Imóveis
+    </button>
+    
+    <input type="file" id="import-imoveis-file" style="display: none;" accept=".json" onchange="App.backup.importImoveis(this)">
+    
+    <button type="button" class="btn-block" style="background: var(--warning); margin: 0;" onclick="App.backup.importImoveisTrigger()">
+        <i class="fas fa-file-import"></i> Importar Apenas Imóveis
+    </button>
+</div>
+<!-- FIM DO NOVO BLOCO -->
                 <button type="button" class="btn-block" style="background: var(--danger); margin-top: 10px;" onclick="App.backup.clearData()">
                     <i class="fas fa-trash"></i> Resetar Tudo
                 </button>
@@ -4768,6 +4789,156 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     fullscreenImage.className = 'fullscreen-image';
                 }
             },
+            // Adicione esta função DENTRO do objeto UI, por exemplo após a função closeFullscreen:
+
+showImportOptions: function(totalImportados) {
+    return new Promise((resolve) => {
+        // Criar overlay
+        const overlay = document.createElement('div');
+        overlay.id = 'import-options-overlay';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            padding: 20px;
+        `;
+        
+        // Criar conteúdo
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            width: 100%;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.3s ease;
+        `;
+        
+        // HTML do modal
+        modal.innerHTML = `
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="width: 60px; height: 60px; background: var(--primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <i class="fas fa-home" style="font-size: 1.8rem; color: white;"></i>
+                </div>
+                <h3 style="color: var(--dark); margin: 0 0 8px 0; font-size: 1.3rem;">
+                    Importar Imóveis
+                </h3>
+                <p style="color: var(--secondary); margin: 0; font-size: 0.95rem;">
+                    ${totalImportados} imóveis encontrados no arquivo
+                </p>
+            </div>
+            
+            <div style="margin-bottom: 25px;">
+                <div class="option-card" id="option-merge" style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 20px; margin-bottom: 15px; cursor: pointer; transition: all 0.2s;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="width: 40px; height: 40px; background: #0ea5e9; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                            <i class="fas fa-plus-circle" style="color: white; font-size: 1.2rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; color: var(--dark); font-size: 1.1rem;">ADICIONAR (MESCLAR)</h4>
+                            <p style="margin: 5px 0 0 0; color: var(--secondary); font-size: 0.9rem;">
+                                Recomendado para manter todos os dados
+                            </p>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                        <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--secondary);">
+                            <li>Mantém os ${UI.data.imoveis.length} imóveis atuais</li>
+                            <li>Adiciona novos imóveis do arquivo</li>
+                            <li>Atualiza imóveis com mesmo ID</li>
+                            <li>Não remove nada</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="option-card" id="option-replace" style="background: #fef2f2; border: 2px solid #fca5a5; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s;">
+                    <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <div style="width: 40px; height: 40px; background: #ef4444; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
+                            <i class="fas fa-exchange-alt" style="color: white; font-size: 1.2rem;"></i>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0; color: var(--dark); font-size: 1.1rem;">SUBSTITUIR TUDO</h4>
+                            <p style="margin: 5px 0 0 0; color: var(--secondary); font-size: 0.9rem;">
+                                Cuidado: remove todos os imóveis atuais
+                            </p>
+                        </div>
+                    </div>
+                    <div style="background: white; padding: 12px; border-radius: 8px; margin-top: 10px;">
+                        <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem; color: var(--secondary);">
+                            <li>Remove TODOS os ${UI.data.imoveis.length} imóveis atuais</li>
+                            <li>Importa apenas os ${totalImportados} imóveis do arquivo</li>
+                            <li>Ideal para restaurar backup completo</li>
+                            <li style="color: #dc2626; font-weight: 600;">⚠️ Dados atuais serão perdidos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button id="option-cancel" style="flex: 1; padding: 15px; background: #f1f5f9; border: none; border-radius: 12px; color: var(--secondary); font-weight: 600; cursor: pointer;">
+                    <i class="fas fa-times"></i> CANCELAR
+                </button>
+            </div>
+        `;
+        
+        // Adicionar ao documento
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Adicionar estilos CSS para animação
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            
+            .option-card:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Configurar eventos
+        document.getElementById('option-merge').onclick = () => {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+            resolve('merge');
+        };
+        
+        document.getElementById('option-replace').onclick = () => {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+            resolve('replace');
+        };
+        
+        document.getElementById('option-cancel').onclick = () => {
+            document.body.removeChild(overlay);
+            document.head.removeChild(style);
+            resolve(null);
+        };
+        
+        // Fechar ao clicar fora
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                document.head.removeChild(style);
+                resolve(null);
+            }
+        };
+    });
+},
 
             nextFullscreenImage: () => {
                 if(UI.fullscreenImages.length <= 1) return;
@@ -6636,6 +6807,205 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 exportIOS: async function() {
                     await App.backup.exportData();
                 },
+                // ============== NOVAS FUNÇÕES PARA BACKUP DE IMÓVEIS ==============
+
+// Função para exportar apenas imóveis
+exportImoveis: async function() {
+    try {
+        // Coletar todos os imóveis
+        const imoveis = UI.data.imoveis;
+        
+        // Criar objeto com metadados
+        const data = {
+            imoveis: imoveis,
+            metadata: {
+                exportDate: new Date().toISOString(),
+                totalImoveis: imoveis.length,
+                app: "ImobiPro",
+                versao: "1.0",
+                tipo: "backup_imoveis"
+            }
+        };
+
+        // Converter para JSON
+        const dataStr = JSON.stringify(data, null, 2);
+        
+        // Criar nome do arquivo com data
+        const hoje = new Date();
+        const dataFormatada = hoje.toISOString().split('T')[0];
+        const horaFormatada = hoje.getHours().toString().padStart(2, '0') + 
+                            hoje.getMinutes().toString().padStart(2, '0');
+        const filename = `imobipro_imoveis_${dataFormatada}_${horaFormatada}.json`;
+        
+        // Criar arquivo para download
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        
+        // Adicionar ao documento e clicar
+        document.body.appendChild(a);
+        a.click();
+        
+        // Limpar
+        setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Mostrar mensagem de sucesso
+        Utils.toast(`✅ ${imoveis.length} imóveis exportados com sucesso!`);
+        
+    } catch (error) {
+        console.error('Erro ao exportar imóveis:', error);
+        Utils.toast('❌ Erro ao exportar imóveis', 'error');
+    }
+},
+
+// Abrir seletor de arquivos para importação
+importImoveisTrigger: function() {
+    document.getElementById('import-imoveis-file').click();
+},
+
+// Processar arquivo de importação
+importImoveis: async function(input) {
+    const file = input.files[0];
+    if (!file) {
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            // Mostrar loading
+            Utils.toast('📁 Processando arquivo...', 'info');
+            
+            // Ler e parsear o JSON
+            const data = JSON.parse(e.target.result);
+            
+            // Validar o arquivo
+            if (!data.imoveis || !Array.isArray(data.imoveis)) {
+                Utils.toast('❌ Arquivo inválido!', 'error');
+                return;
+            }
+            
+            if (data.imoveis.length === 0) {
+                Utils.toast('❌ Arquivo vazio!', 'error');
+                return;
+            }
+            
+            // Mostrar opções de importação
+            const importOption = await UI.showImportOptions(data.imoveis.length);
+            
+            if (importOption === 'merge') {
+                // Modo MESCLAR: adiciona novos, atualiza existentes
+                await App.backup.importImoveisMerge(data.imoveis);
+            } else if (importOption === 'replace') {
+                // Modo SUBSTITUIR: remove tudo e importa novo
+                await App.backup.importImoveisReplace(data.imoveis);
+            } else {
+                Utils.toast('⏹️ Importação cancelada', 'info');
+            }
+            
+        } catch (error) {
+            console.error('Erro na importação:', error);
+            Utils.toast('❌ Erro ao importar arquivo!', 'error');
+        }
+    };
+    reader.readAsText(file);
+},
+
+// Importar no modo MESCLAR
+importImoveisMerge: async function(imoveisImportados) {
+    try {
+        const imoveisAtuais = UI.data.imoveis;
+        let novos = 0;
+        let atualizados = 0;
+        
+        // Para cada imóvel importado
+        for (const imovel of imoveisImportados) {
+            // Verificar se já existe (pelo ID)
+            const existe = imoveisAtuais.find(i => i.id === imovel.id);
+            
+            if (existe) {
+                // Atualizar imóvel existente
+                // Mescla as propriedades, mantendo o ID
+                Object.assign(existe, imovel);
+                await DB.put('imoveis', existe);
+                atualizados++;
+            } else {
+                // É um imóvel novo
+                // Garantir que tenha data de criação
+                if (!imovel.dataCriacao) {
+                    imovel.dataCriacao = new Date().toISOString();
+                }
+                // Garantir que tenha array de vídeos
+                if (!imovel.videos) {
+                    imovel.videos = [];
+                }
+                
+                await DB.add('imoveis', imovel);
+                novos++;
+            }
+        }
+        
+        // Atualizar a lista em memória
+        UI.data.imoveis = await Storage.getImoveis();
+        
+        // Atualizar a interface
+        UI.renderImoveis();
+        UI.renderDashboard();
+        
+        // Mostrar resultado
+        Utils.toast(`✅ Importação concluída! ${novos} novos, ${atualizados} atualizados.`);
+        
+    } catch (error) {
+        console.error('Erro no merge:', error);
+        Utils.toast('❌ Erro ao mesclar imóveis', 'error');
+    }
+},
+
+// Importar no modo SUBSTITUIR
+importImoveisReplace: async function(imoveisImportados) {
+    try {
+        // Confirmar ação (importante!)
+        if (!confirm('⚠️ ATENÇÃO!\n\nIsso irá REMOVER TODOS os imóveis atuais e substituir pelos importados.\n\nDeseja continuar?')) {
+            Utils.toast('⏹️ Substituição cancelada', 'info');
+            return;
+        }
+        
+        // Limpar todos os imóveis atuais
+        await DB.clear('imoveis');
+        
+        // Importar cada imóvel
+        for (const imovel of imoveisImportados) {
+            // Garantir dados mínimos
+            if (!imovel.dataCriacao) {
+                imovel.dataCriacao = new Date().toISOString();
+            }
+            if (!imovel.videos) {
+                imovel.videos = [];
+            }
+            
+            await DB.add('imoveis', imovel);
+        }
+        
+        // Atualizar dados
+        UI.data.imoveis = await Storage.getImoveis();
+        UI.renderImoveis();
+        UI.renderDashboard();
+        
+        // Mensagem de sucesso
+        Utils.toast(`✅ ${imoveisImportados.length} imóveis importados com sucesso!`);
+        
+    } catch (error) {
+        console.error('Erro na substituição:', error);
+        Utils.toast('❌ Erro ao substituir imóveis', 'error');
+    }
+}
+// ============== FIM DAS NOVAS FUNÇÕES ==============
 
                 importTrigger: function() {
                     document.getElementById('import-file').click();
@@ -6729,7 +7099,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         await DB.clear('imoveis');
                         await DB.clear('visitas');
                         await DB.clear('links');
-                        await DB.clear('funilEtapas');
+                        await DB.clear('funilEtapas')
                         
                         // Recarregar página
                         location.reload();
