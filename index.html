@@ -2282,19 +2282,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
-                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-                    <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
-                        <i class="fas fa-file-import"></i> Importar Backup
-                    </button>
-                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
-                    <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
-                        <i class="fas fa-file-export"></i> Exportar Backup
-                    </button>
-                    <button type="button" class="btn-block" style="background: var(--accent); margin: 0;" onclick="App.backup.exportIOS()">
-                        <i class="fab fa-apple"></i> iOS
-                    </button>
-                </div>
-                <!-- INÍCIO DO NOVO BLOCO - BACKUP ESPECÍFICO DE IMÓVEIS -->
+<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+    <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
+        <i class="fas fa-file-import"></i> Importar Backup
+    </button>
+    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
+    <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
+        <i class="fas fa-file-export"></i> Exportar Backup
+    </button>
+    <button type="button" class="btn-block" style="background: var(--accent); margin: 0;" onclick="App.backup.exportIOS()">
+        <i class="fab fa-apple"></i> iOS
+    </button>
+</div>
+
+<!-- INÍCIO DO NOVO BLOCO - BACKUP ESPECÍFICO DE IMÓVEIS -->
 <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; border-top: 2px solid var(--border); padding-top: 20px;">
     <div style="width: 100%; margin-bottom: 10px;">
         <h4 style="color: var(--dark); margin: 0; font-size: 1rem;">
