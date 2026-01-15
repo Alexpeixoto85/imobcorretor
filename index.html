@@ -3393,7 +3393,26 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (hour >= 12 && hour < 18) greeting = "Boa tarde";
                 
                 const clienteFirstName = cliente.nome.split(' ')[0];
-                
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+let message = '';
+
+if (isIOS) {
+    // Mensagem mais curta para iPhone
+    message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
+    message += `Sou ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} da ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
+    
+    if (imovel) {
+        message += `Tenho informações sobre: *${imovel.titulo}*\n`;
+        message += `📍 ${imovel.endereco}\n`;
+        message += `💰 ${imovel.precoVenda ? Utils.formatCurrency(imovel.precoVenda) : Utils.formatCurrency(imovel.precoAluguel) + '/mês'}\n\n`;
+    }
+    
+    message += `Podemos conversar?`;
+} else {
+    // Mensagem completa para Android
+    message = `${greeting}, ${clienteFirstName}! Tudo bem? 😊\n\n`;
+    // ... continue com o resto da mensagem original
+}
                 let message = `${greeting}, ${clienteFirstName}! Tudo bem? 😊\n\n`;
                 message += `Aqui é ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} da ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
                 
