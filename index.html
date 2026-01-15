@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3458,31 +3459,38 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             // FUNÇÃO MELHORADA: Preparar URL do WhatsApp com mensagem pré-definida
-            prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
-                const cliente = UI.data.clientes.find(x => x.id === clienteId);
-                if(!cliente || !cliente.telefone) {
-                    Utils.toast('Cliente sem número de telefone', 'error');
-                    return null;
-                }
-                
-                const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
-                const message = await Utils.generateWhatsAppMessage(cliente, imovel);
-                
-                // Limpar número de telefone usando a nova função
-                const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
-                
-                if(!finalNumber) {
-                    Utils.toast('Número de telefone inválido', 'error');
-                    return null;
-                }
-                
-                // Codificar mensagem para URL
-                const encodedMessage = encodeURIComponent(message);
-                
-                // Retornar URL completa para WhatsApp (isso abrirá o app diretamente)
-                return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
-            },
-            
+prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
+    const cliente = UI.data.clientes.find(x => x.id === clienteId);
+    if(!cliente || !cliente.telefone) {
+        Utils.toast('Cliente sem número de telefone', 'error');
+        return null;
+    }
+    
+    const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
+    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
+    
+    // Limpar número de telefone usando a nova função
+    const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
+    
+    if(!finalNumber) {
+        Utils.toast('Número de telefone inválido', 'error');
+        return null;
+    }
+    
+    // VERIFICAR SE É IPHONE/IPAD
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    // Codificar mensagem para URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    if (isIOS) {
+        // PARA IPHONE: usar URL mais curta e simples
+        return `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
+    } else {
+        // PARA ANDROID: manter como estava
+        return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
+    }
+},            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6126,37 +6134,27 @@ showImportOptions: function(totalImportados) {
                 
                 // FUNÇÃO CORRIGIDA: WhatsApp Personalizado
                 whatsappPersonalizado: async (id) => {
-                    const c = UI.data.clientes.find(x => x.id === id);
-                    if(!c || !c.telefone) {
-                        Utils.toast('Cliente sem número de telefone', 'error');
-                        return;
-                    }
-                    
-                    try {
-                        // Preparar URL do WhatsApp com mensagem
-                        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
-                        
-                        if (whatsappUrl) {
-                            // Abrir WhatsApp diretamente (isso abrirá o app se instalado)
-                            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-                            
-                            // Fallback para web WhatsApp após 2 segundos
-                            setTimeout(() => {
-                                if(!document.hidden) {
-                                    // Se a janela não abriu, tenta abrir web WhatsApp
-                                    const cleanNumber = c.telefone.replace(/\D/g, '');
-                                    const fallbackUrl = `https://web.whatsapp.com/send?phone=55${cleanNumber}`;
-                                    window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
-                                }
-                            }, 2000);
-                            
-                            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
-                        }
-                    } catch (error) {
-                        console.error('Erro ao abrir WhatsApp:', error);
-                        Utils.toast('Erro ao abrir WhatsApp', 'error');
-                    }
-                },
+    const c = UI.data.clientes.find(x => x.id === id);
+    if(!c || !c.telefone) {
+        Utils.toast('Cliente sem número de telefone', 'error');
+        return;
+    }
+    
+    try {
+        // Preparar URL do WhatsApp com mensagem
+        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
+        
+        if (whatsappUrl) {
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
+        }
+    } catch (error) {
+        console.error('Erro ao abrir WhatsApp:', error);
+        Utils.toast('Erro ao abrir WhatsApp', 'error');
+    }
+},
                 
                 email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
