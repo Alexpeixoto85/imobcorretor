@@ -3478,7 +3478,7 @@ if (isIOS) {
             },
             
             // FUNÇÃO MELHORADA: Preparar URL do WhatsApp com mensagem pré-definida
-prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
+            prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     const cliente = UI.data.clientes.find(x => x.id === clienteId);
     if(!cliente || !cliente.telefone) {
         Utils.toast('Cliente sem número de telefone', 'error');
@@ -3486,8 +3486,9 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     }
     
     const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
+    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
     
-    // Limpar número de telefone
+    // Limpar número de telefone usando a nova função
     const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
     
     if(!finalNumber) {
@@ -3495,57 +3496,21 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         return null;
     }
     
-    // VERIFICAR SE É IPHONE
+    // VERIFICAR SE É IPHONE/IPAD
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     
+    // Codificar mensagem para URL
+    const encodedMessage = encodeURIComponent(message);
+    
     if (isIOS) {
-        // PARA IPHONE: mensagem mais curta e URL específica
-        const hour = new Date().getHours();
-        let greeting = "Boa noite";
-        if (hour >= 5 && hour < 12) greeting = "Bom dia";
-        if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-        
-        const clienteFirstName = cliente.nome.split(' ')[0];
-        let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
-        
-        const settings = await DB.get('settings', 'main');
-        message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n\n`;
-        
-        if (imovel) {
-            message += `Tenho informações sobre:\n`;
-            message += `*${imovel.titulo.substring(0, 40)}*\n`;
-            message += `📍 ${imovel.endereco.substring(0, 50)}\n`;
-            
-            if (imovel.precoVenda) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoVenda)}\n`;
-            } else if (imovel.precoAluguel) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
-            }
-            
-            if (imovel.area) message += `📐 ${imovel.area}m² `;
-            if (imovel.quartos) message += `🛏️ ${imovel.quartos} quartos `;
-            if (imovel.banheiros) message += `🛁 ${imovel.banheiros} banheiros\n`;
-            
-            message += `\nVamos conversar?`;
-        } else {
-            message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
-        }
-        
-        message += `\n\n📞 ${settings.telefone || '(82) 99662-2036'}`;
-        
-        const encodedMessage = encodeURIComponent(message);
-        
-        // URL que funciona melhor no iPhone
+        // PARA IPHONE: usar URL mais curta e simples
         return `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
-        
     } else {
-        // PARA ANDROID: mensagem completa
-        const message = await Utils.generateWhatsAppMessage(cliente, imovel);
-        const encodedMessage = encodeURIComponent(message);
-        
+        // PARA ANDROID: manter como estava
         return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
     }
-},            
+},
+            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6188,70 +6153,22 @@ showImportOptions: function(totalImportados) {
                 },
                 
                 // FUNÇÃO CORRIGIDA: WhatsApp Personalizado
-whatsappPersonalizado: async (id) => {
+                whatsappPersonalizado: async (id) => {
     const c = UI.data.clientes.find(x => x.id === id);
     if(!c || !c.telefone) {
         Utils.toast('Cliente sem número de telefone', 'error');
         return;
     }
     
-    // VERIFICAR SE É SAFARI NO IPHONE
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    
     try {
         // Preparar URL do WhatsApp com mensagem
         const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
         
         if (whatsappUrl) {
-            if (isIOS && isSafari) {
-                // MÉTODO ESPECIAL PARA SAFARI NO IPHONE
-                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}...`);
-                
-                // Passo 1: Mostrar um link clicável
-                const link = document.createElement('a');
-                link.href = whatsappUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.id = 'whatsapp-link-' + Date.now();
-                
-                // Adicionar ao corpo da página
-                document.body.appendChild(link);
-                
-                // Passo 2: Esperar um pouco e clicar automaticamente
-                setTimeout(() => {
-                    link.click();
-                    
-                    // Passo 3: Remover o link depois
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                    }, 1000);
-                }, 100);
-                
-                // Passo 4: Se não abrir em 2 segundos, mostrar instruções
-                setTimeout(() => {
-                    if (!document.hidden) {
-                        const confirmOpen = confirm(
-                            `Não conseguimos abrir o WhatsApp automaticamente.\n\n` +
-                            `Para enviar mensagem para ${c.nome}:\n` +
-                            `1. Copie este número: ${c.telefone}\n` +
-                            `2. Abra o WhatsApp manualmente\n` +
-                            `3. Cole o número e envie a mensagem\n\n` +
-                            `Deseja copiar o número agora?`
-                        );
-                        
-                        if (confirmOpen) {
-                            navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
-                            Utils.toast('Número copiado! Abra o WhatsApp e cole.');
-                        }
-                    }
-                }, 2000);
-                
-            } else {
-                // MÉTODO NORMAL PARA ANDROID/OUTROS NAVEGADORES
-                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
-            }
+            // Abrir WhatsApp
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            
+            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
         }
     } catch (error) {
         console.error('Erro ao abrir WhatsApp:', error);
