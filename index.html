@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2259,23 +2260,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 <div class="form-group">
                     <label class="form-label">Nome do Corretor</label>
-                    <input type="text" id="s-nome" class="form-control" placeholder="">
+                    <input type="text" id="s-nome" class="form-control" placeholder="Alex Peixoto">
                 </div>
                 <div class="form-group">
                     <label class="form-label">CRECI</label>
-                    <input type="text" id="s-creci" class="form-control" placeholder="">
+                    <input type="text" id="s-creci" class="form-control" placeholder="5794-AL">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Telefone</label>
-                    <input type="tel" id="s-telefone" class="form-control" value="" oninput="Utils.maskPhone(this)">
+                    <input type="tel" id="s-telefone" class="form-control" value="(82) 99662-2036" oninput="Utils.maskPhone(this)">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Email</label>
-                    <input type="email" id="s-email" class="form-control" placeholder="">
+                    <input type="email" id="s-email" class="form-control" placeholder="alex@resende.com">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Imobiliária</label>
-                    <input type="text" id="s-imobiliaria" class="form-control" placeholder="" value="">
+                    <input type="text" id="s-imobiliaria" class="form-control" placeholder="Resende" value="Resende">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Taxa de Comissão (%)</label>
@@ -2507,12 +2508,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (!settings) {
                             const defaultSettings = {
                                 id: 'main',
-                                nome: '',
-                                creci: '',
-                                telefone: '',
+                                nome: 'Alex Peixoto',
+                                creci: '5794-AL',
+                                telefone: '(82) 99662-2036',
                                 email: '',
-                                imobiliaria: '',
-                                comissao: 
+                                imobiliaria: 'Resende',
+                                comissao: 5
                             };
                             await this.put('settings', defaultSettings);
                         }
@@ -3394,7 +3395,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const clienteFirstName = cliente.nome.split(' ')[0];
                 let message = `${greeting}, ${clienteFirstName}! Tudo bem? 😊\n\n`;
-                message += `Aqui é ${(await DB.get('settings', 'main')).nome || ''} da ${(await DB.get('settings', 'main')).imobiliaria || ''}.\n\n`;
+                message += `Aqui é ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} da ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
                 
                 if (imovel) {
                     message += `Vi que seu interesse inicial foi no *${imovel.titulo}*.\n\n`;
@@ -3440,15 +3441,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message += `\n📝 *Descrição:*\n${imovel.descricao.substring(0, 150)}${imovel.descricao.length > 150 ? '...' : ''}\n`;
                     }
                 } else {
-                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Podemos conversar por aqui mesmo? 🤝\n`;
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar. Podemos conversar? 🤝\n`;
                 }
                 
                 const settings = await DB.get('settings', 'main');
                 
-                message += `📞 *Contato:* ${settings.telefone || ''}\n`;
-                message += `🏢 *Imobiliária:* ${settings.imobiliaria || ''}\n`;
-                message += `👨‍💼 *Corretor:* ${settings.nome || ''}\n`;
-                message += `📋 *CRECI:* ${settings.creci || ''}`;
+                message += `\nTodas essas informações são necessárias para sua tomada de decisão. 💡\n`;
+                message += `Caso tenha alguma dúvida, estou à sua inteira disposição. 📞\n`;
+                message += `Caso queira, podemos marcar uma reunião para conversarmos melhor. 📅\n\n`;
+                message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel! 🎉\n\n`;
+                message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
+                message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
+                message += `👨‍💼 *Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
+                message += `📋 *CRECI:* ${settings.creci || '5794-AL'}`;
                 
                 return message;
             },
@@ -3485,7 +3490,7 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
         
         const settings = await DB.get('settings', 'main');
-        message += `Aqui é ${settings.nome || ''} da ${settings.imobiliaria || ''}.\n\n`;
+        message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n\n`;
         
         if (imovel) {
             message += `Tenho informações sobre:\n`;
@@ -3504,10 +3509,10 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
             
             message += `\nVamos conversar?`;
         } else {
-            message += `Gostaria de conversar sobre imóveis. podemos conversar por aqui ou prefere por ligação?`;
+            message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
         }
         
-        message += `\n\n📞 ${settings.telefone || ''}`;
+        message += `\n\n📞 ${settings.telefone || '(82) 99662-2036'}`;
         
         const encodedMessage = encodeURIComponent(message);
         
@@ -3588,11 +3593,11 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
                 const settings = await DB.get('settings', 'main');
                 return settings || { 
                     id: 'main',
-                    nome: '',
-                    creci: '',
-                    telefone: '',
+                    nome: 'Alex Peixoto',
+                    creci: '5794-AL',
+                    telefone: '(82) 99662-2036',
                     email: '',
-                    imobiliaria: '',
+                    imobiliaria: 'Resende',
                     comissao: 5
                 };
             },
@@ -6760,10 +6765,10 @@ whatsappPersonalizado: async (id) => {
                     
                     message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
                     message += `*Para mais informações:*\n`;
-                    message += `📞 ${settings.nome || ''}\n`;
-                    message += `📱 ${settings.telefone || ''}\n`;
-                    message += `🏢 ${settings.imobiliaria || ''}\n`;
-                    message += `📋 CRECI: ${settings.creci || ''}\n\n`;
+                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
                     message += `_Entre em contato para agendar uma visita!_`;
                     
                     // Abrir WhatsApp diretamente
