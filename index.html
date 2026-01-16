@@ -3440,15 +3440,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message += `\n📝 *Descrição:*\n${imovel.descricao.substring(0, 150)}${imovel.descricao.length > 150 ? '...' : ''}\n`;
                     }
                 } else {
-                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Tenho algumas opções que podem te interessar. Podemos conversar? 🤝\n`;
+                    message += `Estou entrando em contato sobre o seu interesse em imóveis. Podemos conversar por aqui mesmo? 🤝\n`;
                 }
                 
                 const settings = await DB.get('settings', 'main');
                 
-                message += `\nTodas essas informações são necessárias para sua tomada de decisão. 💡\n`;
-                message += `Caso tenha alguma dúvida, estou à sua inteira disposição. 📞\n`;
-                message += `Caso queira, podemos marcar uma reunião para conversarmos melhor. 📅\n\n`;
-                message += `Desde já agradeço seu interesse e ficarei muito feliz em entrar na jornada com você na compra do seu imóvel! 🎉\n\n`;
                 message += `📞 *Contato:* ${settings.telefone || ''}\n`;
                 message += `🏢 *Imobiliária:* ${settings.imobiliaria || ''}\n`;
                 message += `👨‍💼 *Corretor:* ${settings.nome || ''}\n`;
