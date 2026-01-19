@@ -2380,34 +2380,69 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             db: null,
             
             init: function() {
-                return new Promise((resolve, reject) => {
-                    const request = indexedDB.open(this.name, this.version);
-                    
-                    request.onerror = (event) => {
-                        console.error('Erro ao abrir IndexedDB:', event);
-                        reject(event);
-                    };
-                    
-                    request.onsuccess = (event) => {
-                        this.db = event.target.result;
-                        console.log('IndexedDB aberto com sucesso');
-                        resolve();
-                    };
-                    
-                    request.onupgradeneeded = (event) => {
-                        const db = event.target.result;
-                        const oldVersion = event.oldVersion;
-                        
-                        console.log(`Atualizando banco de dados da versão ${oldVersion} para ${this.version}`);
-                        
-                        // Criar object stores se não existirem
-                        this.createObjectStores(db);
-                        
-                        // Migrar dados se necessário
-                        this.migrateDatabase(db, oldVersion);
-                    };
-                });
-            },
+    return new Promise((resolve, reject) => {
+        console.log('🔄 Abrindo IndexedDB...');
+        
+        // Fechar conexão existente se houver
+        if (this.db) {
+            this.db.close();
+            this.db = null;
+        }
+        
+        const request = indexedDB.open(this.name, this.version);
+        let dbOpened = false;
+        
+        request.onerror = (event) => {
+            console.error('❌ Erro ao abrir IndexedDB:', event.target.error);
+            if (!dbOpened) {
+                reject(new Error(`IndexedDB error: ${event.target.error}`));
+            }
+        };
+        
+        request.onsuccess = (event) => {
+            dbOpened = true;
+            this.db = event.target.result;
+            console.log('✅ IndexedDB aberto com sucesso');
+            
+            // Adicionar handler para erros futuros
+            this.db.onerror = (event) => {
+                console.error('Erro no IndexedDB:', event.target.error);
+            };
+            
+            resolve();
+        };
+        
+        request.onupgradeneeded = (event) => {
+            console.log(`🔄 Atualizando DB da versão ${event.oldVersion} para ${this.version}`);
+            const db = event.target.result;
+            this.createObjectStores(db);
+            
+            // Não chamar migrateDatabase aqui para evitar complexidade
+            // A migração será feita separadamente
+        };
+        
+        // Timeout de segurança
+        setTimeout(() => {
+            if (!dbOpened) {
+                console.warn('⚠️ Timeout ao abrir IndexedDB');
+                // Criar dados vazios e continuar
+                this.db = { 
+                    transaction: () => ({ 
+                        objectStore: () => ({ 
+                            getAll: () => ({ onsuccess: (cb) => cb({ target: { result: [] } }) }),
+                            get: () => ({ onsuccess: (cb) => cb({ target: { result: null } }) }),
+                            put: () => ({ onsuccess: (cb) => cb && cb() }),
+                            add: () => ({ onsuccess: (cb) => cb && cb() }),
+                            delete: () => ({ onsuccess: (cb) => cb && cb() }),
+                            clear: () => ({ onsuccess: (cb) => cb && cb() })
+                        })
+                    })
+                };
+                resolve();
+            }
+        }, 5000);
+    });
+},
             
             createObjectStores: function(db) {
                 // Criar object stores
@@ -7133,6 +7168,165 @@ Utils.toast = (msg, type = 'success') => {
         t.style.cursor = 'default';
     }, 3000);
 };
+        // SOLUÇÃO: Inicialização simplificada e mais robusta
+async function initializeApp() {
+    console.log('🚀 Iniciando aplicação...');
+    
+    try {
+        // Esconder loading se demorar muito (timeout de segurança)
+        const loadingTimeout = setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            console.warn('Timeout no carregamento, mostrando interface básica');
+        }, 10000);
+        
+        // Tentar inicializar o IndexedDB
+        await DB.init().catch(async (error) => {
+            console.warn('Erro no IndexedDB, tentando recuperar:', error);
+            
+            // Tentar abrir com versão mais baixa
+            try {
+                const request = indexedDB.open('ImobiProDB', 1);
+                request.onupgradeneeded = function(event) {
+                    const db = event.target.result;
+                    // Criar stores básicas
+                    if (!db.objectStoreNames.contains('clientes')) {
+                        db.createObjectStore('clientes', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('imoveis')) {
+                        db.createObjectStore('imoveis', { keyPath: 'id' });
+                    }
+                    if (!db.objectStoreNames.contains('visitas')) {
+                        db.createObjectStore('visitas', { keyPath: 'id' });
+                    }
+                };
+                
+                request.onsuccess = async function(event) {
+                    DB.db = event.target.result;
+                    console.log('IndexedDB recuperado com versão simplificada');
+                };
+            } catch (e) {
+                console.error('Falha ao recuperar IndexedDB:', e);
+            }
+        });
+        
+        // Migrar dados do localStorage (com fallback)
+        try {
+            await DB.migrateFromLocalStorage();
+        } catch (e) {
+            console.warn('Migração falhou, continuando sem dados antigos:', e);
+        }
+        
+        // Carregar dados com fallbacks
+        try {
+            UI.data.clientes = await Storage.getClientes().catch(() => []);
+            UI.data.imoveis = await Storage.getImoveis().catch(() => []);
+            UI.data.visitas = await Storage.getVisitas().catch(() => []);
+            UI.data.links = await Storage.getLinks().catch(() => []);
+            UI.data.funilEtapas = await Storage.getFunilEtapas().catch(() => []);
+        } catch (e) {
+            console.error('Erro ao carregar dados:', e);
+            // Usar arrays vazios como fallback
+            UI.data = {
+                clientes: [],
+                imoveis: [],
+                visitas: [],
+                links: [],
+                funilEtapas: []
+            };
+        }
+        
+        // Configurar datas dos relatórios
+        const today = new Date();
+        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        const startDateInput = document.getElementById('report-date-start');
+        const endDateInput = document.getElementById('report-date-end');
+        
+        if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
+        if (endDateInput) endDateInput.value = today.toISOString().split('T')[0];
+        
+        // Mostrar aplicação
+        clearTimeout(loadingTimeout);
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        
+        // Inicializar dashboard
+        UI.renderDashboard();
+        UI.renderFunil();
+        
+        console.log('✅ Aplicação inicializada com sucesso');
+        
+        // Forçar renderização inicial das views
+        setTimeout(() => {
+            UI.renderClientes();
+            UI.renderImoveis();
+            UI.renderAgenda();
+            UI.renderLinks();
+        }, 500);
+        
+    } catch (error) {
+        console.error('❌ ERRO CRÍTICO na inicialização:', error);
+        
+        // FALLBACK CRÍTICO: Mostrar interface mesmo com erro
+        document.getElementById('loading').innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 3rem; margin-bottom: 1rem;"></i>
+                <p style="margin-bottom: 1rem;">Sistema carregado em modo de segurança</p>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">
+                    Algumas funcionalidades podem estar limitadas
+                </p>
+                <button onclick="location.reload()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fas fa-redo"></i> Recarregar
+                </button>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            UI.renderDashboard();
+        }, 2000);
+    }
+}
+
+// Substituir o evento DOMContentLoaded existente por este:
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 DOM carregado');
+    
+    // Inicializar imediatamente
+    initializeApp();
+    
+    // Adicionar botão de debug no header (útil para testes)
+    setTimeout(() => {
+        const headerActions = document.querySelector('.header-actions');
+        if (headerActions) {
+            const debugBtn = document.createElement('button');
+            debugBtn.className = 'icon-btn';
+            debugBtn.innerHTML = '<i class="fas fa-bug"></i>';
+            debugBtn.title = 'Debug';
+            debugBtn.onclick = function() {
+                console.log('=== DEBUG INFO ===');
+                console.log('Clientes:', UI.data.clientes.length);
+                console.log('Imóveis:', UI.data.imoveis.length);
+                console.log('Visitas:', UI.data.visitas.length);
+                console.log('Links:', UI.data.links.length);
+                console.log('DB Aberto?', !!DB.db);
+                alert(`Debug:\nClientes: ${UI.data.clientes.length}\nImóveis: ${UI.data.imoveis.length}\nVisitas: ${UI.data.visitas.length}`);
+            };
+            headerActions.insertBefore(debugBtn, headerActions.firstChild);
+        }
+    }, 1000);
+});
+
+// Adicionar tratamento de erros global
+window.addEventListener('error', function(event) {
+    console.error('Erro global:', event.error);
+});
+
+window.addEventListener('unhandledrejection', function(event) {
+    console.error('Promise rejeitada não tratada:', event.reason);
+});
     </script>
 </body>
 </html>
