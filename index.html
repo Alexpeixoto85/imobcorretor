@@ -1,3 +1,7 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2380,69 +2384,34 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             db: null,
             
             init: function() {
-    return new Promise((resolve, reject) => {
-        console.log('🔄 Abrindo IndexedDB...');
-        
-        // Fechar conexão existente se houver
-        if (this.db) {
-            this.db.close();
-            this.db = null;
-        }
-        
-        const request = indexedDB.open(this.name, this.version);
-        let dbOpened = false;
-        
-        request.onerror = (event) => {
-            console.error('❌ Erro ao abrir IndexedDB:', event.target.error);
-            if (!dbOpened) {
-                reject(new Error(`IndexedDB error: ${event.target.error}`));
-            }
-        };
-        
-        request.onsuccess = (event) => {
-            dbOpened = true;
-            this.db = event.target.result;
-            console.log('✅ IndexedDB aberto com sucesso');
-            
-            // Adicionar handler para erros futuros
-            this.db.onerror = (event) => {
-                console.error('Erro no IndexedDB:', event.target.error);
-            };
-            
-            resolve();
-        };
-        
-        request.onupgradeneeded = (event) => {
-            console.log(`🔄 Atualizando DB da versão ${event.oldVersion} para ${this.version}`);
-            const db = event.target.result;
-            this.createObjectStores(db);
-            
-            // Não chamar migrateDatabase aqui para evitar complexidade
-            // A migração será feita separadamente
-        };
-        
-        // Timeout de segurança
-        setTimeout(() => {
-            if (!dbOpened) {
-                console.warn('⚠️ Timeout ao abrir IndexedDB');
-                // Criar dados vazios e continuar
-                this.db = { 
-                    transaction: () => ({ 
-                        objectStore: () => ({ 
-                            getAll: () => ({ onsuccess: (cb) => cb({ target: { result: [] } }) }),
-                            get: () => ({ onsuccess: (cb) => cb({ target: { result: null } }) }),
-                            put: () => ({ onsuccess: (cb) => cb && cb() }),
-                            add: () => ({ onsuccess: (cb) => cb && cb() }),
-                            delete: () => ({ onsuccess: (cb) => cb && cb() }),
-                            clear: () => ({ onsuccess: (cb) => cb && cb() })
-                        })
-                    })
-                };
-                resolve();
-            }
-        }, 5000);
-    });
-},
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.name, this.version);
+                    
+                    request.onerror = (event) => {
+                        console.error('Erro ao abrir IndexedDB:', event);
+                        reject(event);
+                    };
+                    
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        console.log('IndexedDB aberto com sucesso');
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        const oldVersion = event.oldVersion;
+                        
+                        console.log(`Atualizando banco de dados da versão ${oldVersion} para ${this.version}`);
+                        
+                        // Criar object stores se não existirem
+                        this.createObjectStores(db);
+                        
+                        // Migrar dados se necessário
+                        this.migrateDatabase(db, oldVersion);
+                    };
+                });
+            },
             
             createObjectStores: function(db) {
                 // Criar object stores
@@ -2881,20 +2850,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             toast: (msg, type = 'success') => {
-    const t = document.getElementById('toast');
-    if (!t) return;
-    
-    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
-    const bgColor = type === 'success' ? 'var(--dark)' : 'var(--danger)';
-    
-    t.innerHTML = `<i class="fas fa-${icon}"></i> <span>${msg}</span>`;
-    t.style.background = bgColor;
-    t.classList.add('show');
-    
-    setTimeout(() => {
-        t.classList.remove('show');
-    }, 3000);
-},
+                const t = document.getElementById('toast');
+                if (!t) return;
+                
+                const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+                const bgColor = type === 'success' ? 'var(--dark)' : 'var(--danger)';
+                
+                t.innerHTML = `<i class="fas fa-${icon}"></i> <span>${msg}</span>`;
+                t.style.background = bgColor;
+                t.classList.add('show');
+                
+                setTimeout(() => {
+                    t.classList.remove('show');
+                }, 3000);
+            },
             
             readImage: (file) => {
                 return new Promise((resolve, reject) => {
@@ -3500,12 +3469,14 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     }
     
     const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
-    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
-    const encodedMessage = encodeURIComponent(message);
+    
+    // Limpar número de telefone
     const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
     
-    return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
-},
+    if(!finalNumber) {
+        Utils.toast('Número de telefone inválido', 'error');
+        return null;
+    }
     
     // VERIFICAR SE É IPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -3557,44 +3528,7 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         
         return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
     }
-},   
-        // Função especial para iOS
-openWhatsAppIOS: function(phoneNumber, message) {
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Tentar diferentes esquemas de URL
-    const urlsToTry = [
-        `whatsapp://send?phone=55${cleanNumber}&text=${encodedMessage}`,
-        `https://wa.me/55${cleanNumber}?text=${encodedMessage}`,
-        `https://api.whatsapp.com/send?phone=55${cleanNumber}&text=${encodedMessage}`
-    ];
-    
-    let success = false;
-    
-    // Tentar cada URL
-    for (const url of urlsToTry) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        
-        try {
-            link.click();
-            success = true;
-            break;
-        } catch (e) {
-            console.log('Falha com URL:', url);
-        }
-        
-        document.body.removeChild(link);
-    }
-    
-    return success;
-},
-        
+},            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6022,7 +5956,9 @@ showImportOptions: function(totalImportados) {
                 document.getElementById('s-comissao').value = s.comissao || 5;
                 
                 UI.openModal('settings');
-            },
+            }, // <--- NÃO ESQUEÇA DE ADICIONAR ESTA VÍRGULA AQUI
+
+            // --- COLE O CÓDIGO NOVO AQUI EMBAIXO ---
 
             // --- NOVAS FUNÇÕES DE PLANTÃO ---
             
@@ -6148,8 +6084,9 @@ showImportOptions: function(totalImportados) {
                     Utils.toast("Cliente removido.");
                 }
             }
+            // --- FIM DAS NOVAS FUNÇÕES ---
 
-        };
+        }; // <--- FECHAMENTO ORIGINAL DO OBJETO UI
 
         // Aplicação principal
         const App = {
@@ -6241,72 +6178,69 @@ whatsappPersonalizado: async (id) => {
         return;
     }
     
-    // Limpar o número de telefone
-    const cleanPhone = Utils.cleanPhoneNumber(c.telefone);
+    // VERIFICAR SE É SAFARI NO IPHONE
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
     
-    if(!cleanPhone) {
-        Utils.toast('Número de telefone inválido', 'error');
-        return;
-    }
-    
-    // Preparar mensagem
-    const message = await Utils.generateWhatsAppMessage(c, c.imovelInteresseId ? 
-        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null);
-    
-    // Codificar a mensagem para URL
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Criar URL do WhatsApp - USAR WA.ME para melhor compatibilidade
-    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
-    
-    // Técnica universal para abrir WhatsApp
     try {
-        // Tenta abrir em uma nova janela/aba
-        const newWindow = window.open(whatsappUrl, '_blank');
+        // Preparar URL do WhatsApp com mensagem
+        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
         
-        // Se não abriu (bloqueado por popup), usar fallback
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-            // Fallback 1: Usar link temporário
-            const link = document.createElement('a');
-            link.href = whatsappUrl;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            
-            // Limpar após 1 segundo
-            setTimeout(() => {
-                document.body.removeChild(link);
-            }, 1000);
-            
-            // Fallback 2: Se ainda não abrir, mostrar instruções
-            setTimeout(() => {
-                if (!document.hidden) {
-                    const shouldCopy = confirm(
-                        `Não conseguimos abrir o WhatsApp automaticamente.\n\n` +
-                        `Para enviar mensagem para ${c.nome}:\n` +
-                        `1. Abra o WhatsApp\n` +
-                        `2. Adicione este número: 55${cleanPhone}\n` +
-                        `3. Cole esta mensagem: \n\n${message.substring(0, 200)}...\n\n` +
-                        `Deseja copiar o número e mensagem?`
-                    );
+        if (whatsappUrl) {
+            if (isIOS && isSafari) {
+                // MÉTODO ESPECIAL PARA SAFARI NO IPHONE
+                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}...`);
+                
+                // Passo 1: Mostrar um link clicável
+                const link = document.createElement('a');
+                link.href = whatsappUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.id = 'whatsapp-link-' + Date.now();
+                
+                // Adicionar ao corpo da página
+                document.body.appendChild(link);
+                
+                // Passo 2: Esperar um pouco e clicar automaticamente
+                setTimeout(() => {
+                    link.click();
                     
-                    if (shouldCopy) {
-                        navigator.clipboard.writeText(`55${cleanPhone}\n\n${message}`);
-                        Utils.toast('Número e mensagem copiados!');
+                    // Passo 3: Remover o link depois
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                    }, 1000);
+                }, 100);
+                
+                // Passo 4: Se não abrir em 2 segundos, mostrar instruções
+                setTimeout(() => {
+                    if (!document.hidden) {
+                        const confirmOpen = confirm(
+                            `Não conseguimos abrir o WhatsApp automaticamente.\n\n` +
+                            `Para enviar mensagem para ${c.nome}:\n` +
+                            `1. Copie este número: ${c.telefone}\n` +
+                            `2. Abra o WhatsApp manualmente\n` +
+                            `3. Cole o número e envie a mensagem\n\n` +
+                            `Deseja copiar o número agora?`
+                        );
+                        
+                        if (confirmOpen) {
+                            navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
+                            Utils.toast('Número copiado! Abra o WhatsApp e cole.');
+                        }
                     }
-                }
-            }, 2000);
+                }, 2000);
+                
+            } else {
+                // MÉTODO NORMAL PARA ANDROID/OUTROS NAVEGADORES
+                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
+            }
         }
-        
-        Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
-        
     } catch (error) {
         console.error('Erro ao abrir WhatsApp:', error);
         Utils.toast('Erro ao abrir WhatsApp', 'error');
     }
-},
+},                
                 email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.email) {
@@ -6796,57 +6730,55 @@ whatsappPersonalizado: async (id) => {
             whatsapp: {
                 // FUNÇÃO CORRIGIDA: Compartilhar imóvel no WhatsApp
                 shareImovel: async (id) => {
-    const i = UI.data.imoveis.find(x => x.id === id);
-    if(!i) return;
-    
-    const settings = await Storage.getSettings();
-    
-    let message = `🏠 *${i.titulo}*\n\n`;
-    message += `📍 *Endereço:* ${i.endereco}\n`;
-    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-    message += `📐 *Área:* ${i.area || 0}m²\n`;
-    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
-    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
-    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
-    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
-    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
-    
-    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-    
-    if(i.dataEntrega) {
-        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
-    }
-    
-    if(i.construtora) {
-        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
-    }
-    
-    // Adicionar informações sobre vídeos
-    if(i.videos && i.videos.length > 0) {
-        message += `\n🎥 *Vídeos disponíveis:*\n`;
-        i.videos.forEach((video, index) => {
-            message += `• Vídeo ${index + 1}: ${video.url}\n`;
-        });
-        message += `\n`;
-    }
-    
-    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
-    message += `*Para mais informações:*\n`;
-    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
-    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
-    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
-    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
-    message += `_Entre em contato para agendar uma visita!_`;
-    
-    // Usar wa.me para compartilhamento geral
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    
-    // Abrir diretamente
-    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-    
-    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
-}
+                    const i = UI.data.imoveis.find(x => x.id === id);
+                    if(!i) return;
+                    
+                    const settings = await Storage.getSettings();
+                    
+                    let message = `🏠 *${i.titulo}*\n\n`;
+                    message += `📍 *Endereço:* ${i.endereco}\n`;
+                    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+                    message += `📐 *Área:* ${i.area || 0}m²\n`;
+                    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
+                    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
+                    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
+                    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+                    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
+                    
+                    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+                    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+                    
+                    if(i.dataEntrega) {
+                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
+                    }
+                    
+                    if(i.construtora) {
+                        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
+                    }
+                    
+                    // Adicionar informações sobre vídeos
+                    if(i.videos && i.videos.length > 0) {
+                        message += `\n🎥 *Vídeos disponíveis:*\n`;
+                        i.videos.forEach((video, index) => {
+                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+                        });
+                        message += `\n`;
+                    }
+                    
+                    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
+                    message += `*Para mais informações:*\n`;
+                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
+                    message += `_Entre em contato para agendar uma visita!_`;
+                    
+                    // Abrir WhatsApp diretamente
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+                    
+                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+                }
+            },
 
             link: {
                 save: async (e) => {
@@ -7168,165 +7100,6 @@ Utils.toast = (msg, type = 'success') => {
         t.style.cursor = 'default';
     }, 3000);
 };
-        // SOLUÇÃO: Inicialização simplificada e mais robusta
-async function initializeApp() {
-    console.log('🚀 Iniciando aplicação...');
-    
-    try {
-        // Esconder loading se demorar muito (timeout de segurança)
-        const loadingTimeout = setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            console.warn('Timeout no carregamento, mostrando interface básica');
-        }, 10000);
-        
-        // Tentar inicializar o IndexedDB
-        await DB.init().catch(async (error) => {
-            console.warn('Erro no IndexedDB, tentando recuperar:', error);
-            
-            // Tentar abrir com versão mais baixa
-            try {
-                const request = indexedDB.open('ImobiProDB', 1);
-                request.onupgradeneeded = function(event) {
-                    const db = event.target.result;
-                    // Criar stores básicas
-                    if (!db.objectStoreNames.contains('clientes')) {
-                        db.createObjectStore('clientes', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('imoveis')) {
-                        db.createObjectStore('imoveis', { keyPath: 'id' });
-                    }
-                    if (!db.objectStoreNames.contains('visitas')) {
-                        db.createObjectStore('visitas', { keyPath: 'id' });
-                    }
-                };
-                
-                request.onsuccess = async function(event) {
-                    DB.db = event.target.result;
-                    console.log('IndexedDB recuperado com versão simplificada');
-                };
-            } catch (e) {
-                console.error('Falha ao recuperar IndexedDB:', e);
-            }
-        });
-        
-        // Migrar dados do localStorage (com fallback)
-        try {
-            await DB.migrateFromLocalStorage();
-        } catch (e) {
-            console.warn('Migração falhou, continuando sem dados antigos:', e);
-        }
-        
-        // Carregar dados com fallbacks
-        try {
-            UI.data.clientes = await Storage.getClientes().catch(() => []);
-            UI.data.imoveis = await Storage.getImoveis().catch(() => []);
-            UI.data.visitas = await Storage.getVisitas().catch(() => []);
-            UI.data.links = await Storage.getLinks().catch(() => []);
-            UI.data.funilEtapas = await Storage.getFunilEtapas().catch(() => []);
-        } catch (e) {
-            console.error('Erro ao carregar dados:', e);
-            // Usar arrays vazios como fallback
-            UI.data = {
-                clientes: [],
-                imoveis: [],
-                visitas: [],
-                links: [],
-                funilEtapas: []
-            };
-        }
-        
-        // Configurar datas dos relatórios
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        const startDateInput = document.getElementById('report-date-start');
-        const endDateInput = document.getElementById('report-date-end');
-        
-        if (startDateInput) startDateInput.value = firstDay.toISOString().split('T')[0];
-        if (endDateInput) endDateInput.value = today.toISOString().split('T')[0];
-        
-        // Mostrar aplicação
-        clearTimeout(loadingTimeout);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        
-        // Inicializar dashboard
-        UI.renderDashboard();
-        UI.renderFunil();
-        
-        console.log('✅ Aplicação inicializada com sucesso');
-        
-        // Forçar renderização inicial das views
-        setTimeout(() => {
-            UI.renderClientes();
-            UI.renderImoveis();
-            UI.renderAgenda();
-            UI.renderLinks();
-        }, 500);
-        
-    } catch (error) {
-        console.error('❌ ERRO CRÍTICO na inicialização:', error);
-        
-        // FALLBACK CRÍTICO: Mostrar interface mesmo com erro
-        document.getElementById('loading').innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <i class="fas fa-exclamation-triangle" style="color: #f59e0b; font-size: 3rem; margin-bottom: 1rem;"></i>
-                <p style="margin-bottom: 1rem;">Sistema carregado em modo de segurança</p>
-                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 1.5rem;">
-                    Algumas funcionalidades podem estar limitadas
-                </p>
-                <button onclick="location.reload()" style="padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    <i class="fas fa-redo"></i> Recarregar
-                </button>
-            </div>
-        `;
-        
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-            UI.renderDashboard();
-        }, 2000);
-    }
-}
-
-// Substituir o evento DOMContentLoaded existente por este:
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 DOM carregado');
-    
-    // Inicializar imediatamente
-    initializeApp();
-    
-    // Adicionar botão de debug no header (útil para testes)
-    setTimeout(() => {
-        const headerActions = document.querySelector('.header-actions');
-        if (headerActions) {
-            const debugBtn = document.createElement('button');
-            debugBtn.className = 'icon-btn';
-            debugBtn.innerHTML = '<i class="fas fa-bug"></i>';
-            debugBtn.title = 'Debug';
-            debugBtn.onclick = function() {
-                console.log('=== DEBUG INFO ===');
-                console.log('Clientes:', UI.data.clientes.length);
-                console.log('Imóveis:', UI.data.imoveis.length);
-                console.log('Visitas:', UI.data.visitas.length);
-                console.log('Links:', UI.data.links.length);
-                console.log('DB Aberto?', !!DB.db);
-                alert(`Debug:\nClientes: ${UI.data.clientes.length}\nImóveis: ${UI.data.imoveis.length}\nVisitas: ${UI.data.visitas.length}`);
-            };
-            headerActions.insertBefore(debugBtn, headerActions.firstChild);
-        }
-    }, 1000);
-});
-
-// Adicionar tratamento de erros global
-window.addEventListener('error', function(event) {
-    console.error('Erro global:', event.error);
-});
-
-window.addEventListener('unhandledrejection', function(event) {
-    console.error('Promise rejeitada não tratada:', event.reason);
-});
     </script>
 </body>
 </html>
