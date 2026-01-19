@@ -5977,8 +5977,7 @@ showImportOptions: function(totalImportados) {
                 }, 100);
             },
 
-            openSettings: async () => {
-                
+                        openSettings: async () => {
                 const s = await Storage.getSettings();
                 document.getElementById('s-nome').value = s.nome || '';
                 document.getElementById('s-creci').value = s.creci || '';
@@ -5990,12 +5989,9 @@ showImportOptions: function(totalImportados) {
                 UI.openModal('settings');
             }, // <--- NÃO ESQUEÇA DE ADICIONAR ESTA VÍRGULA AQUI
 
-            // --- COLE O CÓDIGO NOVO AQUI EMBAIXO ---
-
             // --- NOVAS FUNÇÕES DE PLANTÃO ---
             
             // Ajusta os campos de data (esconde data final se for plantão)
-            ,
             toggleReportInputs: (type) => {
                 const endInput = document.getElementById('report-date-end');
                 if(type === 'plantao') {
@@ -6117,6 +6113,9 @@ showImportOptions: function(totalImportados) {
                     Utils.toast("Cliente removido.");
                 }
             }
+            // --- FIM DAS NOVAS FUNÇÕES ---
+
+        }; // <--- FECHAMENTO ORIGINAL DO OBJETO UI
             // --- FIM DAS NOVAS FUNÇÕES ---
 
         }; // <--- FECHAMENTO ORIGINAL DO OBJETO UI
