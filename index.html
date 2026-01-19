@@ -5977,7 +5977,7 @@ showImportOptions: function(totalImportados) {
                 }, 100);
             },
 
-                        openSettings: async () => {
+            openSettings: async () => {
                 const s = await Storage.getSettings();
                 document.getElementById('s-nome').value = s.nome || '';
                 document.getElementById('s-creci').value = s.creci || '';
@@ -5987,7 +5987,7 @@ showImportOptions: function(totalImportados) {
                 document.getElementById('s-comissao').value = s.comissao || 5;
                 
                 UI.openModal('settings');
-            }, // <--- NÃO ESQUEÇA DE ADICIONAR ESTA VÍRGULA AQUI
+            },
 
             // --- NOVAS FUNÇÕES DE PLANTÃO ---
             
@@ -6113,12 +6113,8 @@ showImportOptions: function(totalImportados) {
                     Utils.toast("Cliente removido.");
                 }
             }
-            // --- FIM DAS NOVAS FUNÇÕES ---
 
-        }; // <--- FECHAMENTO ORIGINAL DO OBJETO UI
-            // --- FIM DAS NOVAS FUNÇÕES ---
-
-        }; // <--- FECHAMENTO ORIGINAL DO OBJETO UI
+        };
 
         // Aplicação principal
         const App = {
