@@ -1,6 +1,3 @@
-
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2849,20 +2846,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             toast: (msg, type = 'success') => {
-                const t = document.getElementById('toast');
-                if (!t) return;
-                
-                const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
-                const bgColor = type === 'success' ? 'var(--dark)' : 'var(--danger)';
-                
-                t.innerHTML = `<i class="fas fa-${icon}"></i> <span>${msg}</span>`;
-                t.style.background = bgColor;
-                t.classList.add('show');
-                
-                setTimeout(() => {
-                    t.classList.remove('show');
-                }, 3000);
-            },
+    const t = document.getElementById('toast');
+    if (!t) return;
+    
+    const icon = type === 'success' ? 'check-circle' : 'exclamation-circle';
+    const bgColor = type === 'success' ? 'var(--dark)' : 'var(--danger)';
+    
+    t.innerHTML = `<i class="fas fa-${icon}"></i> <span>${msg}</span>`;
+    t.style.background = bgColor;
+    t.classList.add('show');
+    
+    setTimeout(() => {
+        t.classList.remove('show');
+    }, 3000);
+},
             
             readImage: (file) => {
                 return new Promise((resolve, reject) => {
@@ -3468,14 +3465,12 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     }
     
     const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
-    
-    // Limpar número de telefone
+    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
+    const encodedMessage = encodeURIComponent(message);
     const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
     
-    if(!finalNumber) {
-        Utils.toast('Número de telefone inválido', 'error');
-        return null;
-    }
+    return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
+},
     
     // VERIFICAR SE É IPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
@@ -3527,7 +3522,44 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         
         return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
     }
-},            
+},   
+        // Função especial para iOS
+openWhatsAppIOS: function(phoneNumber, message) {
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Tentar diferentes esquemas de URL
+    const urlsToTry = [
+        `whatsapp://send?phone=55${cleanNumber}&text=${encodedMessage}`,
+        `https://wa.me/55${cleanNumber}?text=${encodedMessage}`,
+        `https://api.whatsapp.com/send?phone=55${cleanNumber}&text=${encodedMessage}`
+    ];
+    
+    let success = false;
+    
+    // Tentar cada URL
+    for (const url of urlsToTry) {
+        const link = document.createElement('a');
+        link.href = url;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        
+        try {
+            link.click();
+            success = true;
+            break;
+        } catch (e) {
+            console.log('Falha com URL:', url);
+        }
+        
+        document.body.removeChild(link);
+    }
+    
+    return success;
+},
+        
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6177,69 +6209,72 @@ whatsappPersonalizado: async (id) => {
         return;
     }
     
-    // VERIFICAR SE É SAFARI NO IPHONE
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+    // Limpar o número de telefone
+    const cleanPhone = Utils.cleanPhoneNumber(c.telefone);
     
+    if(!cleanPhone) {
+        Utils.toast('Número de telefone inválido', 'error');
+        return;
+    }
+    
+    // Preparar mensagem
+    const message = await Utils.generateWhatsAppMessage(c, c.imovelInteresseId ? 
+        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null);
+    
+    // Codificar a mensagem para URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Criar URL do WhatsApp - USAR WA.ME para melhor compatibilidade
+    const whatsappUrl = `https://wa.me/55${cleanPhone}?text=${encodedMessage}`;
+    
+    // Técnica universal para abrir WhatsApp
     try {
-        // Preparar URL do WhatsApp com mensagem
-        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
+        // Tenta abrir em uma nova janela/aba
+        const newWindow = window.open(whatsappUrl, '_blank');
         
-        if (whatsappUrl) {
-            if (isIOS && isSafari) {
-                // MÉTODO ESPECIAL PARA SAFARI NO IPHONE
-                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}...`);
-                
-                // Passo 1: Mostrar um link clicável
-                const link = document.createElement('a');
-                link.href = whatsappUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.id = 'whatsapp-link-' + Date.now();
-                
-                // Adicionar ao corpo da página
-                document.body.appendChild(link);
-                
-                // Passo 2: Esperar um pouco e clicar automaticamente
-                setTimeout(() => {
-                    link.click();
+        // Se não abriu (bloqueado por popup), usar fallback
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            // Fallback 1: Usar link temporário
+            const link = document.createElement('a');
+            link.href = whatsappUrl;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpar após 1 segundo
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 1000);
+            
+            // Fallback 2: Se ainda não abrir, mostrar instruções
+            setTimeout(() => {
+                if (!document.hidden) {
+                    const shouldCopy = confirm(
+                        `Não conseguimos abrir o WhatsApp automaticamente.\n\n` +
+                        `Para enviar mensagem para ${c.nome}:\n` +
+                        `1. Abra o WhatsApp\n` +
+                        `2. Adicione este número: 55${cleanPhone}\n` +
+                        `3. Cole esta mensagem: \n\n${message.substring(0, 200)}...\n\n` +
+                        `Deseja copiar o número e mensagem?`
+                    );
                     
-                    // Passo 3: Remover o link depois
-                    setTimeout(() => {
-                        document.body.removeChild(link);
-                    }, 1000);
-                }, 100);
-                
-                // Passo 4: Se não abrir em 2 segundos, mostrar instruções
-                setTimeout(() => {
-                    if (!document.hidden) {
-                        const confirmOpen = confirm(
-                            `Não conseguimos abrir o WhatsApp automaticamente.\n\n` +
-                            `Para enviar mensagem para ${c.nome}:\n` +
-                            `1. Copie este número: ${c.telefone}\n` +
-                            `2. Abra o WhatsApp manualmente\n` +
-                            `3. Cole o número e envie a mensagem\n\n` +
-                            `Deseja copiar o número agora?`
-                        );
-                        
-                        if (confirmOpen) {
-                            navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
-                            Utils.toast('Número copiado! Abra o WhatsApp e cole.');
-                        }
+                    if (shouldCopy) {
+                        navigator.clipboard.writeText(`55${cleanPhone}\n\n${message}`);
+                        Utils.toast('Número e mensagem copiados!');
                     }
-                }, 2000);
-                
-            } else {
-                // MÉTODO NORMAL PARA ANDROID/OUTROS NAVEGADORES
-                window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-                Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
-            }
+                }
+            }, 2000);
         }
+        
+        Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
+        
     } catch (error) {
         console.error('Erro ao abrir WhatsApp:', error);
         Utils.toast('Erro ao abrir WhatsApp', 'error');
     }
-},                
+},
                 email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.email) {
@@ -6729,55 +6764,57 @@ whatsappPersonalizado: async (id) => {
             whatsapp: {
                 // FUNÇÃO CORRIGIDA: Compartilhar imóvel no WhatsApp
                 shareImovel: async (id) => {
-                    const i = UI.data.imoveis.find(x => x.id === id);
-                    if(!i) return;
-                    
-                    const settings = await Storage.getSettings();
-                    
-                    let message = `🏠 *${i.titulo}*\n\n`;
-                    message += `📍 *Endereço:* ${i.endereco}\n`;
-                    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-                    message += `📐 *Área:* ${i.area || 0}m²\n`;
-                    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
-                    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
-                    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
-                    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
-                    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
-                    
-                    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-                    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-                    
-                    if(i.dataEntrega) {
-                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
-                    }
-                    
-                    if(i.construtora) {
-                        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
-                    }
-                    
-                    // Adicionar informações sobre vídeos
-                    if(i.videos && i.videos.length > 0) {
-                        message += `\n🎥 *Vídeos disponíveis:*\n`;
-                        i.videos.forEach((video, index) => {
-                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
-                        });
-                        message += `\n`;
-                    }
-                    
-                    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
-                    message += `*Para mais informações:*\n`;
-                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
-                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
-                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
-                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
-                    message += `_Entre em contato para agendar uma visita!_`;
-                    
-                    // Abrir WhatsApp diretamente
-                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-                    
-                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
-                }
-            },
+    const i = UI.data.imoveis.find(x => x.id === id);
+    if(!i) return;
+    
+    const settings = await Storage.getSettings();
+    
+    let message = `🏠 *${i.titulo}*\n\n`;
+    message += `📍 *Endereço:* ${i.endereco}\n`;
+    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+    message += `📐 *Área:* ${i.area || 0}m²\n`;
+    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
+    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
+    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
+    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
+    
+    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+    
+    if(i.dataEntrega) {
+        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
+    }
+    
+    if(i.construtora) {
+        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
+    }
+    
+    // Adicionar informações sobre vídeos
+    if(i.videos && i.videos.length > 0) {
+        message += `\n🎥 *Vídeos disponíveis:*\n`;
+        i.videos.forEach((video, index) => {
+            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+        });
+        message += `\n`;
+    }
+    
+    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
+    message += `*Para mais informações:*\n`;
+    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
+    message += `_Entre em contato para agendar uma visita!_`;
+    
+    // Usar wa.me para compartilhamento geral
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    
+    // Abrir diretamente
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    
+    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+}
 
             link: {
                 save: async (e) => {
