@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -7115,6 +7114,39 @@ Utils.toast = (msg, type = 'success') => {
         t.style.cursor = 'default';
     }, 3000);
 };
+        // Função auxiliar para detectar e corrigir problemas no iOS
+function setupIOSWhatsAppFix() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    
+    if (isIOS) {
+        // Adicionar evento de clique em todos os botões do WhatsApp
+        document.addEventListener('click', function(e) {
+            const whatsappBtn = e.target.closest('.btn-whatsapp-client, .btn-whatsapp, [onclick*="whatsapp"]');
+            
+            if (whatsappBtn) {
+                // Prevenir múltiplos cliques
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Adicionar pequeno delay para iOS processar
+                setTimeout(() => {
+                    if (whatsappBtn.href && whatsappBtn.href.includes('whatsapp')) {
+                        // Se já tem href, usar
+                        window.location.href = whatsappBtn.href;
+                    }
+                }, 100);
+            }
+        });
+        
+        // Log para debug
+        console.log('iOS WhatsApp fix aplicado');
+    }
+}
+
+// Inicializar quando o DOM carregar
+document.addEventListener('DOMContentLoaded', function() {
+    setupIOSWhatsAppFix();
+});
     </script>
 </body>
 </html>
