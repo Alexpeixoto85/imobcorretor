@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3516,7 +3517,6 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         return `https://wa.me/55${finalNumber}?text=${encodeURIComponent(message)}`;
     }
 },
-            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6256,7 +6256,6 @@ whatsappPersonalizado: async (id) => {
         }
     }
 },
-        
                 email: async (id) => {
                     const c = UI.data.clientes.find(x => x.id === id);
                     if(!c || !c.email) {
@@ -6746,35 +6745,56 @@ whatsappPersonalizado: async (id) => {
             whatsapp: {
                 // FUNÇÃO CORRIGIDA: Compartilhar imóvel no WhatsApp
                 shareImovel: async (id) => {
-    const i = UI.data.imoveis.find(x => x.id === id);
-    if(!i) return;
-    
-    const settings = await Storage.getSettings();
-    
-    // Criar mensagem simplificada
-    let message = `*${i.titulo}*\n`;
-    message += `Endereço: ${i.endereco}\n`;
-    
-    if(i.precoVenda) {
-        message += `Preço: ${Utils.formatCurrency(i.precoVenda)}\n`;
-    } else if(i.precoAluguel) {
-        message += `Aluguel: ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-    }
-    
-    message += `\nPara mais informações entre em contato!\n`;
-    message += `${settings.nome || 'Alex Peixoto'}\n`;
-    message += `${settings.telefone || '(82) 99662-2036'}`;
-    
-    // Codificar mensagem
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Abrir WhatsApp Web para compartilhamento (sem número específico)
-    window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
-    
-    Utils.toast('Compartilhando imóvel no WhatsApp!');
-}
-            },
+                    const i = UI.data.imoveis.find(x => x.id === id);
+                    if(!i) return;
                     
+                    const settings = await Storage.getSettings();
+                    
+                    let message = `🏠 *${i.titulo}*\n\n`;
+                    message += `📍 *Endereço:* ${i.endereco}\n`;
+                    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+                    message += `📐 *Área:* ${i.area || 0}m²\n`;
+                    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
+                    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
+                    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
+                    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+                    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
+                    
+                    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+                    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+                    
+                    if(i.dataEntrega) {
+                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
+                    }
+                    
+                    if(i.construtora) {
+                        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
+                    }
+                    
+                    // Adicionar informações sobre vídeos
+                    if(i.videos && i.videos.length > 0) {
+                        message += `\n🎥 *Vídeos disponíveis:*\n`;
+                        i.videos.forEach((video, index) => {
+                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+                        });
+                        message += `\n`;
+                    }
+                    
+                    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
+                    message += `*Para mais informações:*\n`;
+                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
+                    message += `_Entre em contato para agendar uma visita!_`;
+                    
+                    // Abrir WhatsApp diretamente
+                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
+                    
+                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+                }
+            },
+
             link: {
                 save: async (e) => {
                     e.preventDefault();
