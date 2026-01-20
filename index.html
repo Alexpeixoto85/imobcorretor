@@ -6751,7 +6751,7 @@ whatsappPersonalizado: async (id) => {
     
     const settings = await Storage.getSettings();
     
-    // Criar mensagem
+    // Criar mensagem simplificada
     let message = `*${i.titulo}*\n`;
     message += `Endereço: ${i.endereco}\n`;
     
@@ -6768,36 +6768,12 @@ whatsappPersonalizado: async (id) => {
     // Codificar mensagem
     const encodedMessage = encodeURIComponent(message);
     
-    // Detectar dispositivo
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
+    // Abrir WhatsApp Web para compartilhamento (sem número específico)
+    window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
     
-    let whatsappUrl;
-    
-    if (isIOS || isAndroid) {
-        // Dispositivos móveis - abrir diretamente no WhatsApp
-        whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
-    } else {
-        // Desktop - WhatsApp Web
-        whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
-    }
-    
-    // Abrir diretamente
-    window.location.href = whatsappUrl;
-    
-    // Fallback para desktop/mobile
-    setTimeout(() => {
-        if (document.hasFocus()) {
-            if (isIOS || isAndroid) {
-                // Fallback para mobile
-                window.open(`https://api.whatsapp.com/send?text=${encodedMessage}`, '_blank');
-            } else {
-                // Fallback para desktop
-                window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
-            }
-        }
-    }, 2000);
-};
+    Utils.toast('Compartilhando imóvel no WhatsApp!');
+}
+            },
                     
             link: {
                 save: async (e) => {
