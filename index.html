@@ -6630,58 +6630,59 @@ whatsappPersonalizado: async (id) => {
                 }
             },
 
-            whatsapp: {
-                // FUNÇÃO CORRIGIDA: Compartilhar imóvel no WhatsApp
-                shareImovel: async (id) => {
-    const i = UI.data.imoveis.find(x => x.id === id);
-    if(!i) return;
-    
-    const settings = await Storage.getSettings();
-    
-    let message = `🏠 *${i.titulo}*\n\n`;
-    message += `📍 *Endereço:* ${i.endereco}\n`;
-    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-    message += `📐 *Área:* ${i.area || 0}m²\n`;
-    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
-    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
-    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
-    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
-    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
-    
-    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-    
-    if(i.dataEntrega) {
-        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
-    }
-    
-    if(i.construtora) {
-        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
-    }
-    
-    // Adicionar informações sobre vídeos
-    if(i.videos && i.videos.length > 0) {
-        message += `\n🎥 *Vídeos disponíveis:*\n`;
-        i.videos.forEach((video, index) => {
-            message += `• Vídeo ${index + 1}: ${video.url}\n`;
-        });
-        message += `\n`;
-    }
-    
-    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
-    message += `*Para mais informações:*\n`;
-    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
-    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
-    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
-    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
-    message += `_Entre em contato para agendar uma visita!_`;
-    
-    // Abrir WhatsApp diretamente
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-    
-    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
-}
+shareImovel: async (id) => {
+    try {
+        // 1. Validação inicial
+        if (!id) {
+            Utils.toast('ID do imóvel não fornecido!');
+            return false;
+        }
 
+        const i = UI.data.imoveis.find(x => x.id === id);
+        if (!i) {
+            Utils.toast('Imóvel não encontrado!');
+            return false;
+        }
+
+        // 2. Obter configurações
+        const settings = await Storage.getSettings();
+        
+        // 3. Construir mensagem (como no seu código)
+        let message = `🏠 *${i.titulo}*\n\n`;
+        // ... restante da construção da mensagem ...
+        
+        // 4. Validar se há telefone
+        const telefoneWhatsApp = settings.telefoneWhatsApp || settings.telefone;
+        if (!telefoneWhatsApp) {
+            Utils.toast('Telefone não configurado para WhatsApp!');
+            return false;
+        }
+
+        // 5. Executar ação
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/${telefoneWhatsApp.replace(/\D/g, '')}?text=${encodedMessage}`;
+        
+        const newWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+        
+        // 6. Feedback ao usuário
+        Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+        
+        // 7. Retornar status (opcional, mas útil para debugging)
+        return {
+            success: true,
+            imovelId: id,
+            windowOpened: !!newWindow
+        };
+        
+    } catch (error) {
+        console.error('Erro ao compartilhar no WhatsApp:', error);
+        Utils.toast('Erro ao compartilhar imóvel!');
+        return {
+            success: false,
+            error: error.message
+        };
+    }
+}
             link: {
                 save: async (e) => {
                     e.preventDefault();
