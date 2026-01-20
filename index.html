@@ -3465,9 +3465,7 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         return null;
     }
     
-    const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
-    
-    // Limpar número de telefone
+    // Limpar número
     const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
     
     if(!finalNumber) {
@@ -3475,57 +3473,51 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         return null;
     }
     
-    // VERIFICAR SE É IPHONE
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     
-    if (isIOS) {
-        // PARA IPHONE: mensagem mais curta e URL específica
-        const hour = new Date().getHours();
-        let greeting = "Boa noite";
-        if (hour >= 5 && hour < 12) greeting = "Bom dia";
-        if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-        
-        const clienteFirstName = cliente.nome.split(' ')[0];
-        let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
-        
-        const settings = await DB.get('settings', 'main');
-        message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n\n`;
-        
+    // Mensagem simplificada para melhor compatibilidade
+    const hour = new Date().getHours();
+    let greeting = "Boa noite";
+    if (hour >= 5 && hour < 12) greeting = "Bom dia";
+    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
+    
+    const clienteFirstName = cliente.nome.split(' ')[0];
+    let message = `${greeting}, ${clienteFirstName}! Tudo bem?\\n\\n`;
+    
+    const settings = await DB.get('settings', 'main');
+    message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\\n\\n`;
+    
+    if (imovelId) {
+        const imovel = UI.data.imoveis.find(i => i.id === imovelId);
         if (imovel) {
-            message += `Tenho informações sobre:\n`;
-            message += `*${imovel.titulo.substring(0, 40)}*\n`;
-            message += `📍 ${imovel.endereco.substring(0, 50)}\n`;
+            message += `Sobre o imóvel: *${imovel.titulo.substring(0, 40)}*\\n`;
+            message += `📍 ${imovel.endereco.substring(0, 50)}\\n`;
             
             if (imovel.precoVenda) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoVenda)}\n`;
+                message += `💰 ${Utils.formatCurrency(imovel.precoVenda)}\\n`;
             } else if (imovel.precoAluguel) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
+                message += `💰 ${Utils.formatCurrency(imovel.precoAluguel)}/mês\\n`;
             }
             
             if (imovel.area) message += `📐 ${imovel.area}m² `;
-            if (imovel.quartos) message += `🛏️ ${imovel.quartos} quartos `;
-            if (imovel.banheiros) message += `🛁 ${imovel.banheiros} banheiros\n`;
-            
-            message += `\nVamos conversar?`;
-        } else {
-            message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
+            if (imovel.quartos) message += `🛏️ ${imovel.quartos}qts `;
+            message += `\\n\\nPodemos conversar?`;
         }
-        
-        message += `\n\n📞 ${settings.telefone || '(82) 99662-2036'}`;
-        
-        const encodedMessage = encodeURIComponent(message);
-        
-        // URL que funciona melhor no iPhone
-        return `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
-        
     } else {
-        // PARA ANDROID: mensagem completa
-        const message = await Utils.generateWhatsAppMessage(cliente, imovel);
-        const encodedMessage = encodeURIComponent(message);
-        
-        return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
+        message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
     }
-},            
+    
+    message += `\\n\\n📞 ${settings.telefone || '(82) 99662-2036'}`;
+    
+    // URL otimizada para iOS
+    if (isIOS) {
+        // iOS prefere URL mais simples
+        return `https://wa.me/55${finalNumber}?text=${encodeURIComponent(message)}`;
+    } else {
+        return `https://wa.me/55${finalNumber}?text=${encodeURIComponent(message)}`;
+    }
+},
+            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
