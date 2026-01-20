@@ -6166,63 +6166,95 @@ whatsappPersonalizado: async (id) => {
         return;
     }
     
-    // Limpar número de telefone
-    const cleanNumber = c.telefone.replace(/\D/g, '');
+    // Detectar iOS/Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
     
-    // Remover o 0 inicial se existir e o 55 do país
-    let finalNumber = cleanNumber;
-    if (finalNumber.startsWith('0')) {
-        finalNumber = finalNumber.substring(1);
-    }
-    if (finalNumber.startsWith('55')) {
-        finalNumber = finalNumber.substring(2);
-    }
-    
-    if (!finalNumber) {
-        Utils.toast('Número de telefone inválido', 'error');
-        return;
-    }
-    
-    // Detectar se é iOS ou Android
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    
-    // Gerar mensagem simples
-    const hour = new Date().getHours();
-    let greeting = "Boa noite";
-    if (hour >= 5 && hour < 12) greeting = "Bom dia";
-    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-    
-    const clienteFirstName = c.nome.split(' ')[0];
-    let message = `${greeting}, ${clienteFirstName}! Tudo bem?`;
-    
-    // Codificar a mensagem para URL
-    const encodedMessage = encodeURIComponent(message);
-    
-    // Criar URL baseada no dispositivo
-    let whatsappUrl;
-    
-    if (isIOS) {
-        // iOS usa o esquema whatsapp://
-        whatsappUrl = `whatsapp://send?phone=55${finalNumber}&text=${encodedMessage}`;
-    } else if (isAndroid) {
-        // Android também usa whatsapp://
-        whatsappUrl = `whatsapp://send?phone=55${finalNumber}&text=${encodedMessage}`;
-    } else {
-        // Para desktop, usar api.whatsapp.com como fallback
-        whatsappUrl = `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
-    }
-    
-    // Abrir diretamente
-    window.location.href = whatsappUrl;
-    
-    // Fallback caso não abra (após 2 segundos)
-    setTimeout(() => {
-        if (document.hasFocus()) {
-            // Se ainda estiver na mesma página, abrir fallback
-            window.open(`https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`, '_blank');
+    try {
+        // Preparar URL do WhatsApp
+        const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
+        
+        if (!whatsappUrl) return;
+        
+        if (isIOS) {
+            // MÉTODO ESPECIAL PARA iOS
+            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}...`);
+            
+            // Método 1: Tentar abrir diretamente
+            setTimeout(() => {
+                window.location.href = whatsappUrl;
+            }, 100);
+            
+            // Método 2: Fallback com link clicável
+            setTimeout(() => {
+                const link = document.createElement('a');
+                link.href = whatsappUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.id = 'whatsapp-link';
+                
+                // Estilizar o link (invisível)
+                link.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 1px;
+                    height: 1px;
+                    opacity: 0;
+                    pointer-events: none;
+                `;
+                
+                document.body.appendChild(link);
+                
+                // Clicar programaticamente
+                link.click();
+                
+                // Forçar foco no link (importante para iOS)
+                link.focus();
+                
+                // Remover após uso
+                setTimeout(() => {
+                    if (document.body.contains(link)) {
+                        document.body.removeChild(link);
+                    }
+                }, 3000);
+            }, 200);
+            
+            // Método 3: Se ainda não abriu, mostrar instruções
+            setTimeout(() => {
+                if (document.visibilityState === 'visible') {
+                    const userConfirmed = confirm(
+                        `Se o WhatsApp não abriu automaticamente:\n\n` +
+                        `1. Toque em "OK" para copiar o número\n` +
+                        `2. Abra o WhatsApp manualmente\n` +
+                        `3. Cole o número na nova conversa\n\n` +
+                        `Deseja copiar o número agora?`
+                    );
+                    
+                    if (userConfirmed) {
+                        navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
+                        Utils.toast('Número copiado! Abra o WhatsApp e cole.');
+                    }
+                }
+            }, 1500);
+            
+        } else {
+            // MÉTODO NORMAL PARA ANDROID/OUTROS
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
         }
-    }, 2000);
+        
+    } catch (error) {
+        console.error('Erro ao abrir WhatsApp:', error);
+        
+        // Fallback final
+        const cleanNumber = c.telefone.replace(/\D/g, '');
+        const fallbackUrl = `https://api.whatsapp.com/send?phone=55${cleanNumber}`;
+        
+        if (confirm('Não foi possível abrir automaticamente. Deseja abrir manualmente?')) {
+            window.open(fallbackUrl, '_blank');
+        }
+    }
 },
         
                 email: async (id) => {
