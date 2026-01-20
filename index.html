@@ -6183,6 +6183,10 @@ whatsappPersonalizado: async (id) => {
         return;
     }
     
+    // Detectar se é iOS ou Android
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
     // Gerar mensagem simples
     const hour = new Date().getHours();
     let greeting = "Boa noite";
@@ -6192,24 +6196,33 @@ whatsappPersonalizado: async (id) => {
     const clienteFirstName = c.nome.split(' ')[0];
     let message = `${greeting}, ${clienteFirstName}! Tudo bem?`;
     
-    // Se houver imóvel de interesse, adicionar informações básicas
-    if (c.imovelInteresseId) {
-        const imovel = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
-        if (imovel) {
-            message += ` Aqui estão as informações do imóvel: ${imovel.titulo}`;
-        }
-    }
-    
     // Codificar a mensagem para URL
     const encodedMessage = encodeURIComponent(message);
     
-    // Criar URL do WhatsApp (usando api.whatsapp.com que redireciona para o app)
-    const whatsappUrl = `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
+    // Criar URL baseada no dispositivo
+    let whatsappUrl;
     
-    // Abrir no WhatsApp
-    window.open(whatsappUrl, '_blank');
+    if (isIOS) {
+        // iOS usa o esquema whatsapp://
+        whatsappUrl = `whatsapp://send?phone=55${finalNumber}&text=${encodedMessage}`;
+    } else if (isAndroid) {
+        // Android também usa whatsapp://
+        whatsappUrl = `whatsapp://send?phone=55${finalNumber}&text=${encodedMessage}`;
+    } else {
+        // Para desktop, usar api.whatsapp.com como fallback
+        whatsappUrl = `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
+    }
     
-    Utils.toast(`Abrindo WhatsApp para ${clienteFirstName}`);
+    // Abrir diretamente
+    window.location.href = whatsappUrl;
+    
+    // Fallback caso não abra (após 2 segundos)
+    setTimeout(() => {
+        if (document.hasFocus()) {
+            // Se ainda estiver na mesma página, abrir fallback
+            window.open(`https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`, '_blank');
+        }
+    }, 2000);
 },
         
                 email: async (id) => {
@@ -6706,7 +6719,7 @@ whatsappPersonalizado: async (id) => {
     
     const settings = await Storage.getSettings();
     
-    // Criar mensagem simplificada
+    // Criar mensagem
     let message = `*${i.titulo}*\n`;
     message += `Endereço: ${i.endereco}\n`;
     
@@ -6723,13 +6736,37 @@ whatsappPersonalizado: async (id) => {
     // Codificar mensagem
     const encodedMessage = encodeURIComponent(message);
     
-    // Abrir WhatsApp Web para compartilhamento (sem número específico)
-    window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+    // Detectar dispositivo
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
     
-    Utils.toast('Compartilhando imóvel no WhatsApp!');
+    let whatsappUrl;
+    
+    if (isIOS || isAndroid) {
+        // Dispositivos móveis - abrir diretamente no WhatsApp
+        whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
+    } else {
+        // Desktop - WhatsApp Web
+        whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+    }
+    
+    // Abrir diretamente
+    window.location.href = whatsappUrl;
+    
+    // Fallback para desktop/mobile
+    setTimeout(() => {
+        if (document.hasFocus()) {
+            if (isIOS || isAndroid) {
+                // Fallback para mobile
+                window.open(`https://api.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+            } else {
+                // Fallback para desktop
+                window.open(`https://web.whatsapp.com/send?text=${encodedMessage}`, '_blank');
+            }
+        }
+    }, 2000);
 }
-            },
-
+                    
             link: {
                 save: async (e) => {
                     e.preventDefault();
