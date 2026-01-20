@@ -3457,6 +3457,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             // FUNÇÃO MELHORADA: Preparar URL do WhatsApp com mensagem pré-definida
+// FUNÇÃO CORRIGIDA: Preparar URL do WhatsApp que funciona em todos os dispositivos
 prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     const cliente = UI.data.clientes.find(x => x.id === clienteId);
     if(!cliente || !cliente.telefone) {
@@ -3464,58 +3465,67 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
         return null;
     }
     
-    // Limpar número
-    const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
+    const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
     
-    if(!finalNumber) {
+    // Limpar número de telefone
+    let cleanNumber = cliente.telefone.replace(/\D/g, '');
+    
+    // Remover zeros, DDD inicial, etc
+    if (cleanNumber.length === 10) {
+        // Número sem nono dígito: (82) 99662-2036
+        cleanNumber = '55' + cleanNumber;
+    } else if (cleanNumber.length === 11) {
+        // Número com nono dígito
+        cleanNumber = '55' + cleanNumber;
+    } else if (cleanNumber.startsWith('55')) {
+        // Já tem código do Brasil
+        cleanNumber = cleanNumber;
+    } else {
+        // Padrão internacional
+        cleanNumber = '55' + cleanNumber;
+    }
+    
+    if(!cleanNumber) {
         Utils.toast('Número de telefone inválido', 'error');
         return null;
     }
     
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // GERAR MENSAGEM PERSONALIZADA
+    let message = '';
     
-    // Mensagem simplificada para melhor compatibilidade
-    const hour = new Date().getHours();
-    let greeting = "Boa noite";
-    if (hour >= 5 && hour < 12) greeting = "Bom dia";
-    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-    
-    const clienteFirstName = cliente.nome.split(' ')[0];
-    let message = `${greeting}, ${clienteFirstName}! Tudo bem?\\n\\n`;
-    
-    const settings = await DB.get('settings', 'main');
-    message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\\n\\n`;
-    
-    if (imovelId) {
-        const imovel = UI.data.imoveis.find(i => i.id === imovelId);
-        if (imovel) {
-            message += `Sobre o imóvel: *${imovel.titulo.substring(0, 40)}*\\n`;
-            message += `📍 ${imovel.endereco.substring(0, 50)}\\n`;
-            
-            if (imovel.precoVenda) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoVenda)}\\n`;
-            } else if (imovel.precoAluguel) {
-                message += `💰 ${Utils.formatCurrency(imovel.precoAluguel)}/mês\\n`;
-            }
-            
-            if (imovel.area) message += `📐 ${imovel.area}m² `;
-            if (imovel.quartos) message += `🛏️ ${imovel.quartos}qts `;
-            message += `\\n\\nPodemos conversar?`;
+    if (imovel) {
+        // Mensagem para compartilhar imóvel
+        message = `*${imovel.titulo}*\n\n`;
+        message += `📍 *Endereço:* ${imovel.endereco}\n`;
+        message += `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n`;
+        if (imovel.area) message += `📐 *Área:* ${imovel.area}m²\n`;
+        if (imovel.quartos) message += `🛏️ *Quartos:* ${imovel.quartos}\n`;
+        if (imovel.banheiros) message += `🛁 *Banheiros:* ${imovel.banheiros}\n`;
+        if (imovel.vagas) message += `🚗 *Vagas:* ${imovel.vagas}\n`;
+        if (imovel.precoVenda) {
+            message += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
+        } else if (imovel.precoAluguel) {
+            message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
         }
+        message += `\nPara mais informações, entre em contato!`;
     } else {
-        message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
+        // Mensagem para conversa com cliente
+        const hour = new Date().getHours();
+        let greeting = "Boa noite";
+        if (hour >= 5 && hour < 12) greeting = "Bom dia";
+        if (hour >= 12 && hour < 18) greeting = "Boa tarde";
+        
+        const clienteFirstName = cliente.nome.split(' ')[0];
+        message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
+        message += `Aqui é da Imobiliária Resende. Gostaríamos de conversar sobre seu interesse em imóveis.`;
     }
     
-    message += `\\n\\n📞 ${settings.telefone || '(82) 99662-2036'}`;
+    const encodedMessage = encodeURIComponent(message);
     
-    // URL otimizada para iOS
-    if (isIOS) {
-        // iOS prefere URL mais simples
-        return `https://wa.me/55${finalNumber}?text=${encodeURIComponent(message)}`;
-    } else {
-        return `https://wa.me/55${finalNumber}?text=${encodeURIComponent(message)}`;
-    }
+    // URL QUE FUNCIONA EM TODOS OS DISPOSITIVOS
+    return `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMessage}`;
 },
+            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6165,94 +6175,27 @@ whatsappPersonalizado: async (id) => {
         return;
     }
     
-    // Detectar iOS/Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
-    
     try {
         // Preparar URL do WhatsApp
         const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
         
-        if (!whatsappUrl) return;
-        
-        if (isIOS) {
-            // MÉTODO ESPECIAL PARA iOS
-            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}...`);
+        if (whatsappUrl) {
+            // Abrir diretamente o WhatsApp
+            window.open(whatsappUrl, '_blank');
             
-            // Método 1: Tentar abrir diretamente
+            // Fallback: se não abrir, oferecer alternativa
             setTimeout(() => {
-                window.location.href = whatsappUrl;
-            }, 100);
-            
-            // Método 2: Fallback com link clicável
-            setTimeout(() => {
-                const link = document.createElement('a');
-                link.href = whatsappUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.id = 'whatsapp-link';
-                
-                // Estilizar o link (invisível)
-                link.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 1px;
-                    height: 1px;
-                    opacity: 0;
-                    pointer-events: none;
-                `;
-                
-                document.body.appendChild(link);
-                
-                // Clicar programaticamente
-                link.click();
-                
-                // Forçar foco no link (importante para iOS)
-                link.focus();
-                
-                // Remover após uso
-                setTimeout(() => {
-                    if (document.body.contains(link)) {
-                        document.body.removeChild(link);
-                    }
-                }, 3000);
-            }, 200);
-            
-            // Método 3: Se ainda não abriu, mostrar instruções
-            setTimeout(() => {
-                if (document.visibilityState === 'visible') {
-                    const userConfirmed = confirm(
-                        `Se o WhatsApp não abriu automaticamente:\n\n` +
-                        `1. Toque em "OK" para copiar o número\n` +
-                        `2. Abra o WhatsApp manualmente\n` +
-                        `3. Cole o número na nova conversa\n\n` +
-                        `Deseja copiar o número agora?`
-                    );
-                    
-                    if (userConfirmed) {
-                        navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
-                        Utils.toast('Número copiado! Abra o WhatsApp e cole.');
-                    }
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                if (!isMobile) {
+                    Utils.toast('WhatsApp aberto em nova aba!');
                 }
-            }, 1500);
-            
-        } else {
-            // MÉTODO NORMAL PARA ANDROID/OUTROS
-            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
-            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
+            }, 1000);
         }
-        
     } catch (error) {
         console.error('Erro ao abrir WhatsApp:', error);
-        
-        // Fallback final
+        // Fallback manual
         const cleanNumber = c.telefone.replace(/\D/g, '');
-        const fallbackUrl = `https://api.whatsapp.com/send?phone=55${cleanNumber}`;
-        
-        if (confirm('Não foi possível abrir automaticamente. Deseja abrir manualmente?')) {
-            window.open(fallbackUrl, '_blank');
-        }
+        window.open(`https://wa.me/55${cleanNumber}`, '_blank');
     }
 },
                 email: async (id) => {
@@ -6744,55 +6687,28 @@ whatsappPersonalizado: async (id) => {
             whatsapp: {
                 // FUNÇÃO CORRIGIDA: Compartilhar imóvel no WhatsApp
                 shareImovel: async (id) => {
-                    const i = UI.data.imoveis.find(x => x.id === id);
-                    if(!i) return;
-                    
-                    const settings = await Storage.getSettings();
-                    
-                    let message = `🏠 *${i.titulo}*\n\n`;
-                    message += `📍 *Endereço:* ${i.endereco}\n`;
-                    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
-                    message += `📐 *Área:* ${i.area || 0}m²\n`;
-                    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
-                    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
-                    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
-                    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
-                    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
-                    
-                    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
-                    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
-                    
-                    if(i.dataEntrega) {
-                        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
-                    }
-                    
-                    if(i.construtora) {
-                        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
-                    }
-                    
-                    // Adicionar informações sobre vídeos
-                    if(i.videos && i.videos.length > 0) {
-                        message += `\n🎥 *Vídeos disponíveis:*\n`;
-                        i.videos.forEach((video, index) => {
-                            message += `• Vídeo ${index + 1}: ${video.url}\n`;
-                        });
-                        message += `\n`;
-                    }
-                    
-                    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
-                    message += `*Para mais informações:*\n`;
-                    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
-                    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
-                    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
-                    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
-                    message += `_Entre em contato para agendar uma visita!_`;
-                    
-                    // Abrir WhatsApp diretamente
-                    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-                    
-                    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
-                }
-            },
+    const i = UI.data.imoveis.find(x => x.id === id);
+    if(!i) return;
+    
+    // Criar mensagem simples para compartilhamento
+    let message = `🏠 *${i.titulo}*\n\n`;
+    message += `📍 ${i.endereco}\n`;
+    if (i.precoVenda) {
+        message += `💰 ${Utils.formatCurrency(i.precoVenda)}\n`;
+    } else if (i.precoAluguel) {
+        message += `💰 ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+    }
+    message += `\nInteressado? Entre em contato para mais informações!`;
+    
+    // URL para compartilhamento genérico (sem número específico)
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    
+    // Abrir WhatsApp
+    window.open(whatsappUrl, '_blank');
+    
+    Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
+}
 
             link: {
                 save: async (e) => {
@@ -7114,39 +7030,6 @@ Utils.toast = (msg, type = 'success') => {
         t.style.cursor = 'default';
     }, 3000);
 };
-        // Função auxiliar para detectar e corrigir problemas no iOS
-function setupIOSWhatsAppFix() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    
-    if (isIOS) {
-        // Adicionar evento de clique em todos os botões do WhatsApp
-        document.addEventListener('click', function(e) {
-            const whatsappBtn = e.target.closest('.btn-whatsapp-client, .btn-whatsapp, [onclick*="whatsapp"]');
-            
-            if (whatsappBtn) {
-                // Prevenir múltiplos cliques
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Adicionar pequeno delay para iOS processar
-                setTimeout(() => {
-                    if (whatsappBtn.href && whatsappBtn.href.includes('whatsapp')) {
-                        // Se já tem href, usar
-                        window.location.href = whatsappBtn.href;
-                    }
-                }, 100);
-            }
-        });
-        
-        // Log para debug
-        console.log('iOS WhatsApp fix aplicado');
-    }
-}
-
-// Inicializar quando o DOM carregar
-document.addEventListener('DOMContentLoaded', function() {
-    setupIOSWhatsAppFix();
-});
     </script>
 </body>
 </html>
