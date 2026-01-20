@@ -6221,25 +6221,6 @@ whatsappPersonalizado: async (id) => {
                 }, 3000);
             }, 200);
             
-            // Método 3: Se ainda não abriu, mostrar instruções
-            setTimeout(() => {
-                if (document.visibilityState === 'visible') {
-                    const userConfirmed = confirm(
-                        `Se o WhatsApp não abriu automaticamente:\n\n` +
-                        `1. Toque em "OK" para copiar o número\n` +
-                        `2. Abra o WhatsApp manualmente\n` +
-                        `3. Cole o número na nova conversa\n\n` +
-                        `Deseja copiar o número agora?`
-                    );
-                    
-                    if (userConfirmed) {
-                        navigator.clipboard.writeText(c.telefone.replace(/\D/g, ''));
-                        Utils.toast('Número copiado! Abra o WhatsApp e cole.');
-                    }
-                }
-            }, 1500);
-            
-        } else {
             // MÉTODO NORMAL PARA ANDROID/OUTROS
             window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
             Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
