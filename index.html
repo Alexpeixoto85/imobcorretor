@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3370,19 +3371,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             
             // FUNÇÃO MELHORADA: Limpar número de telefone
             cleanPhoneNumber: (phone) => {
-                if(!phone) return '';
-                // Remove tudo exceto números
-                let clean = phone.replace(/\D/g, '');
-                // Remove o 0 inicial se houver
-                if(clean.startsWith('0')) {
-                    clean = clean.substring(1);
-                }
-                // Se começar com 55, remove (já vamos adicionar)
-                if(clean.startsWith('55')) {
-                    clean = clean.substring(2);
-                }
-                return clean;
-            },
+    if(!phone) return '';
+    
+    // Remove tudo exceto números
+    let clean = phone.replace(/\D/g, '');
+    
+    // Garantir que comece com 55 (código do Brasil)
+    if(!clean.startsWith('55')) {
+        clean = '55' + clean;
+    }
+    
+    return clean;
+},
             
             // FUNÇÃO CORRIGIDA: Gerar mensagem do WhatsApp com emojis
             generateWhatsAppMessage: async (cliente, imovel = null) => {
@@ -3457,7 +3457,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             // FUNÇÃO MELHORADA: Preparar URL do WhatsApp com mensagem pré-definida
-// FUNÇÃO CORRIGIDA: Preparar URL do WhatsApp que funciona em todos os dispositivos
 prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     const cliente = UI.data.clientes.find(x => x.id === clienteId);
     if(!cliente || !cliente.telefone) {
@@ -3467,65 +3466,21 @@ prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
     
     const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
     
-    // Limpar número de telefone
-    let cleanNumber = cliente.telefone.replace(/\D/g, '');
+    // Limpar número de telefone CORRETAMENTE
+    const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
     
-    // Remover zeros, DDD inicial, etc
-    if (cleanNumber.length === 10) {
-        // Número sem nono dígito: (82) 99662-2036
-        cleanNumber = '55' + cleanNumber;
-    } else if (cleanNumber.length === 11) {
-        // Número com nono dígito
-        cleanNumber = '55' + cleanNumber;
-    } else if (cleanNumber.startsWith('55')) {
-        // Já tem código do Brasil
-        cleanNumber = cleanNumber;
-    } else {
-        // Padrão internacional
-        cleanNumber = '55' + cleanNumber;
-    }
-    
-    if(!cleanNumber) {
+    if(!finalNumber) {
         Utils.toast('Número de telefone inválido', 'error');
         return null;
     }
     
-    // GERAR MENSAGEM PERSONALIZADA
-    let message = '';
-    
-    if (imovel) {
-        // Mensagem para compartilhar imóvel
-        message = `*${imovel.titulo}*\n\n`;
-        message += `📍 *Endereço:* ${imovel.endereco}\n`;
-        message += `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n`;
-        if (imovel.area) message += `📐 *Área:* ${imovel.area}m²\n`;
-        if (imovel.quartos) message += `🛏️ *Quartos:* ${imovel.quartos}\n`;
-        if (imovel.banheiros) message += `🛁 *Banheiros:* ${imovel.banheiros}\n`;
-        if (imovel.vagas) message += `🚗 *Vagas:* ${imovel.vagas}\n`;
-        if (imovel.precoVenda) {
-            message += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
-        } else if (imovel.precoAluguel) {
-            message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
-        }
-        message += `\nPara mais informações, entre em contato!`;
-    } else {
-        // Mensagem para conversa com cliente
-        const hour = new Date().getHours();
-        let greeting = "Boa noite";
-        if (hour >= 5 && hour < 12) greeting = "Bom dia";
-        if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-        
-        const clienteFirstName = cliente.nome.split(' ')[0];
-        message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
-        message += `Aqui é da Imobiliária Resende. Gostaríamos de conversar sobre seu interesse em imóveis.`;
-    }
-    
+    // GERAR MENSAGEM (mantenha sua lógica atual)
+    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
     const encodedMessage = encodeURIComponent(message);
     
-    // URL QUE FUNCIONA EM TODOS OS DISPOSITIVOS
-    return `https://api.whatsapp.com/send?phone=${cleanNumber}&text=${encodedMessage}`;
+    // URL CORRETA para WhatsApp - SEM @, APENAS NÚMEROS
+    return `https://wa.me/${finalNumber}?text=${encodedMessage}`;
 },
-            
             // FUNÇÃO NOVA: Extrair ID do YouTube/Vimeo
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -6176,26 +6131,17 @@ whatsappPersonalizado: async (id) => {
     }
     
     try {
-        // Preparar URL do WhatsApp
+        // Preparar URL do WhatsApp com mensagem
         const whatsappUrl = await Utils.prepareWhatsAppUrl(id, c.imovelInteresseId);
         
         if (whatsappUrl) {
-            // Abrir diretamente o WhatsApp
-            window.open(whatsappUrl, '_blank');
-            
-            // Fallback: se não abrir, oferecer alternativa
-            setTimeout(() => {
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                if (!isMobile) {
-                    Utils.toast('WhatsApp aberto em nova aba!');
-                }
-            }, 1000);
+            // Abrir WhatsApp diretamente
+            window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+            Utils.toast(`Abrindo WhatsApp para ${c.nome.split(' ')[0]}`);
         }
     } catch (error) {
         console.error('Erro ao abrir WhatsApp:', error);
-        // Fallback manual
-        const cleanNumber = c.telefone.replace(/\D/g, '');
-        window.open(`https://wa.me/55${cleanNumber}`, '_blank');
+        Utils.toast('Erro ao abrir WhatsApp', 'error');
     }
 },
                 email: async (id) => {
@@ -6690,22 +6636,48 @@ whatsappPersonalizado: async (id) => {
     const i = UI.data.imoveis.find(x => x.id === id);
     if(!i) return;
     
-    // Criar mensagem simples para compartilhamento
+    const settings = await Storage.getSettings();
+    
     let message = `🏠 *${i.titulo}*\n\n`;
-    message += `📍 ${i.endereco}\n`;
-    if (i.precoVenda) {
-        message += `💰 ${Utils.formatCurrency(i.precoVenda)}\n`;
-    } else if (i.precoAluguel) {
-        message += `💰 ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+    message += `📍 *Endereço:* ${i.endereco}\n`;
+    message += `🏠 *Tipo:* ${Utils.getTipoText(i.tipo)}\n`;
+    message += `📐 *Área:* ${i.area || 0}m²\n`;
+    message += `🛏️ *Quartos:* ${i.quartos || 0}\n`;
+    message += `🛁 *Banheiros:* ${i.banheiros || 0}\n`;
+    message += `🚗 *Vagas:* ${i.vagas || 0}\n`;
+    if(i.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+    if(i.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(i.condominio)}/mês\n\n`;
+    
+    if(i.precoVenda) message += `💰 *Preço de Venda:* ${Utils.formatCurrency(i.precoVenda)}\n`;
+    if(i.precoAluguel) message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(i.precoAluguel)}/mês\n`;
+    
+    if(i.dataEntrega) {
+        message += `\n📅 *Data de Entrega:* ${Utils.formatDate(i.dataEntrega)}\n`;
     }
-    message += `\nInteressado? Entre em contato para mais informações!`;
     
-    // URL para compartilhamento genérico (sem número específico)
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+    if(i.construtora) {
+        message += `\n🏗️ *Construtora:* ${i.construtora}\n`;
+    }
     
-    // Abrir WhatsApp
-    window.open(whatsappUrl, '_blank');
+    // Adicionar informações sobre vídeos
+    if(i.videos && i.videos.length > 0) {
+        message += `\n🎥 *Vídeos disponíveis:*\n`;
+        i.videos.forEach((video, index) => {
+            message += `• Vídeo ${index + 1}: ${video.url}\n`;
+        });
+        message += `\n`;
+    }
+    
+    message += `\n${i.descricao || 'Excelente imóvel com ótima localização!'}\n\n`;
+    message += `*Para mais informações:*\n`;
+    message += `📞 ${settings.nome || 'Alex Peixoto'}\n`;
+    message += `📱 ${settings.telefone || '(82) 99662-2036'}\n`;
+    message += `🏢 ${settings.imobiliaria || 'Resende'}\n`;
+    message += `📋 CRECI: ${settings.creci || '5794-AL'}\n\n`;
+    message += `_Entre em contato para agendar uma visita!_`;
+    
+    // Abrir WhatsApp diretamente
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
     
     Utils.toast('Abrindo WhatsApp para compartilhar imóvel!');
 }
