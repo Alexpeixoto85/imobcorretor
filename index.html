@@ -3284,68 +3284,43 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             prepareWhatsAppUrl: async (clienteId, imovelId = null) => {
-                const cliente = UI.data.clientes.find(x => x.id === clienteId);
-                if(!cliente || !cliente.telefone) {
-                    Utils.toast('Cliente sem número de telefone', 'error');
-                    return null;
-                }
-                
-                const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
-                
-                const finalNumber = Utils.cleanPhoneNumber(cliente.telefone);
-                
-                if(!finalNumber) {
-                    Utils.toast('Número de telefone inválido', 'error');
-                    return null;
-                }
-                
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-                
-                if (isIOS) {
-                    const hour = new Date().getHours();
-                    let greeting = "Boa noite";
-                    if (hour >= 5 && hour < 12) greeting = "Bom dia";
-                    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-                    
-                    const clienteFirstName = cliente.nome.split(' ')[0];
-                    let message = `${greeting}, ${clienteFirstName}! Tudo bem?\n\n`;
-                    
-                    const settings = await DB.get('settings', 'main');
-                    message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n\n`;
-                    
-                    if (imovel) {
-                        message += `Tenho informações sobre:\n`;
-                        message += `*${imovel.titulo.substring(0, 40)}*\n`;
-                        message += `📍 ${imovel.endereco.substring(0, 50)}\n`;
-                        
-                        if (imovel.precoVenda) {
-                            message += `💰 ${Utils.formatCurrency(imovel.precoVenda)}\n`;
-                        } else if (imovel.precoAluguel) {
-                            message += `💰 ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
-                        }
-                        
-                        if (imovel.area) message += `📐 ${imovel.area}m² `;
-                        if (imovel.quartos) message += `🛏️ ${imovel.quartos} quartos `;
-                        if (imovel.banheiros) message += `🛁 ${imovel.banheiros} banheiros\n`;
-                        
-                        message += `\nVamos conversar?`;
-                    } else {
-                        message += `Gostaria de conversar sobre imóveis. Podemos marcar uma conversa?`;
-                    }
-                    
-                    message += `\n\n📞 ${settings.telefone || '(82) 99662-2036'}`;
-                    
-                    const encodedMessage = encodeURIComponent(message);
-                    
-                    return `https://api.whatsapp.com/send?phone=55${finalNumber}&text=${encodedMessage}`;
-                    
-                } else {
-                    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
-                    const encodedMessage = encodeURIComponent(message);
-                    
-                    return `https://wa.me/55${finalNumber}?text=${encodedMessage}`;
-                }
-            },            
+    const cliente = UI.data.clientes.find(x => x.id === clienteId);
+    if(!cliente || !cliente.telefone) {
+        Utils.toast('Cliente sem número de telefone', 'error');
+        return null;
+    }
+    
+    const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
+    
+    // Limpar e formatar o número
+    let phoneNumber = cliente.telefone.replace(/\D/g, '');
+    
+    // Remover o 0 no início se existir
+    if (phoneNumber.startsWith('0')) {
+        phoneNumber = phoneNumber.substring(1);
+    }
+    
+    // Adicionar código do Brasil (55) se não tiver
+    if (!phoneNumber.startsWith('55')) {
+        phoneNumber = '55' + phoneNumber;
+    }
+    
+    // Verificar se é dispositivo iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    // Preparar a mensagem
+    const message = await Utils.generateWhatsAppMessage(cliente, imovel);
+    const encodedMessage = encodeURIComponent(message);
+    
+    // URL específica para iOS
+    if (isIOS) {
+        // Para iOS, usar o esquema de URL do WhatsApp
+        return `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
+    } else {
+        // Para Android e outros dispositivos
+        return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+    }
+},
             
             extractVideoId: (url) => {
                 if (!url) return null;
@@ -5795,47 +5770,76 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 },
                 
                 whatsappPersonalizado: async (clienteId) => {
-                    const cliente = UI.data.clientes.find(x => x.id === clienteId);
-                    if(!cliente) return;
-                    
-                    const settings = await Storage.getSettings();
-                    let message = '';
-                    
-                    const hour = new Date().getHours();
-                    let greeting = "Boa noite";
-                    if (hour >= 5 && hour < 12) greeting = "Bom dia";
-                    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-                    
-                    const clienteFirstName = cliente.nome.split(' ')[0];
-                    
-                    if (Utils.isBirthdayToday(cliente.dataNascimento)) {
-                        const idade = Utils.calculateAge(cliente.dataNascimento);
-                        message = `${greeting}, ${clienteFirstName}! 🎉🎂\n\n`;
-                        message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n`;
-                        message += `Gostaria de parabenizá-lo pelos seus ${idade} anos! 🎊\n\n`;
-                        message += `Desejo muita saúde, felicidade e sucesso! ✨\n`;
-                        message += `Que este novo ano de vida seja repleto de conquistas! 🏆\n\n`;
-                        message += `Fico à disposição para ajudá-lo(a) na realização do sonho da casa própria! 🏠\n\n`;
-                        message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
-                        message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}`;
-                    } else {
-                        const imovel = cliente.imovelInteresseId ? 
-                            UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                        
-                        message = await Utils.generateWhatsAppMessage(cliente, imovel);
-                    }
-                    
-                    const phone = Utils.cleanPhoneNumber(cliente.telefone);
-                    if(!phone) {
-                        Utils.toast('Número de telefone inválido', 'error');
-                        return;
-                    }
-                    
-                    const encodedMessage = encodeURIComponent(message);
-                    const whatsappUrl = `https://wa.me/55${phone}?text=${encodedMessage}`;
-                    
-                    window.open(whatsappUrl, '_blank');
-                },
+    const cliente = UI.data.clientes.find(x => x.id === clienteId);
+    if(!cliente) return;
+    
+    const settings = await Storage.getSettings();
+    let message = '';
+    
+    const hour = new Date().getHours();
+    let greeting = "Boa noite";
+    if (hour >= 5 && hour < 12) greeting = "Bom dia";
+    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
+    
+    const clienteFirstName = cliente.nome.split(' ')[0];
+    
+    if (Utils.isBirthdayToday(cliente.dataNascimento)) {
+        const idade = Utils.calculateAge(cliente.dataNascimento);
+        message = `${greeting}, ${clienteFirstName}! 🎉🎂\n\n`;
+        message += `Aqui é ${settings.nome || 'Alex Peixoto'} da ${settings.imobiliaria || 'Resende'}.\n`;
+        message += `Gostaria de parabenizá-lo pelos seus ${idade} anos! 🎊\n\n`;
+        message += `Desejo muita saúde, felicidade e sucesso! ✨\n`;
+        message += `Que este novo ano de vida seja repleto de conquistas! 🏆\n\n`;
+        message += `Fico à disposição para ajudá-lo(a) na realização do sonho da casa própria! 🏠\n\n`;
+        message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
+        message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}`;
+    } else {
+        const imovel = cliente.imovelInteresseId ? 
+            UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
+        
+        message = await Utils.generateWhatsAppMessage(cliente, imovel);
+    }
+    
+    // Limpar e formatar o número
+    let phoneNumber = cliente.telefone.replace(/\D/g, '');
+    
+    // Remover o 0 no início se existir
+    if (phoneNumber.startsWith('0')) {
+        phoneNumber = phoneNumber.substring(1);
+    }
+    
+    // Adicionar código do Brasil (55) se não tiver
+    if (!phoneNumber.startsWith('55')) {
+        phoneNumber = '55' + phoneNumber;
+    }
+    
+    // Verificar se é dispositivo iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Para iOS, tentar abrir no app primeiro
+    if (isIOS) {
+        // Tentar abrir diretamente no app do WhatsApp
+        const appUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
+        
+        // Tentar abrir o app
+        window.location.href = appUrl;
+        
+        // Se não abrir em 500ms, abrir na web
+        setTimeout(() => {
+            // Verificar se ainda estamos na mesma página (app não abriu)
+            if (document.hasFocus()) {
+                const webUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                window.open(webUrl, '_blank');
+            }
+        }, 500);
+    } else {
+        // Para outros dispositivos
+        const webUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+        window.open(webUrl, '_blank');
+    }
+},
                 
                 email: (clienteId) => {
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
