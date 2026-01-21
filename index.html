@@ -3815,18 +3815,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-calendar"></i> ${dias} dias nesta etapa</div>
                                 ${cliente.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${cliente.faixaPreco}</div>` : ''}
                             </div>
-                            <div class="client-actions">
-                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
-                                    <i class="fab fa-whatsapp"></i> WhatsApp
-                                </button>
-                                <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${cliente.id}')">
-                                    <i class="fas fa-envelope"></i> Email
-                                </button>
-                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
-                                    <i class="fas fa-edit"></i> Editar
-                                </button>
-                            </div>
-                        </div>
+<div class="client-actions">
+    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${c.id}')">
+        <i class="fab fa-whatsapp"></i> WhatsApp
+    </button>
+    <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${c.id}')">
+        <i class="fas fa-envelope"></i> Email
+    </button>
+    <button class="btn-sm btn-light" onclick="event.stopPropagation(); UI.openNewVisitaFromCliente('${c.id}')" style="background: #f59e0b; color: white;">
+        <i class="fas fa-calendar-plus"></i> Agendar
+    </button>
+    <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${c.id}')">
+        <i class="fas fa-edit"></i> Editar
+    </button>
+</div>                        </div>
                     `;
                 }).join('');
             },
@@ -5555,44 +5557,50 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             openNewVisita: () => {
-                const clienteSelect = document.getElementById('v-cliente');
-                const imovelSelect = document.getElementById('v-imovel');
-                
-                if (clienteSelect) {
-                    clienteSelect.innerHTML = '<option value="">Selecione...</option>';
-                    UI.data.clientes.forEach(c => {
-                        clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
-                    });
-                }
-                
-                if (imovelSelect) {
-                    imovelSelect.innerHTML = '<option value="">Selecione...</option>';
-                    UI.data.imoveis.filter(i => i.status === 'disponivel').forEach(i => {
-                        imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 30)}...</option>`;
-                    });
-                }
-                
-                const form = document.getElementById('form-visita');
-                if (!form) return;
-                
-                form.reset();
-                document.getElementById('v-id').value = '';
-                document.getElementById('title-visita').innerText = 'Novo Agendamento';
-                
-                document.getElementById('v-data').value = Utils.getToday();
-                document.getElementById('v-horario').value = Utils.getTodayTime();
-                
-                document.querySelectorAll('.tipo-specific-group').forEach(group => {
-                    group.style.display = 'none';
-                    group.querySelectorAll('input, textarea, select').forEach(input => {
-                        input.value = '';
-                    });
-                });
-                
-                UI.toggleVisitaFields();
-                
-                UI.openModal('visita');
-            },
+    const clienteSelect = document.getElementById('v-cliente');
+    const imovelSelect = document.getElementById('v-imovel');
+    
+    if (clienteSelect) {
+        clienteSelect.innerHTML = '<option value="">Selecione...</option>';
+        UI.data.clientes.forEach(c => {
+            clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+        });
+    }
+    
+    if (imovelSelect) {
+        imovelSelect.innerHTML = '<option value="">Selecione...</option>';
+        UI.data.imoveis.filter(i => i.status === 'disponivel').forEach(i => {
+            imovelSelect.innerHTML += `<option value="${i.id}">${i.titulo.substring(0, 30)}...</option>`;
+        });
+    }
+    
+    const form = document.getElementById('form-visita');
+    if (!form) return;
+    
+    form.reset();
+    document.getElementById('v-id').value = '';
+    document.getElementById('title-visita').innerText = 'Novo Agendamento';
+    
+    // Pré-selecionar data e hora atuais
+    document.getElementById('v-data').value = Utils.getToday();
+    document.getElementById('v-horario').value = Utils.getTodayTime();
+    
+    // Limpar todos os campos específicos por tipo
+    document.querySelectorAll('.tipo-specific-group').forEach(group => {
+        group.style.display = 'none';
+        group.querySelectorAll('input, textarea, select').forEach(input => {
+            if (input.type !== 'button' && input.type !== 'submit') {
+                input.value = '';
+            }
+        });
+    });
+    
+    // Por padrão, mostrar tipo visita
+    document.getElementById('v-tipo').value = 'visita';
+    UI.toggleVisitaFields();
+    
+    UI.openModal('visita');
+},
 
             toggleVisitaFields: () => {
                 const tipoSelect = document.getElementById('v-tipo');
@@ -5627,6 +5635,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (clienteField) clienteField.required = tiposComCliente.includes(tipo);
                 if (imovelField) imovelField.required = tiposComImovel.includes(tipo);
             },
+            openNewVisitaFromCliente: (clienteId) => {
+    UI.openNewVisita();
+    setTimeout(() => {
+        const clienteSelect = document.getElementById('v-cliente');
+        const tipoSelect = document.getElementById('v-tipo');
+        
+        if (clienteSelect) clienteSelect.value = clienteId;
+        if (tipoSelect) {
+            tipoSelect.value = 'visita';
+            UI.toggleVisitaFields();
+        }
+    }, 100);
+},
 
             openNewVisitaFromImovel: (imovelId) => {
                 UI.openNewVisita();
