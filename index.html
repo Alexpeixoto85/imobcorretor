@@ -3221,7 +3221,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const clienteFirstName = cliente.nome.split(' ')[0];
                 let message = `${greeting}, ${clienteFirstName}! Tudo bem? 😊\n\n`;
-                message += `Me chamo ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} sou do time de venda da  ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
+                message += `Me chamo ${(await DB.get('settings', 'main')).nome || 'Alex Peixoto'} sou do time de vendas da  ${(await DB.get('settings', 'main')).imobiliaria || 'Resende'}.\n\n`;
                 
                 if (imovel) {
                     message += `Vi que seu interesse inicial foi no *${imovel.titulo}*.\n\n`;
