@@ -3270,15 +3270,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                     
                 }
-
-
                 
                 const settings = await DB.get('settings', 'main');
-
-                message += `📞 Contato: ${settings.telefone || '(82) 99662-2036'}\n`;
-                message += `🏢 Imobiliária: ${settings.imobiliaria || 'Resende'}\n`;
-                message += `👨‍💼 Corretor: ${settings.nome || 'Alex Peixoto'}\n`;
-                message += `📋 CRECI: ${settings.creci || '5794-AL'}`;
                 
                 return message;
             },
