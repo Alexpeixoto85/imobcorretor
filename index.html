@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -1459,14 +1460,10 @@
     </style>
 </head>
 <body>
-<div id="loading" class="loading">
-    <i class="fas fa-spinner"></i> Inicializando sistema...
-    <div style="margin-top: 20px;">
-        <button onclick="location.reload()" style="padding: 10px 20px; background: var(--primary); color: white; border: none; border-radius: 8px;">
-            Recarregar Página
-        </button>
+    <div id="loading" class="loading">
+        <i class="fas fa-spinner"></i> Inicializando sistema...
     </div>
-</div>
+
     <div id="app" style="display: none; width: 100%; height: 100%;">
         <header>
             <div class="brand">
@@ -1818,10 +1815,6 @@
                     <textarea id="c-observacoes" class="form-control" placeholder="Anotações sobre o cliente..."></textarea>
                 </div>
                 <button type="submit" class="btn-block">Salvar Cliente</button>
-                <button type="button" class="btn-block" style="background: var(--accent); color: white; margin-top: 8px;" 
-        onclick="UI.openAgendarContato(document.getElementById('c-id').value)">
-    <i class="fas fa-calendar-plus"></i> Agendar Contato com este Cliente
-</button>
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
             </form>
         </div>
@@ -2265,52 +2258,34 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             version: 7,
             db: null,
             
-init: function() {
-    return new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-            console.warn('Timeout ao abrir IndexedDB, usando fallback');
-            this.db = { 
-                transaction: () => ({ 
-                    objectStore: () => ({ 
-                        getAll: () => ({ onsuccess: cb => setTimeout(() => cb({target: {result: []}}), 100) }),
-                        get: () => ({ onsuccess: cb => setTimeout(() => cb({target: {result: null}}), 100) }),
-                        put: () => ({ onsuccess: cb => setTimeout(cb, 100) }),
-                        add: () => ({ onsuccess: cb => setTimeout(cb, 100) }),
-                        delete: () => ({ onsuccess: cb => setTimeout(cb, 100) }),
-                        clear: () => ({ onsuccess: cb => setTimeout(cb, 100) })
-                    })
-                })
-            };
-            resolve();
-        }, 3000);
-        
-        const request = indexedDB.open(this.name, this.version);
-        
-        request.onerror = (event) => {
-            clearTimeout(timeout);
-            console.error('Erro ao abrir IndexedDB:', event);
-            reject(event);
-        };
-        
-        request.onsuccess = (event) => {
-            clearTimeout(timeout);
-            this.db = event.target.result;
-            console.log('IndexedDB aberto com sucesso');
-            resolve();
-        };
-        
-        request.onupgradeneeded = (event) => {
-            clearTimeout(timeout);
-            const db = event.target.result;
-            const oldVersion = event.oldVersion;
+            init: function() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.name, this.version);
+                    
+                    request.onerror = (event) => {
+                        console.error('Erro ao abrir IndexedDB:', event);
+                        reject(event);
+                    };
+                    
+                    request.onsuccess = (event) => {
+                        this.db = event.target.result;
+                        console.log('IndexedDB aberto com sucesso');
+                        resolve();
+                    };
+                    
+                    request.onupgradeneeded = (event) => {
+                        const db = event.target.result;
+                        const oldVersion = event.oldVersion;
+                        
+                        console.log(`Atualizando banco de dados da versão ${oldVersion} para ${this.version}`);
+                        
+                        this.createObjectStores(db);
+                        
+                        this.migrateDatabase(db, oldVersion);
+                    };
+                });
+            },
             
-            console.log(`Atualizando banco de dados da versão ${oldVersion} para ${this.version}`);
-            
-            this.createObjectStores(db);
-            this.migrateDatabase(db, oldVersion);
-        };
-    });
-},            
             createObjectStores: function(db) {
                 if (!db.objectStoreNames.contains('clientes')) {
                     const clientesStore = db.createObjectStore('clientes', { keyPath: 'id' });
@@ -3454,57 +3429,51 @@ init: function() {
             draggingClient: null,
             currentReport: null,
             
-init: async () => {
-    try {
-        console.log('Inicializando sistema...');
-        
-        // Esconder loading após 5 segundos mesmo com erro
-        const loadingTimeout = setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('app').style.display = 'flex';
-        }, 5000);
-        
-        await DB.init();
-        
-        await DB.migrateFromLocalStorage();
-        
-        UI.data.clientes = await Storage.getClientes();
-        UI.data.imoveis = await Storage.getImoveis();
-        UI.data.visitas = await Storage.getVisitas();
-        UI.data.links = await Storage.getLinks();
-        UI.data.funilEtapas = await Storage.getFunilEtapas();
-        
-        console.log('Dados carregados:', {
-            clientes: UI.data.clientes.length,
-            imoveis: UI.data.imoveis.length,
-            visitas: UI.data.visitas.length,
-            links: UI.data.links.length,
-            etapas: UI.data.funilEtapas.length
-        });
-        
-        const today = new Date();
-        const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-        
-        document.getElementById('report-date-start').value = firstDay.toISOString().split('T')[0];
-        document.getElementById('report-date-end').value = today.toISOString().split('T')[0];
-        
-        clearTimeout(loadingTimeout);
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        
-        UI.renderDashboard();
-        UI.renderFunil();
-        
-        console.log('Sistema inicializado com sucesso');
-        
-    } catch (error) {
-        console.error('Erro ao inicializar:', error);
-        Utils.toast('Erro ao inicializar o sistema. Recarregue a página.', 'error');
-        
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-    }
-},
+            init: async () => {
+                try {
+                    console.log('Inicializando sistema...');
+                    
+                    await DB.init();
+                    
+                    await DB.migrateFromLocalStorage();
+                    
+                    UI.data.clientes = await Storage.getClientes();
+                    UI.data.imoveis = await Storage.getImoveis();
+                    UI.data.visitas = await Storage.getVisitas();
+                    UI.data.links = await Storage.getLinks();
+                    UI.data.funilEtapas = await Storage.getFunilEtapas();
+                    
+                    console.log('Dados carregados:', {
+                        clientes: UI.data.clientes.length,
+                        imoveis: UI.data.imoveis.length,
+                        visitas: UI.data.visitas.length,
+                        links: UI.data.links.length,
+                        etapas: UI.data.funilEtapas.length
+                    });
+                    
+                    const today = new Date();
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    
+                    document.getElementById('report-date-start').value = firstDay.toISOString().split('T')[0];
+                    document.getElementById('report-date-end').value = today.toISOString().split('T')[0];
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                    
+                    UI.renderDashboard();
+                    UI.renderFunil();
+                    
+                    console.log('Sistema inicializado com sucesso');
+                    
+                } catch (error) {
+                    console.error('Erro ao inicializar:', error);
+                    Utils.toast('Erro ao inicializar o sistema', 'error');
+                    
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                }
+            },
+
             switchTab: (el) => {
                 document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
                 document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -3607,56 +3576,53 @@ init: async () => {
             },
 
             renderAniversariantes: () => {
-    const hoje = new Date();
-    const diaHoje = hoje.getDate();
-    const mesHoje = hoje.getMonth() + 1;
-    
-    const aniversariantes = UI.data.clientes.filter(cliente => {
-        if (!cliente.dataNascimento) return false;
-        const nascimento = new Date(cliente.dataNascimento);
-        return nascimento.getDate() === diaHoje && (nascimento.getMonth() + 1) === mesHoje;
-    });
-    
-    const aniversariantesList = document.getElementById('aniversariantes-list');
-    const badge = document.getElementById('aniversariantes-badge');
-    
-    if (aniversariantes.length === 0) {
-        aniversariantesList.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-birthday-cake"></i>
-                <p>Nenhum aniversariante hoje</p>
-            </div>
-        `;
-        badge.style.display = 'none';
-    } else {
-        aniversariantesList.innerHTML = aniversariantes.map(cliente => {
-            const idade = Utils.calculateAge(cliente.dataNascimento);
-            const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil) || UI.data.funilEtapas[0];
-            
-            return `
-                <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
-                    <div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>
-                    <div class="client-header">
-                        <div class="client-name">${cliente.nome} ${idade ? `(${idade} anos)` : ''}</div>
-                        <span class="client-type" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
-                    </div>
-                    <div class="client-info">
-                        <div class="client-row"><i class="fas fa-phone"></i> ${cliente.telefone}</div>
-                        ${cliente.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${cliente.email}</div>` : ''}
-                        <div class="client-row"><i class="fas fa-birthday-cake"></i> Aniversariante de hoje!</div>
-                    </div>
-                    <div class="client-actions">
-                        <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
-                            <i class="fab fa-whatsapp"></i> Parabenizar
-                        </button>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        badge.style.display = 'inline-block';
-        badge.innerText = aniversariantes.length.toString();
-    }
-},
+                const hoje = new Date();
+                const diaHoje = hoje.getDate();
+                const mesHoje = hoje.getMonth() + 1;
+                
+                const aniversariantes = UI.data.clientes.filter(cliente => {
+                    if (!cliente.dataNascimento) return false;
+                    const nascimento = new Date(cliente.dataNascimento);
+                    return nascimento.getDate() === diaHoje && (nascimento.getMonth() + 1) === mesHoje;
+                });
+                
+                const aniversariantesList = document.getElementById('aniversariantes-list');
+                const badge = document.getElementById('aniversariantes-badge');
+                
+                if (aniversariantes.length === 0) {
+                    aniversariantesList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-birthday-cake"></i>
+                            <p>Nenhum aniversariante hoje</p>
+                        </div>
+                    `;
+                    badge.style.display = 'none';
+                } else {
+                    aniversariantesList.innerHTML = aniversariantes.map(cliente => {
+                        const idade = Utils.calculateAge(cliente.dataNascimento);
+                        return `
+                            <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
+                                <div class="client-header">
+                                    <div class="client-name">${cliente.nome} <span class="badge badge-pink">🎂 ${idade ? idade + ' anos' : 'Aniversário'}</span></div>
+                                    <span class="client-type type-${cliente.tipo}">${Utils.getTipoClienteText(cliente.tipo)}</span>
+                                </div>
+                                <div class="client-info">
+                                    <div class="client-row"><i class="fas fa-phone"></i> ${cliente.telefone}</div>
+                                    ${cliente.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${cliente.email}</div>` : ''}
+                                    ${cliente.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(cliente.dataNascimento)}</div>` : ''}
+                                </div>
+                                <div class="client-actions">
+                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
+                                        <i class="fab fa-whatsapp"></i> Parabéns!
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    badge.style.display = 'inline-block';
+                    badge.innerText = aniversariantes.length.toString();
+                }
+            },
 
             renderFunil: async () => {
                 const etapas = UI.data.funilEtapas.sort((a, b) => a.ordem - b.ordem);
@@ -5600,49 +5566,6 @@ init: async () => {
                         clienteSelect.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
                     });
                 }
-                openAgendarContato: (clienteId) => {
-    // Encontra o cliente
-    const cliente = UI.data.clientes.find(c => c.id === clienteId);
-    if (!cliente) return;
-    
-    // Abre o modal de novo agendamento
-    UI.openNewVisita();
-    
-    // Preenche automaticamente os campos
-    setTimeout(() => {
-        // Preenche o cliente
-        const clienteSelect = document.getElementById('v-cliente');
-        if (clienteSelect) {
-            clienteSelect.value = clienteId;
-        }
-        
-        // Preenche o imóvel de interesse, se houver
-        if (cliente.imovelInteresseId) {
-            const imovelSelect = document.getElementById('v-imovel');
-            if (imovelSelect) {
-                imovelSelect.value = cliente.imovelInteresseId;
-            }
-        }
-        
-        // Define o tipo como "Visita ao Imóvel" por padrão
-        const tipoSelect = document.getElementById('v-tipo');
-        if (tipoSelect) {
-            tipoSelect.value = 'visita';
-            UI.toggleVisitaFields();
-        }
-        
-        // Sugere um título baseado no cliente
-        if (cliente.nome) {
-            const nomeCliente = cliente.nome.split(' ')[0];
-            document.getElementById('v-observacoes').value = `Contato agendado com ${cliente.nome}`;
-        }
-        
-        // Foca no campo de data para facilitar
-        document.getElementById('v-data').focus();
-        
-        Utils.toast(`Agendando contato com ${cliente.nome}`);
-    }, 100);
-},
                 
                 if (imovelSelect) {
                     imovelSelect.innerHTML = '<option value="">Selecione...</option>';
