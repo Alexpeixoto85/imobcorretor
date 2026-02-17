@@ -1912,7 +1912,7 @@
                     <input type="email" id="c-email" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Imóvel de Interesse</label>
+                    <label class="form-label">Imóvel de Interesse (vínculo)</label>
                     <select id="c-imovel-interesse" class="form-control">
                         <option value="">Selecione um imóvel...</option>
                     </select>
@@ -4566,8 +4566,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                          (nascimento.getMonth() + 1) === (hoje.getMonth() + 1);
                     
                     const idade = Utils.calculateAge(c.dataNascimento);
-                    const imovelInteresse = c.imovelInteresseId ? 
-                        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
+                    let imovelDisplay = '';
+                    if (c.imovelInteresseId) {
+                        const imovelInteresse = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
+                        if (imovelInteresse) {
+                            imovelDisplay = `<div class="client-row"><i class="fas fa-home"></i> Vinculado: ${imovelInteresse.titulo.substring(0, 30)}...</div>`;
+                        } else {
+                            imovelDisplay = `<div class="client-row" style="color: var(--warning);"><i class="fas fa-exclamation-triangle"></i> Imóvel vinculado não encontrado (ID: ${c.imovelInteresseId})</div>`;
+                        }
+                    }
                     
                     const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
                     
@@ -4582,7 +4589,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
                                 ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
                                 ${c.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(c.dataNascimento)}</div>` : ''}
-                                ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
+                                ${imovelDisplay}
                                 ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
@@ -6726,6 +6733,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const dataNascimento = document.getElementById('c-data-nascimento').value || null;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
+
+                    console.log('Salvando cliente com imovelInteresseId:', imovelInteresseId); // Debug
 
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, email, 
