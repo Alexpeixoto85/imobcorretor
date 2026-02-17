@@ -3972,7 +3972,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 vendasDoMes.forEach(cliente => {
                     const imovel = imoveis.find(i => i.id === cliente.imovelInteresseId);
                     if (imovel) {
-                        totalVendas += (imovel.precoVenda || imovel.precoAluguel || 0);
+                        if (imovel.status === 'vendido') {
+                            totalVendas += imovel.precoVenda || 0;
+                        } else if (imovel.status === 'alugado') {
+                            totalVendas += imovel.precoAluguel || 0;
+                        } else {
+                            totalVendas += (imovel.precoVenda || imovel.precoAluguel || 0);
+                        }
                     }
                 });
                 
@@ -6504,7 +6510,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                 const encodedMessage = encodeURIComponent(mensagem);
-                const url = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                // Usar wa.me para abrir diretamente no app (ou web)
+                const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                 window.open(url, '_blank');
 
                 UI.envioMassaEnviados++;
@@ -6619,7 +6626,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                     const encodedMessage = encodeURIComponent(mensagem);
-                    const url = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                     window.open(url, '_blank');
 
                     // Pequeno delay para não sobrecarregar
@@ -6872,25 +6879,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             }
                         }, 500);
                     } else {
-                        // Para outros dispositivos
-                        // Primeiro tentar abrir o WhatsApp Web na mesma aba
-                        const webUrl = `https://web.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                        
-                        // Verificar se já temos uma janela do WhatsApp aberta
-                        let whatsappWindow = window.open('', '_blank');
-                        
-                        // Tenta carregar o WhatsApp Web
-                        try {
-                            whatsappWindow.location.href = webUrl;
-                            
-                            // Foca na janela existente
-                            if (whatsappWindow) {
-                                whatsappWindow.focus();
-                            }
-                        } catch (e) {
-                            // Se houver erro (por exemplo, bloqueio de popup), abre na mesma aba
-                            window.location.href = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-                        }
+                        // Para outros dispositivos, usar wa.me
+                        const webUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                        window.open(webUrl, '_blank');
                     }
                 },
                 
