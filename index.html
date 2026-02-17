@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
-        /* (todo o estilo original permanece) */
+        /* (todo o estilo original permanece, exceto a media query dark removida) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -1500,50 +1500,7 @@
             font-size: 16px !important;
         }
 
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --dark: #f8fafc;
-                --light: #0f172a;
-                --surface: #1e293b;
-                --border: #334155;
-            }
-            
-            body {
-                background-color: #0f172a;
-            }
-            
-            .property-card, .client-card, .schedule-card, 
-            .details-card, .funnel-container, .link-card,
-            .stat-card {
-                background: var(--surface);
-                border-color: var(--border);
-            }
-            
-            .search-input, .form-control {
-                background: #1e293b;
-                color: #f8fafc;
-                border-color: var(--border);
-            }
-            
-            .btn-light {
-                background: #334155;
-                color: #cbd5e1;
-            }
-            
-            .btn-details-secondary {
-                background: #334155;
-                color: #cbd5e1;
-            }
-            
-            .report-table th {
-                background: #334155;
-            }
-        }
-
-        .btn-whatsapp-client i,
-        .btn-whatsapp i {
-            font-size: 1.1rem;
-        }
+        /* A media query @media (prefers-color-scheme: dark) foi removida para manter o tema claro sempre */
     </style>
 </head>
 <body>
@@ -1912,7 +1869,7 @@
                     <input type="email" id="c-email" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Imóvel de Interesse (vínculo)</label>
+                    <label class="form-label">Imóvel de Interesse</label>
                     <select id="c-imovel-interesse" class="form-control">
                         <option value="">Selecione um imóvel...</option>
                     </select>
@@ -4566,15 +4523,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                          (nascimento.getMonth() + 1) === (hoje.getMonth() + 1);
                     
                     const idade = Utils.calculateAge(c.dataNascimento);
-                    let imovelDisplay = '';
-                    if (c.imovelInteresseId) {
-                        const imovelInteresse = UI.data.imoveis.find(i => i.id === c.imovelInteresseId);
-                        if (imovelInteresse) {
-                            imovelDisplay = `<div class="client-row"><i class="fas fa-home"></i> Vinculado: ${imovelInteresse.titulo.substring(0, 30)}...</div>`;
-                        } else {
-                            imovelDisplay = `<div class="client-row" style="color: var(--warning);"><i class="fas fa-exclamation-triangle"></i> Imóvel vinculado não encontrado (ID: ${c.imovelInteresseId})</div>`;
-                        }
-                    }
+                    const imovelInteresse = c.imovelInteresseId ? 
+                        UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
                     
                     const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
                     
@@ -4589,7 +4539,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
                                 ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
                                 ${c.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(c.dataNascimento)}</div>` : ''}
-                                ${imovelDisplay}
+                                ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
                                 ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
@@ -6516,8 +6466,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                 const encodedMessage = encodeURIComponent(mensagem);
-                // Usar API do WhatsApp para abrir no app (se instalado) ou na web
-                const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                // Usar link universal wa.me que abre o app se instalado, caso contrário abre a web
+                const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                 window.open(url, '_blank');
 
                 UI.envioMassaEnviados++;
@@ -6632,7 +6582,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                     const encodedMessage = encodeURIComponent(mensagem);
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                     window.open(url, '_blank');
 
                     // Pequeno delay para não sobrecarregar
@@ -6733,8 +6683,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const dataNascimento = document.getElementById('c-data-nascimento').value || null;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
-
-                    console.log('Salvando cliente com imovelInteresseId:', imovelInteresseId); // Debug
 
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, email, 
