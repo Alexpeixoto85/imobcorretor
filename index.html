@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
-        /* (todo o estilo original permanece, com alguns acréscimos) */
+        /* (todo o estilo original permanece) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -240,8 +240,8 @@
         .badge-featured { background: var(--warning); color: white; }
         .badge-success { background: var(--success); color: white; }
         .badge-warning { background: var(--warning); color: white; }
-        .badge-pre { background: #8b5cf6; color: white; } /* roxo para pré-lançamento */
-        .badge-lancamento { background: #f97316; color: white; } /* laranja para lançamento */
+        .badge-pre { background: #8b5cf6; color: white; }
+        .badge-lancamento { background: #f97316; color: white; }
 
         .property-content { padding: 16px; }
         .property-title { 
@@ -1402,7 +1402,6 @@
             background: #f8fafc;
         }
 
-        /* Estilos para seleção múltipla de clientes */
         .client-select-item {
             display: flex;
             align-items: center;
@@ -1629,7 +1628,6 @@
                     </div>
                 </div>
 
-                <!-- Alerta de lançamento -->
                 <div id="alert-lancamento-container" style="display: none;"></div>
 
                 <div class="section-title">
@@ -3346,6 +3344,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
+            // NOVA FUNÇÃO: Gera PDF da ficha com até 4 fotos (para o botão Compartilhar)
+            generateSharePDF: function(imovelId) {
+                const imovel = UI.data.imoveis.find(x => x.id === imovelId);
+                if (!imovel) return;
+                // Criar uma cópia para não alterar o original
+                const imovelCopy = JSON.parse(JSON.stringify(imovel));
+                if (imovelCopy.imagens && imovelCopy.imagens.length > 4) {
+                    imovelCopy.imagens = imovelCopy.imagens.slice(0, 4);
+                }
+                Utils.generatePDF(imovelCopy);
+            },
+
             generatePlantaoPDF: async (dateStr) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3878,7 +3888,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 imoveis: [], 
                 visitas: [],
                 links: [],
-                funilEtapas: []
+                funilEtapas: [],
+                settings: null // Adicionado para armazenar configurações
             },
             currentCarouselIndex: 0,
             currentCarouselImages: [],
@@ -3908,6 +3919,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.data.visitas = await Storage.getVisitas();
                     UI.data.links = await Storage.getLinks();
                     UI.data.funilEtapas = await Storage.getFunilEtapas();
+                    UI.data.settings = await Storage.getSettings(); // Carrega configurações
                     
                     console.log('Dados carregados:', {
                         clientes: UI.data.clientes.length,
@@ -4756,8 +4768,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); UI.openNewVisitaFromImovel('${i.id}')">
                                     <i class="fas fa-calendar-plus"></i> Visita
                                 </button>
-                                <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); App.whatsapp.shareImovel('${i.id}')">
-                                    <i class="fab fa-whatsapp"></i> Compartilhar
+                                <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); Utils.generateSharePDF('${i.id}')">
+                                    <i class="fas fa-file-pdf"></i> Compartilhar
                                 </button>
                             </div>
                         </div>
@@ -5507,11 +5519,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generateSalesReport: (start, end) => {
-                // (mantido igual, mas adicionado verificação de lançamento)
+                // Clientes com etapa "venda"
                 const clientesVendaConcluida = UI.data.clientes.filter(cliente => 
                     cliente.etapaFunil === 'venda'
                 );
                 
+                // Imóveis vendidos/alugados no período
                 const imoveisVendidos = UI.data.imoveis.filter(imovel => {
                     if (!imovel.dataVenda) return false;
                     const dataVenda = new Date(imovel.dataVenda);
@@ -5576,25 +5589,24 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const totalClientesVenda = clientesVendaConcluida.length;
                 const totalVendasConfirmadas = vendasDetalhadas.length;
                 
+                // Cálculo de comissões baseado na comissão de cada imóvel (fallback para settings)
                 let totalComissoes = 0;
                 const comissoesDetalhadas = [];
                 
-                // Usar taxa de comissão das configurações
-                Storage.getSettings().then(settings => {
-                    const taxaComissao = settings.comissao || 5;
+                vendasDetalhadas.forEach(venda => {
+                    const imovel = UI.data.imoveis.find(i => i.id === venda.imovelId);
+                    // Usa a comissão do imóvel, se não tiver, usa a comissão global das configurações
+                    const taxaComissao = imovel?.comissao ?? UI.data.settings?.comissao ?? 0;
+                    const comissao = (venda.valor * taxaComissao) / 100;
+                    totalComissoes += comissao;
                     
-                    vendasDetalhadas.forEach(venda => {
-                        const comissao = (venda.valor * taxaComissao) / 100;
-                        totalComissoes += comissao;
-                        
-                        comissoesDetalhadas.push({
-                            cliente: venda.clienteNome,
-                            imovel: venda.imovelTitulo,
-                            valorVenda: venda.valor,
-                            comissao: comissao,
-                            taxa: taxaComissao + '%',
-                            data: venda.dataVenda
-                        });
+                    comissoesDetalhadas.push({
+                        cliente: venda.clienteNome,
+                        imovel: venda.imovelTitulo,
+                        valorVenda: venda.valor,
+                        comissao: comissao,
+                        taxa: taxaComissao + '%',
+                        data: venda.dataVenda
                     });
                 });
                 
@@ -5663,7 +5675,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     datasOrdenadas.forEach(data => {
                         const vendasDoDia = vendasPorData[data];
                         const valorTotalDia = vendasDoDia.reduce((acc, v) => acc + (v.valor || 0), 0);
-                        const comissaoTotalDia = vendasDoDia.reduce((acc, v) => acc + ((v.valor * 5) / 100), 0);
+                        const comissaoTotalDia = vendasDoDia.reduce((acc, v) => {
+                            const imovel = UI.data.imoveis.find(i => i.id === v.imovelId);
+                            const taxa = imovel?.comissao ?? UI.data.settings?.comissao ?? 0;
+                            return acc + (v.valor * taxa / 100);
+                        }, 0);
                         
                         html += `
                             <tr>
