@@ -2503,7 +2503,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- NOVO MODAL: Notificar Lançamento -->
+        <!-- NOVO MODAL: Notificar Lançamento (atualizado) -->
         <div class="modal-overlay" id="overlay-notificar-lancamento"></div>
         <div class="modal-sheet" id="sheet-notificar-lancamento">
             <div class="sheet-handle"></div>
@@ -2529,13 +2529,36 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </button>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
         </div>
+
+        <!-- NOVO MODAL: Lista de Espera de Lançamento -->
+        <div class="modal-overlay" id="overlay-lista-espera"></div>
+        <div class="modal-sheet" id="sheet-lista-espera">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-lista-espera">Lista de Espera - Lançamento</h3>
+            <div id="info-imovel-espera"></div>
+            <div class="form-group">
+                <label class="form-label">Clientes interessados (marque para adicionar à lista)</label>
+                <input type="text" class="form-control" placeholder="Filtrar clientes..." id="filtro-clientes-espera" oninput="UI.filtrarClientesEspera()">
+                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-espera">
+                    <!-- será preenchido -->
+                </div>
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesEspera(true)">Selecionar todos</button>
+                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesEspera(false)">Limpar todos</button>
+                </div>
+            </div>
+            <button class="btn-block" style="background: var(--primary);" onclick="UI.salvarListaEspera()">
+                <i class="fas fa-save"></i> Salvar Lista de Espera
+            </button>
+            <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
+        </div>
     </div>
 
     <script>
-        // Objeto principal do banco de dados IndexedDB (versão 8 adicionada)
+        // Objeto principal do banco de dados IndexedDB (versão 9 adicionada)
         const DB = {
             name: 'ImobiProDB',
-            version: 8, // Atualizado para incluir campos de lançamento
+            version: 9, // Adicionado campo waitingList aos imóveis
             db: null,
             
             init: function() {
@@ -2581,7 +2604,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imoveisStore.createIndex('tipo', 'tipo', { unique: false });
                     imoveisStore.createIndex('status', 'status', { unique: false });
                     imoveisStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
-                    // Novos índices para lançamento
                     imoveisStore.createIndex('estagioLancamento', 'estagioLancamento', { unique: false });
                 }
                 
@@ -2610,110 +2632,29 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                // (código de migração mantido, com acréscimos)
-                if (oldVersion < 1) {
-                    console.log('Migrando para versão 1');
-                }
-                
-                if (oldVersion < 4) {
-                    console.log('Migrando para versão 4: Adicionando campo dataEntradaFunil');
+                if (oldVersion < 9) {
+                    console.log('Migrando para versão 9: Adicionando campo waitingList aos imóveis');
                     try {
-                        const clientes = await this.getAll('clientes');
-                        for (const cliente of clientes) {
-                            if (!cliente.dataEntradaFunil) {
-                                cliente.dataEntradaFunil = cliente.dataCriacao ? 
-                                    cliente.dataCriacao.split('T')[0] : 
-                                    new Date().toISOString().split('T')[0];
-                                await this.put('clientes', cliente);
+                        const transaction = db.transaction(['imoveis'], 'readwrite');
+                        const store = transaction.objectStore('imoveis');
+                        const request = store.getAll();
+                        
+                        request.onsuccess = async (event) => {
+                            const imoveis = event.target.result;
+                            for (const imovel of imoveis) {
+                                if (!imovel.waitingList) {
+                                    imovel.waitingList = [];
+                                    await new Promise((resolve, reject) => {
+                                        const putReq = store.put(imovel);
+                                        putReq.onsuccess = resolve;
+                                        putReq.onerror = reject;
+                                    });
+                                }
                             }
-                        }
+                            console.log('Migração para versão 9 concluída');
+                        };
                     } catch (error) {
-                        console.error('Erro na migração:', error);
-                    }
-                }
-                
-                if (oldVersion < 5) {
-                    console.log('Migrando para versão 5: Adicionando etapas padrão do funil');
-                    try {
-                        const etapas = await this.getAll('funilEtapas');
-                        if (etapas.length === 0) {
-                            const etapasPadrao = [
-                                { id: 'lead', nome: 'Lead', cor: '#93c5fd', ordem: 1 },
-                                { id: 'contato', nome: 'Contato Realizado', cor: '#60a5fa', ordem: 2 },
-                                { id: 'cpf', nome: 'CPF em Análise', cor: '#3b82f6', ordem: 3 },
-                                { id: 'sem-restricao', nome: 'Sem Restrição', cor: '#1d4ed8', ordem: 4 },
-                                { id: 'documentacao', nome: 'Documentação', cor: '#7c3aed', ordem: 5 },
-                                { id: 'aprovado', nome: 'Aprovado', cor: '#10b981', ordem: 6 },
-                                { id: 'contrato', nome: 'Contrato Assinado', cor: '#059669', ordem: 7 },
-                                { id: 'venda', nome: 'Venda Concluída', cor: '#047857', ordem: 8 }
-                            ];
-                            
-                            for (const etapa of etapasPadrao) {
-                                await this.add('funilEtapas', etapa);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Erro ao adicionar etapas padrão:', error);
-                    }
-                }
-                
-                if (oldVersion < 6) {
-                    console.log('Migrando para versão 6: Configurações padrão');
-                    try {
-                        const settings = await this.get('settings', 'main');
-                        if (!settings) {
-                            const defaultSettings = {
-                                id: 'main',
-                                nome: 'Alex Peixoto',
-                                creci: '5794-AL',
-                                telefone: '(82) 99662-2036',
-                                email: '',
-                                imobiliaria: 'Resende',
-                                comissao: 5,
-                                msgPadrao: '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡'
-                            };
-                            await this.put('settings', defaultSettings);
-                        }
-                    } catch (error) {
-                        console.error('Erro ao adicionar configurações padrão:', error);
-                    }
-                }
-                
-                if (oldVersion < 7) {
-                    console.log('Migrando para versão 7: Adicionando campo vídeos aos imóveis');
-                    try {
-                        const imoveis = await this.getAll('imoveis');
-                        for (const imovel of imoveis) {
-                            if (!imovel.videos) {
-                                imovel.videos = [];
-                                await this.put('imoveis', imovel);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Erro na migração para versão 7:', error);
-                    }
-                }
-
-                if (oldVersion < 8) {
-                    console.log('Migrando para versão 8: Adicionando campos de lançamento aos imóveis');
-                    try {
-                        const imoveis = await this.getAll('imoveis');
-                        for (const imovel of imoveis) {
-                            let modificado = false;
-                            if (!imovel.estagioLancamento) {
-                                imovel.estagioLancamento = 'nenhum';
-                                modificado = true;
-                            }
-                            if (!imovel.dataLancamento) {
-                                imovel.dataLancamento = '';
-                                modificado = true;
-                            }
-                            if (modificado) {
-                                await this.put('imoveis', imovel);
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Erro na migração para versão 8:', error);
+                        console.error('Erro na migração para versão 9:', error);
                     }
                 }
             },
@@ -2889,6 +2830,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                         if (!imovel.dataLancamento) {
                                             imovel.dataLancamento = '';
                                         }
+                                        if (!imovel.waitingList) {
+                                            imovel.waitingList = [];
+                                        }
                                         await this.put('imoveis', imovel);
                                     }
                                     migrated = true;
@@ -2947,7 +2891,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Utilitários (mantidos, com acréscimos)
+        // Utilitários (mantidos, com acréscimo de generateSalesReport corrigido)
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
             
@@ -3889,7 +3833,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 visitas: [],
                 links: [],
                 funilEtapas: [],
-                settings: null // Adicionado para armazenar configurações
+                settings: null
             },
             currentCarouselIndex: 0,
             currentCarouselImages: [],
@@ -3919,7 +3863,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.data.visitas = await Storage.getVisitas();
                     UI.data.links = await Storage.getLinks();
                     UI.data.funilEtapas = await Storage.getFunilEtapas();
-                    UI.data.settings = await Storage.getSettings(); // Carrega configurações
+                    UI.data.settings = await Storage.getSettings();
                     
                     console.log('Dados carregados:', {
                         clientes: UI.data.clientes.length,
@@ -4011,17 +3955,27 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const visitasHoje = visitas.filter(v => v.data === hoje && v.status !== 'cancelado');
                 document.getElementById('dash-visitas').innerText = visitasHoje.length;
                 
-                // Vendas do mês baseadas na etapa "venda" do funil
+                // Vendas do mês baseadas nos clientes que entraram na etapa "Venda Concluída" no mês atual
+                const hojeDate = new Date();
+                const inicioMes = new Date(hojeDate.getFullYear(), hojeDate.getMonth(), 1);
+                const fimMes = new Date(hojeDate.getFullYear(), hojeDate.getMonth() + 1, 0);
+                
                 let totalVendas = 0;
-                const clientesVendaConcluida = clientes.filter(cliente => cliente.etapaFunil === 'venda');
-                clientesVendaConcluida.forEach(cliente => {
-                    if (cliente.imovelInteresseId) {
-                        const imovel = imoveis.find(i => i.id === cliente.imovelInteresseId);
-                        if (imovel && imovel.precoVenda) {
-                            totalVendas += imovel.precoVenda;
-                        }
+                const vendasDoMes = clientes.filter(cliente => {
+                    if (cliente.etapaFunil === 'venda' && cliente.dataEntradaFunil) {
+                        const dataEntrada = new Date(cliente.dataEntradaFunil);
+                        return dataEntrada >= inicioMes && dataEntrada <= fimMes && cliente.imovelInteresseId;
+                    }
+                    return false;
+                });
+                
+                vendasDoMes.forEach(cliente => {
+                    const imovel = imoveis.find(i => i.id === cliente.imovelInteresseId);
+                    if (imovel) {
+                        totalVendas += (imovel.precoVenda || imovel.precoAluguel || 0);
                     }
                 });
+                
                 document.getElementById('dash-vendas').innerText = Utils.formatCurrency(totalVendas);
                 
                 // Negociações: clientes em etapas intermediárias (excluindo lead e venda)
@@ -4247,9 +4201,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (clienteId) {
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (cliente && cliente.etapaFunil !== etapaId) {
+                        const etapaAnterior = cliente.etapaFunil;
                         cliente.etapaFunil = etapaId;
                         cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
                         await DB.put('clientes', cliente);
+                        
+                        // Se a nova etapa for "Venda Concluída", atualiza o imóvel vinculado
+                        if (etapaId === 'venda') {
+                            await App.cliente.handleVendaStage(cliente.id);
+                        }
+                        
                         UI.data.clientes = await Storage.getClientes();
                         UI.renderFunil();
                         UI.renderClientes();
@@ -5000,6 +4961,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-secondary" onclick="UI.openNewVisitaFromImovel('${i.id}')">
                                 <i class="fas fa-calendar-plus"></i> Agendar Visita
                             </button>
+                            <button class="btn-details btn-details-secondary" onclick="UI.openListaEspera('${i.id}')">
+                                <i class="fas fa-clock"></i> Lista de Espera
+                            </button>
                             <button class="btn-details btn-pdf" onclick="Utils.generatePDF(${JSON.stringify(safeImovel).replace(/"/g, '\"')})">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
@@ -5518,135 +5482,93 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
             },
             
+            // ========== RELATÓRIO DE VENDAS REFEITO ==========
             generateSalesReport: (start, end) => {
-                // Clientes com etapa "venda"
-                const clientesVendaConcluida = UI.data.clientes.filter(cliente => 
-                    cliente.etapaFunil === 'venda'
-                );
-                
-                // Imóveis vendidos/alugados no período
-                const imoveisVendidos = UI.data.imoveis.filter(imovel => {
-                    if (!imovel.dataVenda) return false;
-                    const dataVenda = new Date(imovel.dataVenda);
-                    return dataVenda >= start && dataVenda <= end && (imovel.status === 'vendido' || imovel.status === 'alugado');
+                // Filtrar clientes que entraram na etapa "Venda Concluída" no período e possuem imóvel vinculado
+                const vendas = UI.data.clientes.filter(cliente => {
+                    if (cliente.etapaFunil !== 'venda' || !cliente.dataEntradaFunil || !cliente.imovelInteresseId) return false;
+                    const dataVenda = new Date(cliente.dataEntradaFunil);
+                    return dataVenda >= start && dataVenda <= end;
                 });
                 
+                // Construir detalhes das vendas
                 const vendasDetalhadas = [];
-                const clientesComVenda = new Set();
+                const settings = UI.data.settings;
                 
-                clientesVendaConcluida.forEach(cliente => {
-                    if (cliente.imovelInteresseId) {
-                        const imovelVendido = imoveisVendidos.find(i => i.id === cliente.imovelInteresseId);
-                        if (imovelVendido) {
-                            vendasDetalhadas.push({
-                                clienteId: cliente.id,
-                                clienteNome: cliente.nome,
-                                clienteTelefone: cliente.telefone,
-                                imovelId: imovelVendido.id,
-                                imovelTitulo: imovelVendido.titulo,
-                                imovelTipo: imovelVendido.tipo,
-                                valor: imovelVendido.precoVenda || imovelVendido.precoAluguel || 0,
-                                dataVenda: imovelVendido.dataVenda,
-                                status: imovelVendido.status,
-                                transacao: imovelVendido.transacao
-                            });
-                            clientesComVenda.add(cliente.id);
-                        }
+                vendas.forEach(cliente => {
+                    const imovel = UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId);
+                    if (imovel) {
+                        const taxaComissao = imovel.comissao ?? settings?.comissao ?? 0;
+                        const valorVenda = imovel.precoVenda || imovel.precoAluguel || 0;
+                        const comissao = (valorVenda * taxaComissao) / 100;
+                        
+                        vendasDetalhadas.push({
+                            clienteId: cliente.id,
+                            clienteNome: cliente.nome,
+                            clienteTelefone: cliente.telefone,
+                            imovelId: imovel.id,
+                            imovelTitulo: imovel.titulo,
+                            valor: valorVenda,
+                            dataVenda: cliente.dataEntradaFunil,
+                            transacao: imovel.transacao,
+                            taxaComissao: taxaComissao,
+                            comissao: comissao
+                        });
                     }
-                    
-                    imoveisVendidos.forEach(imovel => {
-                        if (!clientesComVenda.has(cliente.id)) {
-                            vendasDetalhadas.push({
-                                clienteId: cliente.id,
-                                clienteNome: cliente.nome,
-                                clienteTelefone: cliente.telefone,
-                                imovelId: imovel.id,
-                                imovelTitulo: imovel.titulo,
-                                imovelTipo: imovel.tipo,
-                                valor: imovel.precoVenda || imovel.precoAluguel || 0,
-                                dataVenda: imovel.dataVenda,
-                                status: imovel.status,
-                                transacao: imovel.transacao
-                            });
-                            clientesComVenda.add(cliente.id);
-                        }
-                    });
                 });
                 
+                // Agrupar por data
                 const vendasPorData = {};
-                vendasDetalhadas.forEach(venda => {
-                    if (!venda.dataVenda) return;
-                    const data = venda.dataVenda.split('T')[0];
-                    if (!vendasPorData[data]) {
-                        vendasPorData[data] = [];
-                    }
-                    vendasPorData[data].push(venda);
+                vendasDetalhadas.forEach(v => {
+                    if (!v.dataVenda) return;
+                    const data = v.dataVenda;
+                    if (!vendasPorData[data]) vendasPorData[data] = [];
+                    vendasPorData[data].push(v);
                 });
                 
                 const datasOrdenadas = Object.keys(vendasPorData).sort();
                 
-                const totalVendas = vendasDetalhadas.reduce((acc, v) => acc + (v.valor || 0), 0);
-                const totalClientesVenda = clientesVendaConcluida.length;
+                const totalVendasValor = vendasDetalhadas.reduce((acc, v) => acc + v.valor, 0);
+                const totalComissoes = vendasDetalhadas.reduce((acc, v) => acc + v.comissao, 0);
                 const totalVendasConfirmadas = vendasDetalhadas.length;
                 
-                // Cálculo de comissões baseado na comissão de cada imóvel (fallback para settings)
-                let totalComissoes = 0;
-                const comissoesDetalhadas = [];
-                
-                vendasDetalhadas.forEach(venda => {
-                    const imovel = UI.data.imoveis.find(i => i.id === venda.imovelId);
-                    // Usa a comissão do imóvel, se não tiver, usa a comissão global das configurações
-                    const taxaComissao = imovel?.comissao ?? UI.data.settings?.comissao ?? 0;
-                    const comissao = (venda.valor * taxaComissao) / 100;
-                    totalComissoes += comissao;
-                    
-                    comissoesDetalhadas.push({
-                        cliente: venda.clienteNome,
-                        imovel: venda.imovelTitulo,
-                        valorVenda: venda.valor,
-                        comissao: comissao,
-                        taxa: taxaComissao + '%',
-                        data: venda.dataVenda
-                    });
-                });
-                
+                // Construir HTML do relatório
                 let html = `
                     <div class="report-summary">
                         <h3>Relatório de Vendas</h3>
                         <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
-                        <p><strong>Clientes em "Venda Concluída":</strong> ${totalClientesVenda}</p>
                         <p><strong>Vendas Confirmadas:</strong> ${totalVendasConfirmadas}</p>
-                        <p><strong>Valor Total em Vendas:</strong> ${Utils.formatCurrency(totalVendas)}</p>
+                        <p><strong>Valor Total em Vendas:</strong> ${Utils.formatCurrency(totalVendasValor)}</p>
                         <p><strong>Total de Comissões:</strong> ${Utils.formatCurrency(totalComissoes)}</p>
                     </div>
                 `;
                 
-                if (comissoesDetalhadas.length > 0) {
+                if (vendasDetalhadas.length > 0) {
                     html += `
-                        <div class="section-title">Detalhamento de Comissões</div>
+                        <div class="section-title">Detalhamento das Vendas</div>
                         <table class="report-table">
                             <thead>
                                 <tr>
+                                    <th>Data</th>
                                     <th>Cliente</th>
                                     <th>Imóvel</th>
-                                    <th>Valor da Venda</th>
-                                    <th>Taxa Comissão</th>
-                                    <th>Valor Comissão</th>
-                                    <th>Data</th>
+                                    <th>Valor</th>
+                                    <th>Taxa</th>
+                                    <th>Comissão</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
                     
-                    comissoesDetalhadas.forEach(comissao => {
+                    vendasDetalhadas.forEach(v => {
                         html += `
                             <tr>
-                                <td>${comissao.cliente}</td>
-                                <td>${comissao.imovel.substring(0, 30)}...</td>
-                                <td>${Utils.formatCurrency(comissao.valorVenda)}</td>
-                                <td>${comissao.taxa}</td>
-                                <td>${Utils.formatCurrency(comissao.comissao)}</td>
-                                <td>${Utils.formatDate(comissao.data)}</td>
+                                <td>${Utils.formatDate(v.dataVenda)}</td>
+                                <td>${v.clienteNome}</td>
+                                <td>${v.imovelTitulo.substring(0, 30)}...</td>
+                                <td>${Utils.formatCurrency(v.valor)}</td>
+                                <td>${v.taxaComissao}%</td>
+                                <td>${Utils.formatCurrency(v.comissao)}</td>
                             </tr>
                         `;
                     });
@@ -5674,19 +5596,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     datasOrdenadas.forEach(data => {
                         const vendasDoDia = vendasPorData[data];
-                        const valorTotalDia = vendasDoDia.reduce((acc, v) => acc + (v.valor || 0), 0);
-                        const comissaoTotalDia = vendasDoDia.reduce((acc, v) => {
-                            const imovel = UI.data.imoveis.find(i => i.id === v.imovelId);
-                            const taxa = imovel?.comissao ?? UI.data.settings?.comissao ?? 0;
-                            return acc + (v.valor * taxa / 100);
-                        }, 0);
-                        
+                        const valorDia = vendasDoDia.reduce((acc, v) => acc + v.valor, 0);
+                        const comissaoDia = vendasDoDia.reduce((acc, v) => acc + v.comissao, 0);
                         html += `
                             <tr>
                                 <td>${Utils.formatDate(data)}</td>
                                 <td>${vendasDoDia.length}</td>
-                                <td>${Utils.formatCurrency(valorTotalDia)}</td>
-                                <td>${Utils.formatCurrency(comissaoTotalDia)}</td>
+                                <td>${Utils.formatCurrency(valorDia)}</td>
+                                <td>${Utils.formatCurrency(comissaoDia)}</td>
                             </tr>
                         `;
                     });
@@ -5701,63 +5618,54 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <div class="section-title">Resumo Estatístico</div>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-icon bg-green"><i class="fas fa-users"></i></div>
-                            <div class="stat-value">${totalClientesVenda}</div>
-                            <div class="stat-label">Clientes Venda</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-blue"><i class="fas fa-handshake"></i></div>
+                            <div class="stat-icon bg-green"><i class="fas fa-handshake"></i></div>
                             <div class="stat-value">${totalVendasConfirmadas}</div>
-                            <div class="stat-label">Vendas Confirmadas</div>
+                            <div class="stat-label">Vendas</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon bg-orange"><i class="fas fa-money-bill-wave"></i></div>
-                            <div class="stat-value">${Utils.formatCurrency(totalVendas)}</div>
+                            <div class="stat-icon bg-blue"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="stat-value">${Utils.formatCurrency(totalVendasValor)}</div>
                             <div class="stat-label">Valor Total</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon bg-purple"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-icon bg-orange"><i class="fas fa-percentage"></i></div>
                             <div class="stat-value">${Utils.formatCurrency(totalComissoes)}</div>
                             <div class="stat-label">Comissões</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-purple"><i class="fas fa-chart-line"></i></div>
+                            <div class="stat-value">${totalVendasConfirmadas > 0 ? Utils.formatCurrency(totalVendasValor / totalVendasConfirmadas) : 'R$ 0,00'}</div>
+                            <div class="stat-label">Ticket Médio</div>
                         </div>
                     </div>
                 `;
                 
-                const clientesSemVendaConfirmada = clientesVendaConcluida.filter(cliente => 
-                    !clientesComVenda.has(cliente.id)
+                // Verificar clientes com etapa 'venda' mas sem imóvel vinculado (opcional)
+                const clientesVendaSemImovel = UI.data.clientes.filter(c => 
+                    c.etapaFunil === 'venda' && 
+                    (!c.imovelInteresseId || !vendas.some(v => v.clienteId === c.id))
                 );
                 
-                if (clientesSemVendaConfirmada.length > 0) {
+                if (clientesVendaSemImovel.length > 0) {
                     html += `
                         <div class="section-title" style="color: var(--warning);">
-                            <i class="fas fa-exclamation-triangle"></i> Clientes em "Venda Concluída" sem imóvel associado
+                            <i class="fas fa-exclamation-triangle"></i> Clientes em "Venda Concluída" sem imóvel vinculado
                         </div>
                         <table class="report-table">
                             <thead>
                                 <tr>
                                     <th>Cliente</th>
                                     <th>Telefone</th>
-                                    <th>Imóvel de Interesse</th>
-                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                     `;
                     
-                    clientesSemVendaConfirmada.forEach(cliente => {
-                        const imovelInteresse = cliente.imovelInteresseId ? 
-                            UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                        
+                    clientesVendaSemImovel.forEach(cliente => {
                         html += `
                             <tr>
                                 <td>${cliente.nome}</td>
                                 <td>${cliente.telefone}</td>
-                                <td>${imovelInteresse ? imovelInteresse.titulo.substring(0, 30) + '...' : 'Não informado'}</td>
-                                <td>
-                                    <button class="btn-sm btn-light" onclick="App.cliente.edit('${cliente.id}')">
-                                        <i class="fas fa-edit"></i> Verificar
-                                    </button>
-                                </td>
                             </tr>
                         `;
                     });
@@ -5766,8 +5674,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </tbody>
                         </table>
                         <p class="warning-note">
-                            <i class="fas fa-info-circle"></i> Estes clientes estão marcados como "Venda Concluída" mas não têm um imóvel vendido associado. 
-                            Verifique se a venda foi realmente concluída ou se falta associar um imóvel.
+                            Verifique se estes clientes realmente concluíram a compra ou se falta associar o imóvel.
                         </p>
                     `;
                 }
@@ -5777,25 +5684,158 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     data: {
                         periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
                         total: totalVendasConfirmadas,
-                        dados: comissoesDetalhadas.map(c => ({
-                            cliente: c.cliente,
-                            imovel: c.imovel,
-                            valorVenda: Utils.formatCurrency(c.valorVenda),
-                            taxaComissao: c.taxa,
-                            comissao: Utils.formatCurrency(c.comissao),
-                            data: Utils.formatDate(c.data)
+                        dados: vendasDetalhadas.map(v => ({
+                            data: Utils.formatDate(v.dataVenda),
+                            cliente: v.clienteNome,
+                            imovel: v.imovelTitulo,
+                            valor: Utils.formatCurrency(v.valor),
+                            comissao: Utils.formatCurrency(v.comissao)
                         })),
-                        headers: ['Cliente', 'Imóvel', 'Valor Venda', 'Taxa', 'Comissão', 'Data'],
+                        headers: ['Data', 'Cliente', 'Imóvel', 'Valor', 'Comissão'],
                         resumo: {
-                            'Clientes em Venda Concluída': totalClientesVenda,
                             'Vendas Confirmadas': totalVendasConfirmadas,
-                            'Valor Total em Vendas': Utils.formatCurrency(totalVendas),
-                            'Total de Comissões': Utils.formatCurrency(totalComissoes),
-                            'Média por Venda': totalVendasConfirmadas > 0 ? Utils.formatCurrency(totalVendas / totalVendasConfirmadas) : 'R$ 0,00',
-                            'Média de Comissão': totalVendasConfirmadas > 0 ? Utils.formatCurrency(totalComissoes / totalVendasConfirmadas) : 'R$ 0,00'
+                            'Valor Total': Utils.formatCurrency(totalVendasValor),
+                            'Comissões': Utils.formatCurrency(totalComissoes),
+                            'Ticket Médio': totalVendasConfirmadas > 0 ? Utils.formatCurrency(totalVendasValor / totalVendasConfirmadas) : 'R$ 0,00'
                         }
                     },
                     type: 'vendas'
+                };
+            },
+            
+            generateSalesFunnelReport: (start, end) => {
+                // Relatório de vendas pelo funil (clientes com etapa venda)
+                const clientesVendaConcluida = UI.data.clientes.filter(cliente => 
+                    cliente.etapaFunil === 'venda'
+                );
+                
+                // Imóveis vendidos/alugados no período
+                const imoveisVendidos = UI.data.imoveis.filter(imovel => {
+                    if (!imovel.dataVenda) return false;
+                    const dataVenda = new Date(imovel.dataVenda);
+                    return dataVenda >= start && dataVenda <= end && (imovel.status === 'vendido' || imovel.status === 'alugado');
+                });
+                
+                const vendasDetalhadas = [];
+                
+                clientesVendaConcluida.forEach(cliente => {
+                    if (cliente.imovelInteresseId) {
+                        const imovelVendido = imoveisVendidos.find(i => i.id === cliente.imovelInteresseId);
+                        if (imovelVendido) {
+                            vendasDetalhadas.push({
+                                clienteId: cliente.id,
+                                clienteNome: cliente.nome,
+                                clienteTelefone: cliente.telefone,
+                                imovelId: imovelVendido.id,
+                                imovelTitulo: imovelVendido.titulo,
+                                imovelTipo: imovelVendido.tipo,
+                                valor: imovelVendido.precoVenda || imovelVendido.precoAluguel || 0,
+                                dataVenda: imovelVendido.dataVenda,
+                                status: imovelVendido.status,
+                                transacao: imovelVendido.transacao
+                            });
+                        }
+                    }
+                });
+                
+                const totalVendas = vendasDetalhadas.length;
+                const totalValor = vendasDetalhadas.reduce((acc, v) => acc + v.valor, 0);
+                
+                let html = `
+                    <div class="report-summary">
+                        <h3>Relatório de Vendas pelo Funil</h3>
+                        <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
+                        <p><strong>Clientes em "Venda Concluída":</strong> ${clientesVendaConcluida.length}</p>
+                        <p><strong>Vendas com imóvel vinculado:</strong> ${totalVendas}</p>
+                        <p><strong>Valor Total:</strong> ${Utils.formatCurrency(totalValor)}</p>
+                    </div>
+                `;
+                
+                if (vendasDetalhadas.length > 0) {
+                    html += `
+                        <div class="section-title">Vendas por Cliente</div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Telefone</th>
+                                    <th>Imóvel</th>
+                                    <th>Valor</th>
+                                    <th>Data</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    vendasDetalhadas.forEach(v => {
+                        html += `
+                            <tr>
+                                <td>${v.clienteNome}</td>
+                                <td>${v.clienteTelefone}</td>
+                                <td>${v.imovelTitulo.substring(0, 30)}...</td>
+                                <td>${Utils.formatCurrency(v.valor)}</td>
+                                <td>${Utils.formatDate(v.dataVenda)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                const clientesSemImovel = clientesVendaConcluida.filter(c => !c.imovelInteresseId || !imoveisVendidos.some(i => i.id === c.imovelInteresseId));
+                
+                if (clientesSemImovel.length > 0) {
+                    html += `
+                        <div class="section-title" style="color: var(--warning);">
+                            <i class="fas fa-exclamation-triangle"></i> Clientes em "Venda Concluída" sem imóvel associado
+                        </div>
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente</th>
+                                    <th>Telefone</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    clientesSemImovel.forEach(cliente => {
+                        html += `
+                            <tr>
+                                <td>${cliente.nome}</td>
+                                <td>${cliente.telefone}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                    `;
+                }
+                
+                return {
+                    html,
+                    data: {
+                        periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
+                        total: clientesVendaConcluida.length,
+                        dados: vendasDetalhadas.map(v => ({
+                            cliente: v.clienteNome,
+                            imovel: v.imovelTitulo,
+                            valor: Utils.formatCurrency(v.valor),
+                            data: Utils.formatDate(v.dataVenda)
+                        })),
+                        headers: ['Cliente', 'Imóvel', 'Valor', 'Data'],
+                        resumo: {
+                            'Clientes em Venda Concluída': clientesVendaConcluida.length,
+                            'Vendas com imóvel vinculado': totalVendas,
+                            'Valor Total': Utils.formatCurrency(totalValor)
+                        }
+                    },
+                    type: 'vendas-funil'
                 };
             },
             
@@ -6515,25 +6555,30 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     </div>
                 `;
 
-                // Carregar clientes
+                UI.imovelLancamentoId = imovelId;
                 UI.filtrarClientesLancamento('');
+
+                // A mensagem padrão pode incluir o título
                 document.getElementById('msg-lancamento').value = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré-lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑`;
 
                 UI.openModal('notificar-lancamento');
-                // Guardar imovelId para uso posterior
-                UI.imovelLancamentoId = imovelId;
             },
 
             filtrarClientesLancamento: (filtro = '') => {
                 const termo = document.getElementById('filtro-clientes-lancamento').value.toLowerCase();
                 const container = document.getElementById('lista-clientes-lancamento');
+                const imovel = UI.data.imoveis.find(i => i.id === UI.imovelLancamentoId);
+                const waitingList = imovel?.waitingList || [];
+
                 const clientesFiltrados = UI.data.clientes.filter(c => 
                     c.nome.toLowerCase().includes(termo) || 
                     (c.telefone && c.telefone.includes(termo))
                 );
+
                 container.innerHTML = clientesFiltrados.map(c => `
                     <div class="client-select-item">
-                        <input type="checkbox" class="cliente-lancamento-checkbox" data-id="${c.id}" data-nome="${c.nome}" data-telefone="${c.telefone}">
+                        <input type="checkbox" class="cliente-lancamento-checkbox" data-id="${c.id}" data-nome="${c.nome}" data-telefone="${c.telefone}"
+                            ${waitingList.includes(c.id) ? 'checked' : ''}>
                         <div class="client-select-info">
                             <div class="client-select-name">${c.nome}</div>
                             <div class="client-select-phone">${c.telefone}</div>
@@ -6593,6 +6638,70 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (!imovelId) return;
                 
                 UI.openFullscreen(imovelId, index);
+            },
+
+            // ========== FUNÇÕES PARA LISTA DE ESPERA ==========
+            openListaEspera: (imovelId) => {
+                const imovel = UI.data.imoveis.find(i => i.id === imovelId);
+                if (!imovel) return;
+
+                document.getElementById('info-imovel-espera').innerHTML = `
+                    <div style="background: #e0f2fe; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                        <h4>${imovel.titulo}</h4>
+                        <p>Selecione os clientes que devem ser avisados quando este imóvel entrar em lançamento.</p>
+                    </div>
+                `;
+
+                UI.imovelEsperaId = imovelId;
+                UI.filtrarClientesEspera('');
+                UI.openModal('lista-espera');
+            },
+
+            filtrarClientesEspera: (filtro = '') => {
+                const termo = document.getElementById('filtro-clientes-espera').value.toLowerCase();
+                const container = document.getElementById('lista-clientes-espera');
+                const imovel = UI.data.imoveis.find(i => i.id === UI.imovelEsperaId);
+                const waitingList = imovel?.waitingList || [];
+
+                const clientesFiltrados = UI.data.clientes.filter(c => 
+                    c.nome.toLowerCase().includes(termo) || 
+                    (c.telefone && c.telefone.includes(termo))
+                );
+
+                container.innerHTML = clientesFiltrados.map(c => `
+                    <div class="client-select-item">
+                        <input type="checkbox" class="cliente-espera-checkbox" data-id="${c.id}" data-nome="${c.nome}" data-telefone="${c.telefone}" 
+                            ${waitingList.includes(c.id) ? 'checked' : ''}>
+                        <div class="client-select-info">
+                            <div class="client-select-name">${c.nome}</div>
+                            <div class="client-select-phone">${c.telefone}</div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            selecionarTodosClientesEspera: (selecionar) => {
+                document.querySelectorAll('#lista-clientes-espera .cliente-espera-checkbox').forEach(cb => {
+                    cb.checked = selecionar;
+                });
+            },
+
+            salvarListaEspera: async () => {
+                const imovel = UI.data.imoveis.find(i => i.id === UI.imovelEsperaId);
+                if (!imovel) return;
+
+                const checkboxes = document.querySelectorAll('#lista-clientes-espera .cliente-espera-checkbox');
+                const waitingList = [];
+                checkboxes.forEach(cb => {
+                    if (cb.checked) waitingList.push(cb.dataset.id);
+                });
+
+                imovel.waitingList = waitingList;
+                await DB.put('imoveis', imovel);
+                UI.data.imoveis = await Storage.getImoveis();
+
+                Utils.toast('Lista de espera atualizada!');
+                UI.closeModals();
             }
         };
 
@@ -6622,6 +6731,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     const existingIdx = UI.data.clientes.findIndex(c => c.id === id);
                     if(existingIdx >= 0) {
+                        // Preservar dataEntradaFunil se a etapa não mudou
                         if(UI.data.clientes[existingIdx].dataEntradaFunil && UI.data.clientes[existingIdx].etapaFunil === etapaFunil) {
                             newClient.dataEntradaFunil = UI.data.clientes[existingIdx].dataEntradaFunil;
                         }
@@ -6633,6 +6743,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
 
                     UI.data.clientes = await Storage.getClientes();
+                    
+                    // Se o cliente foi salvo na etapa "Venda Concluída", atualiza o imóvel vinculado
+                    if (etapaFunil === 'venda' && imovelInteresseId) {
+                        await App.cliente.handleVendaStage(id);
+                    }
                     
                     Utils.toast('Cliente salvo com sucesso!');
                     
@@ -6846,6 +6961,40 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     const mailtoLink = `mailto:${cliente.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                     window.location.href = mailtoLink;
+                },
+                
+                // Nova função para atualizar o imóvel quando o cliente atinge a etapa "Venda Concluída"
+                handleVendaStage: async (clienteId) => {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente || !cliente.imovelInteresseId) return;
+                    
+                    const imovel = UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId);
+                    if (!imovel) return;
+                    
+                    // Define o status do imóvel com base na transação
+                    let novoStatus = 'vendido';
+                    if (imovel.transacao === 'aluguel') {
+                        novoStatus = 'alugado';
+                    } else if (imovel.transacao === 'ambos') {
+                        // Se for ambos, considera venda por padrão (pode ser ajustado manualmente depois)
+                        novoStatus = 'vendido';
+                    }
+                    
+                    // Atualiza o imóvel
+                    imovel.status = novoStatus;
+                    imovel.dataVenda = cliente.dataEntradaFunil || Utils.getToday();
+                    
+                    await DB.put('imoveis', imovel);
+                    
+                    // Atualiza a lista de imóveis na UI
+                    const idx = UI.data.imoveis.findIndex(i => i.id === imovel.id);
+                    if (idx !== -1) UI.data.imoveis[idx] = imovel;
+                    
+                    Utils.toast(`Imóvel "${imovel.titulo}" marcado como ${novoStatus === 'vendido' ? 'Vendido' : 'Alugado'}.`);
+                    
+                    // Atualiza a interface
+                    UI.renderImoveis();
+                    UI.renderDashboard();
                 }
             },
             
@@ -6885,8 +7034,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const estagioLancamento = document.getElementById('i-estagio-lancamento').value;
                         let dataLancamento = document.getElementById('i-data-lancamento').value;
                         
-                        // Se mudou de pré para lançamento, registrar data
+                        // Lista de espera (preservar existente)
                         const imovelExistente = UI.data.imoveis.find(i => i.id === id);
+                        const waitingList = imovelExistente?.waitingList || [];
+                        
+                        // Se mudou de pré para lançamento, registrar data
                         if (imovelExistente && imovelExistente.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
                         } else if (!imovelExistente && estagioLancamento === 'lancamento') {
@@ -6918,6 +7070,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             comissao,
                             estagioLancamento,
                             dataLancamento,
+                            waitingList,
                             dataCriacao: imovelExistente ? imovelExistente.dataCriacao : new Date().toISOString(),
                             dataAtualizacao: new Date().toISOString()
                         };
@@ -7514,10 +7667,166 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             backup: {
-                // (código de backup mantido igual, omitido por brevidade, mas deve permanecer no sistema completo)
-                // Para não repetir, mantemos o mesmo código do backup original.
-                // Como o código é muito extenso, garantimos que está presente no sistema final.
-                // Incluímos as funções originais de backup.
+                importTrigger: function() {
+                    document.getElementById('import-file').click();
+                },
+                importData: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+                        
+                        if (data.clientes && Array.isArray(data.clientes)) {
+                            await DB.clear('clientes');
+                            for (const cliente of data.clientes) {
+                                await DB.add('clientes', cliente);
+                            }
+                        }
+                        
+                        if (data.imoveis && Array.isArray(data.imoveis)) {
+                            await DB.clear('imoveis');
+                            for (const imovel of data.imoveis) {
+                                if (!imovel.waitingList) imovel.waitingList = [];
+                                await DB.add('imoveis', imovel);
+                            }
+                        }
+                        
+                        if (data.visitas && Array.isArray(data.visitas)) {
+                            await DB.clear('visitas');
+                            for (const visita of data.visitas) {
+                                await DB.add('visitas', visita);
+                            }
+                        }
+                        
+                        if (data.links && Array.isArray(data.links)) {
+                            await DB.clear('links');
+                            for (const link of data.links) {
+                                await DB.add('links', link);
+                            }
+                        }
+                        
+                        if (data.settings) {
+                            await DB.put('settings', data.settings);
+                        }
+                        
+                        if (data.funilEtapas && Array.isArray(data.funilEtapas)) {
+                            await DB.clear('funilEtapas');
+                            for (const etapa of data.funilEtapas) {
+                                await DB.add('funilEtapas', etapa);
+                            }
+                        }
+                        
+                        Utils.toast('Dados importados com sucesso!');
+                        location.reload();
+                        
+                    } catch (error) {
+                        console.error('Erro ao importar:', error);
+                        Utils.toast('Erro ao importar dados', 'error');
+                    }
+                    
+                    input.value = '';
+                },
+                
+                exportData: async function() {
+                    const data = {
+                        clientes: await DB.getAll('clientes'),
+                        imoveis: await DB.getAll('imoveis'),
+                        visitas: await DB.getAll('visitas'),
+                        links: await DB.getAll('links'),
+                        settings: await DB.get('settings', 'main'),
+                        funilEtapas: await DB.getAll('funilEtapas')
+                    };
+                    
+                    const json = JSON.stringify(data, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `imobipro_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    Utils.toast('Backup exportado com sucesso!');
+                },
+                
+                importImoveisTrigger: function() {
+                    document.getElementById('import-imoveis-file').click();
+                },
+                
+                importImoveisData: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    try {
+                        const text = await file.text();
+                        const imoveis = JSON.parse(text);
+                        
+                        if (Array.isArray(imoveis)) {
+                            // Limpar store de imóveis
+                            await DB.clear('imoveis');
+                            for (const imovel of imoveis) {
+                                if (!imovel.waitingList) imovel.waitingList = [];
+                                await DB.add('imoveis', imovel);
+                            }
+                            
+                            Utils.toast(`${imoveis.length} imóveis importados!`);
+                            location.reload();
+                        } else {
+                            Utils.toast('Formato inválido', 'error');
+                        }
+                        
+                    } catch (error) {
+                        console.error('Erro ao importar imóveis:', error);
+                        Utils.toast('Erro ao importar imóveis', 'error');
+                    }
+                    
+                    input.value = '';
+                },
+                
+                exportImoveisData: async function() {
+                    const imoveis = await DB.getAll('imoveis');
+                    const json = JSON.stringify(imoveis, null, 2);
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `imobipro_imoveis_${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    
+                    Utils.toast('Imóveis exportados com sucesso!');
+                },
+                
+                exportIOS: function() {
+                    // Função para iOS - compartilhar via Web Share API
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'ImobiPro Backup',
+                            text: 'Compartilhe o backup do sistema',
+                            url: window.location.href
+                        });
+                    } else {
+                        Utils.toast('Compartilhamento não suportado neste dispositivo', 'error');
+                    }
+                },
+                
+                clearData: async function() {
+                    if(!confirm('TEM CERTEZA QUE DESEJA RESETAR TODOS OS DADOS? Esta ação é irreversível!')) return;
+                    
+                    await DB.clear('clientes');
+                    await DB.clear('imoveis');
+                    await DB.clear('visitas');
+                    await DB.clear('links');
+                    await DB.delete('settings', 'main');
+                    await DB.clear('funilEtapas');
+                    
+                    localStorage.clear();
+                    
+                    Utils.toast('Todos os dados foram resetados!');
+                    location.reload();
+                }
             }
         };
 
