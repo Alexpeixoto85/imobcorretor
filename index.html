@@ -6768,6 +6768,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.renderFunil();
                 },
                 
+                // ===== FUNÇÃO WHATSAPP INDIVIDUAL CORRIGIDA (não abre duplicado) =====
                 whatsappPersonalizado: async (clienteId) => {
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
                     if(!cliente) return;
@@ -6812,33 +6813,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         phoneNumber = '55' + phoneNumber;
                     }
                     
-                    // Verificar se é dispositivo iOS
-                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                    
                     const encodedMessage = encodeURIComponent(message);
                     
-                    // Para iOS, tentar abrir no app primeiro
-                    if (isIOS) {
-                        // Tentar abrir diretamente no app do WhatsApp
-                        const appUrl = `whatsapp://send?phone=${phoneNumber}&text=${encodedMessage}`;
-                        
-                        // Tentar abrir o app
-                        window.location.href = appUrl;
-                        
-                        // Se não abrir em 500ms, abrir na web
-                        setTimeout(() => {
-                            // Verificar se ainda estamos na mesma página (app não abriu)
-                            if (document.hasFocus()) {
-                                const webUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                                // Usar window.location.href para usar a mesma aba
-                                window.location.href = webUrl;
-                            }
-                        }, 500);
-                    } else {
-                        // Para outros dispositivos, usar a API do WhatsApp
-                        const webUrl = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                        window.open(webUrl, '_blank');
-                    }
+                    // Usar link universal wa.me que abre o app se instalado, caso contrário abre a web
+                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                    
+                    // Abrir em nova aba/janela (evita duplicação)
+                    window.open(url, '_blank');
                 },
                 
                 email: (clienteId) => {
