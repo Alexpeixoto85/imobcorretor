@@ -3682,8 +3682,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const message = await Utils.generateWhatsAppMessage(cliente, imovel);
                 const encodedMessage = encodeURIComponent(message);
                 
-                // Retornar URL universal (abre app ou web)
-                return `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                // Retornar URL universal (abre app ou web) - usando wa.me para iOS
+                return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
             },
             
             extractVideoId: (url) => {
@@ -6466,8 +6466,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                 const encodedMessage = encodeURIComponent(mensagem);
-                // Usar link universal api.whatsapp.com (abre app ou web)
-                const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                // Usar wa.me para iOS
+                const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                 window.open(url, '_blank');
 
                 UI.envioMassaEnviados++;
@@ -6582,7 +6582,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                     const encodedMessage = encodeURIComponent(mensagem);
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                     window.open(url, '_blank');
 
                     // Pequeno delay para não sobrecarregar
@@ -6768,7 +6768,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.renderFunil();
                 },
                 
-                // ===== FUNÇÃO WHATSAPP INDIVIDUAL CORRIGIDA (usa link api.whatsapp.com) =====
+                // ===== FUNÇÃO WHATSAPP INDIVIDUAL CORRIGIDA (usa link wa.me) =====
                 whatsappPersonalizado: async (clienteId) => {
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
                     if(!cliente) return;
@@ -6815,8 +6815,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     const encodedMessage = encodeURIComponent(message);
                     
-                    // Usar link universal api.whatsapp.com
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                    // Usar link wa.me para iOS
+                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
                     
                     // Abrir em nova aba/janela
                     window.open(url, '_blank');
