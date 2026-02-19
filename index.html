@@ -16,7 +16,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
-        /* (todo o estilo original permanece, exceto a media query dark removida) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -35,12 +34,10 @@
             --type-reuniao-equipe: #0ea5e9;
             --type-documentacao: #10b981;
             --type-plantao: #7c3aed;
-            --type-generico: #f59e0b;
             --type-outro: #64748b;
             --type-ligacao: #0ea5e9;
             --type-whatsapp: #25D366;
             --type-reuniao: #8b5cf6;
-            --type-visita: #3b82f6;
             
             --funnel-lead: #93c5fd;
             --funnel-contato: #60a5fa;
@@ -387,12 +384,10 @@
         .schedule-card.reuniao-equipe { border-left-color: var(--type-reuniao-equipe); }
         .schedule-card.documentacao { border-left-color: var(--type-documentacao); }
         .schedule-card.plantao { border-left-color: var(--type-plantao); }
-        .schedule-card.generico { border-left-color: var(--type-generico); }
         .schedule-card.outro { border-left-color: var(--type-outro); }
         .schedule-card.ligacao { border-left-color: var(--type-ligacao); }
         .schedule-card.whatsapp { border-left-color: var(--type-whatsapp); }
         .schedule-card.reuniao { border-left-color: var(--type-reuniao); }
-        .schedule-card.visita { border-left-color: var(--type-visita); }
 
         .schedule-type.ligacao { background: var(--type-ligacao); }
         .schedule-type.whatsapp { background: var(--type-whatsapp); }
@@ -412,7 +407,6 @@
         .schedule-type.reuniao-equipe { background: var(--type-reuniao-equipe); }
         .schedule-type.documentacao { background: var(--type-documentacao); }
         .schedule-type.plantao { background: var(--type-plantao); }
-        .schedule-type.generico { background: var(--type-generico); }
         .schedule-type.outro { background: var(--type-outro); }
         
         .schedule-time {
@@ -1014,7 +1008,6 @@
         .filter-chip.reuniao-equipe { border-color: var(--type-reuniao-equipe); color: var(--type-reuniao-equipe); }
         .filter-chip.documentacao { border-color: var(--type-documentacao); color: var(--type-documentacao); }
         .filter-chip.plantao { border-color: var(--type-plantao); color: var(--type-plantao); }
-        .filter-chip.generico { border-color: var(--type-generico); color: var(--type-generico); }
         .filter-chip.outro { border-color: var(--type-outro); color: var(--type-outro); }
 
         .filter-chip.active.visita { background: var(--type-visita); color: white; }
@@ -1022,17 +1015,14 @@
         .filter-chip.active.reuniao-equipe { background: var(--type-reuniao-equipe); color: white; }
         .filter-chip.active.documentacao { background: var(--type-documentacao); color: white; }
         .filter-chip.active.plantao { background: var(--type-plantao); color: white; }
-        .filter-chip.active.generico { background: var(--type-generico); color: white; }
         .filter-chip.active.outro { background: var(--type-outro); color: white; }
         .filter-chip.ligacao { border-color: var(--type-ligacao); color: var(--type-ligacao); }
         .filter-chip.whatsapp { border-color: var(--type-whatsapp); color: var(--type-whatsapp); }
         .filter-chip.reuniao { border-color: var(--type-reuniao); color: var(--type-reuniao); }
-        .filter-chip.visita { border-color: var(--type-visita); color: var(--type-visita); }
 
         .filter-chip.active.ligacao { background: var(--type-ligacao); color: white; }
         .filter-chip.active.whatsapp { background: var(--type-whatsapp); color: white; }
         .filter-chip.active.reuniao { background: var(--type-reuniao); color: white; }
-        .filter-chip.active.visita { background: var(--type-visita); color: white; }
 
         .birthday-alert {
             background: linear-gradient(135deg, #fce7f3, #fbcfe8);
@@ -1499,8 +1489,6 @@
         input, select, textarea {
             font-size: 16px !important;
         }
-
-        /* A media query @media (prefers-color-scheme: dark) foi removida para manter o tema claro sempre */
     </style>
 </head>
 <body>
@@ -1673,17 +1661,16 @@
                 </div>
                 
                 <div class="agenda-filters" id="agenda-filters">
-                <div class="filter-chip active" data-type="todos" onclick="UI.filterAgenda('todos')">Todos</div>
-                <div class="filter-chip ligacao" data-type="ligacao" onclick="UI.filterAgenda('ligacao')">📞 Ligação</div>
-                <div class="filter-chip whatsapp" data-type="whatsapp" onclick="UI.filterAgenda('whatsapp')">💬 WhatsApp</div>
-                <div class="filter-chip reuniao" data-type="reuniao" onclick="UI.filterAgenda('reuniao')">👥 Reunião</div>
-                <div class="filter-chip visita" data-type="visita" onclick="UI.filterAgenda('visita')">🏠 Visita</div>
-                <div class="filter-chip reuniao-construtor" data-type="reuniao-construtor" onclick="UI.filterAgenda('reuniao-construtor')">🏗️ Construtor</div>
-                <div class="filter-chip reuniao-equipe" data-type="reuniao-equipe" onclick="UI.filterAgenda('reuniao-equipe')">👨‍💼 Equipe</div>
-                <div class="filter-chip documentacao" data-type="documentacao" onclick="UI.filterAgenda('documentacao')">📄 Documentação</div>
-                <div class="filter-chip plantao" data-type="plantao" onclick="UI.filterAgenda('plantao')">📋 Plantões</div>
-                <div class="filter-chip generico" data-type="generico" onclick="UI.filterAgenda('generico')">📅 Genéricos</div>
-                <div class="filter-chip outro" data-type="outro" onclick="UI.filterAgenda('outro')">🔧 Outros</div>
+                    <div class="filter-chip active" data-type="todos" onclick="UI.filterAgenda('todos')">Todos</div>
+                    <div class="filter-chip ligacao" data-type="ligacao" onclick="UI.filterAgenda('ligacao')">📞 Ligação</div>
+                    <div class="filter-chip whatsapp" data-type="whatsapp" onclick="UI.filterAgenda('whatsapp')">💬 WhatsApp</div>
+                    <div class="filter-chip reuniao" data-type="reuniao" onclick="UI.filterAgenda('reuniao')">👥 Reunião</div>
+                    <div class="filter-chip visita" data-type="visita" onclick="UI.filterAgenda('visita')">🏠 Visita</div>
+                    <div class="filter-chip reuniao-construtor" data-type="reuniao-construtor" onclick="UI.filterAgenda('reuniao-construtor')">🏗️ Construtor</div>
+                    <div class="filter-chip reuniao-equipe" data-type="reuniao-equipe" onclick="UI.filterAgenda('reuniao-equipe')">👨‍💼 Equipe</div>
+                    <div class="filter-chip documentacao" data-type="documentacao" onclick="UI.filterAgenda('documentacao')">📄 Documentação</div>
+                    <div class="filter-chip plantao" data-type="plantao" onclick="UI.filterAgenda('plantao')">📋 Plantões</div>
+                    <div class="filter-chip outro" data-type="outro" onclick="UI.filterAgenda('outro')">🔧 Outros</div>
                 </div>                
                 <div id="agenda-list"></div>
             </div>
@@ -1780,7 +1767,8 @@
                         <option value="vendas">Relatório de Vendas</option>
                         <option value="vendas-funil">Relatório de Vendas pelo Funil</option>
                         <option value="performance">Performance</option>
-                        <option value="plantao">Relatório de Plantão (Diário)</option> </select>
+                        <option value="plantao">Relatório de Plantão (Diário)</option>
+                    </select>
                 </div>
                 
                 <div class="report-actions">
@@ -1829,7 +1817,7 @@
             </a>
         </nav>
 
-        <!-- Modais existentes (mantidos) -->
+        <!-- Modais -->
         <div class="modal-overlay" id="overlay-imovel-details"></div>
         <div class="modal-sheet" id="sheet-imovel-details">
             <div class="sheet-handle"></div>
@@ -1890,7 +1878,8 @@
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
             </form>
         </div>
-                <div class="modal-overlay" id="overlay-imovel"></div>
+
+        <div class="modal-overlay" id="overlay-imovel"></div>
         <div class="modal-sheet" id="sheet-imovel">
             <div class="sheet-handle"></div>
             <h3 class="section-title" id="title-imovel">Novo Imóvel</h3>
@@ -2034,7 +2023,6 @@
                     </select>
                 </div>
 
-                <!-- NOVOS CAMPOS: Estágio de Lançamento -->
                 <div class="form-group">
                     <label class="form-label">Estágio do Lançamento</label>
                     <select id="i-estagio-lancamento" class="form-control">
@@ -2045,7 +2033,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Data de Mudança para Lançamento</label>
-                    <input type="date" id="i-data-lancamento" class="form-control" placeholder="Preenchido automaticamente quando mudar para Lançamento">
+                    <input type="date" id="i-data-lancamento" class="form-control">
                 </div>
                 
                 <div class="form-group">
@@ -2083,7 +2071,6 @@
                     <option value="reuniao-equipe">👨‍💼 Reunião de Equipe</option>
                     <option value="documentacao">📄 Assinatura de Documentos</option>
                     <option value="plantao">📋 Plantão</option>
-                    <option value="generico">📅 Agendamento Genérico</option>
                     <option value="outro">🔧 Outro</option>
                 </select>
 
@@ -2096,7 +2083,7 @@
 
                 <div class="form-group imovel-dependent-group">
                     <label class="form-label">Imóvel</label>
-                        <select id="v-imovel" class="form-control">
+                    <select id="v-imovel" class="form-control">
                         <option value="">Selecione...</option>
                     </select>
                 </div>
@@ -2118,61 +2105,59 @@
                         <input type="text" id="v-local-visita" class="form-control" placeholder="Endereço da visita">
                     </div>
                 </div>
-                <!-- Grupo Ligação Telefônica -->
-<div class="tipo-specific-group" id="grupo-ligacao" style="display: none;">
-    <div class="form-group">
-        <label class="form-label">Número para Ligação</label>
-        <input type="tel" id="v-ligacao-numero" class="form-control" placeholder="(00) 00000-0000" oninput="Utils.maskPhone(this)">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Assunto da Ligação</label>
-        <input type="text" id="v-ligacao-assunto" class="form-control" placeholder="Ex: Retorno sobre financiamento, negociação, etc.">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Preparação/Anotações</label>
-        <textarea id="v-ligacao-preparacao" class="form-control" placeholder="Pontos importantes para abordar na ligação..."></textarea>
-    </div>
-</div>
 
-<!-- Grupo WhatsApp -->
-<div class="tipo-specific-group" id="grupo-whatsapp" style="display: none;">
-    <div class="form-group">
-        <label class="form-label">Número do WhatsApp</label>
-        <input type="tel" id="v-whatsapp-numero" class="form-control" placeholder="(00) 00000-0000" oninput="Utils.maskPhone(this)">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Assunto da Conversa</label>
-        <input type="text" id="v-whatsapp-assunto" class="form-control" placeholder="Ex: Envio de proposta, esclarecimento de dúvidas, etc.">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Conteúdo/Arquivos para Enviar</label>
-        <textarea id="v-whatsapp-conteudo" class="form-control" placeholder="Descreva o que será enviado ou discutido..."></textarea>
-    </div>
-    <div class="form-group">
-        <label class="form-label">Link/Arquivo para Compartilhar</label>
-        <input type="text" id="v-whatsapp-link" class="form-control" placeholder="https://... ou nome do arquivo">
-    </div>
-</div>
+                <div class="tipo-specific-group" id="grupo-ligacao" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Número para Ligação</label>
+                        <input type="tel" id="v-ligacao-numero" class="form-control" placeholder="(00) 00000-0000" oninput="Utils.maskPhone(this)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assunto da Ligação</label>
+                        <input type="text" id="v-ligacao-assunto" class="form-control" placeholder="Ex: Retorno sobre financiamento, negociação, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Preparação/Anotações</label>
+                        <textarea id="v-ligacao-preparacao" class="form-control" placeholder="Pontos importantes para abordar na ligação..."></textarea>
+                    </div>
+                </div>
 
-<!-- Grupo Reunião (genérico) -->
-<div class="tipo-specific-group" id="grupo-reuniao" style="display: none;">
-    <div class="form-group">
-        <label class="form-label">Título da Reunião</label>
-        <input type="text" id="v-reuniao-titulo" class="form-control" placeholder="Ex: Alinhamento comercial, apresentação de proposta, etc.">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Local da Reunião</label>
-        <input type="text" id="v-reuniao-local" class="form-control" placeholder="Ex: Escritório, café, online (Zoom/Teams), etc.">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Participantes</label>
-        <input type="text" id="v-reuniao-participantes" class="form-control" placeholder="Nomes dos participantes">
-    </div>
-    <div class="form-group">
-        <label class="form-label">Pauta/Assuntos</label>
-        <textarea id="v-reuniao-pauta" class="form-control" placeholder="Tópicos a serem discutidos na reunião..."></textarea>
-    </div>
-</div>
+                <div class="tipo-specific-group" id="grupo-whatsapp" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Número do WhatsApp</label>
+                        <input type="tel" id="v-whatsapp-numero" class="form-control" placeholder="(00) 00000-0000" oninput="Utils.maskPhone(this)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Assunto da Conversa</label>
+                        <input type="text" id="v-whatsapp-assunto" class="form-control" placeholder="Ex: Envio de proposta, esclarecimento de dúvidas, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Conteúdo/Arquivos para Enviar</label>
+                        <textarea id="v-whatsapp-conteudo" class="form-control" placeholder="Descreva o que será enviado ou discutido..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Link/Arquivo para Compartilhar</label>
+                        <input type="text" id="v-whatsapp-link" class="form-control" placeholder="https://... ou nome do arquivo">
+                    </div>
+                </div>
+
+                <div class="tipo-specific-group" id="grupo-reuniao" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Título da Reunião</label>
+                        <input type="text" id="v-reuniao-titulo" class="form-control" placeholder="Ex: Alinhamento comercial, apresentação de proposta, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Local da Reunião</label>
+                        <input type="text" id="v-reuniao-local" class="form-control" placeholder="Ex: Escritório, café, online (Zoom/Teams), etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Participantes</label>
+                        <input type="text" id="v-reuniao-participantes" class="form-control" placeholder="Nomes dos participantes">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pauta/Assuntos</label>
+                        <textarea id="v-reuniao-pauta" class="form-control" placeholder="Tópicos a serem discutidos na reunião..."></textarea>
+                    </div>
+                </div>
 
                 <div class="tipo-specific-group" id="grupo-reuniao-construtor" style="display: none;">
                     <div class="form-group">
@@ -2250,21 +2235,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     </div>
                 </div>
 
-                <div class="tipo-specific-group" id="grupo-generico" style="display: none;">
-                    <div class="form-group">
-                        <label class="form-label">Título do Agendamento</label>
-                        <input type="text" id="v-generico-titulo" class="form-control" placeholder="Título descritivo">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Local</label>
-                        <input type="text" id="v-generico-local" class="form-control" placeholder="Local do compromisso">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Descrição Detalhada</label>
-                        <textarea id="v-generico-descricao" class="form-control" placeholder="Descreva o propósito deste agendamento..."></textarea>
-                    </div>
-                </div>
-
                 <div class="tipo-specific-group" id="grupo-outro" style="display: none;">
                     <div class="form-group">
                         <label class="form-label">Descrição do Compromisso</label>
@@ -2327,47 +2297,46 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
                 </div>
 
-                <!-- NOVO: Mensagem padrão para envio em massa -->
                 <div class="form-group">
                     <label class="form-label">Mensagem Padrão para Primeiro Contato</label>
                     <textarea id="s-msg-padrao" class="form-control" rows="4" placeholder="Olá {nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡">{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡</textarea>
                     <small class="form-text text-muted">Use {nome} para inserir o nome do cliente. O emoji será adicionado automaticamente se não houver.</small>
                 </div>
 
-<hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
-<div class="section-title" style="font-size: 1rem; margin-bottom: 10px;">Backup Geral</div>
-<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-    <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
-        <i class="fas fa-file-import"></i> Importar Tudo
-    </button>
-    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
-    <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
-        <i class="fas fa-file-export"></i> Exportar Tudo
-    </button>
-</div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+                <div class="section-title" style="font-size: 1rem; margin-bottom: 10px;">Backup Geral</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-block" style="background: var(--secondary); margin: 0;" onclick="App.backup.importTrigger()">
+                        <i class="fas fa-file-import"></i> Importar Tudo
+                    </button>
+                    <input type="file" id="import-file" style="display: none;" accept=".json" onchange="App.backup.importData(this)">
+                    <button type="button" class="btn-block" style="background: var(--primary); margin: 0;" onclick="App.backup.exportData()">
+                        <i class="fas fa-file-export"></i> Exportar Tudo
+                    </button>
+                </div>
 
-<hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
-<div class="section-title" style="font-size: 1rem; margin-bottom: 10px;">Backup Específico de Imóveis</div>
-<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-    <button type="button" class="btn-block" style="background: #10b981; margin: 0;" onclick="App.backup.importImoveisTrigger()">
-        <i class="fas fa-file-import"></i> Importar Imóveis
-    </button>
-    <input type="file" id="import-imoveis-file" style="display: none;" accept=".json" onchange="App.backup.importImoveisData(this)">
-    <button type="button" class="btn-block" style="background: #3b82f6; margin: 0;" onclick="App.backup.exportImoveisData()">
-        <i class="fas fa-file-export"></i> Exportar Imóveis
-    </button>
-</div>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
+                <div class="section-title" style="font-size: 1rem; margin-bottom: 10px;">Backup Específico de Imóveis</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-block" style="background: #10b981; margin: 0;" onclick="App.backup.importImoveisTrigger()">
+                        <i class="fas fa-file-import"></i> Importar Imóveis
+                    </button>
+                    <input type="file" id="import-imoveis-file" style="display: none;" accept=".json" onchange="App.backup.importImoveisData(this)">
+                    <button type="button" class="btn-block" style="background: #3b82f6; margin: 0;" onclick="App.backup.exportImoveisData()">
+                        <i class="fas fa-file-export"></i> Exportar Imóveis
+                    </button>
+                </div>
 
-<div class="warning-note" style="margin-top: 15px; text-align: left;">
-    <i class="fas fa-info-circle"></i> <strong>Dica:</strong> Use "Exportar Imóveis" para fazer backup apenas dos imóveis. 
-    Use "Importar Imóveis" para restaurar em outro dispositivo.
-</div>
+                <div class="warning-note" style="margin-top: 15px; text-align: left;">
+                    <i class="fas fa-info-circle"></i> <strong>Dica:</strong> Use "Exportar Imóveis" para fazer backup apenas dos imóveis. 
+                    Use "Importar Imóveis" para restaurar em outro dispositivo.
+                </div>
 
-<div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-    <button type="button" class="btn-block" style="background: var(--accent); margin: 0;" onclick="App.backup.exportIOS()">
-        <i class="fab fa-apple"></i> iOS
-    </button>
-</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                    <button type="button" class="btn-block" style="background: var(--accent); margin: 0;" onclick="App.backup.exportIOS()">
+                        <i class="fab fa-apple"></i> iOS
+                    </button>
+                </div>
                 <button type="button" class="btn-block" style="background: var(--danger); margin-top: 10px;" onclick="App.backup.clearData()">
                     <i class="fas fa-trash"></i> Resetar Tudo
                 </button>
@@ -2414,14 +2383,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Descrição</label>
-                        <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
+                    <textarea id="l-descricao" class="form-control" placeholder="Descrição do link..."></textarea>
                 </div>
                 <button type="submit" class="btn-block">Salvar Link</button>
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
             </form>
         </div>
 
-        <!-- NOVO MODAL: Envio em Massa -->
         <div class="modal-overlay" id="overlay-envio-massa"></div>
         <div class="modal-sheet" id="sheet-envio-massa">
             <div class="sheet-handle"></div>
@@ -2430,7 +2398,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 <label class="form-label">Selecionar Clientes</label>
                 <input type="text" class="form-control" placeholder="Filtrar clientes..." id="filtro-clientes-envio" oninput="UI.filtrarClientesEnvio()">
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-envio">
-                    <!-- será preenchido dinamicamente -->
                 </div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">
                     <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesEnvio(true)">Selecionar todos</button>
@@ -2460,7 +2427,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- NOVO MODAL: Notificar Lançamento (atualizado) -->
         <div class="modal-overlay" id="overlay-notificar-lancamento"></div>
         <div class="modal-sheet" id="sheet-notificar-lancamento">
             <div class="sheet-handle"></div>
@@ -2470,7 +2436,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 <label class="form-label">Selecionar Clientes para avisar</label>
                 <input type="text" class="form-control" placeholder="Filtrar clientes..." id="filtro-clientes-lancamento" oninput="UI.filtrarClientesLancamento()">
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-lancamento">
-                    <!-- será preenchido dinamicamente -->
                 </div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">
                     <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesLancamento(true)">Selecionar todos</button>
@@ -2487,7 +2452,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
         </div>
 
-        <!-- NOVO MODAL: Lista de Espera de Lançamento -->
         <div class="modal-overlay" id="overlay-lista-espera"></div>
         <div class="modal-sheet" id="sheet-lista-espera">
             <div class="sheet-handle"></div>
@@ -2497,7 +2461,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 <label class="form-label">Clientes interessados (marque para adicionar à lista)</label>
                 <input type="text" class="form-control" placeholder="Filtrar clientes..." id="filtro-clientes-espera" oninput="UI.filtrarClientesEspera()">
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-espera">
-                    <!-- será preenchido -->
                 </div>
                 <div style="margin-top: 8px; display: flex; gap: 8px;">
                     <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesEspera(true)">Selecionar todos</button>
@@ -2512,10 +2475,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
     </div>
 
     <script>
-        // Objeto principal do banco de dados IndexedDB (versão 9 adicionada)
         const DB = {
             name: 'ImobiProDB',
-            version: 9, // Adicionado campo waitingList aos imóveis
+            version: 9,
             db: null,
             
             init: function() {
@@ -2649,26 +2611,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const request = store.get(key);
                         
                         request.onsuccess = (event) => resolve(event.target.result || null);
-                        request.onerror = (event) => reject(event);
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            },
-            
-            add: function(storeName, data) {
-                return new Promise((resolve, reject) => {
-                    if (!this.db) {
-                        reject(new Error('Banco de dados não inicializado'));
-                        return;
-                    }
-                    
-                    try {
-                        const transaction = this.db.transaction([storeName], 'readwrite');
-                        const store = transaction.objectStore(storeName);
-                        const request = store.add(data);
-                        
-                        request.onsuccess = () => resolve(data);
                         request.onerror = (event) => reject(event);
                     } catch (error) {
                         reject(error);
@@ -2848,7 +2790,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Utilitários (mantidos, com acréscimo de generateSalesReport corrigido)
         const Utils = {
             id: () => Date.now().toString(36) + Math.random().toString(36).substr(2),
             
@@ -2944,7 +2885,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 setTimeout(() => {
                     t.classList.remove('show');
-                }, 3000);
+                }, 5000); // Aumentado para 5 segundos
             },
             
             readImage: (file) => {
@@ -3042,7 +2983,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     'reuniao-equipe': '👨‍💼 Reunião de Equipe',
                     'documentacao': '📄 Assinatura de Documentos',
                     'plantao': '📋 Plantão',
-                    'generico': '📅 Agendamento Genérico',
                     'outro': '🔧 Outro'
                 };
                 return tipos[tipo] || tipo;
@@ -3094,7 +3034,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generatePDF: async (imovel) => {
-                // (mantido igual)
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'mm', 'a4');
@@ -3216,7 +3155,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 doc.setDrawColor(220, 220, 220);
                                 doc.rect(xPos, yPos, imgWidth, imgHeight);
                             } catch (e) {
-                                // Ignora erro de imagem
                             }
 
                             if (xPos === margin) {
@@ -3245,11 +3183,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            // NOVA FUNÇÃO: Gera PDF da ficha com até 4 fotos (para o botão Compartilhar)
             generateSharePDF: function(imovelId) {
                 const imovel = UI.data.imoveis.find(x => x.id === imovelId);
                 if (!imovel) return;
-                // Criar uma cópia para não alterar o original
                 const imovelCopy = JSON.parse(JSON.stringify(imovel));
                 if (imovelCopy.imagens && imovelCopy.imagens.length > 4) {
                     imovelCopy.imagens = imovelCopy.imagens.slice(0, 4);
@@ -3430,7 +3366,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
             
-            // Nova função para gerar portfólio de todos os imóveis em PDF
             generatePortfolioPDF: async function() {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3440,7 +3375,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     const settings = await DB.get('settings', 'main') || {};
                     
-                    const imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado'); // Opcional: filtrar apenas disponíveis
+                    const imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado');
                     
                     if (imoveis.length === 0) {
                         Utils.toast('Nenhum imóvel disponível para portfólio', 'error');
@@ -3452,13 +3387,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     for (let idx = 0; idx < imoveis.length; idx++) {
                         const imovel = imoveis[idx];
                         
-                        // Se não for a primeira página, adicionar nova página
                         if (idx > 0) {
                             doc.addPage();
                             pageNum++;
                         }
                         
-                        // Cabeçalho da página
                         doc.setFillColor(37, 99, 235);
                         doc.rect(0, 0, pageWidth, 25, 'F');
                         doc.setTextColor(255, 255, 255);
@@ -3470,7 +3403,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         
                         let yPos = 35;
                         
-                        // Título do imóvel
                         doc.setTextColor(30, 41, 59);
                         doc.setFontSize(14);
                         doc.setFont("helvetica", "bold");
@@ -3478,7 +3410,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text(tituloSplit, margin, yPos);
                         yPos += (tituloSplit.length * 6) + 5;
                         
-                        // Preço e endereço
                         doc.setFontSize(16);
                         doc.setTextColor(37, 99, 235);
                         let preco = '';
@@ -3492,7 +3423,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text(`📍 ${imovel.endereco}`, margin, yPos);
                         yPos += 10;
                         
-                        // Características
                         doc.setFontSize(10);
                         doc.setTextColor(30, 41, 59);
                         const features = [
@@ -3515,7 +3445,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         }
                         yPos = colY + 12;
                         
-                        // Grid de fotos (até 4)
                         if (imovel.imagens && imovel.imagens.length > 0) {
                             const fotos = imovel.imagens.slice(0, 4);
                             const imgWidth = (pageWidth - margin * 3) / 2;
@@ -3530,7 +3459,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     doc.setDrawColor(220, 220, 220);
                                     doc.rect(xPos, yPosImg, imgWidth, imgHeight);
                                 } catch (e) {
-                                    // Placeholder
                                     doc.setFillColor(241, 245, 249);
                                     doc.rect(xPos, yPosImg, imgWidth, imgHeight, 'F');
                                     doc.setFontSize(12);
@@ -3547,7 +3475,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             }
                         }
                         
-                        // Descrição resumida
                         if (imovel.descricao) {
                             yPos = pageHeight - 40;
                             doc.setFontSize(10);
@@ -3561,7 +3488,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             doc.text(descSplit, margin, yPos);
                         }
                         
-                        // Rodapé
                         doc.setFontSize(8);
                         doc.setTextColor(150, 150, 150);
                         doc.text(`Referência: ${imovel.id.substring(0, 8).toUpperCase()}`, margin, pageHeight - 10);
@@ -3665,25 +3591,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
                 
-                // Limpar e formatar o número
                 let phoneNumber = cliente.telefone.replace(/\D/g, '');
                 
-                // Remover o 0 no início se existir
                 if (phoneNumber.startsWith('0')) {
                     phoneNumber = phoneNumber.substring(1);
                 }
                 
-                // Adicionar código do Brasil (55) se não tiver
                 if (!phoneNumber.startsWith('55')) {
                     phoneNumber = '55' + phoneNumber;
                 }
                 
-                // Preparar a mensagem
                 const message = await Utils.generateWhatsAppMessage(cliente, imovel);
                 const encodedMessage = encodeURIComponent(message);
                 
-                // Retornar URL universal (abre app ou web) - usando wa.me para iOS
-                return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                return `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
             },
             
             extractVideoId: (url) => {
@@ -3725,7 +3646,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Camada de armazenamento
         const Storage = {
             async getClientes() {
                 return await DB.getAll('clientes');
@@ -3782,7 +3702,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Interface do usuário (completada com as novas funções)
         const UI = {
             data: { 
                 clientes: [], 
@@ -3912,7 +3831,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const visitasHoje = visitas.filter(v => v.data === hoje && v.status !== 'cancelado');
                 document.getElementById('dash-visitas').innerText = visitasHoje.length;
                 
-                // Vendas do mês: clientes que entraram na etapa "Venda Concluída" no mês atual, com imóvel vinculado
                 const hojeDate = new Date();
                 const inicioMes = new Date(hojeDate.getFullYear(), hojeDate.getMonth(), 1);
                 const fimMes = new Date(hojeDate.getFullYear(), hojeDate.getMonth() + 1, 0);
@@ -3929,14 +3847,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 vendasDoMes.forEach(cliente => {
                     const imovel = imoveis.find(i => i.id === cliente.imovelInteresseId);
                     if (imovel) {
-                        // Usa o preço de venda ou aluguel do imóvel vinculado, independente do status
                         totalVendas += imovel.precoVenda || imovel.precoAluguel || 0;
                     }
                 });
                 
                 document.getElementById('dash-vendas').innerText = Utils.formatCurrency(totalVendas);
                 
-                // Negociações: clientes em etapas intermediárias (excluindo lead e venda)
                 const negociacoes = clientes.filter(c => 
                     c.etapaFunil && c.etapaFunil !== 'lead' && c.etapaFunil !== 'venda'
                 ).length;
@@ -4164,7 +4080,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
                         await DB.put('clientes', cliente);
                         
-                        // Se a nova etapa for "Venda Concluída", chama a função handleVendaStage (agora vazia)
                         if (etapaId === 'venda') {
                             await App.cliente.handleVendaStage(cliente.id);
                         }
@@ -4439,8 +4354,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     additionalInfo = `<div class="schedule-notes">Com: ${v.construtorNome}</div>`;
                 } else if(v.tipo === 'reuniao-equipe' && v.equipeTipo) {
                     additionalInfo = `<div class="schedule-notes">${v.equipeTipo}</div>`;
-                } else if(v.tipo === 'generico' && v.genericoTitulo) {
-                    additionalInfo = `<div class="schedule-notes">${v.genericoTitulo}</div>`;
                 }
                 
                 return `
@@ -4459,7 +4372,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                               v.tipo === 'reuniao-construtor' ? (v.construtorNome || 'Reunião Construtor') :
                               v.tipo === 'reuniao-equipe' ? 'Reunião de Equipe' :
                               v.tipo === 'plantao' ? 'PLANTÃO' :
-                              v.tipo === 'generico' ? (v.genericoTitulo || 'Agendamento Genérico') :
                               v.tipo === 'outro' ? (v.outroDescricao || 'Outro') :
                               'Agendamento'}
                         </div>
@@ -4621,7 +4533,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     badgeText = 'RESERVADO';
                 }
 
-                // Badge de lançamento
                 if (i.estagioLancamento === 'pre-lancamento') {
                     badgeClass = 'badge-pre';
                     badgeText = 'PRÉ-LANÇAMENTO';
@@ -5172,7 +5083,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generateClientReport: (start, end) => {
-                // (mantido igual ao original)
                 const clientesFiltrados = UI.data.clientes.filter(cliente => {
                     const dataCriacao = new Date(cliente.dataCriacao);
                     return dataCriacao >= start && dataCriacao <= end;
@@ -5289,14 +5199,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generateAgendaReport: (start, end) => {
-                // (mantido igual)
                 const visitasFiltradas = UI.data.visitas.filter(visita => {
                     const dataVisita = new Date(visita.data);
                     return dataVisita >= start && dataVisita <= end;
                 });
                 
                 const visitasPorTipo = {};
-                const tipos = ['visita', 'reuniao-construtor', 'reuniao-equipe', 'documentacao', 'plantao', 'generico', 'outro'];
+                const tipos = ['visita', 'reuniao-construtor', 'reuniao-equipe', 'documentacao', 'plantao', 'outro'];
                 
                 tipos.forEach(tipo => {
                     visitasPorTipo[tipo] = visitasFiltradas.filter(v => v.tipo === tipo);
@@ -5440,16 +5349,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
             },
             
-            // ========== RELATÓRIO DE VENDAS REFEITO ==========
             generateSalesReport: (start, end) => {
-                // Filtrar clientes que entraram na etapa "Venda Concluída" no período e possuem imóvel vinculado
                 const vendas = UI.data.clientes.filter(cliente => {
                     if (cliente.etapaFunil !== 'venda' || !cliente.dataEntradaFunil || !cliente.imovelInteresseId) return false;
                     const dataVenda = new Date(cliente.dataEntradaFunil);
                     return dataVenda >= start && dataVenda <= end;
                 });
                 
-                // Construir detalhes das vendas
                 const vendasDetalhadas = [];
                 const settings = UI.data.settings;
                 
@@ -5475,7 +5381,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                 });
                 
-                // Agrupar por data
                 const vendasPorData = {};
                 vendasDetalhadas.forEach(v => {
                     if (!v.dataVenda) return;
@@ -5490,7 +5395,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const totalComissoes = vendasDetalhadas.reduce((acc, v) => acc + v.comissao, 0);
                 const totalVendasConfirmadas = vendasDetalhadas.length;
                 
-                // Construir HTML do relatório
                 let html = `
                     <div class="report-summary">
                         <h3>Relatório de Vendas</h3>
@@ -5598,7 +5502,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     </div>
                 `;
                 
-                // Verificar clientes com etapa 'venda' mas sem imóvel vinculado (opcional)
                 const clientesVendaSemImovel = UI.data.clientes.filter(c => 
                     c.etapaFunil === 'venda' && 
                     (!c.imovelInteresseId || !vendas.some(v => v.clienteId === c.id))
@@ -5662,12 +5565,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generateSalesFunnelReport: (start, end) => {
-                // Relatório de vendas pelo funil (clientes com etapa venda)
                 const clientesVendaConcluida = UI.data.clientes.filter(cliente => 
                     cliente.etapaFunil === 'venda'
                 );
                 
-                // Imóveis vendidos/alugados no período
                 const imoveisVendidos = UI.data.imoveis.filter(imovel => {
                     if (!imovel.dataVenda) return false;
                     const dataVenda = new Date(imovel.dataVenda);
@@ -5798,7 +5699,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             generatePerformanceReport: (start, end) => {
-                // (mantido igual, mas ajustado para usar clientes com etapa venda e data dentro do período)
                 const clientes = UI.data.clientes.filter(c => {
                     const dataCriacao = new Date(c.dataCriacao);
                     return dataCriacao >= start && dataCriacao <= end;
@@ -5809,14 +5709,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     return dataVisita >= start && dataVisita <= end;
                 }).length;
                 
-                // Clientes que atingiram "Venda Concluída" no período (com ou sem imóvel vinculado)
                 const clientesVendaConcluidaPeriodo = UI.data.clientes.filter(cliente => {
                     if (cliente.etapaFunil !== 'venda' || !cliente.dataEntradaFunil) return false;
                     const dataVenda = new Date(cliente.dataEntradaFunil);
                     return dataVenda >= start && dataVenda <= end;
                 }).length;
                 
-                // Vendas efetivas: clientes com etapa venda e imóvel vinculado, dentro do período
                 let vendasConfirmadas = 0;
                 let valorTotalVendas = 0;
                 
@@ -6261,7 +6159,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('image-counter').innerText = '0';
                 document.getElementById('i-imagens-data').value = '[]';
                 
-                // Reset campos de lançamento
                 document.getElementById('i-estagio-lancamento').value = 'nenhum';
                 document.getElementById('i-data-lancamento').value = '';
                 
@@ -6324,9 +6221,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     grupoEspecifico.style.display = 'block';
                 }
                 
-                // Definir quais tipos precisam de cliente e imóvel
                 const tiposComCliente = ['ligacao', 'whatsapp', 'reuniao', 'visita', 'documentacao'];
-                const tiposComImovel = ['visita']; // Apenas visita precisa de imóvel
+                const tiposComImovel = ['visita'];
                 
                 document.querySelectorAll('.cliente-dependent-group').forEach(el => {
                     el.style.display = tiposComCliente.includes(tipo) ? 'block' : 'none';
@@ -6382,9 +6278,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            // NOVAS FUNÇÕES PARA ENVIO EM MASSA
             openEnvioMassa: async () => {
-                // Carregar a lista de clientes
                 const settings = await Storage.getSettings();
                 document.getElementById('msg-envio').value = settings.msgPadrao || '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
                 document.getElementById('delay-min').value = 3;
@@ -6441,7 +6335,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('progress-fill').style.width = '0%';
                 document.getElementById('progresso-envio').style.display = 'block';
 
-                // Iniciar envio sequencial
                 UI.envioMassaIndex = 0;
                 UI.enviarProximoCliente();
             },
@@ -6456,7 +6349,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const cliente = UI.envioMassaList[UI.envioMassaIndex];
                 const settings = await Storage.getSettings();
                 let mensagem = UI.envioMassaMsg.replace(/{nome}/g, cliente.nome.split(' ')[0]);
-                // Adicionar emoji se não tiver
                 if (!mensagem.includes('🏡') && !mensagem.includes('🏠') && !mensagem.includes('🔑')) {
                     mensagem += ' 🏡';
                 }
@@ -6466,8 +6358,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                 const encodedMessage = encodeURIComponent(mensagem);
-                // Usar wa.me para iOS
-                const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                 window.open(url, '_blank');
 
                 UI.envioMassaEnviados++;
@@ -6476,14 +6367,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                 UI.envioMassaIndex++;
 
-                // Delay aleatório
                 const delay = Math.floor(Math.random() * (UI.envioMassaDelayMax - UI.envioMassaDelayMin + 1) + UI.envioMassaDelayMin) * 1000;
                 setTimeout(() => {
                     UI.enviarProximoCliente();
                 }, delay);
             },
 
-            // Funções para alerta de lançamento
             verificarLancamentos: () => {
                 const hoje = Utils.getToday();
                 const imoveisLancados = UI.data.imoveis.filter(i => 
@@ -6521,7 +6410,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.imovelLancamentoId = imovelId;
                 UI.filtrarClientesLancamento('');
 
-                // A mensagem padrão pode incluir o título
                 document.getElementById('msg-lancamento').value = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré-lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑`;
 
                 UI.openModal('notificar-lancamento');
@@ -6572,7 +6460,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const nome = cb.dataset.nome.split(' ')[0];
                     const telefone = cb.dataset.telefone;
                     let mensagem = msgBase.replace(/{nome}/g, nome);
-                    // Garantir emoji
                     if (!mensagem.includes('🏡') && !mensagem.includes('🏠') && !mensagem.includes('🔑')) {
                         mensagem += ' 🏡';
                     }
@@ -6582,10 +6469,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
 
                     const encodedMessage = encodeURIComponent(mensagem);
-                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     window.open(url, '_blank');
 
-                    // Pequeno delay para não sobrecarregar
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
 
@@ -6603,7 +6489,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.openFullscreen(imovelId, index);
             },
 
-            // ========== FUNÇÕES PARA LISTA DE ESPERA ==========
             openListaEspera: (imovelId) => {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
                 if (!imovel) return;
@@ -6668,7 +6553,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Aplicação principal (objeto App) - mantido quase igual, com pequenas adições
         const App = {
             cliente: {
                 save: async (e) => {
@@ -6694,7 +6578,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     const existingIdx = UI.data.clientes.findIndex(c => c.id === id);
                     if(existingIdx >= 0) {
-                        // Preservar dataEntradaFunil se a etapa não mudou
                         if(UI.data.clientes[existingIdx].dataEntradaFunil && UI.data.clientes[existingIdx].etapaFunil === etapaFunil) {
                             newClient.dataEntradaFunil = UI.data.clientes[existingIdx].dataEntradaFunil;
                         }
@@ -6707,7 +6590,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                     UI.data.clientes = await Storage.getClientes();
                     
-                    // Se o cliente foi salvo na etapa "Venda Concluída", chama handleVendaStage (agora apenas informativo)
                     if (etapaFunil === 'venda' && imovelInteresseId) {
                         await App.cliente.handleVendaStage(id);
                     }
@@ -6768,7 +6650,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.renderFunil();
                 },
                 
-                // ===== FUNÇÃO WHATSAPP INDIVIDUAL CORRIGIDA (usa link wa.me) =====
                 whatsappPersonalizado: async (clienteId) => {
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
                     if(!cliente) return;
@@ -6800,25 +6681,20 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message = await Utils.generateWhatsAppMessage(cliente, imovel);
                     }
                     
-                    // Limpar e formatar o número
                     let phoneNumber = cliente.telefone.replace(/\D/g, '');
                     
-                    // Remover o 0 no início se existir
                     if (phoneNumber.startsWith('0')) {
                         phoneNumber = phoneNumber.substring(1);
                     }
                     
-                    // Adicionar código do Brasil (55) se não tiver
                     if (!phoneNumber.startsWith('55')) {
                         phoneNumber = '55' + phoneNumber;
                     }
                     
                     const encodedMessage = encodeURIComponent(message);
                     
-                    // Usar link wa.me para iOS
-                    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     
-                    // Abrir em nova aba/janela
                     window.open(url, '_blank');
                 },
                 
@@ -6891,7 +6767,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     window.location.href = mailtoLink;
                 },
                 
-                // Nova função para quando o cliente atinge a etapa "Venda Concluída" - agora apenas informativa (não altera o imóvel)
                 handleVendaStage: async (clienteId) => {
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (!cliente || !cliente.imovelInteresseId) return;
@@ -6899,10 +6774,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const imovel = UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId);
                     if (!imovel) return;
                     
-                    // Não alteramos mais o status do imóvel, apenas registramos a venda no cliente
                     console.log(`Cliente ${cliente.nome} atingiu Venda Concluída para o imóvel ${imovel.titulo}`);
                     
-                    // Poderíamos, opcionalmente, registrar a data da venda no cliente (já está em dataEntradaFunil)
                     Utils.toast(`Cliente marcado como venda concluída para "${imovel.titulo}".`);
                 }
             },
@@ -6939,15 +6812,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const videos = videosData ? JSON.parse(videosData) : [];
                         const comissao = parseFloat(document.getElementById('i-comissao').value) || 0;
                         
-                        // Campos de lançamento
                         const estagioLancamento = document.getElementById('i-estagio-lancamento').value;
                         let dataLancamento = document.getElementById('i-data-lancamento').value;
                         
-                        // Lista de espera (preservar existente)
                         const imovelExistente = UI.data.imoveis.find(i => i.id === id);
                         const waitingList = imovelExistente?.waitingList || [];
                         
-                        // Se mudou de pré para lançamento, registrar data
                         if (imovelExistente && imovelExistente.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
                         } else if (!imovelExistente && estagioLancamento === 'lancamento') {
@@ -6984,7 +6854,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             dataAtualizacao: new Date().toISOString()
                         };
                         
-                        // Se o imóvel foi vendido/alugado, registrar a data de venda (opcional)
                         if (status === 'vendido' || status === 'alugado') {
                             newImovel.dataVenda = new Date().toISOString().split('T')[0];
                         }
@@ -7039,7 +6908,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         document.getElementById('i-data-entrega').value = imovel.dataEntrega || '';
                         document.getElementById('i-comissao').value = imovel.comissao || '';
                         
-                        // Campos de lançamento
                         document.getElementById('i-estagio-lancamento').value = imovel.estagioLancamento || 'nenhum';
                         document.getElementById('i-data-lancamento').value = imovel.dataLancamento || '';
                         
@@ -7296,10 +7164,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             newVisita.detalhesPlantoes = document.getElementById('v-detalhes-plantoes').value;
                             newVisita.clientesAtendidos = document.getElementById('v-clientes-atendidos').value;
                             newVisita.negociosGerados = document.getElementById('v-negocios-gerados').value;
-                        } else if (tipo === 'generico') {
-                            newVisita.genericoTitulo = document.getElementById('v-generico-titulo').value;
-                            newVisita.genericoLocal = document.getElementById('v-generico-local').value;
-                            newVisita.genericoDescricao = document.getElementById('v-generico-descricao').value;
                         } else if (tipo === 'outro') {
                             newVisita.outroDescricao = document.getElementById('v-outro-descricao').value;
                             newVisita.outroDetalhes = document.getElementById('v-outro-detalhes').value;
@@ -7391,10 +7255,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 document.getElementById('v-detalhes-plantoes').value = visita.detalhesPlantoes || '';
                                 document.getElementById('v-clientes-atendidos').value = visita.clientesAtendidos || '';
                                 document.getElementById('v-negocios-gerados').value = visita.negociosGerados || '';
-                            } else if (tipo === 'generico') {
-                                document.getElementById('v-generico-titulo').value = visita.genericoTitulo || '';
-                                document.getElementById('v-generico-local').value = visita.genericoLocal || '';
-                                document.getElementById('v-generico-descricao').value = visita.genericoDescricao || '';
                             } else if (tipo === 'outro') {
                                 document.getElementById('v-outro-descricao').value = visita.outroDescricao || '';
                                 document.getElementById('v-outro-detalhes').value = visita.outroDetalhes || '';
@@ -7469,7 +7329,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     message += `📋 *CRECI:* ${settings.creci || '5794-AL'}`;
                     
                     const encodedMessage = encodeURIComponent(message);
-                    // Usar link universal
                     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
                     
                     window.open(whatsappUrl, '_blank');
@@ -7674,7 +7533,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const imoveis = JSON.parse(text);
                         
                         if (Array.isArray(imoveis)) {
-                            // Limpar store de imóveis
                             await DB.clear('imoveis');
                             for (const imovel of imoveis) {
                                 if (!imovel.waitingList) imovel.waitingList = [];
@@ -7710,7 +7568,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 },
                 
                 exportIOS: function() {
-                    // Função para iOS - compartilhar via Web Share API
                     if (navigator.share) {
                         navigator.share({
                             title: 'ImobiPro Backup',
@@ -7740,12 +7597,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
-        // Inicialização
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
         });
 
-        // PWA - Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/service-worker.js')
@@ -7758,21 +7613,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             });
         }
 
-        // Evento de fechamento do modal ao clicar no overlay
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal-overlay')) {
                 UI.closeModals();
             }
         });
 
-        // Evento para fechar teclado virtual ao clicar fora de inputs
         document.addEventListener('touchstart', (e) => {
             if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
                 document.activeElement.blur();
             }
         });
 
-        // Prevenir zoom em inputs no iOS
         document.addEventListener('touchmove', (e) => {
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
                 e.preventDefault();
