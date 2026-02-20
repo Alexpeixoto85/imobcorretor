@@ -16,6 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
+        /* (mantido o mesmo CSS do original) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -1454,6 +1455,27 @@
             margin-bottom: 8px;
         }
 
+        .whatsapp-links-list {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+        .whatsapp-link-item {
+            background: white;
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            border-left: 3px solid #25D366;
+            word-break: break-all;
+        }
+        .whatsapp-link-item a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
         @media (max-width: 360px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -2421,6 +2443,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <div class="progress-bar-envio"><div class="progress-fill" id="progress-fill"></div></div>
                 </div>
             </div>
+            <div id="whatsapp-links" style="display: none;">
+                <label class="form-label">Links gerados (clique para abrir)</label>
+                <div class="whatsapp-links-list" id="whatsapp-links-list"></div>
+            </div>
             <button class="btn-block" style="background: #25D366;" onclick="UI.iniciarEnvioMassa()">
                 <i class="fab fa-whatsapp"></i> Iniciar Envio
             </button>
@@ -2885,7 +2911,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 setTimeout(() => {
                     t.classList.remove('show');
-                }, 5000); // Aumentado para 5 segundos
+                }, 5000);
             },
             
             readImage: (file) => {
@@ -3031,6 +3057,21 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const hoje = new Date();
                 const diffTime = Math.abs(hoje - entrada);
                 return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            },
+            
+            // Função centralizada para formatar número de telefone para WhatsApp
+            formatPhoneForWhatsApp: (phone) => {
+                if (!phone) return null;
+                let clean = phone.replace(/\D/g, '');
+                // Remove zero inicial
+                if (clean.startsWith('0')) {
+                    clean = clean.substring(1);
+                }
+                // Adiciona código do Brasil (55) se não tiver
+                if (!clean.startsWith('55')) {
+                    clean = '55' + clean;
+                }
+                return clean;
             },
             
             generatePDF: async (imovel) => {
@@ -3591,16 +3632,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const imovel = imovelId ? UI.data.imoveis.find(i => i.id === imovelId) : null;
                 
-                let phoneNumber = cliente.telefone.replace(/\D/g, '');
-                
-                if (phoneNumber.startsWith('0')) {
-                    phoneNumber = phoneNumber.substring(1);
-                }
-                
-                if (!phoneNumber.startsWith('55')) {
-                    phoneNumber = '55' + phoneNumber;
-                }
-                
+                const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
                 const message = await Utils.generateWhatsAppMessage(cliente, imovel);
                 const encodedMessage = encodeURIComponent(message);
                 
@@ -6284,6 +6316,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('delay-min').value = 3;
                 document.getElementById('delay-max').value = 8;
                 document.getElementById('progresso-envio').style.display = 'none';
+                document.getElementById('whatsapp-links').style.display = 'none';
                 UI.filtrarClientesEnvio('');
                 UI.openModal('envio-massa');
             },
@@ -6330,10 +6363,33 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.envioMassaTotal = UI.envioMassaList.length;
                 UI.envioMassaEnviados = 0;
 
+                // Verifica se é iOS (Safari) para evitar bloqueio de pop-ups
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+                if (isIOS) {
+                    // No iOS, exibe os links para que o usuário clique manualmente
+                    const linksContainer = document.getElementById('whatsapp-links');
+                    const linksList = document.getElementById('whatsapp-links-list');
+                    linksList.innerHTML = '';
+                    
+                    for (const cliente of UI.envioMassaList) {
+                        const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
+                        const mensagem = UI.envioMassaMsg.replace(/{nome}/g, cliente.nome.split(' ')[0]);
+                        const encodedMsg = encodeURIComponent(mensagem);
+                        const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMsg}`;
+                        linksList.innerHTML += `<div class="whatsapp-link-item"><a href="${url}" target="_blank">${cliente.nome}</a></div>`;
+                    }
+                    
+                    linksContainer.style.display = 'block';
+                    document.getElementById('progresso-envio').style.display = 'none';
+                    Utils.toast('Links gerados. Clique em cada um para enviar.');
+                    return;
+                }
+
                 document.getElementById('total-count').textContent = UI.envioMassaTotal;
                 document.getElementById('enviados-count').textContent = '0';
                 document.getElementById('progress-fill').style.width = '0%';
                 document.getElementById('progresso-envio').style.display = 'block';
+                document.getElementById('whatsapp-links').style.display = 'none';
 
                 UI.envioMassaIndex = 0;
                 UI.enviarProximoCliente();
@@ -6353,10 +6409,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     mensagem += ' 🏡';
                 }
 
-                let phoneNumber = cliente.telefone.replace(/\D/g, '');
-                if (phoneNumber.startsWith('0')) phoneNumber = phoneNumber.substring(1);
-                if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
-
+                const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
                 const encodedMessage = encodeURIComponent(mensagem);
                 const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                 window.open(url, '_blank');
@@ -6464,10 +6517,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         mensagem += ' 🏡';
                     }
 
-                    let phoneNumber = telefone.replace(/\D/g, '');
-                    if (phoneNumber.startsWith('0')) phoneNumber = phoneNumber.substring(1);
-                    if (!phoneNumber.startsWith('55')) phoneNumber = '55' + phoneNumber;
-
+                    const phoneNumber = Utils.formatPhoneForWhatsApp(telefone);
                     const encodedMessage = encodeURIComponent(mensagem);
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     window.open(url, '_blank');
@@ -6585,7 +6635,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         await DB.put('clientes', newClient);
                     } else {
                         UI.data.clientes.push(newClient);
-                        await DB.add('clientes', newClient);
+                        await DB.put('clientes', newClient);
                     }
 
                     UI.data.clientes = await Storage.getClientes();
@@ -6681,18 +6731,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         message = await Utils.generateWhatsAppMessage(cliente, imovel);
                     }
                     
-                    let phoneNumber = cliente.telefone.replace(/\D/g, '');
-                    
-                    if (phoneNumber.startsWith('0')) {
-                        phoneNumber = phoneNumber.substring(1);
-                    }
-                    
-                    if (!phoneNumber.startsWith('55')) {
-                        phoneNumber = '55' + phoneNumber;
-                    }
-                    
+                    const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
                     const encodedMessage = encodeURIComponent(message);
-                    
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     
                     window.open(url, '_blank');
@@ -6864,7 +6904,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             await DB.put('imoveis', newImovel);
                         } else {
                             UI.data.imoveis.push(newImovel);
-                            await DB.add('imoveis', newImovel);
+                            await DB.put('imoveis', newImovel);
                         }
                         
                         UI.data.imoveis = await Storage.getImoveis();
@@ -7175,7 +7215,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             await DB.put('visitas', newVisita);
                         } else {
                             UI.data.visitas.push(newVisita);
-                            await DB.add('visitas', newVisita);
+                            await DB.put('visitas', newVisita);
                         }
                         
                         UI.data.visitas = await Storage.getVisitas();
@@ -7360,7 +7400,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         await DB.put('links', newLink);
                     } else {
                         UI.data.links.push(newLink);
-                        await DB.add('links', newLink);
+                        await DB.put('links', newLink);
                     }
                     
                     UI.data.links = await Storage.getLinks();
@@ -7450,7 +7490,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (data.clientes && Array.isArray(data.clientes)) {
                             await DB.clear('clientes');
                             for (const cliente of data.clientes) {
-                                await DB.add('clientes', cliente);
+                                await DB.put('clientes', cliente);
                             }
                         }
                         
@@ -7458,21 +7498,21 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             await DB.clear('imoveis');
                             for (const imovel of data.imoveis) {
                                 if (!imovel.waitingList) imovel.waitingList = [];
-                                await DB.add('imoveis', imovel);
+                                await DB.put('imoveis', imovel);
                             }
                         }
                         
                         if (data.visitas && Array.isArray(data.visitas)) {
                             await DB.clear('visitas');
                             for (const visita of data.visitas) {
-                                await DB.add('visitas', visita);
+                                await DB.put('visitas', visita);
                             }
                         }
                         
                         if (data.links && Array.isArray(data.links)) {
                             await DB.clear('links');
                             for (const link of data.links) {
-                                await DB.add('links', link);
+                                await DB.put('links', link);
                             }
                         }
                         
@@ -7483,7 +7523,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (data.funilEtapas && Array.isArray(data.funilEtapas)) {
                             await DB.clear('funilEtapas');
                             for (const etapa of data.funilEtapas) {
-                                await DB.add('funilEtapas', etapa);
+                                await DB.put('funilEtapas', etapa);
                             }
                         }
                         
@@ -7536,7 +7576,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             await DB.clear('imoveis');
                             for (const imovel of imoveis) {
                                 if (!imovel.waitingList) imovel.waitingList = [];
-                                await DB.add('imoveis', imovel);
+                                await DB.put('imoveis', imovel);
                             }
                             
                             Utils.toast(`${imoveis.length} imóveis importados!`);
