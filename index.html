@@ -16,7 +16,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
     <style>
-        /* (mantido o mesmo CSS do original) */
+        /* (mesmo CSS do original – mantido para não alterar o layout) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -1839,7 +1839,7 @@
             </a>
         </nav>
 
-        <!-- Modais -->
+        <!-- Modais (mantidos idênticos ao original) -->
         <div class="modal-overlay" id="overlay-imovel-details"></div>
         <div class="modal-sheet" id="sheet-imovel-details">
             <div class="sheet-handle"></div>
@@ -3675,6 +3675,18 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return url.includes('youtube.com') || 
                        url.includes('youtu.be') || 
                        url.includes('vimeo.com');
+            },
+
+            // Nova função para abrir WhatsApp de forma confiável em qualquer dispositivo
+            openWhatsApp: function(url) {
+                // Cria um link âncora temporário e simula um clique
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             }
         };
 
@@ -6412,7 +6424,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
                 const encodedMessage = encodeURIComponent(mensagem);
                 const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                window.open(url, '_blank');
+                
+                // Usa a função centralizada para abrir o WhatsApp
+                Utils.openWhatsApp(url);
 
                 UI.envioMassaEnviados++;
                 document.getElementById('enviados-count').textContent = UI.envioMassaEnviados;
@@ -6520,7 +6534,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const phoneNumber = Utils.formatPhoneForWhatsApp(telefone);
                     const encodedMessage = encodeURIComponent(mensagem);
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                    window.open(url, '_blank');
+                    
+                    // Usa a função centralizada para abrir o WhatsApp
+                    Utils.openWhatsApp(url);
 
                     await new Promise(resolve => setTimeout(resolve, 1500));
                 }
@@ -6735,7 +6751,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const encodedMessage = encodeURIComponent(message);
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     
-                    window.open(url, '_blank');
+                    // Usa a função centralizada para abrir o WhatsApp
+                    Utils.openWhatsApp(url);
                 },
                 
                 email: (clienteId) => {
@@ -7371,7 +7388,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const encodedMessage = encodeURIComponent(message);
                     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
                     
-                    window.open(whatsappUrl, '_blank');
+                    // Usa a função centralizada para abrir o WhatsApp
+                    Utils.openWhatsApp(whatsappUrl);
                 }
             },
             
