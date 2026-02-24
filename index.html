@@ -1839,7 +1839,7 @@
             </a>
         </nav>
 
-        <!-- Modais (mantidos idênticos ao original) -->
+        <!-- Modais -->
         <div class="modal-overlay" id="overlay-imovel-details"></div>
         <div class="modal-sheet" id="sheet-imovel-details">
             <div class="sheet-handle"></div>
@@ -2453,28 +2453,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
+        <!-- MODAL NOTIFICAR LANÇAMENTO (MODIFICADO) -->
         <div class="modal-overlay" id="overlay-notificar-lancamento"></div>
         <div class="modal-sheet" id="sheet-notificar-lancamento">
             <div class="sheet-handle"></div>
             <h3 class="section-title">Notificar Lançamento</h3>
             <div id="info-imovel-lancamento"></div>
+            
+            <!-- Lista apenas de clientes na lista de espera, cada um clicável -->
             <div class="form-group">
-                <label class="form-label">Selecionar Clientes para avisar</label>
-                <input type="text" class="form-control" placeholder="Filtrar clientes..." id="filtro-clientes-lancamento" oninput="UI.filtrarClientesLancamento()">
+                <label class="form-label">Clientes na lista de espera (clique para enviar WhatsApp)</label>
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-lancamento">
                 </div>
-                <div style="margin-top: 8px; display: flex; gap: 8px;">
-                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesLancamento(true)">Selecionar todos</button>
-                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosClientesLancamento(false)">Limpar todos</button>
-                </div>
             </div>
+
             <div class="form-group">
-                <label class="form-label">Mensagem personalizada (opcional)</label>
+                <label class="form-label">Mensagem personalizada (opcional) - use {nome} para o nome do cliente</label>
                 <textarea id="msg-lancamento" class="form-control" rows="4" placeholder="Ex: Olá {nome}, o imóvel [Título] que estava em pré-lançamento agora está em LANÇAMENTO! Venha conhecer... 🏡"></textarea>
             </div>
-            <button class="btn-block" style="background: #f97316;" onclick="UI.enviarNotificacaoLancamento()">
-                <i class="fab fa-whatsapp"></i> Enviar Notificações
-            </button>
+
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
         </div>
 
@@ -2501,6 +2498,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
     </div>
 
     <script>
+        // CÓDIGO JAVASCRIPT COMPLETO (com as alterações)
         const DB = {
             name: 'ImobiProDB',
             version: 9,
@@ -6462,6 +6460,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 `).join('');
             },
 
+            // FUNÇÃO MODIFICADA: mostra apenas clientes na lista de espera
             abrirNotificacaoLancamento: async (imovelId) => {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
                 if (!imovel) return;
@@ -6475,85 +6474,74 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 `;
 
                 UI.imovelLancamentoId = imovelId;
-                UI.filtrarClientesLancamento('');
 
-                document.getElementById('msg-lancamento').value = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré-lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑`;
+                // Filtra apenas os clientes que estão na lista de espera deste imóvel
+                const waitingList = imovel.waitingList || [];
+                const clientesEspera = UI.data.clientes.filter(c => waitingList.includes(c.id));
+
+                const container = document.getElementById('lista-clientes-lancamento');
+                if (clientesEspera.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-user-clock"></i><p>Nenhum cliente na lista de espera.</p></div>`;
+                } else {
+                    container.innerHTML = clientesEspera.map(c => `
+                        <div class="client-card" onclick="UI.enviarNotificacaoIndividual('${c.id}')">
+                            <div class="client-header">
+                                <div class="client-name">${c.nome}</div>
+                                <span class="client-type" style="background: #f97316; color: white;">Lista de Espera</span>
+                            </div>
+                            <div class="client-info">
+                                <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
+                                ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
+                            </div>
+                            <div class="client-actions">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); UI.enviarNotificacaoIndividual('${c.id}')">
+                                    <i class="fab fa-whatsapp"></i> Enviar Notificação
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Mensagem padrão com informações do imóvel
+                const msgPadrao = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré‑lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑\n\n` +
+                    `📍 *Endereço:* ${imovel.endereco}\n` +
+                    `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n` +
+                    (imovel.area ? `📐 *Área:* ${imovel.area}m²\n` : '') +
+                    (imovel.quartos ? `🛏️ *Quartos:* ${imovel.quartos}\n` : '') +
+                    (imovel.banheiros ? `🛁 *Banheiros:* ${imovel.banheiros}\n` : '') +
+                    (imovel.vagas ? `🚗 *Vagas:* ${imovel.vagas}\n` : '') +
+                    (imovel.precoVenda ? `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n` : '') +
+                    (imovel.precoAluguel ? `💰 *Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n` : '') +
+                    `\nFale comigo para mais detalhes!`;
+                document.getElementById('msg-lancamento').value = msgPadrao;
 
                 UI.openModal('notificar-lancamento');
             },
 
-            filtrarClientesLancamento: (filtro = '') => {
-                const termo = document.getElementById('filtro-clientes-lancamento').value.toLowerCase();
-                const container = document.getElementById('lista-clientes-lancamento');
-                const imovel = UI.data.imoveis.find(i => i.id === UI.imovelLancamentoId);
-                const waitingList = imovel?.waitingList || [];
-
-                const clientesFiltrados = UI.data.clientes.filter(c => 
-                    c.nome.toLowerCase().includes(termo) || 
-                    (c.telefone && c.telefone.includes(termo))
-                );
-
-                container.innerHTML = clientesFiltrados.map(c => `
-                    <div class="client-select-item">
-                        <input type="checkbox" class="cliente-lancamento-checkbox" data-id="${c.id}" data-nome="${c.nome}" data-telefone="${c.telefone}"
-                            ${waitingList.includes(c.id) ? 'checked' : ''}>
-                        <div class="client-select-info">
-                            <div class="client-select-name">${c.nome}</div>
-                            <div class="client-select-phone">${c.telefone}</div>
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            selecionarTodosClientesLancamento: (selecionar) => {
-                document.querySelectorAll('#lista-clientes-lancamento .cliente-lancamento-checkbox').forEach(cb => {
-                    cb.checked = selecionar;
-                });
-            },
-
-            enviarNotificacaoLancamento: async () => {
-                const checkboxes = document.querySelectorAll('#lista-clientes-lancamento .cliente-lancamento-checkbox:checked');
-                if (checkboxes.length === 0) {
-                    Utils.toast('Selecione pelo menos um cliente', 'error');
-                    return;
-                }
+            // NOVA FUNÇÃO: envia notificação individual para um cliente da lista de espera
+            enviarNotificacaoIndividual: async (clienteId) => {
+                const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                if (!cliente) return;
 
                 const imovel = UI.data.imoveis.find(i => i.id === UI.imovelLancamentoId);
                 if (!imovel) return;
 
-                const msgBase = document.getElementById('msg-lancamento').value || `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré-lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑`;
-
-                for (const cb of checkboxes) {
-                    const nome = cb.dataset.nome.split(' ')[0];
-                    const telefone = cb.dataset.telefone;
-                    let mensagem = msgBase.replace(/{nome}/g, nome);
-                    if (!mensagem.includes('🏡') && !mensagem.includes('🏠') && !mensagem.includes('🔑')) {
-                        mensagem += ' 🏡';
-                    }
-
-                    const phoneNumber = Utils.formatPhoneForWhatsApp(telefone);
-                    const encodedMessage = encodeURIComponent(mensagem);
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                    
-                    // Usa a função centralizada para abrir o WhatsApp
-                    Utils.openWhatsApp(url);
-
-                    await new Promise(resolve => setTimeout(resolve, 1500));
+                let mensagem = document.getElementById('msg-lancamento').value;
+                if (!mensagem.trim()) {
+                    mensagem = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré‑lançamento agora está em LANÇAMENTO! Venha conhecer. 🏡`;
                 }
+                mensagem = mensagem.replace(/{nome}/g, cliente.nome.split(' ')[0]);
 
-                Utils.toast('Notificações enviadas!');
-                UI.closeModals();
+                const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
+                const encodedMessage = encodeURIComponent(mensagem);
+                const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                Utils.openWhatsApp(url);
             },
 
-            openFullscreenFromGallery: function(index) {
-                const currentSheet = document.querySelector('.modal-sheet[style*="transform: translateY(0px)"]');
-                if (!currentSheet) return;
-                
-                const imovelId = document.getElementById('i-id')?.value;
-                if (!imovelId) return;
-                
-                UI.openFullscreen(imovelId, index);
-            },
+            // As funções antigas foram removidas (ou mantidas vazias para evitar erros)
+            filtrarClientesLancamento: () => {},
+            selecionarTodosClientesLancamento: () => {},
+            enviarNotificacaoLancamento: () => {},
 
             openListaEspera: (imovelId) => {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
