@@ -1697,7 +1697,8 @@
                 <div class="section-title">
                     Imóveis
                     <div style="display: flex; gap: 8px;">
-                        <button class="icon-btn" style="background: var(--success); color: white; border-radius: 8px; padding: 8px;" onclick="Utils.generatePortfolioPDF()">
+                        <!-- Botão Portfólio modificado para abrir seleção -->
+                        <button class="icon-btn" style="background: var(--success); color: white; border-radius: 8px; padding: 8px;" onclick="UI.openPortfolioSelection()">
                             <i class="fas fa-file-pdf"></i> Portfólio
                         </button>
                         <button class="icon-btn" style="background: var(--primary); color: white; border-radius: 8px; padding: 8px;" onclick="UI.openNewImovel()">
@@ -2608,6 +2609,27 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Cancelar
                 </button>
             </div>
+        </div>
+
+        <!-- NOVO MODAL: SELEÇÃO DE IMÓVEIS PARA PORTFÓLIO -->
+        <div class="modal-overlay" id="overlay-portfolio-select"></div>
+        <div class="modal-sheet" id="sheet-portfolio-select">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title">Selecionar Imóveis para Portfólio</h3>
+            <div class="form-group">
+                <label class="form-label">Imóveis disponíveis</label>
+                <input type="text" class="form-control" placeholder="Filtrar imóveis..." id="filtro-imoveis-portfolio" oninput="UI.filtrarImoveisPortfolio()">
+                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-imoveis-portfolio">
+                </div>
+                <div style="margin-top: 8px; display: flex; gap: 8px;">
+                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosImoveisPortfolio(true)">Selecionar todos</button>
+                    <button type="button" class="btn-sm btn-light" onclick="UI.selecionarTodosImoveisPortfolio(false)">Limpar todos</button>
+                </div>
+            </div>
+            <button class="btn-block" style="background: var(--primary);" onclick="UI.gerarPortfolioSelecionados()">
+                <i class="fas fa-file-pdf"></i> Gerar PDF dos Selecionados
+            </button>
+            <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
     </div>
 
@@ -3620,7 +3642,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
             
-            generatePortfolioPDF: async function() {
+            generatePortfolioPDF: async function(selectedIds = null) {
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'mm', 'a4');
@@ -3629,10 +3651,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     const settings = await DB.get('settings', 'main') || {};
                     
-                    const imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado');
+                    let imoveis;
+                    if (selectedIds && Array.isArray(selectedIds) && selectedIds.length > 0) {
+                        imoveis = UI.data.imoveis.filter(i => selectedIds.includes(i.id));
+                    } else {
+                        imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado');
+                    }
                     
                     if (imoveis.length === 0) {
-                        Utils.toast('Nenhum imóvel disponível para portfólio', 'error');
+                        Utils.toast('Nenhum imóvel selecionado ou disponível para portfólio', 'error');
                         return;
                     }
                     
@@ -4534,7 +4561,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.renderClientes();
                 Utils.toast('Etapa removida! Clientes movidos para a primeira etapa.');
             },
-            
+
             renderLinks: (filter = '') => {
                 const container = document.getElementById('links-grid');
                 if (!container) return;
@@ -6831,6 +6858,57 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.data.imoveis = await Storage.getImoveis();
 
                 Utils.toast('Lista de espera atualizada!');
+                UI.closeModals();
+            },
+
+            // NOVAS FUNÇÕES PARA SELEÇÃO DE PORTFÓLIO
+            openPortfolioSelection: function() {
+                const container = document.getElementById('lista-imoveis-portfolio');
+                if (!container) return;
+                UI.filtrarImoveisPortfolio(''); // populate
+                UI.openModal('portfolio-select');
+            },
+
+            filtrarImoveisPortfolio: function(filter = '') {
+                const termo = document.getElementById('filtro-imoveis-portfolio')?.value.toLowerCase() || '';
+                const container = document.getElementById('lista-imoveis-portfolio');
+                if (!container) return;
+                
+                let imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado'); // available only? Or all? We'll use same as original portfolio: exclude vendido/alugado.
+                
+                if (termo) {
+                    imoveis = imoveis.filter(i => 
+                        i.titulo.toLowerCase().includes(termo) ||
+                        i.endereco.toLowerCase().includes(termo) ||
+                        (i.construtora && i.construtora.toLowerCase().includes(termo))
+                    );
+                }
+                
+                container.innerHTML = imoveis.map(i => `
+                    <div class="client-select-item">
+                        <input type="checkbox" class="imovel-portfolio-checkbox" data-id="${i.id}" data-titulo="${i.titulo}">
+                        <div class="client-select-info">
+                            <div class="client-select-name">${i.titulo}</div>
+                            <div class="client-select-phone">${i.endereco.substring(0, 40)}...</div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+
+            selecionarTodosImoveisPortfolio: function(selecionar) {
+                document.querySelectorAll('#lista-imoveis-portfolio .imovel-portfolio-checkbox').forEach(cb => {
+                    cb.checked = selecionar;
+                });
+            },
+
+            gerarPortfolioSelecionados: function() {
+                const checkboxes = document.querySelectorAll('#lista-imoveis-portfolio .imovel-portfolio-checkbox:checked');
+                if (checkboxes.length === 0) {
+                    Utils.toast('Selecione pelo menos um imóvel', 'error');
+                    return;
+                }
+                const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
+                Utils.generatePortfolioPDF(selectedIds);
                 UI.closeModals();
             }
         };
