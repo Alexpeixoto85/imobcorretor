@@ -1482,6 +1482,74 @@
             text-decoration: none;
         }
 
+        /* Estilos do modal de confirmação WhatsApp (importados do DJ Manager) */
+        .confirm-whatsapp-modal {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            margin: auto;
+            text-align: center;
+        }
+
+        .confirm-whatsapp-modal .modal-icon {
+            font-size: 3rem;
+            color: #25D366;
+            margin-bottom: 16px;
+        }
+
+        .confirm-whatsapp-modal .modal-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .confirm-whatsapp-modal .modal-description {
+            color: var(--secondary);
+            margin-bottom: 24px;
+            line-height: 1.4;
+        }
+
+        .confirm-whatsapp-options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .confirm-whatsapp-btn {
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .confirm-whatsapp-btn:active { transform: scale(0.98); }
+
+        .confirm-whatsapp-btn.conversa {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+
+        .confirm-whatsapp-btn.orcamento {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .confirm-whatsapp-btn.cancelar {
+            background: var(--light);
+            color: var(--secondary);
+        }
+
         @media (max-width: 360px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -2506,6 +2574,41 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </button>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
+
+        <!-- MODAL DE CONFIRMAÇÃO WHATSAPP (importado do DJ Manager) -->
+        <div class="modal-overlay" id="overlay-whatsapp-confirm"></div>
+        <div class="modal-sheet" id="sheet-whatsapp-confirm">
+            <div class="sheet-handle"></div>
+            <div class="confirm-whatsapp-modal">
+                <div class="modal-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="modal-title">Enviar para WhatsApp</div>
+                <div class="modal-description">
+                    Como você gostaria de iniciar a conversa com o cliente?
+                </div>
+                <div class="confirm-whatsapp-options">
+                    <button class="confirm-whatsapp-btn conversa" onclick="App.whatsapp.openConversaSimplesCliente()">
+                        <i class="fas fa-comment-dots"></i>
+                        <div style="text-align: left; flex: 1;">
+                            <div style="font-weight: 700; font-size: 1.1rem;">Apenas Conversa</div>
+                            <div style="font-size: 0.85rem; font-weight: normal;">Abrir conversa simples sem enviar ficha</div>
+                        </div>
+                    </button>
+                    <button class="confirm-whatsapp-btn orcamento" onclick="App.whatsapp.openMensagemPersonalizadaCliente()">
+                        <i class="fas fa-birthday-cake"></i>
+                        <div style="text-align: left; flex: 1;">
+                            <div style="font-weight: 700; font-size: 1.1rem;">Mensagem Personalizada</div>
+                            <div style="font-size: 0.85rem; font-weight: normal;">Enviar mensagem com aniversário ou detalhes do imóvel</div>
+                        </div>
+                    </button>
+                </div>
+                <button class="confirm-whatsapp-btn cancelar" onclick="UI.closeModals()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -3092,20 +3195,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return etapa?.cor || '#93c5fd';
             },
             
+            // CORREÇÃO: isBirthdayToday agora usa os valores da string diretamente para evitar problemas de fuso horário
             isBirthdayToday: (birthdate) => {
                 if (!birthdate) return false;
                 const today = new Date();
-                const birth = new Date(birthdate);
-                return today.getDate() === birth.getDate() && today.getMonth() === birth.getMonth();
+                const todayMonth = today.getMonth() + 1;
+                const todayDay = today.getDate();
+                const [year, month, day] = birthdate.split('-').map(Number);
+                return todayDay === day && todayMonth === month;
             },
             
+            // CORREÇÃO: calculateAge agora usa a data de nascimento de forma segura
             calculateAge: (birthdate) => {
                 if (!birthdate) return null;
+                const [year, month, day] = birthdate.split('-').map(Number);
                 const today = new Date();
-                const birth = new Date(birthdate);
-                let age = today.getFullYear() - birth.getFullYear();
-                const m = today.getMonth() - birth.getMonth();
-                if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+                let age = today.getFullYear() - year;
+                const m = today.getMonth() + 1 - month;
+                const d = today.getDate() - day;
+                if (m < 0 || (m === 0 && d < 0)) {
                     age--;
                 }
                 return age;
@@ -3875,6 +3983,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             envioMassaDelayMax: 8,
             envioMassaTotal: 0,
             envioMassaEnviados: 0,
+            currentWhatsappClienteId: null, // novo para o modal
             
             init: async () => {
                 try {
@@ -4033,6 +4142,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
             },
             
+            // CORREÇÃO: renderAniversariantes agora usa os valores da string diretamente
             renderAniversariantes: () => {
                 const hoje = new Date();
                 const diaHoje = hoje.getDate();
@@ -4040,8 +4150,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 const aniversariantes = UI.data.clientes.filter(cliente => {
                     if (!cliente.dataNascimento) return false;
-                    const nascimento = new Date(cliente.dataNascimento);
-                    return nascimento.getDate() === diaHoje && (nascimento.getMonth() + 1) === mesHoje;
+                    const [year, month, day] = cliente.dataNascimento.split('-').map(Number);
+                    return day === diaHoje && month === mesHoje;
                 });
                 
                 const aniversariantesList = document.getElementById('aniversariantes-list');
@@ -4285,7 +4395,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 ${cliente.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${cliente.faixaPreco}</div>` : ''}
                             </div>
                             <div class="client-actions">
-                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
@@ -4585,10 +4695,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                 list.innerHTML = filtered.map(c => {
                     const hoje = new Date();
-                    const nascimento = c.dataNascimento ? new Date(c.dataNascimento) : null;
+                    const nascimento = c.dataNascimento ? c.dataNascimento.split('-').map(Number) : null;
                     const isAniversario = nascimento && 
-                                         nascimento.getDate() === hoje.getDate() && 
-                                         (nascimento.getMonth() + 1) === (hoje.getMonth() + 1);
+                                         nascimento[2] === hoje.getDate() && 
+                                         nascimento[1] === (hoje.getMonth() + 1);
                     
                     const idade = Utils.calculateAge(c.dataNascimento);
                     const imovelInteresse = c.imovelInteresseId ? 
@@ -4612,7 +4722,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
                             <div class="client-actions">
-                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${c.id}')">
+                                <!-- Botão WhatsApp modificado para abrir o modal de confirmação -->
+                                <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${c.id}')">
@@ -4986,7 +5097,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-primary" onclick="App.imovel.edit('${i.id}')">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.shareImovel('${i.id}')">
+                            <!-- Botão WhatsApp modificado para abrir o modal de confirmação (imóvel) -->
+                            <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.confirmOpenImovel('${i.id}')">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </button>
                             <button class="btn-details btn-details-secondary" onclick="UI.openNewVisitaFromImovel('${i.id}')">
@@ -7497,6 +7609,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             whatsapp: {
+                // Funções existentes
                 shareImovel: async (imovelId) => {
                     const imovel = UI.data.imoveis.find(x => x.id === imovelId);
                     if (!imovel) return;
@@ -7544,8 +7657,49 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const encodedMessage = encodeURIComponent(message);
                     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
                     
-                    // Usa a função centralizada para abrir o WhatsApp
                     Utils.openWhatsApp(whatsappUrl);
+                },
+
+                // NOVAS FUNÇÕES PARA O MODAL DE CONFIRMAÇÃO (CLIENTE)
+                confirmOpenCliente: (clienteId) => {
+                    UI.currentWhatsappClienteId = clienteId;
+                    UI.openModal('whatsapp-confirm');
+                },
+
+                openConversaSimplesCliente: async () => {
+                    if (!UI.currentWhatsappClienteId) {
+                        UI.closeModals();
+                        return;
+                    }
+                    const cliente = UI.data.clientes.find(c => c.id === UI.currentWhatsappClienteId);
+                    if (!cliente) {
+                        UI.closeModals();
+                        return;
+                    }
+                    const saudacao = Utils.getGreeting();
+                    const message = `${saudacao}, ${cliente.nome.split(' ')[0]}! Tudo bem? Gostaria de conversar sobre imóveis. Podemos bater um papo?`;
+                    const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
+                    const encodedMessage = encodeURIComponent(message);
+                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+                    Utils.openWhatsApp(url);
+                    UI.closeModals();
+                },
+
+                openMensagemPersonalizadaCliente: async () => {
+                    if (!UI.currentWhatsappClienteId) {
+                        UI.closeModals();
+                        return;
+                    }
+                    // Chama a função existente que já envia a mensagem personalizada
+                    await App.cliente.whatsappPersonalizado(UI.currentWhatsappClienteId);
+                    UI.closeModals();
+                },
+
+                // (Opcional) Para imóvel, podemos adicionar um modal similar futuramente
+                confirmOpenImovel: (imovelId) => {
+                    // Por enquanto, apenas chama a função shareImovel diretamente
+                    // Mas podemos expandir depois
+                    App.whatsapp.shareImovel(imovelId);
                 }
             },
             
