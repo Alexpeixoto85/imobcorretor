@@ -554,6 +554,11 @@
         .details-section {
             margin-bottom: 20px;
             width: 100%;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
         }
         
         .details-section-title {
@@ -1883,6 +1888,7 @@
                     <select id="c-imovel-interesse" class="form-control">
                         <option value="">Selecione um imóvel...</option>
                     </select>
+                    <button type="button" class="btn-sm btn-primary-soft" style="margin-top: 8px;" onclick="App.cliente.addToWaitingList()" id="btn-add-waitinglist">Adicionar à lista de espera</button>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Data de Nascimento</label>
@@ -2318,6 +2324,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <label class="form-label">Taxa de Comissão (%)</label>
                     <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
                 </div>
+                <div class="form-group">
+                    <label class="form-label">Contador de Referência de Imóveis</label>
+                    <input type="number" id="s-ref-counter" class="form-control" readonly disabled>
+                    <small style="color: var(--secondary);">O número de referência é gerado automaticamente.</small>
+                </div>
 
                 <div class="form-group">
                     <label class="form-label">Mensagem Padrão para Primeiro Contato</label>
@@ -2501,7 +2512,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // CÓDIGO JAVASCRIPT COMPLETO (com as alterações)
         const DB = {
             name: 'ImobiProDB',
-            version: 9,
+            version: 10, // increment version for refNumber and waitingList enhancements
             db: null,
             
             init: function() {
@@ -2548,6 +2559,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imoveisStore.createIndex('status', 'status', { unique: false });
                     imoveisStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                     imoveisStore.createIndex('estagioLancamento', 'estagioLancamento', { unique: false });
+                    imoveisStore.createIndex('refNumber', 'refNumber', { unique: false }); // new index for reference
                 }
                 
                 if (!db.objectStoreNames.contains('visitas')) {
@@ -2598,6 +2610,50 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         };
                     } catch (error) {
                         console.error('Erro na migração para versão 9:', error);
+                    }
+                }
+                if (oldVersion < 10) {
+                    console.log('Migrando para versão 10: Adicionando refNumber aos imóveis');
+                    try {
+                        const transaction = db.transaction(['imoveis', 'settings'], 'readwrite');
+                        const store = transaction.objectStore('imoveis');
+                        const request = store.getAll();
+                        
+                        request.onsuccess = async (event) => {
+                            const imoveis = event.target.result;
+                            let maxRef = 0;
+                            for (const imovel of imoveis) {
+                                if (!imovel.refNumber) {
+                                    // generate new refNumber based on existing ones
+                                    maxRef++;
+                                    imovel.refNumber = `Ref${String(maxRef).padStart(4, '0')}`;
+                                    await new Promise((resolve, reject) => {
+                                        const putReq = store.put(imovel);
+                                        putReq.onsuccess = resolve;
+                                        putReq.onerror = reject;
+                                    });
+                                } else {
+                                    const num = parseInt(imovel.refNumber.replace('Ref', '')) || 0;
+                                    if (num > maxRef) maxRef = num;
+                                }
+                            }
+                            // update settings refCounter
+                            const settingsStore = transaction.objectStore('settings');
+                            const settings = await new Promise((res, rej) => {
+                                const getReq = settingsStore.get('main');
+                                getReq.onsuccess = () => res(getReq.result);
+                                getReq.onerror = rej;
+                            });
+                            if (settings) {
+                                settings.refCounter = maxRef;
+                                settingsStore.put(settings);
+                            } else {
+                                settingsStore.put({ id: 'main', refCounter: maxRef });
+                            }
+                            console.log('Migração para versão 10 concluída');
+                        };
+                    } catch (error) {
+                        console.error('Erro na migração para versão 10:', error);
                     }
                 }
             },
@@ -2756,6 +2812,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                         if (!imovel.waitingList) {
                                             imovel.waitingList = [];
                                         }
+                                        if (!imovel.refNumber) {
+                                            // Will be assigned later in migration to version 10
+                                        }
                                         await this.put('imoveis', imovel);
                                     }
                                     migrated = true;
@@ -2781,6 +2840,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 if (key.includes('settings') && typeof parsedData === 'object') {
                                     if (!parsedData.msgPadrao) {
                                         parsedData.msgPadrao = '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
+                                    }
+                                    if (!parsedData.refCounter) {
+                                        parsedData.refCounter = 0;
                                     }
                                     await this.put('settings', { id: 'main', ...parsedData });
                                     migrated = true;
@@ -3072,6 +3134,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return clean;
             },
             
+            // NOVA FUNÇÃO: gera PDF com layout profissional e "a partir de"
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3081,139 +3144,183 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const margin = 15;
                     let yPos = 20;
 
+                    // Cabeçalho
                     doc.setFillColor(37, 99, 235);
                     doc.rect(0, 0, pageWidth, 30, 'F');
-                    
                     doc.setTextColor(255, 255, 255);
                     doc.setFontSize(22);
                     doc.setFont("helvetica", "bold");
                     doc.text("FICHA DO IMÓVEL", pageWidth / 2, 18, { align: "center" });
-                    
+
                     const settings = await DB.get('settings', 'main') || {};
                     doc.setFontSize(10);
                     doc.setFont("helvetica", "normal");
-                    doc.text(`${settings.imobiliaria || "ImobiPro"} | ${settings.telefone || ""}`, pageWidth / 2, 25, { align: "center" });
+                    const headerInfo = `${settings.imobiliaria || "ImobiPro"} | ${settings.telefone || ""} | ${settings.nome || ""}`;
+                    doc.text(headerInfo, pageWidth / 2, 25, { align: "center" });
 
                     yPos = 45;
 
+                    // Título
                     doc.setTextColor(30, 41, 59);
-                    doc.setFontSize(14);
+                    doc.setFontSize(16);
                     doc.setFont("helvetica", "bold");
                     const tituloSplit = doc.splitTextToSize(imovel.titulo.toUpperCase(), pageWidth - (margin * 2));
                     doc.text(tituloSplit, margin, yPos);
-                    yPos += (tituloSplit.length * 6) + 5;
+                    yPos += (tituloSplit.length * 7) + 5;
 
+                    // Preço com "A partir de"
                     doc.setFontSize(18);
                     doc.setTextColor(37, 99, 235);
-                    let precoTexto = imovel.precoVenda ? Utils.formatCurrency(imovel.precoVenda) : 
-                                     (imovel.precoAluguel ? Utils.formatCurrency(imovel.precoAluguel) + "/mês" : "Consulte");
+                    let precoTexto = '';
+                    if (imovel.precoVenda && imovel.transacao !== 'aluguel') {
+                        precoTexto += `A partir de ${Utils.formatCurrency(imovel.precoVenda)} (venda)`;
+                    }
+                    if (imovel.precoAluguel && imovel.transacao !== 'venda') {
+                        if (precoTexto) precoTexto += ' | ';
+                        precoTexto += `A partir de ${Utils.formatCurrency(imovel.precoAluguel)}/mês (aluguel)`;
+                    }
+                    if (!precoTexto) precoTexto = 'Consulte valores';
+                    
                     doc.text(precoTexto, margin, yPos);
                     
-                    doc.setFontSize(10);
+                    doc.setFontSize(9);
                     doc.setTextColor(100, 100, 100);
-                    doc.text(`Ref: ${imovel.id.substring(0,6).toUpperCase()}`, pageWidth - margin, yPos, { align: "right" });
+                    doc.text(`Ref: ${imovel.refNumber || imovel.id.substring(0,8).toUpperCase()}`, pageWidth - margin, yPos, { align: "right" });
                     
                     yPos += 8;
                     doc.setDrawColor(200, 200, 200);
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 10;
 
-                    doc.setFontSize(10);
-                    doc.setTextColor(0, 0, 0);
-                    
-                    const detalhes = [
-                        `Endereço: ${imovel.endereco}`,
-                        `Bairro/Cidade: (Ver localização)`, 
-                        `Tipo: ${Utils.getTipoText(imovel.tipo)}`,
-                        `Área: ${imovel.area || '-'} m²`,
-                        `Quartos: ${imovel.quartos || '-'}`,
-                        `Banheiros: ${imovel.banheiros || '-'}`,
-                        `Vagas: ${imovel.vagas || '-'}`,
-                        `Condomínio: ${imovel.condominio ? Utils.formatCurrency(imovel.condominio) : '-'}`,
-                        `Status: ${Utils.getStatusText(imovel.status)}`,
-                        `Construtora: ${imovel.construtora || '-'}`
+                    // Tabela de características
+                    const body = [
+                        ['Endereço', imovel.endereco],
+                        ['Tipo', Utils.getTipoText(imovel.tipo)],
+                        ['Área', imovel.area ? imovel.area + ' m²' : '-'],
+                        ['Quartos', imovel.quartos ? imovel.quartos.toString() : '-'],
+                        ['Banheiros', imovel.banheiros ? imovel.banheiros.toString() : '-'],
+                        ['Vagas', imovel.vagas ? imovel.vagas.toString() : '-'],
+                        ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
+                        ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
+                        ['Construtora', imovel.construtora || '-'],
+                        ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
+                        ['Forma de Pagamento', imovel.formaPagamento || '-'],
+                        ['Status', Utils.getStatusText(imovel.status)]
                     ];
 
-                    let col = 0;
-                    detalhes.forEach((detalhe) => {
-                        if (col === 0) {
-                            doc.text("• " + detalhe, margin, yPos);
-                            col = 1;
-                        } else {
-                            doc.text("• " + detalhe, pageWidth / 2 + 5, yPos);
-                            col = 0;
-                            yPos += 6;
-                        }
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['Característica', 'Detalhe']],
+                        body: body,
+                        theme: 'striped',
+                        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 10 },
+                        styles: { fontSize: 9, cellPadding: 3 },
+                        columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 'auto' } },
+                        margin: { left: margin, right: margin }
                     });
-                    if (col === 1) yPos += 6; 
-                    yPos += 5;
 
+                    yPos = doc.lastAutoTable.finalY + 10;
+
+                    // Descrição
                     if (imovel.descricao) {
-                        yPos += 5;
+                        if (yPos > pageHeight - 40) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
                         doc.setFont("helvetica", "bold");
                         doc.setTextColor(37, 99, 235);
+                        doc.setFontSize(12);
                         doc.text("DESCRIÇÃO", margin, yPos);
                         yPos += 6;
                         
                         doc.setFont("helvetica", "normal");
                         doc.setTextColor(50, 50, 50);
                         doc.setFontSize(9);
-                        
                         const descSplit = doc.splitTextToSize(imovel.descricao, pageWidth - (margin * 2));
                         doc.text(descSplit, margin, yPos);
-                        yPos += (descSplit.length * 4) + 10;
+                        yPos += (descSplit.length * 5) + 10;
                     }
 
+                    // Vídeos
+                    if (imovel.videos && imovel.videos.length > 0) {
+                        if (yPos > pageHeight - 40) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFontSize(12);
+                        doc.text("VÍDEOS", margin, yPos);
+                        yPos += 6;
+                        
+                        doc.setFont("helvetica", "normal");
+                        doc.setTextColor(50, 50, 50);
+                        imovel.videos.forEach((video, idx) => {
+                            doc.setFontSize(9);
+                            doc.text(`${idx+1}. ${video.url}`, margin, yPos);
+                            yPos += 5;
+                        });
+                        yPos += 5;
+                    }
+
+                    // Imagens
                     if (imovel.imagens && imovel.imagens.length > 0) {
+                        // Se não houver espaço suficiente, nova página
                         if (yPos > pageHeight - 60) {
                             doc.addPage();
                             yPos = 20;
                         }
-
-                        doc.setFontSize(12);
                         doc.setFont("helvetica", "bold");
                         doc.setTextColor(37, 99, 235);
+                        doc.setFontSize(12);
                         doc.text("GALERIA DE FOTOS", margin, yPos);
                         yPos += 10;
 
-                        const imgWidth = 85; 
-                        const imgHeight = 55; 
-                        const xGap = 10; 
-                        const yGap = 10; 
-                        
+                        const imgWidth = 85;
+                        const imgHeight = 55;
+                        const gap = 10;
                         let xPos = margin;
-                        
+                        let yImg = yPos;
+
                         for (let i = 0; i < imovel.imagens.length; i++) {
-                            if (yPos + imgHeight > pageHeight - margin) {
+                            if (i > 0 && i % 2 === 0) {
+                                yImg += imgHeight + gap;
+                                xPos = margin;
+                            } else if (i > 0) {
+                                xPos += imgWidth + gap;
+                            }
+
+                            if (yImg + imgHeight > pageHeight - margin) {
                                 doc.addPage();
-                                yPos = 20;
+                                yImg = 20;
+                                xPos = margin;
                             }
 
                             try {
-                                doc.addImage(imovel.imagens[i], 'JPEG', xPos, yPos, imgWidth, imgHeight);
+                                doc.addImage(imovel.imagens[i], 'JPEG', xPos, yImg, imgWidth, imgHeight);
                                 doc.setDrawColor(220, 220, 220);
-                                doc.rect(xPos, yPos, imgWidth, imgHeight);
+                                doc.rect(xPos, yImg, imgWidth, imgHeight);
                             } catch (e) {
-                            }
-
-                            if (xPos === margin) {
-                                xPos = margin + imgWidth + xGap; 
-                            } else {
-                                xPos = margin; 
-                                yPos += imgHeight + yGap; 
+                                // Imagem inválida, apenas desenha retângulo vazio
+                                doc.setFillColor(240, 240, 240);
+                                doc.rect(xPos, yImg, imgWidth, imgHeight, 'F');
+                                doc.setTextColor(150, 150, 150);
+                                doc.setFontSize(8);
+                                doc.text("Sem imagem", xPos + imgWidth/2, yImg + imgHeight/2, { align: "center" });
                             }
                         }
                     }
 
+                    // Rodapé em todas as páginas
                     const pageCount = doc.getNumberOfPages();
-                    for(let i = 1; i <= pageCount; i++) {
+                    for (let i = 1; i <= pageCount; i++) {
                         doc.setPage(i);
                         doc.setFontSize(8);
                         doc.setTextColor(150, 150, 150);
-                        doc.text(`Página ${i} de ${pageCount} - Gerado por ImobiPro`, pageWidth / 2, pageHeight - 10, { align: "center" });
+                        doc.text(`Página ${i} de ${pageCount} - Gerado por ImobiPro em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageHeight - 10, { align: "center" });
                     }
 
-                    doc.save(`Ficha_${imovel.titulo.substring(0,10).replace(/[^a-z0-9]/gi, '_')}.pdf`);
+                    doc.save(`Ficha_${imovel.titulo.substring(0, 15).replace(/[^a-z0-9]/gi, '_')}.pdf`);
                     Utils.toast("PDF gerado com sucesso!");
 
                 } catch (err) {
@@ -3452,8 +3559,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.setFontSize(16);
                         doc.setTextColor(37, 99, 235);
                         let preco = '';
-                        if (imovel.precoVenda) preco += `Venda: ${Utils.formatCurrency(imovel.precoVenda)} `;
-                        if (imovel.precoAluguel) preco += `Aluguel: ${Utils.formatCurrency(imovel.precoAluguel)}/mês`;
+                        if (imovel.precoVenda) preco += `A partir de ${Utils.formatCurrency(imovel.precoVenda)} (venda) `;
+                        if (imovel.precoAluguel) preco += `A partir de ${Utils.formatCurrency(imovel.precoAluguel)}/mês (aluguel)`;
                         doc.text(preco, margin, yPos);
                         yPos += 8;
                         
@@ -3529,7 +3636,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         
                         doc.setFontSize(8);
                         doc.setTextColor(150, 150, 150);
-                        doc.text(`Referência: ${imovel.id.substring(0, 8).toUpperCase()}`, margin, pageHeight - 10);
+                        doc.text(`Referência: ${imovel.refNumber || imovel.id.substring(0,8).toUpperCase()}`, margin, pageHeight - 10);
                         doc.text(`Valor sujeito a alteração`, pageWidth - margin, pageHeight - 10, { align: "right" });
                     }
                     
@@ -3586,9 +3693,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     if (imovel.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(imovel.condominio)}/mês\n\n`;
                     
                     if (imovel.precoVenda) {
-                        message += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
+                        message += `💰 *Preço de Venda (a partir de):* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
                     } else if (imovel.precoAluguel) {
-                        message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
+                        message += `💰 *Preço de Aluguel (a partir de):* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
                     }
                     
                     if (imovel.formaPagamento) {
@@ -3715,6 +3822,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     email: '',
                     imobiliaria: 'Resende',
                     comissao: 5,
+                    refCounter: 0,
                     msgPadrao: '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡'
                 };
             },
@@ -4653,11 +4761,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const i = UI.data.imoveis.find(x => x.id === id);
                 if(!i) return;
                 
+                // Não mostrar selo de status se estiver vendido ou alugado
                 let statusBadge = '';
                 if(i.status === 'disponivel') statusBadge = `<span class="badge badge-success">DISPONÍVEL</span>`;
-                if(i.status === 'reservado') statusBadge = `<span class="badge badge-warning">RESERVADO</span>`;
-                if(i.status === 'vendido') statusBadge = `<span class="badge badge-primary">VENDIDO</span>`;
-                if(i.status === 'alugado') statusBadge = `<span class="badge badge-primary">ALUGADO</span>`;
+                else if(i.status === 'reservado') statusBadge = `<span class="badge badge-warning">RESERVADO</span>`;
+                // Não mostrar se vendido ou alugado
                 
                 const precoVenda = i.precoVenda ? Utils.formatCurrency(i.precoVenda) : '-';
                 const precoAluguel = i.precoAluguel ? Utils.formatCurrency(i.precoAluguel) + '/mês' : '-';
@@ -4736,14 +4844,17 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <div class="details-card">
                         <div class="details-header">
                             <div class="details-title">${i.titulo}</div>
-                            ${statusBadge}
+                            <div style="display: flex; gap: 8px; align-items: center;">
+                                ${statusBadge}
+                                <span class="badge badge-secondary">Ref: ${i.refNumber || 'N/A'}</span>
+                            </div>
                         </div>
                         
                         ${carouselHTML}
                         ${videosHTML}
                         
                         <div class="details-section">
-                            <div class="details-section-title"><i class="fas fa-money-bill-wave"></i> VALORES</div>
+                            <div class="details-section-title"><i class="fas fa-money-bill-wave"></i> VALORES (a partir de)</div>
                             <div class="details-info-grid">
                                 <div class="info-item">
                                     <div class="info-label">Preço de Venda</div>
@@ -6303,6 +6414,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('s-email').value = s.email || '';
                 document.getElementById('s-imobiliaria').value = s.imobiliaria || '';
                 document.getElementById('s-comissao').value = s.comissao || 5;
+                document.getElementById('s-ref-counter').value = s.refCounter || 0;
                 document.getElementById('s-msg-padrao').value = s.msgPadrao || '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
                 
                 UI.openModal('settings');
@@ -6510,8 +6622,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     (imovel.quartos ? `🛏️ *Quartos:* ${imovel.quartos}\n` : '') +
                     (imovel.banheiros ? `🛁 *Banheiros:* ${imovel.banheiros}\n` : '') +
                     (imovel.vagas ? `🚗 *Vagas:* ${imovel.vagas}\n` : '') +
-                    (imovel.precoVenda ? `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n` : '') +
-                    (imovel.precoAluguel ? `💰 *Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n` : '') +
+                    (imovel.precoVenda ? `💰 *Preço de Venda (a partir de):* ${Utils.formatCurrency(imovel.precoVenda)}\n` : '') +
+                    (imovel.precoAluguel ? `💰 *Aluguel (a partir de):* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n` : '') +
                     `\nFale comigo para mais detalhes!`;
                 document.getElementById('msg-lancamento').value = msgPadrao;
 
@@ -6537,11 +6649,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                 Utils.openWhatsApp(url);
             },
-
-            // As funções antigas foram removidas (ou mantidas vazias para evitar erros)
-            filtrarClientesLancamento: () => {},
-            selecionarTodosClientesLancamento: () => {},
-            enviarNotificacaoLancamento: () => {},
 
             openListaEspera: (imovelId) => {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
@@ -6775,9 +6882,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (imovel.condominio) body += `💰 Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês\n\n`;
                         
                         if (imovel.precoVenda) {
-                            body += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
+                            body += `💰 *Preço de Venda (a partir de):* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
                         } else if (imovel.precoAluguel) {
-                            body += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
+                            body += `💰 *Preço de Aluguel (a partir de):* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
                         }
                         
                         if (imovel.dataEntrega) {
@@ -6822,6 +6929,37 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     console.log(`Cliente ${cliente.nome} atingiu Venda Concluída para o imóvel ${imovel.titulo}`);
                     
                     Utils.toast(`Cliente marcado como venda concluída para "${imovel.titulo}".`);
+                },
+
+                // NOVA FUNÇÃO: adiciona cliente à lista de espera do imóvel de interesse
+                addToWaitingList: async function() {
+                    const clienteId = document.getElementById('c-id').value;
+                    const imovelId = document.getElementById('c-imovel-interesse').value;
+                    
+                    if (!clienteId) {
+                        Utils.toast('Salve o cliente primeiro antes de adicionar à lista de espera.', 'error');
+                        return;
+                    }
+                    if (!imovelId) {
+                        Utils.toast('Selecione um imóvel de interesse.', 'error');
+                        return;
+                    }
+                    
+                    const imovel = UI.data.imoveis.find(i => i.id === imovelId);
+                    if (!imovel) return;
+                    
+                    if (!imovel.waitingList) imovel.waitingList = [];
+                    
+                    if (imovel.waitingList.includes(clienteId)) {
+                        Utils.toast('Cliente já está na lista de espera deste imóvel.', 'warning');
+                        return;
+                    }
+                    
+                    imovel.waitingList.push(clienteId);
+                    await DB.put('imoveis', imovel);
+                    UI.data.imoveis = await Storage.getImoveis();
+                    
+                    Utils.toast('Cliente adicionado à lista de espera!');
                 }
             },
             
@@ -6861,6 +6999,17 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         let dataLancamento = document.getElementById('i-data-lancamento').value;
                         
                         const imovelExistente = UI.data.imoveis.find(i => i.id === id);
+                        
+                        // Gerar referência sequencial para novos imóveis
+                        let refNumber = imovelExistente?.refNumber;
+                        if (!refNumber) {
+                            const settings = await Storage.getSettings();
+                            settings.refCounter = (settings.refCounter || 0) + 1;
+                            refNumber = `Ref${String(settings.refCounter).padStart(4, '0')}`;
+                            await DB.put('settings', settings);
+                            UI.data.settings = settings;
+                        }
+                        
                         const waitingList = imovelExistente?.waitingList || [];
                         
                         if (imovelExistente && imovelExistente.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
@@ -6871,6 +7020,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         
                         const newImovel = {
                             id,
+                            refNumber,
                             titulo,
                             tipo,
                             transacao,
@@ -7340,10 +7490,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     message += `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n`;
                     
                     if (imovel.precoVenda) {
-                        message += `💰 *Preço de Venda:* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
+                        message += `💰 *Preço de Venda (a partir de):* ${Utils.formatCurrency(imovel.precoVenda)}\n`;
                     }
                     if (imovel.precoAluguel) {
-                        message += `💰 *Preço de Aluguel:* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
+                        message += `💰 *Preço de Aluguel (a partir de):* ${Utils.formatCurrency(imovel.precoAluguel)}/mês\n`;
                     }
                     
                     if (imovel.area) message += `📐 *Área:* ${imovel.area}m²\n`;
@@ -7470,6 +7620,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         email: document.getElementById('s-email').value,
                         imobiliaria: document.getElementById('s-imobiliaria').value,
                         comissao: parseFloat(document.getElementById('s-comissao').value) || 5,
+                        refCounter: UI.data.settings?.refCounter || 0,
                         msgPadrao: document.getElementById('s-msg-padrao').value
                     };
                     
