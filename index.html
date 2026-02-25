@@ -319,6 +319,7 @@
             display: flex; gap: 8px; margin-top: 12px;
             padding-top: 12px; border-top: 1px solid var(--border);
             width: 100%;
+            flex-wrap: wrap;
         }
 
         .btn-whatsapp-client {
@@ -2464,14 +2465,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- MODAL NOTIFICAR LANÇAMENTO (MODIFICADO) -->
+        <!-- MODAL NOTIFICAR LANÇAMENTO -->
         <div class="modal-overlay" id="overlay-notificar-lancamento"></div>
         <div class="modal-sheet" id="sheet-notificar-lancamento">
             <div class="sheet-handle"></div>
             <h3 class="section-title">Notificar Lançamento</h3>
             <div id="info-imovel-lancamento"></div>
             
-            <!-- Lista apenas de clientes na lista de espera, cada um clicável -->
             <div class="form-group">
                 <label class="form-label">Clientes na lista de espera (clique para enviar WhatsApp)</label>
                 <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 8px;" id="lista-clientes-lancamento">
@@ -4073,6 +4073,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
                                         <i class="fab fa-whatsapp"></i> Parabéns!
                                     </button>
+                                    <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
+                                        <i class="fas fa-calendar-plus"></i> Agendar
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -4284,6 +4287,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
+                                    <i class="fas fa-calendar-plus"></i> Agendar
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${cliente.id}')">
                                     <i class="fas fa-envelope"></i> Email
@@ -4608,6 +4614,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${c.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
+                                </button>
+                                <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${c.id}')">
+                                    <i class="fas fa-calendar-plus"></i> Agendar
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${c.id}')">
                                     <i class="fas fa-envelope"></i> Email
@@ -6960,6 +6969,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.data.imoveis = await Storage.getImoveis();
                     
                     Utils.toast('Cliente adicionado à lista de espera!');
+                },
+                
+                // NOVA FUNÇÃO: abre o modal de agendamento com o cliente pré‑selecionado
+                agendarAtividade: (clienteId) => {
+                    UI.openNewVisita();
+                    setTimeout(() => {
+                        const select = document.getElementById('v-cliente');
+                        if (select) select.value = clienteId;
+                    }, 100);
                 }
             },
             
