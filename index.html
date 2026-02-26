@@ -2631,13 +2631,32 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </button>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
+
+        <!-- NOVO MODAL: SELEÇÃO DE FOTOS PARA PDF (agora até 8 imagens) -->
+        <div class="modal-overlay" id="overlay-select-images"></div>
+        <div class="modal-sheet" id="sheet-select-images">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title">Selecionar Fotos para PDF</h3>
+            <p style="font-size: 0.9rem; color: var(--secondary); margin-bottom: 12px;">Selecione até 8 imagens para incluir no PDF.</p>
+            <div id="image-selection-container" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; max-height: 400px; overflow-y: auto; padding: 4px;">
+                <!-- populated dynamically -->
+            </div>
+            <div style="margin-top: 16px; display: flex; gap: 8px;">
+                <button class="btn-block" style="background: var(--primary);" onclick="UI.generatePDFWithSelectedImages()">
+                    <i class="fas fa-file-pdf"></i> Gerar PDF
+                </button>
+                <button class="btn-block" style="background: var(--light); color: var(--secondary);" onclick="UI.closeModals()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as alterações)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as alterações: limite 8 imagens, botão WhatsApp na agenda, etc.)
         const DB = {
             name: 'ImobiProDB',
-            version: 10, // increment version for refNumber and waitingList enhancements
+            version: 10,
             db: null,
             
             init: function() {
@@ -2684,7 +2703,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imoveisStore.createIndex('status', 'status', { unique: false });
                     imoveisStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                     imoveisStore.createIndex('estagioLancamento', 'estagioLancamento', { unique: false });
-                    imoveisStore.createIndex('refNumber', 'refNumber', { unique: false }); // new index for reference
+                    imoveisStore.createIndex('refNumber', 'refNumber', { unique: false });
                 }
                 
                 if (!db.objectStoreNames.contains('visitas')) {
@@ -2749,7 +2768,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             let maxRef = 0;
                             for (const imovel of imoveis) {
                                 if (!imovel.refNumber) {
-                                    // generate new refNumber based on existing ones
                                     maxRef++;
                                     imovel.refNumber = `Ref${String(maxRef).padStart(4, '0')}`;
                                     await new Promise((resolve, reject) => {
@@ -2762,7 +2780,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     if (num > maxRef) maxRef = num;
                                 }
                             }
-                            // update settings refCounter
                             const settingsStore = transaction.objectStore('settings');
                             const settings = await new Promise((res, rej) => {
                                 const getReq = settingsStore.get('main');
@@ -2936,9 +2953,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                         }
                                         if (!imovel.waitingList) {
                                             imovel.waitingList = [];
-                                        }
-                                        if (!imovel.refNumber) {
-                                            // Will be assigned later in migration to version 10
                                         }
                                         await this.put('imoveis', imovel);
                                     }
@@ -3217,7 +3231,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return etapa?.cor || '#93c5fd';
             },
             
-            // CORREÇÃO: isBirthdayToday agora usa os valores da string diretamente para evitar problemas de fuso horário
             isBirthdayToday: (birthdate) => {
                 if (!birthdate) return false;
                 const today = new Date();
@@ -3227,7 +3240,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return todayDay === day && todayMonth === month;
             },
             
-            // CORREÇÃO: calculateAge agora usa a data de nascimento de forma segura
             calculateAge: (birthdate) => {
                 if (!birthdate) return null;
                 const [year, month, day] = birthdate.split('-').map(Number);
@@ -3249,22 +3261,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             },
             
-            // Função centralizada para formatar número de telefone para WhatsApp
             formatPhoneForWhatsApp: (phone) => {
                 if (!phone) return null;
                 let clean = phone.replace(/\D/g, '');
-                // Remove zero inicial
                 if (clean.startsWith('0')) {
                     clean = clean.substring(1);
                 }
-                // Adiciona código do Brasil (55) se não tiver
                 if (!clean.startsWith('55')) {
                     clean = '55' + clean;
                 }
                 return clean;
             },
             
-            // NOVA FUNÇÃO: gera PDF com layout profissional e "a partir de"
+            // NOVA FUNÇÃO: gera PDF com layout profissional e "a partir de" (agora suporta até 8 imagens)
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3298,7 +3307,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     doc.text(tituloSplit, margin, yPos);
                     yPos += (tituloSplit.length * 7) + 5;
 
-                    // Preço com "A partir de"
+                    // Preço
                     doc.setFontSize(18);
                     doc.setTextColor(37, 99, 235);
                     let precoTexto = '';
@@ -3393,10 +3402,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         yPos += 5;
                     }
 
-                    // Imagens
+                    // Imagens (até 8, duas linhas de 4)
                     if (imovel.imagens && imovel.imagens.length > 0) {
-                        // Se não houver espaço suficiente, nova página
-                        if (yPos > pageHeight - 60) {
+                        if (yPos > pageHeight - 100) {
                             doc.addPage();
                             yPos = 20;
                         }
@@ -3406,8 +3414,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text("GALERIA DE FOTOS", margin, yPos);
                         yPos += 10;
 
-                        const imgWidth = 85;
-                        const imgHeight = 55;
+                        const imgWidth = (pageWidth - margin * 3) / 2;
+                        const imgHeight = 60;
                         const gap = 10;
                         let xPos = margin;
                         let yImg = yPos;
@@ -3431,7 +3439,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 doc.setDrawColor(220, 220, 220);
                                 doc.rect(xPos, yImg, imgWidth, imgHeight);
                             } catch (e) {
-                                // Imagem inválida, apenas desenha retângulo vazio
                                 doc.setFillColor(240, 240, 240);
                                 doc.rect(xPos, yImg, imgWidth, imgHeight, 'F');
                                 doc.setTextColor(150, 150, 150);
@@ -3463,8 +3470,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const imovel = UI.data.imoveis.find(x => x.id === imovelId);
                 if (!imovel) return;
                 const imovelCopy = JSON.parse(JSON.stringify(imovel));
-                if (imovelCopy.imagens && imovelCopy.imagens.length > 4) {
-                    imovelCopy.imagens = imovelCopy.imagens.slice(0, 4);
+                if (imovelCopy.imagens && imovelCopy.imagens.length > 8) {
+                    imovelCopy.imagens = imovelCopy.imagens.slice(0, 8);
                 }
                 Utils.generatePDF(imovelCopy);
             },
@@ -3727,7 +3734,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         yPos = colY + 12;
                         
                         if (imovel.imagens && imovel.imagens.length > 0) {
-                            const fotos = imovel.imagens.slice(0, 4);
+                            const fotos = imovel.imagens.slice(0, 4); // mantém 4 no portfólio por imóvel
                             const imgWidth = (pageWidth - margin * 3) / 2;
                             const imgHeight = 70;
                             
@@ -3917,9 +3924,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                        url.includes('vimeo.com');
             },
 
-            // Nova função para abrir WhatsApp de forma confiável em qualquer dispositivo
             openWhatsApp: function(url) {
-                // Cria um link âncora temporário e simula um clique
                 const a = document.createElement('a');
                 a.href = url;
                 a.target = '_blank';
@@ -4010,7 +4015,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             envioMassaDelayMax: 8,
             envioMassaTotal: 0,
             envioMassaEnviados: 0,
-            currentWhatsappClienteId: null, // novo para o modal
+            currentWhatsappClienteId: null,
+            currentPdfImovelId: null,
             
             init: async () => {
                 try {
@@ -4169,7 +4175,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
             },
             
-            // CORREÇÃO: renderAniversariantes agora usa os valores da string diretamente
             renderAniversariantes: () => {
                 const hoje = new Date();
                 const diaHoje = hoje.getDate();
@@ -4634,7 +4639,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
 
             createVisitaCard: (v) => {
-                const cliente = UI.data.clientes.find(c => c.id === v.clienteId) || { nome: 'Cliente não encontrado' };
+                const cliente = UI.data.clientes.find(c => c.id === v.clienteId);
+                const clienteNome = cliente ? cliente.nome : '';
+                const telefoneCliente = cliente ? cliente.telefone : '';
                 const imovel = UI.data.imoveis.find(i => i.id === v.imovelId) || { titulo: 'Imóvel não especificado' };
                 
                 const isUrgent = v.status === 'agendado' && v.data === Utils.getToday();
@@ -4649,6 +4656,29 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     additionalInfo = `<div class="schedule-notes">${v.equipeTipo}</div>`;
                 }
                 
+                // Nome a ser exibido: se for visita e tiver cliente, exibe nome do cliente; senão, exibe título do compromisso
+                let displayTitle = '';
+                if (cliente) {
+                    displayTitle = clienteNome;
+                } else {
+                    if (v.tipo === 'visita') displayTitle = 'Visita sem cliente';
+                    else if (v.tipo === 'reuniao-construtor') displayTitle = v.construtorNome || 'Reunião Construtor';
+                    else if (v.tipo === 'reuniao-equipe') displayTitle = 'Reunião de Equipe';
+                    else if (v.tipo === 'plantao') displayTitle = 'Plantão';
+                    else if (v.tipo === 'outro') displayTitle = v.outroDescricao || 'Outro';
+                    else if (v.tipo === 'ligacao') displayTitle = v.ligacaoAssunto || 'Ligação';
+                    else if (v.tipo === 'whatsapp') displayTitle = v.whatsappAssunto || 'WhatsApp';
+                    else if (v.tipo === 'documentacao') displayTitle = 'Documentação';
+                    else displayTitle = 'Agendamento';
+                }
+                
+                // Botão WhatsApp aparece apenas se houver cliente com telefone
+                const whatsappBtn = cliente && cliente.telefone ? `
+                    <button class="btn-whatsapp-client" style="flex: 0; min-width: 36px; padding: 8px;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
+                        <i class="fab fa-whatsapp"></i>
+                    </button>
+                ` : '';
+                
                 return `
                     <div class="schedule-card ${tipoClass} ${isUrgent ? 'schedule-urgent' : ''}" onclick="App.agenda.edit('${v.id}')">
                         <div class="schedule-header">
@@ -4661,17 +4691,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <i class="far fa-calendar"></i> ${Utils.formatDate(v.data)} <i class="far fa-clock"></i> ${v.horario}
                         </div>
                         <div class="schedule-title">
-                            ${v.tipo === 'visita' ? cliente.nome : 
-                              v.tipo === 'reuniao-construtor' ? (v.construtorNome || 'Reunião Construtor') :
-                              v.tipo === 'reuniao-equipe' ? 'Reunião de Equipe' :
-                              v.tipo === 'plantao' ? 'PLANTÃO' :
-                              v.tipo === 'outro' ? (v.outroDescricao || 'Outro') :
-                              'Agendamento'}
+                            ${displayTitle}
                         </div>
                         ${additionalInfo}
                         <div class="schedule-notes">
                             ${v.tipo === 'visita' ? `Visita: ${imovel.titulo.substring(0, 30)}...` : 
                              v.observacoes ? v.observacoes.substring(0, 50) + (v.observacoes.length > 50 ? '...' : '') : ''}
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+                            ${whatsappBtn}
                         </div>
                     </div>
                 `;
@@ -4749,7 +4777,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)</div>
                             </div>
                             <div class="client-actions">
-                                <!-- Botão WhatsApp modificado para abrir o modal de confirmação -->
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
                                     <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
@@ -4895,7 +4922,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); UI.openNewVisitaFromImovel('${i.id}')">
                                     <i class="fas fa-calendar-plus"></i> Visita
                                 </button>
-                                <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); Utils.generateSharePDF('${i.id}')">
+                                <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); UI.openSelectImagesForPDF('${i.id}')">
                                     <i class="fas fa-file-pdf"></i> Compartilhar
                                 </button>
                             </div>
@@ -4908,11 +4935,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const i = UI.data.imoveis.find(x => x.id === id);
                 if(!i) return;
                 
-                // Não mostrar selo de status se estiver vendido ou alugado
                 let statusBadge = '';
                 if(i.status === 'disponivel') statusBadge = `<span class="badge badge-success">DISPONÍVEL</span>`;
                 else if(i.status === 'reservado') statusBadge = `<span class="badge badge-warning">RESERVADO</span>`;
-                // Não mostrar se vendido ou alugado
                 
                 const precoVenda = i.precoVenda ? Utils.formatCurrency(i.precoVenda) : '-';
                 const precoAluguel = i.precoAluguel ? Utils.formatCurrency(i.precoAluguel) + '/mês' : '-';
@@ -5124,7 +5149,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-primary" onclick="App.imovel.edit('${i.id}')">
                                 <i class="fas fa-edit"></i> Editar
                             </button>
-                            <!-- Botão WhatsApp modificado para abrir o modal de confirmação (imóvel) -->
                             <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.confirmOpenImovel('${i.id}')">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </button>
@@ -5134,7 +5158,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <button class="btn-details btn-details-secondary" onclick="UI.openListaEspera('${i.id}')">
                                 <i class="fas fa-clock"></i> Lista de Espera
                             </button>
-                            <button class="btn-details btn-pdf" onclick="Utils.generatePDF(${JSON.stringify(safeImovel).replace(/"/g, '\"')})">
+                            <button class="btn-details btn-pdf" onclick="event.stopPropagation(); UI.openSelectImagesForPDF('${i.id}')">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
                         </div>
@@ -6633,10 +6657,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.envioMassaTotal = UI.envioMassaList.length;
                 UI.envioMassaEnviados = 0;
 
-                // Verifica se é iOS (Safari) para evitar bloqueio de pop-ups
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
                 if (isIOS) {
-                    // No iOS, exibe os links para que o usuário clique manualmente
                     const linksContainer = document.getElementById('whatsapp-links');
                     const linksList = document.getElementById('whatsapp-links-list');
                     linksList.innerHTML = '';
@@ -6683,7 +6705,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const encodedMessage = encodeURIComponent(mensagem);
                 const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                 
-                // Usa a função centralizada para abrir o WhatsApp
                 Utils.openWhatsApp(url);
 
                 UI.envioMassaEnviados++;
@@ -6720,7 +6741,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 `).join('');
             },
 
-            // FUNÇÃO MODIFICADA: mostra apenas clientes na lista de espera
             abrirNotificacaoLancamento: async (imovelId) => {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
                 if (!imovel) return;
@@ -6735,7 +6755,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                 UI.imovelLancamentoId = imovelId;
 
-                // Filtra apenas os clientes que estão na lista de espera deste imóvel
                 const waitingList = imovel.waitingList || [];
                 const clientesEspera = UI.data.clientes.filter(c => waitingList.includes(c.id));
 
@@ -6762,7 +6781,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     `).join('');
                 }
 
-                // Mensagem padrão com informações do imóvel
                 const msgPadrao = `Olá {nome}, o imóvel *${imovel.titulo}* que estava em pré‑lançamento agora está em LANÇAMENTO! Venha conhecer as condições especiais. 🏡🔑\n\n` +
                     `📍 *Endereço:* ${imovel.endereco}\n` +
                     `🏠 *Tipo:* ${Utils.getTipoText(imovel.tipo)}\n` +
@@ -6778,7 +6796,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.openModal('notificar-lancamento');
             },
 
-            // NOVA FUNÇÃO: envia notificação individual para um cliente da lista de espera
             enviarNotificacaoIndividual: async (clienteId) => {
                 const cliente = UI.data.clientes.find(c => c.id === clienteId);
                 if (!cliente) return;
@@ -6861,11 +6878,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.closeModals();
             },
 
-            // NOVAS FUNÇÕES PARA SELEÇÃO DE PORTFÓLIO
             openPortfolioSelection: function() {
                 const container = document.getElementById('lista-imoveis-portfolio');
                 if (!container) return;
-                UI.filtrarImoveisPortfolio(''); // populate
+                UI.filtrarImoveisPortfolio('');
                 UI.openModal('portfolio-select');
             },
 
@@ -6874,7 +6890,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const container = document.getElementById('lista-imoveis-portfolio');
                 if (!container) return;
                 
-                let imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado'); // available only? Or all? We'll use same as original portfolio: exclude vendido/alugado.
+                let imoveis = UI.data.imoveis.filter(i => i.status !== 'vendido' && i.status !== 'alugado');
                 
                 if (termo) {
                     imoveis = imoveis.filter(i => 
@@ -6909,6 +6925,76 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
                 const selectedIds = Array.from(checkboxes).map(cb => cb.dataset.id);
                 Utils.generatePortfolioPDF(selectedIds);
+                UI.closeModals();
+            },
+
+            openSelectImagesForPDF: function(imovelId) {
+                const imovel = UI.data.imoveis.find(i => i.id === imovelId);
+                if (!imovel) return;
+                UI.currentPdfImovelId = imovelId;
+                UI.populateImageSelection(imovel);
+                UI.openModal('select-images');
+            },
+
+            populateImageSelection: function(imovel) {
+                const container = document.getElementById('image-selection-container');
+                if (!container) return;
+                const imagens = imovel.imagens || [];
+                if (imagens.length === 0) {
+                    container.innerHTML = '<div class="empty-state" style="grid-column: span 2;">Nenhuma imagem para selecionar.</div>';
+                    return;
+                }
+                let html = '';
+                imagens.forEach((img, index) => {
+                    html += `
+                        <div style="position: relative; border-radius: 8px; overflow: hidden; border: 2px solid transparent;" data-index="${index}">
+                            <img src="${img}" style="width:100%; height:100px; object-fit:cover; display:block;">
+                            <input type="checkbox" class="image-select-checkbox" data-index="${index}" style="position: absolute; top: 5px; right: 5px; width: 24px; height: 24px; z-index: 2; accent-color: var(--primary);">
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+                
+                const checkboxes = container.querySelectorAll('.image-select-checkbox');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', function(e) {
+                        const checked = container.querySelectorAll('.image-select-checkbox:checked').length;
+                        if (checked > 8) {
+                            this.checked = false;
+                            Utils.toast('Máximo de 8 imagens selecionadas', 'error');
+                        }
+                    });
+                });
+            },
+
+            generatePDFWithSelectedImages: function() {
+                const imovelId = UI.currentPdfImovelId;
+                if (!imovelId) {
+                    UI.closeModals();
+                    return;
+                }
+                const imovel = UI.data.imoveis.find(i => i.id === imovelId);
+                if (!imovel) {
+                    UI.closeModals();
+                    return;
+                }
+                
+                const checkboxes = document.querySelectorAll('#image-selection-container .image-select-checkbox:checked');
+                const selectedIndices = Array.from(checkboxes).map(cb => parseInt(cb.dataset.index));
+                
+                const imovelCopy = JSON.parse(JSON.stringify(imovel));
+                if (selectedIndices.length > 0) {
+                    imovelCopy.imagens = selectedIndices.map(idx => imovel.imagens[idx]);
+                } else {
+                    imovelCopy.imagens = [];
+                }
+                
+                if (imovelCopy.imagens.length > 8) {
+                    imovelCopy.imagens = imovelCopy.imagens.slice(0, 8);
+                }
+                
+                Utils.generatePDF(imovelCopy);
+                
                 UI.closeModals();
             }
         };
@@ -7045,7 +7131,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const encodedMessage = encodeURIComponent(message);
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     
-                    // Usa a função centralizada para abrir o WhatsApp
                     Utils.openWhatsApp(url);
                 },
                 
@@ -7130,7 +7215,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast(`Cliente marcado como venda concluída para "${imovel.titulo}".`);
                 },
 
-                // NOVA FUNÇÃO: adiciona cliente à lista de espera do imóvel de interesse
                 addToWaitingList: async function() {
                     const clienteId = document.getElementById('c-id').value;
                     const imovelId = document.getElementById('c-imovel-interesse').value;
@@ -7161,7 +7245,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast('Cliente adicionado à lista de espera!');
                 },
                 
-                // NOVA FUNÇÃO: abre o modal de agendamento com o cliente pré‑selecionado
                 agendarAtividade: (clienteId) => {
                     UI.openNewVisita();
                     setTimeout(() => {
@@ -7208,7 +7291,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         
                         const imovelExistente = UI.data.imoveis.find(i => i.id === id);
                         
-                        // Gerar referência sequencial para novos imóveis
                         let refNumber = imovelExistente?.refNumber;
                         if (!refNumber) {
                             const settings = await Storage.getSettings();
@@ -7687,7 +7769,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             whatsapp: {
-                // Funções existentes
                 shareImovel: async (imovelId) => {
                     const imovel = UI.data.imoveis.find(x => x.id === imovelId);
                     if (!imovel) return;
@@ -7738,7 +7819,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.openWhatsApp(whatsappUrl);
                 },
 
-                // NOVAS FUNÇÕES PARA O MODAL DE CONFIRMAÇÃO (CLIENTE)
                 confirmOpenCliente: (clienteId) => {
                     UI.currentWhatsappClienteId = clienteId;
                     UI.openModal('whatsapp-confirm');
@@ -7768,15 +7848,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         UI.closeModals();
                         return;
                     }
-                    // Chama a função existente que já envia a mensagem personalizada
                     await App.cliente.whatsappPersonalizado(UI.currentWhatsappClienteId);
                     UI.closeModals();
                 },
 
-                // (Opcional) Para imóvel, podemos adicionar um modal similar futuramente
                 confirmOpenImovel: (imovelId) => {
-                    // Por enquanto, apenas chama a função shareImovel diretamente
-                    // Mas podemos expandir depois
                     App.whatsapp.shareImovel(imovelId);
                 }
             },
