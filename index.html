@@ -3307,7 +3307,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     doc.text(tituloSplit, margin, yPos);
                     yPos += (tituloSplit.length * 7) + 5;
 
-                    // Preço
+                    // Preço e referência
                     doc.setFontSize(18);
                     doc.setTextColor(37, 99, 235);
                     let precoTexto = '';
@@ -3324,14 +3324,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     doc.setFontSize(9);
                     doc.setTextColor(100, 100, 100);
-                    doc.text(`Ref: ${imovel.refNumber || imovel.id.substring(0,8).toUpperCase()}`, pageWidth - margin, yPos, { align: "right" });
+                    const refDisplay = Utils.formatRefNumber(imovel.refNumber || imovel.id);
+                    doc.text(refDisplay, pageWidth - margin, yPos, { align: "right" });
                     
                     yPos += 8;
                     doc.setDrawColor(200, 200, 200);
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 10;
 
-                    // Tabela de características
+                    // Características (duas grades lado a lado)
                     const body = [
                         ['Endereço', imovel.endereco],
                         ['Tipo', Utils.getTipoText(imovel.tipo)],
@@ -3347,18 +3348,39 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         ['Status', Utils.getStatusText(imovel.status)]
                     ];
 
+                    const gap = 5; // espaço entre as duas grades
+                    const colWidth = (pageWidth - margin * 2 - gap) / 2;
+                    const startY = yPos;
+
+                    // Primeira grade (itens 0 a 5)
                     doc.autoTable({
-                        startY: yPos,
+                        startY: startY,
                         head: [['Característica', 'Detalhe']],
-                        body: body,
+                        body: body.slice(0, 6),
                         theme: 'striped',
                         headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 10 },
                         styles: { fontSize: 9, cellPadding: 3 },
-                        columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 'auto' } },
-                        margin: { left: margin, right: margin }
+                        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: colWidth - 40 } },
+                        margin: { left: margin, right: pageWidth - (margin + colWidth) },
+                        tableWidth: colWidth
                     });
+                    const finalY1 = doc.lastAutoTable.finalY;
 
-                    yPos = doc.lastAutoTable.finalY + 10;
+                    // Segunda grade (itens 6 a 11)
+                    doc.autoTable({
+                        startY: startY,
+                        head: [['Característica', 'Detalhe']],
+                        body: body.slice(6),
+                        theme: 'striped',
+                        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 10 },
+                        styles: { fontSize: 9, cellPadding: 3 },
+                        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: colWidth - 40 } },
+                        margin: { left: margin + colWidth + gap, right: margin },
+                        tableWidth: colWidth
+                    });
+                    const finalY2 = doc.lastAutoTable.finalY;
+
+                    yPos = Math.max(finalY1, finalY2) + 10;
 
                     // Descrição
                     if (imovel.descricao) {
@@ -3464,6 +3486,22 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     console.error(err);
                     Utils.toast("Erro ao gerar PDF.", "error");
                 }
+            },
+
+            // Função para formatar número de referência no padrão "Ref.: 0001"
+            formatRefNumber: function(ref) {
+                if (!ref) return 'Ref.: 0000';
+                // Se for apenas dígitos (ex.: "0001")
+                if (/^\d+$/.test(ref)) {
+                    return 'Ref.: ' + ref.padStart(4, '0');
+                }
+                // Se começar com "Ref" (ex.: "Ref0001")
+                if (ref.startsWith('Ref')) {
+                    const digits = ref.match(/\d+/);
+                    if (digits) return 'Ref.: ' + digits[0].padStart(4, '0');
+                }
+                // Caso contrário, retorna placeholder (não deve ocorrer após migração)
+                return 'Ref.: ' + ref;
             },
 
             generateSharePDF: function(imovelId) {
@@ -3711,27 +3749,55 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text(`📍 ${imovel.endereco}`, margin, yPos);
                         yPos += 10;
                         
-                        doc.setFontSize(10);
-                        doc.setTextColor(30, 41, 59);
-                        const features = [
-                            `Área: ${imovel.area || '-'} m²`,
-                            `Quartos: ${imovel.quartos || '-'}`,
-                            `Banheiros: ${imovel.banheiros || '-'}`,
-                            `Vagas: ${imovel.vagas || '-'}`,
-                            `Condomínio: ${imovel.condominio ? Utils.formatCurrency(imovel.condominio) : '-'}`,
-                            `Construtora: ${imovel.construtora || '-'}`,
-                            `Entrega: ${imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'}`
+                        // Características em duas grades lado a lado
+                        const bodyPortfolio = [
+                            ['Endereço', imovel.endereco],
+                            ['Tipo', Utils.getTipoText(imovel.tipo)],
+                            ['Área', imovel.area ? imovel.area + ' m²' : '-'],
+                            ['Quartos', imovel.quartos ? imovel.quartos.toString() : '-'],
+                            ['Banheiros', imovel.banheiros ? imovel.banheiros.toString() : '-'],
+                            ['Vagas', imovel.vagas ? imovel.vagas.toString() : '-'],
+                            ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
+                            ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
+                            ['Construtora', imovel.construtora || '-'],
+                            ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
+                            ['Forma de Pagamento', imovel.formaPagamento || '-'],
+                            ['Status', Utils.getStatusText(imovel.status)]
                         ];
-                        
-                        let colX = margin;
-                        let colY = yPos;
-                        for (let i = 0; i < features.length; i++) {
-                            if (i % 2 === 0 && i > 0) {
-                                colY += 6;
-                            }
-                            doc.text(`• ${features[i]}`, colX + (i % 2 === 0 ? 0 : pageWidth/2 - margin), colY);
-                        }
-                        yPos = colY + 12;
+
+                        const gap = 5;
+                        const colWidth = (pageWidth - margin * 2 - gap) / 2;
+                        const startY = yPos;
+
+                        // Primeira grade
+                        doc.autoTable({
+                            startY: startY,
+                            head: [['Característica', 'Detalhe']],
+                            body: bodyPortfolio.slice(0, 6),
+                            theme: 'striped',
+                            headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 9 },
+                            styles: { fontSize: 8, cellPadding: 2 },
+                            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: colWidth - 35 } },
+                            margin: { left: margin, right: pageWidth - (margin + colWidth) },
+                            tableWidth: colWidth
+                        });
+                        const finalY1 = doc.lastAutoTable.finalY;
+
+                        // Segunda grade
+                        doc.autoTable({
+                            startY: startY,
+                            head: [['Característica', 'Detalhe']],
+                            body: bodyPortfolio.slice(6),
+                            theme: 'striped',
+                            headStyles: { fillColor: [37, 99, 235], textColor: 255, fontSize: 9 },
+                            styles: { fontSize: 8, cellPadding: 2 },
+                            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: colWidth - 35 } },
+                            margin: { left: margin + colWidth + gap, right: margin },
+                            tableWidth: colWidth
+                        });
+                        const finalY2 = doc.lastAutoTable.finalY;
+
+                        yPos = Math.max(finalY1, finalY2) + 10;
                         
                         if (imovel.imagens && imovel.imagens.length > 0) {
                             const fotos = imovel.imagens.slice(0, 4); // mantém 4 no portfólio por imóvel
@@ -3761,10 +3827,15 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     xPos += imgWidth + margin;
                                 }
                             }
+                            
+                            yPos = yPosImg + imgHeight + 10;
                         }
                         
                         if (imovel.descricao) {
-                            yPos = pageHeight - 40;
+                            if (yPos > pageHeight - 60) {
+                                doc.addPage();
+                                yPos = 20;
+                            }
                             doc.setFontSize(10);
                             doc.setTextColor(30, 41, 59);
                             doc.setFont("helvetica", "bold");
@@ -3778,7 +3849,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         
                         doc.setFontSize(8);
                         doc.setTextColor(150, 150, 150);
-                        doc.text(`Referência: ${imovel.refNumber || imovel.id.substring(0,8).toUpperCase()}`, margin, pageHeight - 10);
+                        const refDisplay = Utils.formatRefNumber(imovel.refNumber || imovel.id);
+                        doc.text(`Referência: ${refDisplay}`, margin, pageHeight - 10);
                         doc.text(`Valor sujeito a alteração`, pageWidth - margin, pageHeight - 10, { align: "right" });
                     }
                     
@@ -4033,6 +4105,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.data.funilEtapas = await Storage.getFunilEtapas();
                     UI.data.settings = await Storage.getSettings();
                     
+                    // Corrigir números de referência inválidos
+                    await UI.migrateRefNumbers();
+                    
                     console.log('Dados carregados:', {
                         clientes: UI.data.clientes.length,
                         imoveis: UI.data.imoveis.length,
@@ -4063,6 +4138,51 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('app').style.display = 'flex';
                 }
+            },
+            
+            // Nova função para corrigir números de referência antigos
+            migrateRefNumbers: async function() {
+                let settings = UI.data.settings;
+                let maxRef = settings?.refCounter || 0;
+                let changed = false;
+                
+                for (let imovel of UI.data.imoveis) {
+                    let ref = imovel.refNumber;
+                    let valid = false;
+                    
+                    if (typeof ref === 'string') {
+                        if (/^\d+$/.test(ref)) {
+                            valid = true; // puramente numérico, ok
+                            let num = parseInt(ref, 10);
+                            if (num > maxRef) maxRef = num;
+                        } else if (ref.startsWith('Ref')) {
+                            const digits = ref.match(/\d+/);
+                            if (digits) {
+                                valid = true;
+                                let num = parseInt(digits[0], 10);
+                                if (num > maxRef) maxRef = num;
+                            }
+                        }
+                    }
+                    
+                    if (!valid) {
+                        // Atribuir novo número de referência
+                        maxRef++;
+                        imovel.refNumber = String(maxRef).padStart(4, '0');
+                        await DB.put('imoveis', imovel);
+                        changed = true;
+                    }
+                }
+                
+                if (changed) {
+                    settings.refCounter = maxRef;
+                    await DB.put('settings', settings);
+                    UI.data.settings = settings;
+                    Utils.toast('Números de referência atualizados.');
+                }
+                
+                // Recarregar imóveis com os valores corrigidos
+                UI.data.imoveis = await Storage.getImoveis();
             },
 
             switchTab: (el) => {
@@ -5018,7 +5138,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <div class="details-title">${i.titulo}</div>
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 ${statusBadge}
-                                <span class="badge badge-secondary">Ref: ${i.refNumber || 'N/A'}</span>
+                                <span class="badge badge-secondary">${Utils.formatRefNumber(i.refNumber || i.id)}</span>
                             </div>
                         </div>
                         
@@ -7295,7 +7415,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (!refNumber) {
                             const settings = await Storage.getSettings();
                             settings.refCounter = (settings.refCounter || 0) + 1;
-                            refNumber = `Ref${String(settings.refCounter).padStart(4, '0')}`;
+                            // Armazena apenas o número com 4 dígitos (ex.: "0001")
+                            refNumber = String(settings.refCounter).padStart(4, '0');
                             await DB.put('settings', settings);
                             UI.data.settings = settings;
                         }
