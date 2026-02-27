@@ -1922,6 +1922,14 @@
             </div>
         </div>
 
+        <!-- NOVO MODAL: Detalhes do Cliente com simulação de financiamento -->
+        <div class="modal-overlay" id="overlay-cliente-details"></div>
+        <div class="modal-sheet" id="sheet-cliente-details">
+            <div class="sheet-handle"></div>
+            <div id="cliente-details-content">
+            </div>
+        </div>
+
         <div class="modal-overlay" id="overlay-cliente"></div>
         <div class="modal-sheet" id="sheet-cliente">
             <div class="sheet-handle"></div>
@@ -1963,6 +1971,10 @@
                 <div class="form-group">
                     <label class="form-label">Data de Nascimento</label>
                     <input type="date" id="c-data-nascimento" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Renda Mensal (R$)</label>
+                    <input type="text" id="c-renda-mensal" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Faixa de Preço (Interesse)</label>
@@ -2419,6 +2431,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Taxa de Juros Anual (%) (para simulação de financiamento)</label>
+                    <input type="number" id="s-taxa-juros" class="form-control" placeholder="8.5" min="0" max="30" step="0.01" value="8.5">
+                </div>
+                <div class="form-group">
                     <label class="form-label">Contador de Referência de Imóveis</label>
                     <input type="number" id="s-ref-counter" class="form-control" readonly disabled>
                     <small style="color: var(--secondary);">O número de referência é gerado automaticamente.</small>
@@ -2635,7 +2651,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             </div>
         </div>
 
-        <!-- NOVO MODAL: SELEÇÃO DE IMÓVEIS PARA PORTFÓLIO -->
+        <!-- MODAL: SELEÇÃO DE IMÓVEIS PARA PORTFÓLIO -->
         <div class="modal-overlay" id="overlay-portfolio-select"></div>
         <div class="modal-sheet" id="sheet-portfolio-select">
             <div class="sheet-handle"></div>
@@ -2656,7 +2672,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- NOVO MODAL: SELEÇÃO DE FOTOS PARA PDF (agora até 8 imagens) -->
+        <!-- MODAL: SELEÇÃO DE FOTOS PARA PDF (agora até 8 imagens) -->
         <div class="modal-overlay" id="overlay-select-images"></div>
         <div class="modal-sheet" id="sheet-select-images">
             <div class="sheet-handle"></div>
@@ -2677,10 +2693,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão apenas ícone)
         const DB = {
             name: 'ImobiProDB',
-            version: 11, // Atualizado para versão 11
+            version: 12, // Atualizado para versão 12 (novo campo rendaMensal em clientes e taxaJuros em settings)
             db: null,
             
             init: function() {
@@ -2755,108 +2771,46 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                if (oldVersion < 9) {
-                    console.log('Migrando para versão 9: Adicionando campo waitingList aos imóveis');
+                if (oldVersion < 12) {
+                    console.log('Migrando para versão 12: Adicionando rendaMensal aos clientes e taxaJuros às settings');
                     try {
-                        const transaction = db.transaction(['imoveis'], 'readwrite');
-                        const store = transaction.objectStore('imoveis');
-                        const request = store.getAll();
+                        const transaction = db.transaction(['clientes', 'settings'], 'readwrite');
+                        const clientesStore = transaction.objectStore('clientes');
+                        const request = clientesStore.getAll();
                         
                         request.onsuccess = async (event) => {
-                            const imoveis = event.target.result;
-                            for (const imovel of imoveis) {
-                                if (!imovel.waitingList) {
-                                    imovel.waitingList = [];
+                            const clientes = event.target.result;
+                            for (const cliente of clientes) {
+                                if (cliente.rendaMensal === undefined) {
+                                    cliente.rendaMensal = 0;
                                     await new Promise((resolve, reject) => {
-                                        const putReq = store.put(imovel);
+                                        const putReq = clientesStore.put(cliente);
                                         putReq.onsuccess = resolve;
                                         putReq.onerror = reject;
                                     });
                                 }
                             }
-                            console.log('Migração para versão 9 concluída');
+                            console.log('Migração clientes concluída');
                         };
-                    } catch (error) {
-                        console.error('Erro na migração para versão 9:', error);
-                    }
-                }
-                if (oldVersion < 10) {
-                    console.log('Migrando para versão 10: Adicionando refNumber aos imóveis');
-                    try {
-                        const transaction = db.transaction(['imoveis', 'settings'], 'readwrite');
-                        const store = transaction.objectStore('imoveis');
-                        const request = store.getAll();
                         
-                        request.onsuccess = async (event) => {
-                            const imoveis = event.target.result;
-                            let maxRef = 0;
-                            for (const imovel of imoveis) {
-                                if (!imovel.refNumber) {
-                                    maxRef++;
-                                    imovel.refNumber = `Ref${String(maxRef).padStart(4, '0')}`;
-                                    await new Promise((resolve, reject) => {
-                                        const putReq = store.put(imovel);
-                                        putReq.onsuccess = resolve;
-                                        putReq.onerror = reject;
-                                    });
-                                } else {
-                                    const num = parseInt(imovel.refNumber.replace('Ref', '')) || 0;
-                                    if (num > maxRef) maxRef = num;
-                                }
-                            }
-                            const settingsStore = transaction.objectStore('settings');
-                            const settings = await new Promise((res, rej) => {
-                                const getReq = settingsStore.get('main');
-                                getReq.onsuccess = () => res(getReq.result);
-                                getReq.onerror = rej;
-                            });
+                        const settingsStore = transaction.objectStore('settings');
+                        const settingsReq = settingsStore.get('main');
+                        settingsReq.onsuccess = async (event) => {
+                            let settings = event.target.result;
                             if (settings) {
-                                settings.refCounter = maxRef;
-                                settingsStore.put(settings);
+                                if (settings.taxaJuros === undefined) settings.taxaJuros = 8.5;
+                                await new Promise((resolve, reject) => {
+                                    const putReq = settingsStore.put(settings);
+                                    putReq.onsuccess = resolve;
+                                    putReq.onerror = reject;
+                                });
                             } else {
-                                settingsStore.put({ id: 'main', refCounter: maxRef });
+                                settingsStore.put({ id: 'main', taxaJuros: 8.5 });
                             }
-                            console.log('Migração para versão 10 concluída');
+                            console.log('Migração settings concluída');
                         };
                     } catch (error) {
-                        console.error('Erro na migração para versão 10:', error);
-                    }
-                }
-                if (oldVersion < 11) {
-                    console.log('Migrando para versão 11: Adicionando campos valorAvaliacao, tabelaPDF, tabelaPDFNome aos imóveis');
-                    try {
-                        const transaction = db.transaction(['imoveis'], 'readwrite');
-                        const store = transaction.objectStore('imoveis');
-                        const request = store.getAll();
-                        
-                        request.onsuccess = async (event) => {
-                            const imoveis = event.target.result;
-                            for (const imovel of imoveis) {
-                                let changed = false;
-                                if (imovel.valorAvaliacao === undefined) {
-                                    imovel.valorAvaliacao = 0;
-                                    changed = true;
-                                }
-                                if (imovel.tabelaPDF === undefined) {
-                                    imovel.tabelaPDF = '';
-                                    changed = true;
-                                }
-                                if (imovel.tabelaPDFNome === undefined) {
-                                    imovel.tabelaPDFNome = '';
-                                    changed = true;
-                                }
-                                if (changed) {
-                                    await new Promise((resolve, reject) => {
-                                        const putReq = store.put(imovel);
-                                        putReq.onsuccess = resolve;
-                                        putReq.onerror = reject;
-                                    });
-                                }
-                            }
-                            console.log('Migração para versão 11 concluída');
-                        };
-                    } catch (error) {
-                        console.error('Erro na migração para versão 11:', error);
+                        console.error('Erro na migração para versão 12:', error);
                     }
                 }
             },
@@ -2995,6 +2949,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                                 cliente.dataCriacao.split('T')[0] : 
                                                 new Date().toISOString().split('T')[0];
                                         }
+                                        if (cliente.rendaMensal === undefined) cliente.rendaMensal = 0;
                                         await this.put('clientes', cliente);
                                     }
                                     migrated = true;
@@ -3015,7 +2970,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                         if (!imovel.waitingList) {
                                             imovel.waitingList = [];
                                         }
-                                        // Adicionar campos novos se não existirem
                                         if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                         if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                         if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
@@ -3048,6 +3002,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                     if (!parsedData.refCounter) {
                                         parsedData.refCounter = 0;
                                     }
+                                    if (parsedData.taxaJuros === undefined) parsedData.taxaJuros = 8.5;
                                     await this.put('settings', { id: 'main', ...parsedData });
                                     migrated = true;
                                     console.log('Settings migrados do localStorage');
@@ -3409,7 +3364,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     // Características (duas grades lado a lado)
                     const body = [];
                     if (imovel.tipo !== 'terreno') {
-                        // Para não-terreno, incluir quartos, banheiros, vagas
                         body.push(
                             ['Endereço', imovel.endereco],
                             ['Tipo', Utils.getTipoText(imovel.tipo)],
@@ -3425,7 +3379,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             ['Status', Utils.getStatusText(imovel.status)]
                         );
                     } else {
-                        // Para terreno, omitir quartos, banheiros, vagas
                         body.push(
                             ['Endereço', imovel.endereco],
                             ['Tipo', Utils.getTipoText(imovel.tipo)],
@@ -3439,16 +3392,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         );
                     }
 
-                    const gap = 5; // espaço entre as duas grades
+                    const gap = 5;
                     const colWidth = (pageWidth - margin * 2 - gap) / 2;
                     const startY = yPos;
 
-                    // Dividir body em duas partes aproximadamente iguais
                     const meio = Math.ceil(body.length / 2);
                     const primeiraParte = body.slice(0, meio);
                     const segundaParte = body.slice(meio);
 
-                    // Primeira grade
                     doc.autoTable({
                         startY: startY,
                         head: [['Característica', 'Detalhe']],
@@ -3462,7 +3413,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     });
                     const finalY1 = doc.lastAutoTable.finalY;
 
-                    // Segunda grade
                     doc.autoTable({
                         startY: startY,
                         head: [['Característica', 'Detalhe']],
@@ -3587,16 +3537,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             // Função para formatar número de referência no padrão "Ref.: 0001"
             formatRefNumber: function(ref) {
                 if (!ref) return 'Ref.: 0000';
-                // Se for apenas dígitos (ex.: "0001")
                 if (/^\d+$/.test(ref)) {
                     return 'Ref.: ' + ref.padStart(4, '0');
                 }
-                // Se começar com "Ref" (ex.: "Ref0001")
                 if (ref.startsWith('Ref')) {
                     const digits = ref.match(/\d+/);
                     if (digits) return 'Ref.: ' + digits[0].padStart(4, '0');
                 }
-                // Caso contrário, retorna placeholder
                 return 'Ref.: ' + ref;
             },
 
@@ -3845,7 +3792,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.text(`📍 ${imovel.endereco}`, margin, yPos);
                         yPos += 10;
                         
-                        // Características
                         let bodyPortfolio = [];
                         if (imovel.tipo !== 'terreno') {
                             bodyPortfolio = [
@@ -4117,6 +4063,165 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+            },
+
+            // Função para simular financiamento
+            simulateFinancing: (cliente, imovel, taxaJurosAnual) => {
+                if (!cliente.rendaMensal || cliente.rendaMensal <= 0) {
+                    return { error: "Renda mensal não informada." };
+                }
+                if (!cliente.dataNascimento) {
+                    return { error: "Data de nascimento não informada." };
+                }
+                if (!imovel || (!imovel.precoVenda && !imovel.precoAluguel)) {
+                    return { error: "Imóvel de interesse não selecionado ou sem preço de venda." };
+                }
+
+                const valorImovel = imovel.precoVenda || imovel.precoAluguel || 0;
+                const maxFinanciamento = valorImovel * 0.8; // 80% LTV
+
+                const idadeAtual = Utils.calculateAge(cliente.dataNascimento);
+                if (idadeAtual === null) return { error: "Idade não calculada." };
+                const idadeMax = 70.6; // anos
+                const maxMesesIdade = Math.max(0, (idadeMax - idadeAtual) * 12);
+                const maxMeses = Math.min(420, Math.floor(maxMesesIdade)); // prazo máximo 420 meses
+
+                if (maxMeses <= 0) {
+                    return { error: "Cliente excede a idade máxima para financiamento." };
+                }
+
+                const rendaMensal = cliente.rendaMensal;
+                const maxPrestacao = rendaMensal * 0.3; // 30% da renda
+
+                // Taxa mensal
+                const i = taxaJurosAnual / 100 / 12;
+
+                // Cálculo do valor máximo financiável pela renda: PV = PMT * (1 - (1+i)^-n) / i
+                let maxPelaRenda = 0;
+                if (i > 0) {
+                    maxPelaRenda = maxPrestacao * (1 - Math.pow(1 + i, -maxMeses)) / i;
+                } else {
+                    maxPelaRenda = maxPrestacao * maxMeses; // juros zero
+                }
+
+                const valorFinanciavel = Math.min(maxFinanciamento, maxPelaRenda);
+                const entradaNecessaria = valorImovel - valorFinanciavel;
+                const prestacaoMensal = (i > 0) 
+                    ? valorFinanciavel * i / (1 - Math.pow(1 + i, -maxMeses))
+                    : valorFinanciavel / maxMeses;
+
+                return {
+                    valorImovel,
+                    maxFinanciamento,
+                    maxPelaRenda,
+                    valorFinanciavel,
+                    entradaNecessaria,
+                    prestacaoMensal,
+                    prazoMeses: maxMeses,
+                    taxaAnual: taxaJurosAnual,
+                    idadeAtual,
+                    rendaMensal,
+                    maxPrestacao
+                };
+            },
+
+            // Gera PDF do relatório do cliente com simulação
+            generateClientePDF: async (cliente) => {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const margin = 15;
+                    const settings = await DB.get('settings', 'main') || {};
+
+                    doc.setFillColor(37, 99, 235);
+                    doc.rect(0, 0, pageWidth, 25, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("RELATÓRIO DO CLIENTE", pageWidth/2, 15, { align: "center" });
+                    doc.setFontSize(9);
+                    doc.text(`${settings.imobiliaria || "ImobiPro"} | ${settings.nome || ""} - ${settings.creci || ""}`, pageWidth/2, 22, { align: "center" });
+
+                    let yPos = 35;
+
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFontSize(14);
+                    doc.setFont("helvetica", "bold");
+                    doc.text(cliente.nome, margin, yPos);
+                    yPos += 8;
+
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    const telefone = cliente.telefone ? Utils.formatPhone(cliente.telefone) : '-';
+                    const email = cliente.email || '-';
+                    const nascimento = cliente.dataNascimento ? Utils.formatDate(cliente.dataNascimento) : '-';
+                    const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
+                    const renda = cliente.rendaMensal ? Utils.formatCurrency(cliente.rendaMensal) : '-';
+                    const tipo = Utils.getTipoClienteText(cliente.tipo);
+                    const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil)?.nome || cliente.etapaFunil;
+
+                    doc.text(`Telefone: ${telefone}`, margin, yPos); yPos += 6;
+                    doc.text(`Email: ${email}`, margin, yPos); yPos += 6;
+                    doc.text(`Nascimento: ${nascimento} (${idade} anos)`, margin, yPos); yPos += 6;
+                    doc.text(`Renda Mensal: ${renda}`, margin, yPos); yPos += 6;
+                    doc.text(`Tipo: ${tipo} | Etapa Funil: ${etapa}`, margin, yPos); yPos += 10;
+
+                    // Simulação de financiamento
+                    const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
+                    const taxaJuros = settings.taxaJuros || 8.5;
+                    const simulacao = Utils.simulateFinancing(cliente, imovel, taxaJuros);
+
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(37, 99, 235);
+                    doc.setFontSize(12);
+                    doc.text("SIMULAÇÃO DE FINANCIAMENTO (Caixa Econômica)", margin, yPos);
+                    yPos += 8;
+
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFontSize(10);
+
+                    if (simulacao.error) {
+                        doc.text(`Não foi possível simular: ${simulacao.error}`, margin, yPos);
+                    } else {
+                        doc.text(`Imóvel de interesse: ${imovel ? imovel.titulo : 'Nenhum'}`, margin, yPos); yPos += 6;
+                        if (imovel) {
+                            doc.text(`Valor do imóvel: ${Utils.formatCurrency(simulacao.valorImovel)}`, margin, yPos); yPos += 6;
+                            doc.text(`Máximo financiável (80%): ${Utils.formatCurrency(simulacao.maxFinanciamento)}`, margin, yPos); yPos += 6;
+                            doc.text(`Renda mensal: ${Utils.formatCurrency(simulacao.rendaMensal)}`, margin, yPos); yPos += 6;
+                            doc.text(`Prestação máxima (30%): ${Utils.formatCurrency(simulacao.maxPrestacao)}`, margin, yPos); yPos += 6;
+                            doc.text(`Prazo máximo permitido: ${simulacao.prazoMeses} meses`, margin, yPos); yPos += 6;
+                            doc.text(`Valor financiável pela renda: ${Utils.formatCurrency(simulacao.maxPelaRenda)}`, margin, yPos); yPos += 6;
+                            doc.text(`Valor efetivamente financiado: ${Utils.formatCurrency(simulacao.valorFinanciavel)}`, margin, yPos); yPos += 6;
+                            doc.text(`Entrada necessária: ${Utils.formatCurrency(simulacao.entradaNecessaria)}`, margin, yPos); yPos += 6;
+                            doc.text(`Prestação mensal estimada: ${Utils.formatCurrency(simulacao.prestacaoMensal)}`, margin, yPos); yPos += 6;
+                            doc.text(`Taxa de juros anual: ${simulacao.taxaAnual.toFixed(2)}%`, margin, yPos); yPos += 8;
+                            if (simulacao.valorFinanciavel < simulacao.maxFinanciamento) {
+                                doc.text("⚠️ O valor financiado está limitado pela renda do cliente.", margin, yPos); yPos += 6;
+                            } else {
+                                doc.text("✅ O cliente pode financiar até 80% do valor do imóvel.", margin, yPos); yPos += 6;
+                            }
+                        }
+                    }
+
+                    // Observações
+                    if (cliente.observacoes) {
+                        yPos += 5;
+                        doc.setFont("helvetica", "bold");
+                        doc.text("Observações:", margin, yPos);
+                        yPos += 6;
+                        doc.setFont("helvetica", "normal");
+                        const obsSplit = doc.splitTextToSize(cliente.observacoes, pageWidth - margin*2);
+                        doc.text(obsSplit, margin, yPos);
+                    }
+
+                    doc.save(`Cliente_${cliente.nome.replace(/\s/g, '_')}.pdf`);
+                    Utils.toast("Relatório do cliente gerado!");
+                } catch (err) {
+                    console.error(err);
+                    Utils.toast("Erro ao gerar PDF do cliente", "error");
+                }
             }
         };
 
@@ -4148,6 +4253,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     imobiliaria: 'Resende',
                     comissao: 5,
                     refCounter: 0,
+                    taxaJuros: 8.5,
                     msgPadrao: '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡'
                 };
             },
@@ -4265,7 +4371,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     
                     if (typeof ref === 'string') {
                         if (/^\d+$/.test(ref)) {
-                            valid = true; // puramente numérico, ok
+                            valid = true;
                             let num = parseInt(ref, 10);
                             if (num > maxRef) maxRef = num;
                         } else if (ref.startsWith('Ref')) {
@@ -4279,7 +4385,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                     
                     if (!valid) {
-                        // Atribuir novo número de referência
                         maxRef++;
                         imovel.refNumber = String(maxRef).padStart(4, '0');
                         await DB.put('imoveis', imovel);
@@ -4294,7 +4399,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast('Números de referência atualizados.');
                 }
                 
-                // Recarregar imóveis com os valores corrigidos
                 UI.data.imoveis = await Storage.getImoveis();
             },
 
@@ -4434,7 +4538,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     aniversariantesList.innerHTML = aniversariantes.map(cliente => {
                         const idade = Utils.calculateAge(cliente.dataNascimento);
                         return `
-                            <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
+                            <div class="client-card" onclick="App.cliente.showDetails('${cliente.id}')">
                                 <div class="client-header">
                                     <div class="client-name">${cliente.nome} <span class="badge badge-pink">🎂 ${idade ? idade + ' anos' : 'Aniversário'}</span></div>
                                     <span class="client-type type-${cliente.tipo}">${Utils.getTipoClienteText(cliente.tipo)}</span>
@@ -4525,7 +4629,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                          draggable="true" 
                                          data-cliente-id="${cliente.id}"
                                          ondragstart="UI.startDrag(event, '${cliente.id}')"
-                                         onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
+                                         onclick="event.stopPropagation(); App.cliente.showDetails('${cliente.id}')">
                                         <div class="funnel-client-name">${cliente.nome}</div>
                                         <div class="funnel-client-days">
                                             ${cliente.dataEntradaFunil ? `${Utils.calculateDaysInStage(cliente.dataEntradaFunil)} dias` : 'Novo'}
@@ -4646,7 +4750,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const dias = cliente.dataEntradaFunil ? Utils.calculateDaysInStage(cliente.dataEntradaFunil) : 0;
                     
                     return `
-                        <div class="client-card" onclick="App.cliente.edit('${cliente.id}')">
+                        <div class="client-card" onclick="App.cliente.showDetails('${cliente.id}')">
                             <div class="client-header">
                                 <div class="client-name">${cliente.nome}</div>
                                 <span class="client-type" style="background: ${etapa?.cor || '#93c5fd'}; color: white;">
@@ -4889,7 +4993,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     additionalInfo = `<div class="schedule-notes">${v.equipeTipo}</div>`;
                 }
                 
-                // Nome a ser exibido: se for visita e tiver cliente, exibe nome do cliente; senão, exibe título do compromisso
                 let displayTitle = '';
                 if (cliente) {
                     displayTitle = clienteNome;
@@ -4905,7 +5008,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     else displayTitle = 'Agendamento';
                 }
                 
-                // Botão WhatsApp aparece apenas se houver cliente com telefone
                 const whatsappBtn = cliente && cliente.telefone ? `
                     <button class="btn-whatsapp-client" style="flex: 0; min-width: 36px; padding: 8px;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
                         <i class="fab fa-whatsapp"></i>
@@ -4995,7 +5097,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
                     
                     return `
-                        <div class="client-card" onclick="App.cliente.edit('${c.id}')">
+                        <div class="client-card" onclick="App.cliente.showDetails('${c.id}')">
                             ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
                             <div class="client-header">
                                 <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''}</div>
@@ -5113,14 +5215,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 const hasVideos = i.videos && i.videos.length > 0;
                 const videoBadge = hasVideos ? `<div class="property-badge" style="top: 40px; left: 12px; background: #8b5cf6;">🎥 VÍDEO</div>` : '';
                 
-                // Botão PDF da tabela (se existir)
                 const pdfButton = i.tabelaPDF ? `
                     <button class="btn-sm btn-light" style="background: #dc2626; color: white;" onclick="event.stopPropagation(); UI.openTabelaPDF('${i.id}')">
-                        <i class="fas fa-file-pdf"></i> Tabela
+                        <i class="fas fa-file-pdf"></i>
                     </button>
                 ` : '';
                 
-                // Características (ocultar quartos/banheiros/vagas se for terreno)
                 let featuresHTML = '';
                 if (i.tipo === 'terreno') {
                     featuresHTML = `
@@ -5172,13 +5272,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <div class="property-price">${preco}</div>
                             <div class="property-actions">
                                 <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.imovel.edit('${i.id}')">
-                                    <i class="fas fa-edit"></i> Editar
+                                    <i class="fas fa-edit"></i>
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); UI.openNewVisitaFromImovel('${i.id}')">
-                                    <i class="fas fa-calendar-plus"></i> Visita
+                                    <i class="fas fa-calendar-plus"></i>
                                 </button>
                                 <button class="btn-sm btn-whatsapp" onclick="event.stopPropagation(); UI.openSelectImagesForPDF('${i.id}')">
-                                    <i class="fas fa-file-pdf"></i> Compartilhar
+                                    <i class="fas fa-file-pdf"></i>
                                 </button>
                                 ${pdfButton}
                             </div>
@@ -5431,6 +5531,166 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 
                 document.getElementById('imovel-details-content').innerHTML = detailsContent;
                 UI.openModal('imovel-details');
+            },
+
+            // NOVA FUNÇÃO: mostrar detalhes do cliente (com simulação)
+            showClienteDetails: (id) => {
+                const cliente = UI.data.clientes.find(x => x.id === id);
+                if (!cliente) return;
+
+                const settings = UI.data.settings || {};
+                const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
+                const simulacao = Utils.simulateFinancing(cliente, imovel, settings.taxaJuros || 8.5);
+
+                const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil) || { nome: 'Lead', cor: '#93c5fd' };
+                const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
+                const renda = cliente.rendaMensal ? Utils.formatCurrency(cliente.rendaMensal) : '-';
+
+                let simulacaoHTML = '';
+                if (simulacao.error) {
+                    simulacaoHTML = `<div class="warning-note">${simulacao.error}</div>`;
+                } else {
+                    simulacaoHTML = `
+                        <div class="details-section" style="background: #f3e8ff; border-left-color: #7c3aed;">
+                            <div class="details-section-title"><i class="fas fa-calculator"></i> SIMULAÇÃO DE FINANCIAMENTO</div>
+                            <div class="details-info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Valor do Imóvel</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.valorImovel)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Máx. Financiável (80%)</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.maxFinanciamento)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Renda Mensal</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.rendaMensal)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Prestação Máx. (30%)</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.maxPrestacao)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Prazo Máx. (meses)</div>
+                                    <div class="info-value">${simulacao.prazoMeses}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Financiável pela Renda</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.maxPelaRenda)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Valor Financiado</div>
+                                    <div class="info-value"><strong>${Utils.formatCurrency(simulacao.valorFinanciavel)}</strong></div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Entrada Necessária</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.entradaNecessaria)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Prestação Mensal</div>
+                                    <div class="info-value">${Utils.formatCurrency(simulacao.prestacaoMensal)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Taxa de Juros Anual</div>
+                                    <div class="info-value">${simulacao.taxaAnual.toFixed(2)}%</div>
+                                </div>
+                            </div>
+                            ${simulacao.valorFinanciavel < simulacao.maxFinanciamento ? 
+                                '<div class="warning-note" style="margin-top:8px;">⚠️ O valor financiado está limitado pela renda do cliente.</div>' : 
+                                '<div class="warning-note" style="background: #d1fae5; color: #065f46;">✅ O cliente pode financiar até 80% do valor do imóvel.</div>'}
+                        </div>
+                    `;
+                }
+
+                const detailsContent = `
+                    <div class="details-card">
+                        <div class="details-header">
+                            <div class="details-title">${cliente.nome}</div>
+                            <div style="display: flex; gap: 8px;">
+                                <span class="badge" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-user"></i> INFORMAÇÕES PESSOAIS</div>
+                            <div class="details-info-grid">
+                                <div class="info-item">
+                                    <div class="info-label">Telefone</div>
+                                    <div class="info-value">${cliente.telefone}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Email</div>
+                                    <div class="info-value">${cliente.email || '-'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Nascimento</div>
+                                    <div class="info-value">${cliente.dataNascimento ? Utils.formatDate(cliente.dataNascimento) + ' (' + idade + ' anos)' : '-'}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Renda Mensal</div>
+                                    <div class="info-value">${renda}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Tipo</div>
+                                    <div class="info-value">${Utils.getTipoClienteText(cliente.tipo)}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Faixa de Preço</div>
+                                    <div class="info-value">${cliente.faixaPreco || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${imovel ? `
+                        <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-home"></i> IMÓVEL DE INTERESSE</div>
+                            <div class="info-item">
+                                <div class="info-label">Título</div>
+                                <div class="info-value">${imovel.titulo}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Endereço</div>
+                                <div class="info-value">${imovel.endereco}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Preço</div>
+                                <div class="info-value">${imovel.precoVenda ? Utils.formatCurrency(imovel.precoVenda) : (imovel.precoAluguel ? Utils.formatCurrency(imovel.precoAluguel) + '/mês' : '-')}</div>
+                            </div>
+                            <button class="btn-sm btn-primary-soft" style="margin-top:8px;" onclick="event.stopPropagation(); UI.showImovelDetails('${imovel.id}')">
+                                <i class="fas fa-eye"></i> Ver Imóvel
+                            </button>
+                        </div>
+                        ` : ''}
+                        
+                        ${simulacaoHTML}
+                        
+                        ${cliente.observacoes ? `
+                        <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-align-left"></i> OBSERVAÇÕES</div>
+                            <div class="info-value">${cliente.observacoes}</div>
+                        </div>
+                        ` : ''}
+                        
+                        <div class="details-actions">
+                            <button class="btn-details btn-details-primary" onclick="App.cliente.edit('${cliente.id}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.confirmOpenCliente('${cliente.id}')">
+                                <i class="fab fa-whatsapp"></i> WhatsApp
+                            </button>
+                            <button class="btn-details btn-details-secondary" onclick="Utils.generateClientePDF(cliente)">
+                                <i class="fas fa-file-pdf"></i> Relatório PDF
+                            </button>
+                            <button class="btn-details btn-details-secondary" onclick="App.cliente.agendarAtividade('${cliente.id}')">
+                                <i class="fas fa-calendar-plus"></i> Agendar
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
+                `;
+                
+                document.getElementById('cliente-details-content').innerHTML = detailsContent;
+                UI.openModal('cliente-details');
             },
 
             openTabelaPDF: function(imovelId) {
@@ -6870,6 +7130,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('s-email').value = s.email || '';
                 document.getElementById('s-imobiliaria').value = s.imobiliaria || '';
                 document.getElementById('s-comissao').value = s.comissao || 5;
+                document.getElementById('s-taxa-juros').value = s.taxaJuros || 8.5;
                 document.getElementById('s-ref-counter').value = s.refCounter || 0;
                 document.getElementById('s-msg-padrao').value = s.msgPadrao || '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
                 
@@ -7295,12 +7556,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const email = document.getElementById('c-email').value;
                     const imovelInteresseId = document.getElementById('c-imovel-interesse').value || null;
                     const dataNascimento = document.getElementById('c-data-nascimento').value || null;
+                    const rendaMensal = document.getElementById('c-renda-mensal').value ? Utils.parseCurrency(document.getElementById('c-renda-mensal').value) : 0;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
 
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, email, 
-                        imovelInteresseId, dataNascimento,
+                        imovelInteresseId, dataNascimento, rendaMensal,
                         faixaPreco, observacoes,
                         dataCriacao: new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0]
@@ -7343,6 +7605,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('c-email').value = cliente.email || '';
                     document.getElementById('c-imovel-interesse').value = cliente.imovelInteresseId || '';
                     document.getElementById('c-data-nascimento').value = cliente.dataNascimento || '';
+                    document.getElementById('c-renda-mensal').value = cliente.rendaMensal ? cliente.rendaMensal.toString() : '';
                     document.getElementById('c-faixa-preco').value = cliente.faixaPreco || '';
                     document.getElementById('c-observacoes').value = cliente.observacoes || '';
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
@@ -7366,6 +7629,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }
                     
                     UI.openModal('cliente');
+                },
+
+                // Nova função: mostrar detalhes
+                showDetails: (id) => {
+                    UI.showClienteDetails(id);
                 },
                 
                 delete: async (id) => {
@@ -7551,7 +7819,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const precoAluguel = document.getElementById('i-preco-aluguel').value ? Utils.parseCurrency(document.getElementById('i-preco-aluguel').value) : 0;
                         const endereco = document.getElementById('i-endereco').value;
                         
-                        // Área: converter vírgula para ponto
                         let area = 0;
                         const areaStr = document.getElementById('i-area').value.trim();
                         if (areaStr) {
@@ -7580,10 +7847,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const estagioLancamento = document.getElementById('i-estagio-lancamento').value;
                         let dataLancamento = document.getElementById('i-data-lancamento').value;
                         
-                        // Novo campo valorAvaliacao
                         const valorAvaliacao = document.getElementById('i-valor-avaliacao').value ? Utils.parseCurrency(document.getElementById('i-valor-avaliacao').value) : 0;
                         
-                        // PDF da tabela
                         const tabelaPDF = document.getElementById('i-tabela-pdf-data').value;
                         const tabelaPDFNome = document.getElementById('i-tabela-pdf-nome').value;
                         
@@ -7944,7 +8209,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 },
                 
                 validateArea: function(input) {
-                    // Permite apenas dígitos e uma vírgula
                     let value = input.value;
                     value = value.replace(/[^\d,]/g, '');
                     const parts = value.split(',');
@@ -8307,6 +8571,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         email: document.getElementById('s-email').value,
                         imobiliaria: document.getElementById('s-imobiliaria').value,
                         comissao: parseFloat(document.getElementById('s-comissao').value) || 5,
+                        taxaJuros: parseFloat(document.getElementById('s-taxa-juros').value) || 8.5,
                         refCounter: UI.data.settings?.refCounter || 0,
                         msgPadrao: document.getElementById('s-msg-padrao').value
                     };
@@ -8486,6 +8751,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             }
         };
+
+        // Mapear função showDetails para cliente
+        App.cliente.showDetails = UI.showClienteDetails.bind(UI);
 
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
