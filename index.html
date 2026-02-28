@@ -2713,6 +2713,48 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 </button>
             </div>
         </div>
+
+        <!-- MODAL CALCULADORA EVOLUÇÃO DE OBRA -->
+        <div class="modal-overlay" id="overlay-calc-obra"></div>
+        <div class="modal-sheet" id="sheet-calc-obra">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title">Calculadora de Evolução de Obra</h3>
+            <form id="form-calc-obra" onsubmit="event.preventDefault(); UI.calcularEvolucaoObra()">
+                <div class="form-group">
+                    <label class="form-label">Crédito Liberado (R$)</label>
+                    <input type="text" id="calc-credito" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Percentual da Obra (%)</label>
+                    <input type="number" id="calc-percentual" class="form-control" placeholder="Ex: 40" min="0" max="100" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Juros Contratado Anual (%)</label>
+                    <input type="number" id="calc-juros-anual" class="form-control" placeholder="Ex: 4,8548" step="0.0001" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">TR Mensal (%)</label>
+                    <input type="number" id="calc-tr" class="form-control" placeholder="Ex: 0,12" step="0.01" value="0.12" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Seguro (R$)</label>
+                    <input type="text" id="calc-seguro" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Taxa de Administração (R$)</label>
+                    <input type="text" id="calc-taxa-admin" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Resultado (Taxa de Evolução Mensal)</label>
+                    <div id="calc-resultado" style="font-size: 1.5rem; font-weight: 700; color: var(--primary); text-align: center; padding: 16px; background: #f1f5f9; border-radius: 8px;">R$ 0,00</div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn-block" style="background: var(--primary);">Calcular</button>
+                    <button type="button" class="btn-block" style="background: var(--success);" onclick="UI.exportEvolucaoObraPDF()">Exportar PDF</button>
+                </div>
+                <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
+            </form>
+        </div>
     </div>
 
     <script>
@@ -3730,11 +3772,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             styles: { fontSize: 9, cellPadding: 3 },
                             headStyles: { fillColor: [37, 99, 235] }
                         });
+                        
+                        if (doc.lastAutoTable) yPos = doc.lastAutoTable.finalY + 10;
+                        else yPos += 10;
                     }
                     
                     if (reportData.resumo) {
-                        yPos = doc.lastAutoTable.finalY + 10;
-                        
                         if (yPos > doc.internal.pageSize.getHeight() - 20) {
                             doc.addPage();
                             yPos = margin;
@@ -4285,7 +4328,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            // Função para download de documento
+            // Função para download de documento (mantida para compatibilidade)
             downloadDocument: function(doc) {
                 const a = document.createElement('a');
                 a.href = doc.dados;
@@ -4379,6 +4422,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             envioMassaEnviados: 0,
             currentWhatsappClienteId: null,
             currentPdfImovelId: null,
+            calcObraData: null, // dados da calculadora
             
             init: async () => {
                 try {
@@ -4991,49 +5035,76 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     );
                 }
                 
-                if (links.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state" style="grid-column: 1 / -1;">
-                            <i class="fas fa-link"></i>
-                            <p>${filter ? 'Nenhum link encontrado' : 'Nenhum link salvo ainda'}</p>
-                            ${!filter ? '<button class="btn-block" onclick="UI.openNewLink()" style="margin-top: 16px;">Adicionar Primeiro Link</button>' : ''}
+                let html = '';
+                
+                // Adiciona card da calculadora se não houver filtro ou se o filtro corresponder
+                if (!filter || filter.toLowerCase().includes('calculadora') || filter.toLowerCase().includes('obra')) {
+                    html += `
+                        <div class="link-card" onclick="UI.openCalculadoraObra()">
+                            <div class="link-icon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="link-title">Calculadora de Evolução de Obra</div>
+                            <div class="link-url">Calcular taxa de evolução</div>
                         </div>
                     `;
-                    return;
                 }
                 
-                container.innerHTML = links.map(link => {
-                    const categoriaIcon = {
-                        'construtora': 'building',
-                        'documentos': 'file-contract',
-                        'financiamento': 'hand-holding-usd',
-                        'noticias': 'newspaper',
-                        'ferramentas': 'tools',
-                        'outros': 'link'
-                    }[link.categoria] || 'link';
-                    
-                    return `
-                        <div class="link-card" onclick="App.link.open('${link.id}')">
-                            <div class="link-icon">
-                                <i class="fas fa-${categoriaIcon}"></i>
+                if (links.length === 0 && !filter) {
+                    // Se não há links e não há filtro, apenas o card da calculadora aparecerá (se adicionado)
+                    if (!html) {
+                        html = `
+                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                <i class="fas fa-link"></i>
+                                <p>Nenhum link salvo ainda</p>
+                                <button class="btn-block" onclick="UI.openNewLink()" style="margin-top: 16px;">Adicionar Primeiro Link</button>
                             </div>
-                            <div class="link-title">${link.titulo}</div>
-                            <div class="link-url">${link.url.replace(/^https?:\/\//, '').substring(0, 30)}...</div>
-                            ${link.descricao ? `<div style="font-size: 0.8rem; color: var(--secondary); margin-top: 4px;">${link.descricao.substring(0, 50)}...</div>` : ''}
-                            <div class="link-actions">
-                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.edit('${link.id}')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.copy('${link.id}')">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                                <button class="btn-sm btn-light" style="color: var(--danger);" onclick="event.stopPropagation(); App.link.delete('${link.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
+                        `;
+                    }
+                } else if (links.length === 0 && filter) {
+                    html += `
+                        <div class="empty-state" style="grid-column: 1 / -1;">
+                            <i class="fas fa-link"></i>
+                            <p>Nenhum link encontrado</p>
                         </div>
                     `;
-                }).join('');
+                } else {
+                    // Adiciona os links existentes
+                    links.forEach(link => {
+                        const categoriaIcon = {
+                            'construtora': 'building',
+                            'documentos': 'file-contract',
+                            'financiamento': 'hand-holding-usd',
+                            'noticias': 'newspaper',
+                            'ferramentas': 'tools',
+                            'outros': 'link'
+                        }[link.categoria] || 'link';
+                        
+                        html += `
+                            <div class="link-card" onclick="App.link.open('${link.id}')">
+                                <div class="link-icon">
+                                    <i class="fas fa-${categoriaIcon}"></i>
+                                </div>
+                                <div class="link-title">${link.titulo}</div>
+                                <div class="link-url">${link.url.replace(/^https?:\/\//, '').substring(0, 30)}...</div>
+                                ${link.descricao ? `<div style="font-size: 0.8rem; color: var(--secondary); margin-top: 4px;">${link.descricao.substring(0, 50)}...</div>` : ''}
+                                <div class="link-actions">
+                                    <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.edit('${link.id}')">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.link.copy('${link.id}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                    <button class="btn-sm btn-light" style="color: var(--danger);" onclick="event.stopPropagation(); App.link.delete('${link.id}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                container.innerHTML = html;
             },
             
             openNewLink: () => {
@@ -5679,7 +5750,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     docsHTML = `
                         <div class="details-section">
                             <div class="details-section-title"><i class="fas fa-paperclip"></i> DOCUMENTOS ANEXADOS</div>
-                            ${cliente.documentos.map(doc => {
+                            ${cliente.documentos.map((doc, index) => {
                                 const isImage = doc.dados.startsWith('data:image');
                                 const icon = isImage ? 'fa-image' : 'fa-file-pdf';
                                 return `
@@ -5689,10 +5760,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                         <div><strong>${doc.tipoLabel}</strong></div>
                                         <div style="font-size: 0.8rem; color: var(--secondary);">${doc.nome}</div>
                                     </div>
-                                    <button class="icon-btn" onclick="event.stopPropagation(); window.open(${JSON.stringify(doc.dados)}, '_blank')" title="Visualizar">
+                                    <button class="icon-btn" onclick="event.stopPropagation(); App.cliente.viewDocument('${cliente.id}', ${index})" title="Visualizar">
                                         <i class="fas fa-eye"></i>
                                     </button>
-                                    <button class="icon-btn" onclick="event.stopPropagation(); Utils.downloadDocument(${JSON.stringify(doc)})" title="Download">
+                                    <button class="icon-btn" onclick="event.stopPropagation(); App.cliente.downloadDocument('${cliente.id}', ${index})" title="Download">
                                         <i class="fas fa-download"></i>
                                     </button>
                                 </div>
@@ -7648,6 +7719,90 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 Utils.generatePDF(imovelCopy);
                 
                 UI.closeModals();
+            },
+
+            // NOVAS FUNÇÕES PARA CALCULADORA DE EVOLUÇÃO DE OBRA
+            openCalculadoraObra: function() {
+                document.getElementById('calc-credito').value = '';
+                document.getElementById('calc-percentual').value = '';
+                document.getElementById('calc-juros-anual').value = '';
+                document.getElementById('calc-tr').value = '0.12';
+                document.getElementById('calc-seguro').value = '';
+                document.getElementById('calc-taxa-admin').value = '';
+                document.getElementById('calc-resultado').innerText = 'R$ 0,00';
+                UI.calcObraData = null;
+                UI.openModal('calc-obra');
+            },
+
+            calcularEvolucaoObra: function() {
+                const credito = Utils.parseCurrency(document.getElementById('calc-credito').value);
+                const percentual = parseFloat(document.getElementById('calc-percentual').value) || 0;
+                const jurosAnual = parseFloat(document.getElementById('calc-juros-anual').value) || 0;
+                const trMensal = parseFloat(document.getElementById('calc-tr').value) || 0;
+                const seguro = Utils.parseCurrency(document.getElementById('calc-seguro').value);
+                const taxaAdmin = Utils.parseCurrency(document.getElementById('calc-taxa-admin').value);
+
+                if (credito <= 0 || percentual <= 0 || jurosAnual <= 0) {
+                    Utils.toast('Preencha todos os campos obrigatórios', 'error');
+                    return;
+                }
+
+                const saldoLiberado = (percentual / 100) * credito;
+                const jurosMensal = (jurosAnual / 100) / 12;
+                const parcelaJuros = saldoLiberado * jurosMensal;
+                const parcelaTR = saldoLiberado * (trMensal / 100);
+                const total = parcelaJuros + parcelaTR + seguro + taxaAdmin;
+
+                document.getElementById('calc-resultado').innerText = Utils.formatCurrency(total);
+                UI.calcObraData = { credito, percentual, jurosAnual, trMensal, seguro, taxaAdmin, saldoLiberado, parcelaJuros, parcelaTR, total };
+            },
+
+            exportEvolucaoObraPDF: function() {
+                if (!UI.calcObraData) {
+                    Utils.toast('Calcule primeiro', 'error');
+                    return;
+                }
+                const data = UI.calcObraData;
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.getWidth();
+                let y = 20;
+
+                doc.setFillColor(37, 99, 235);
+                doc.rect(0, 0, pageWidth, 25, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(18);
+                doc.setFont("helvetica", "bold");
+                doc.text("Cálculo da Taxa de Evolução de Obra", pageWidth/2, 15, { align: "center" });
+
+                y = 35;
+                doc.setTextColor(30, 41, 59);
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "normal");
+
+                const lineHeight = 7;
+                doc.text(`Crédito Liberado: ${Utils.formatCurrency(data.credito)}`, 15, y); y += lineHeight;
+                doc.text(`Percentual da Obra: ${data.percentual}%`, 15, y); y += lineHeight;
+                doc.text(`Saldo Liberado (${data.percentual}% de ${Utils.formatCurrency(data.credito)}): ${Utils.formatCurrency(data.saldoLiberado)}`, 15, y); y += lineHeight;
+                doc.text(`Juros Contratado Anual: ${data.jurosAnual.toFixed(4)}%`, 15, y); y += lineHeight;
+                doc.text(`Juros Mensal: ${(data.jurosAnual/12).toFixed(4)}%`, 15, y); y += lineHeight;
+                doc.text(`Parcela de Juros: ${Utils.formatCurrency(data.parcelaJuros)}`, 15, y); y += lineHeight;
+                doc.text(`TR Mensal: ${data.trMensal}%`, 15, y); y += lineHeight;
+                doc.text(`Parcela TR: ${Utils.formatCurrency(data.parcelaTR)}`, 15, y); y += lineHeight;
+                doc.text(`Seguro: ${Utils.formatCurrency(data.seguro)}`, 15, y); y += lineHeight;
+                doc.text(`Taxa de Administração: ${Utils.formatCurrency(data.taxaAdmin)}`, 15, y); y += lineHeight*1.5;
+                doc.setFont("helvetica", "bold");
+                doc.text(`Total da Taxa de Evolução: ${Utils.formatCurrency(data.total)}`, 15, y); y += lineHeight*2;
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text("Fórmula: (Saldo liberado x juros mensal) + (Saldo liberado x TR) + Seguro + Taxa de adm", 15, y);
+                y += lineHeight;
+                doc.text(`Exemplo: (${Utils.formatCurrency(data.saldoLiberado)} x ${(data.jurosAnual/12).toFixed(4)}%) + (${Utils.formatCurrency(data.saldoLiberado)} x ${data.trMensal}%) + ${Utils.formatCurrency(data.seguro)} + ${Utils.formatCurrency(data.taxaAdmin)} = ${Utils.formatCurrency(data.total)}`, 15, y);
+
+                doc.save(`evolucao_obra_${new Date().toISOString().split('T')[0]}.pdf`);
+                Utils.toast("PDF gerado!");
             }
         };
 
@@ -8040,6 +8195,25 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     docs.splice(index, 1);
                     document.getElementById('c-documentos-data').value = JSON.stringify(docs);
                     App.cliente.renderDocumentosList(docs);
+                },
+
+                // NOVAS FUNÇÕES PARA VISUALIZAR/BAIXAR DOCUMENTOS
+                viewDocument: function(clienteId, index) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente || !cliente.documentos || !cliente.documentos[index]) return;
+                    const doc = cliente.documentos[index];
+                    window.open(doc.dados, '_blank');
+                },
+                downloadDocument: function(clienteId, index) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente || !cliente.documentos || !cliente.documentos[index]) return;
+                    const doc = cliente.documentos[index];
+                    const a = document.createElement('a');
+                    a.href = doc.dados;
+                    a.download = doc.nome;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 }
             },
             
