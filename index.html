@@ -330,7 +330,7 @@
             background: #25D366;
             color: white;
             border: none;
-            padding: 8px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-size: 1rem;
             font-weight: 600;
@@ -341,7 +341,7 @@
             cursor: pointer;
             transition: transform 0.2s;
             flex: 0 0 auto;
-            min-width: 36px;
+            min-width: auto;
             min-height: 36px;
         }
         
@@ -2814,7 +2814,7 @@
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão apenas ícone, e agora anexo de documentos para clientes)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão WhatsApp com texto, e agora anexo de documentos para clientes)
         const DB = {
             name: 'ImobiProDB',
             version: 13, // Atualizado para versão 13 (novo campo taxaJuros em clientes)
@@ -4712,8 +4712,8 @@
                                     ${cliente.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(cliente.dataNascimento)}</div>` : ''}
                                 </div>
                                 <div class="client-actions">
-                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
-                                        <i class="fab fa-whatsapp"></i>
+                                    <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp
                                     </button>
                                     <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
                                         <i class="fas fa-calendar-plus"></i>
@@ -4934,7 +4934,7 @@
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
-                                    <i class="fab fa-whatsapp"></i>
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
                                     <i class="fas fa-calendar-plus"></i>
@@ -5203,8 +5203,8 @@
                 }
                 
                 const whatsappBtn = cliente && cliente.telefone ? `
-                    <button class="btn-whatsapp-client" style="flex: 0; min-width: 36px; padding: 8px;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
-                        <i class="fab fa-whatsapp"></i>
+                    <button class="btn-whatsapp-client" style="flex: 0; min-width: auto; padding: 8px 12px;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
+                        <i class="fab fa-whatsapp"></i> WhatsApp
                     </button>
                 ` : '';
                 
@@ -5307,7 +5307,7 @@
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
-                                    <i class="fab fa-whatsapp"></i>
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${c.id}')">
                                     <i class="fas fa-calendar-plus"></i>
@@ -7553,7 +7553,7 @@
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); UI.enviarNotificacaoIndividual('${c.id}')">
-                                    <i class="fab fa-whatsapp"></i>
+                                    <i class="fab fa-whatsapp"></i> WhatsApp
                                 </button>
                             </div>
                         </div>
@@ -8163,7 +8163,7 @@
                                 nome: file.name,
                                 data: e.target.result
                             };
-                            UI.openCropModal(e.target.result);
+                            App.openCropModal(e.target.result);
                         };
                         reader.readAsDataURL(file);
                     } else if (file.type === 'application/pdf') {
@@ -8209,7 +8209,7 @@
                             nome: file.name || 'foto_camera.jpg',
                             data: e.target.result
                         };
-                        UI.openCropModal(e.target.result);
+                        App.openCropModal(e.target.result);
                     };
                     reader.readAsDataURL(file);
                     
@@ -8249,14 +8249,14 @@
                             document.getElementById('c-documentos-data').value = JSON.stringify(docs);
                             App.cliente.renderDocumentosList(docs);
                             
-                            UI.closeCropModal();
+                            App.closeCropModal();
                         };
                         reader.readAsDataURL(blob);
                     }, 'image/jpeg', 0.9);
                 },
 
                 cancelCrop: function() {
-                    UI.closeCropModal();
+                    App.closeCropModal();
                 },
 
                 renderDocumentosList: function(docs) {
