@@ -1922,7 +1922,7 @@
             </div>
         </div>
 
-        <!-- NOVO MODAL: Detalhes do Cliente com simulação de financiamento -->
+        <!-- NOVO MODAL: Detalhes do Cliente com simulação de financiamento e documentos -->
         <div class="modal-overlay" id="overlay-cliente-details"></div>
         <div class="modal-sheet" id="sheet-cliente-details">
             <div class="sheet-handle"></div>
@@ -1984,6 +1984,29 @@
                     <label class="form-label">Observações</label>
                     <textarea id="c-observacoes" class="form-control" placeholder="Anotações sobre o cliente..."></textarea>
                 </div>
+
+                <!-- NOVO: Seção de Documentos do Cliente -->
+                <div class="form-group">
+                    <label class="form-label">Documentos do Cliente</label>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
+                        <select id="c-documento-tipo" class="form-control" style="flex: 2; min-width: 150px;">
+                            <!-- preenchido via JS -->
+                        </select>
+                        <button type="button" class="btn-sm btn-primary-soft" onclick="document.getElementById('c-documento-file').click()">
+                            <i class="fas fa-upload"></i> Adicionar
+                        </button>
+                        <button type="button" class="btn-sm btn-primary-soft" onclick="App.cliente.scanDocumento()">
+                            <i class="fas fa-camera"></i> Escanear
+                        </button>
+                    </div>
+                    <input type="file" id="c-documento-file" accept=".pdf,image/*" style="display: none;" onchange="App.cliente.processDocumento(this)">
+                    <input type="file" id="c-documento-camera" accept="image/*" capture="environment" style="display: none;" onchange="App.cliente.processCameraDocumento(this)">
+                    <div id="c-documentos-list" style="margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px;">
+                        <!-- Lista de documentos será inserida aqui -->
+                    </div>
+                    <input type="hidden" id="c-documentos-data" value="[]">
+                </div>
+
                 <button type="submit" class="btn-block">Salvar Cliente</button>
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
             </form>
@@ -2693,7 +2716,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão apenas ícone)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão apenas ícone, e agora anexo de documentos para clientes)
         const DB = {
             name: 'ImobiProDB',
             version: 12, // Atualizado para versão 12 (novo campo rendaMensal em clientes e taxaJuros em settings)
@@ -2950,6 +2973,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                                 new Date().toISOString().split('T')[0];
                                         }
                                         if (cliente.rendaMensal === undefined) cliente.rendaMensal = 0;
+                                        if (cliente.documentos === undefined) cliente.documentos = []; // campo para documentos
                                         await this.put('clientes', cliente);
                                     }
                                     migrated = true;
@@ -3301,6 +3325,23 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
                 return clean;
             },
+
+            // Lista de tipos de documentos (para renda formal/informal)
+            documentTypes: [
+                { value: 'comprovante_renda_formal', label: 'Comprovante de Renda (formal)' },
+                { value: 'contracheque', label: 'Contracheque (3 últimos)' },
+                { value: 'declaracao_ir', label: 'Declaração de Imposto de Renda' },
+                { value: 'carteira_trabalho', label: 'Carteira de Trabalho (páginas de identificação e contrato)' },
+                { value: 'extrato_bancario', label: 'Extrato Bancário (últimos 3 meses)' },
+                { value: 'comprovante_residencia', label: 'Comprovante de Residência' },
+                { value: 'rg', label: 'Documento de Identidade (RG/CNH)' },
+                { value: 'cpf', label: 'CPF' },
+                { value: 'certidao_casamento', label: 'Certidão de Casamento (se aplicável)' },
+                { value: 'renda_informal', label: 'Comprovante de Renda (informal) - declaração própria' },
+                { value: 'declaracao_autonomo', label: 'Declaração de Autônomo' },
+                { value: 'recibos', label: 'Recibos/Comprovantes de Recebimento' },
+                { value: 'outros', label: 'Outros' }
+            ],
             
             // Gera PDF da ficha do imóvel (sem valor de avaliação)
             generatePDF: async (imovel) => {
@@ -4125,7 +4166,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 };
             },
 
-            // Gera PDF do relatório do cliente com simulação
+            // Gera PDF do relatório do cliente com simulação e documentos
             generateClientePDF: async (cliente) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -4214,6 +4255,26 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         doc.setFont("helvetica", "normal");
                         const obsSplit = doc.splitTextToSize(cliente.observacoes, pageWidth - margin*2);
                         doc.text(obsSplit, margin, yPos);
+                        yPos += (obsSplit.length * 6) + 10;
+                    }
+
+                    // Documentos anexados
+                    if (cliente.documentos && cliente.documentos.length > 0) {
+                        doc.setFont("helvetica", "bold");
+                        doc.setTextColor(37, 99, 235);
+                        doc.setFontSize(12);
+                        doc.text("DOCUMENTOS ANEXADOS", margin, yPos);
+                        yPos += 8;
+
+                        doc.setFont("helvetica", "normal");
+                        doc.setTextColor(30, 41, 59);
+                        doc.setFontSize(9);
+
+                        cliente.documentos.forEach((docFile, index) => {
+                            doc.text(`${index+1}. ${docFile.tipoLabel} - ${docFile.nome} (enviado em ${Utils.formatDate(docFile.dataUpload.split('T')[0])})`, margin, yPos);
+                            yPos += 5;
+                        });
+                        yPos += 5;
                     }
 
                     doc.save(`Cliente_${cliente.nome.replace(/\s/g, '_')}.pdf`);
@@ -4222,6 +4283,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     console.error(err);
                     Utils.toast("Erro ao gerar PDF do cliente", "error");
                 }
+            },
+
+            // Função para download de documento
+            downloadDocument: function(doc) {
+                const a = document.createElement('a');
+                a.href = doc.dados;
+                a.download = doc.nome;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
             }
         };
 
@@ -5533,7 +5604,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.openModal('imovel-details');
             },
 
-            // NOVA FUNÇÃO: mostrar detalhes do cliente (com simulação)
+            // NOVA FUNÇÃO: mostrar detalhes do cliente (com simulação e documentos)
             showClienteDetails: (id) => {
                 const cliente = UI.data.clientes.find(x => x.id === id);
                 if (!cliente) return;
@@ -5598,6 +5669,35 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             ${simulacao.valorFinanciavel < simulacao.maxFinanciamento ? 
                                 '<div class="warning-note" style="margin-top:8px;">⚠️ O valor financiado está limitado pela renda do cliente.</div>' : 
                                 '<div class="warning-note" style="background: #d1fae5; color: #065f46;">✅ O cliente pode financiar até 80% do valor do imóvel.</div>'}
+                        </div>
+                    `;
+                }
+
+                // Documentos anexados
+                let docsHTML = '';
+                if (cliente.documentos && cliente.documentos.length > 0) {
+                    docsHTML = `
+                        <div class="details-section">
+                            <div class="details-section-title"><i class="fas fa-paperclip"></i> DOCUMENTOS ANEXADOS</div>
+                            ${cliente.documentos.map(doc => {
+                                const isImage = doc.dados.startsWith('data:image');
+                                const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                                return `
+                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border);">
+                                    <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                    <div style="flex: 1;">
+                                        <div><strong>${doc.tipoLabel}</strong></div>
+                                        <div style="font-size: 0.8rem; color: var(--secondary);">${doc.nome}</div>
+                                    </div>
+                                    <button class="icon-btn" onclick="event.stopPropagation(); window.open(${JSON.stringify(doc.dados)}, '_blank')" title="Visualizar">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button class="icon-btn" onclick="event.stopPropagation(); Utils.downloadDocument(${JSON.stringify(doc)})" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                </div>
+                                `;
+                            }).join('')}
                         </div>
                     `;
                 }
@@ -5670,6 +5770,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             <div class="info-value">${cliente.observacoes}</div>
                         </div>
                         ` : ''}
+                        
+                        ${docsHTML}
                         
                         <div class="details-actions">
                             <button class="btn-details btn-details-primary" onclick="App.cliente.edit('${cliente.id}')">
@@ -6993,6 +7095,11 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     });
                 }
                 
+                // Preencher tipos de documentos e resetar lista
+                populateDocumentoTipoSelect();
+                document.getElementById('c-documentos-data').value = '[]';
+                App.cliente.renderDocumentosList([]);
+                
                 UI.openModal('cliente');
             },
 
@@ -7544,6 +7651,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             }
         };
 
+        // Função auxiliar para preencher o select de tipos de documento
+        function populateDocumentoTipoSelect() {
+            const select = document.getElementById('c-documento-tipo');
+            if (!select) return;
+            select.innerHTML = Utils.documentTypes.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
+        }
+
         const App = {
             cliente: {
                 save: async (e) => {
@@ -7559,11 +7673,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const rendaMensal = document.getElementById('c-renda-mensal').value ? Utils.parseCurrency(document.getElementById('c-renda-mensal').value) : 0;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
+                    const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
 
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, email, 
                         imovelInteresseId, dataNascimento, rendaMensal,
-                        faixaPreco, observacoes,
+                        faixaPreco, observacoes, documentos,
                         dataCriacao: new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0]
                     };
@@ -7627,6 +7742,12 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         });
                         etapaSelect.value = cliente.etapaFunil || 'lead';
                     }
+
+                    // Carregar documentos
+                    populateDocumentoTipoSelect();
+                    const documentos = cliente.documentos || [];
+                    document.getElementById('c-documentos-data').value = JSON.stringify(documentos);
+                    App.cliente.renderDocumentosList(documentos);
                     
                     UI.openModal('cliente');
                 },
@@ -7803,10 +7924,127 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         const select = document.getElementById('v-cliente');
                         if (select) select.value = clienteId;
                     }, 100);
+                },
+
+                // Métodos para gerenciar documentos
+                scanDocumento: function() {
+                    document.getElementById('c-documento-camera').click();
+                },
+
+                adicionarDocumento: function() {
+                    document.getElementById('c-documento-file').click();
+                },
+
+                processDocumento: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    const tipo = document.getElementById('c-documento-tipo').value;
+                    const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
+                    
+                    // Ler arquivo como data URL
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64 = e.target.result;
+                        
+                        // Obter documentos atuais
+                        const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
+                        
+                        // Verificar tamanho (10MB limite)
+                        if (base64.length > 10 * 1024 * 1024) {
+                            Utils.toast('Arquivo muito grande. Máximo 10MB.', 'error');
+                            return;
+                        }
+                        
+                        docs.push({
+                            tipo: tipo,
+                            tipoLabel: tipoLabel,
+                            nome: file.name,
+                            dados: base64,
+                            dataUpload: new Date().toISOString()
+                        });
+                        
+                        document.getElementById('c-documentos-data').value = JSON.stringify(docs);
+                        App.cliente.renderDocumentosList(docs);
+                        
+                        input.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                processCameraDocumento: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+
+                    const tipo = document.getElementById('c-documento-tipo').value;
+                    const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
+
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                        const base64 = e.target.result;
+
+                        const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
+                        
+                        if (base64.length > 10 * 1024 * 1024) {
+                            Utils.toast('Imagem muito grande. Máximo 10MB.', 'error');
+                            return;
+                        }
+
+                        docs.push({
+                            tipo: tipo,
+                            tipoLabel: tipoLabel,
+                            nome: file.name || 'foto_camera.jpg',
+                            dados: base64,
+                            dataUpload: new Date().toISOString()
+                        });
+
+                        document.getElementById('c-documentos-data').value = JSON.stringify(docs);
+                        App.cliente.renderDocumentosList(docs);
+
+                        input.value = '';
+                    };
+                    reader.readAsDataURL(file);
+                },
+
+                renderDocumentosList: function(docs) {
+                    const container = document.getElementById('c-documentos-list');
+                    if (!container) return;
+                    
+                    if (docs.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; color: var(--secondary); padding: 8px;">Nenhum documento anexado.</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    docs.forEach((doc, index) => {
+                        const isImage = doc.dados.startsWith('data:image');
+                        const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                        html += `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid var(--border);">
+                                <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                <div style="flex: 1; font-size: 0.85rem;">
+                                    <div><strong>${doc.tipoLabel}</strong></div>
+                                    <div style="color: var(--secondary);">${doc.nome}</div>
+                                </div>
+                                <button class="icon-btn" onclick="App.cliente.removerDocumento(${index})" style="color: var(--danger);">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                },
+
+                removerDocumento: function(index) {
+                    const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
+                    docs.splice(index, 1);
+                    document.getElementById('c-documentos-data').value = JSON.stringify(docs);
+                    App.cliente.renderDocumentosList(docs);
                 }
             },
             
             imovel: {
+                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8231,6 +8469,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             agenda: {
+                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8483,6 +8722,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             link: {
+                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8560,6 +8800,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             settings: {
+                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8585,6 +8826,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             backup: {
+                // (mesmo código existente, mantido inalterado)
                 importTrigger: function() {
                     document.getElementById('import-file').click();
                 },
@@ -8599,6 +8841,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         if (data.clientes && Array.isArray(data.clientes)) {
                             await DB.clear('clientes');
                             for (const cliente of data.clientes) {
+                                if (!cliente.documentos) cliente.documentos = [];
                                 await DB.put('clientes', cliente);
                             }
                         }
