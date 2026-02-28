@@ -10,10 +10,13 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Cropper.js -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
     <style>
         /* (mesmo CSS do original – mantido para não alterar o layout) */
@@ -320,23 +323,25 @@
             padding-top: 12px; border-top: 1px solid var(--border);
             width: 100%;
             flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .btn-whatsapp-client {
             background: #25D366;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 1rem;
             font-weight: 600;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
             cursor: pointer;
             transition: transform 0.2s;
-            flex: 1;
-            justify-content: center;
+            flex: 0 0 auto;
+            min-width: 36px;
             min-height: 36px;
         }
         
@@ -349,18 +354,19 @@
             background: #3b82f6;
             color: white;
             border: none;
-            padding: 8px 16px;
+            padding: 8px;
             border-radius: 8px;
-            font-size: 0.85rem;
+            font-size: 1rem;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 6px;
             cursor: pointer;
             transition: transform 0.2s;
-            flex: 1;
-            justify-content: center;
+            flex: 0 0 auto;
+            min-width: 36px;
             min-height: 36px;
+            justify-content: center;
         }
         
         .btn-email-client:active {
@@ -1550,6 +1556,45 @@
             color: var(--secondary);
         }
 
+        /* Modal de crop */
+        .crop-modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .crop-container {
+            max-width: 100%;
+            max-height: 70vh;
+            background: #000;
+        }
+        .crop-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .crop-btn {
+            padding: 12px 24px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .crop-btn.confirm {
+            background: var(--primary);
+            color: white;
+        }
+        .crop-btn.cancel {
+            background: #f1f5f9;
+            color: var(--secondary);
+        }
+
         @media (max-width: 360px) {
             .stats-grid {
                 grid-template-columns: 1fr;
@@ -1633,6 +1678,17 @@
             </div>
         </div>
 
+        <!-- Modal de Crop para documentos -->
+        <div id="crop-modal" class="crop-modal" style="display: none;">
+            <div class="crop-container">
+                <img id="crop-image" style="max-width: 100%; max-height: 70vh;">
+            </div>
+            <div class="crop-actions">
+                <button class="crop-btn confirm" onclick="App.cliente.confirmCrop()">Confirmar</button>
+                <button class="crop-btn cancel" onclick="App.cliente.cancelCrop()">Cancelar</button>
+            </div>
+        </div>
+
         <main>
             <div id="dashboard-view" class="view active">
                 <div class="section-title">Visão Geral</div>
@@ -1697,7 +1753,6 @@
                 <div class="section-title">
                     Imóveis
                     <div style="display: flex; gap: 8px;">
-                        <!-- Botão Portfólio modificado para abrir seleção -->
                         <button class="icon-btn" style="background: var(--success); color: white; border-radius: 8px; padding: 8px;" onclick="UI.openPortfolioSelection()">
                             <i class="fas fa-file-pdf"></i> Portfólio
                         </button>
@@ -1974,7 +2029,12 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Renda Mensal (R$)</label>
-                    <input type="text" id="c-renda-mensal" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
+                    <input type="text" id="c-renda-mensal" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this); App.cliente.calcularTaxaJurosPorRenda();">
+                </div>
+                <!-- NOVO CAMPO: Taxa de Juros Anual (%) -->
+                <div class="form-group">
+                    <label class="form-label">Taxa de Juros Anual (%) <span style="font-weight:normal; color:var(--secondary);">(preenchida automaticamente, pode editar)</span></label>
+                    <input type="number" id="c-taxa-juros" class="form-control" placeholder="Ex: 8.5" min="0" max="30" step="0.01" value="8.5">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Faixa de Preço (Interesse)</label>
@@ -1985,14 +2045,14 @@
                     <textarea id="c-observacoes" class="form-control" placeholder="Anotações sobre o cliente..."></textarea>
                 </div>
 
-                <!-- NOVO: Seção de Documentos do Cliente -->
+                <!-- Seção de Documentos do Cliente -->
                 <div class="form-group">
                     <label class="form-label">Documentos do Cliente</label>
                     <div style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
                         <select id="c-documento-tipo" class="form-control" style="flex: 2; min-width: 150px;">
                             <!-- preenchido via JS -->
                         </select>
-                        <button type="button" class="btn-sm btn-primary-soft" onclick="document.getElementById('c-documento-file').click()">
+                        <button type="button" class="btn-sm btn-primary-soft" onclick="App.cliente.adicionarDocumento()">
                             <i class="fas fa-upload"></i> Adicionar
                         </button>
                         <button type="button" class="btn-sm btn-primary-soft" onclick="App.cliente.scanDocumento()">
@@ -2380,11 +2440,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Clientes Atendidos</label>
-                        <textarea id="v-clientes-atendidos" class="form-control" placeholder="Liste os clientes atendidos, telefones e situações (separados por linha)">
-Exemplo:
-João Silva - (11) 99999-9999 - Interessado em apartamento 2 quartos
-Maria Santos - (11) 88888-8888 - Agendou visita para amanhã
-Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
+                        <textarea id="v-clientes-atendidos" class="form-control" placeholder="Exemplo: João Silva - (11) 99999-9999 - Interessado em apartamento 2 quartos\nMaria Santos - (11) 88888-8888 - Agendou visita para amanhã\nPedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Negócios Gerados</label>
@@ -2454,7 +2510,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     <input type="number" id="s-comissao" class="form-control" placeholder="5" min="0" max="100" step="0.1">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Taxa de Juros Anual (%) (para simulação de financiamento)</label>
+                    <label class="form-label">Taxa de Juros Anual (%) (padrão)</label>
                     <input type="number" id="s-taxa-juros" class="form-control" placeholder="8.5" min="0" max="30" step="0.01" value="8.5">
                 </div>
                 <div class="form-group">
@@ -2761,7 +2817,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
         // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão apenas ícone, e agora anexo de documentos para clientes)
         const DB = {
             name: 'ImobiProDB',
-            version: 12, // Atualizado para versão 12 (novo campo rendaMensal em clientes e taxaJuros em settings)
+            version: 13, // Atualizado para versão 13 (novo campo taxaJuros em clientes)
             db: null,
             
             init: function() {
@@ -2836,18 +2892,19 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                if (oldVersion < 12) {
-                    console.log('Migrando para versão 12: Adicionando rendaMensal aos clientes e taxaJuros às settings');
+                if (oldVersion < 13) {
+                    console.log('Migrando para versão 13: Adicionando taxaJuros aos clientes');
                     try {
-                        const transaction = db.transaction(['clientes', 'settings'], 'readwrite');
+                        const transaction = db.transaction(['clientes'], 'readwrite');
                         const clientesStore = transaction.objectStore('clientes');
                         const request = clientesStore.getAll();
                         
                         request.onsuccess = async (event) => {
                             const clientes = event.target.result;
                             for (const cliente of clientes) {
-                                if (cliente.rendaMensal === undefined) {
-                                    cliente.rendaMensal = 0;
+                                if (cliente.taxaJuros === undefined) {
+                                    // Definir uma taxa padrão baseada na renda se possível
+                                    cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
                                     await new Promise((resolve, reject) => {
                                         const putReq = clientesStore.put(cliente);
                                         putReq.onsuccess = resolve;
@@ -2857,25 +2914,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             }
                             console.log('Migração clientes concluída');
                         };
-                        
-                        const settingsStore = transaction.objectStore('settings');
-                        const settingsReq = settingsStore.get('main');
-                        settingsReq.onsuccess = async (event) => {
-                            let settings = event.target.result;
-                            if (settings) {
-                                if (settings.taxaJuros === undefined) settings.taxaJuros = 8.5;
-                                await new Promise((resolve, reject) => {
-                                    const putReq = settingsStore.put(settings);
-                                    putReq.onsuccess = resolve;
-                                    putReq.onerror = reject;
-                                });
-                            } else {
-                                settingsStore.put({ id: 'main', taxaJuros: 8.5 });
-                            }
-                            console.log('Migração settings concluída');
-                        };
                     } catch (error) {
-                        console.error('Erro na migração para versão 12:', error);
+                        console.error('Erro na migração para versão 13:', error);
                     }
                 }
             },
@@ -3015,7 +3055,10 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                                 new Date().toISOString().split('T')[0];
                                         }
                                         if (cliente.rendaMensal === undefined) cliente.rendaMensal = 0;
-                                        if (cliente.documentos === undefined) cliente.documentos = []; // campo para documentos
+                                        if (cliente.documentos === undefined) cliente.documentos = [];
+                                        if (cliente.taxaJuros === undefined) {
+                                            cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
+                                        }
                                         await this.put('clientes', cliente);
                                     }
                                     migrated = true;
@@ -3368,7 +3411,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 return clean;
             },
 
-            // Lista de tipos de documentos (para renda formal/informal)
+            // Lista de tipos de documentos
             documentTypes: [
                 { value: 'comprovante_renda_formal', label: 'Comprovante de Renda (formal)' },
                 { value: 'contracheque', label: 'Contracheque (3 últimos)' },
@@ -3384,8 +3427,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 { value: 'recibos', label: 'Recibos/Comprovantes de Recebimento' },
                 { value: 'outros', label: 'Outros' }
             ],
+
+            // Função para determinar taxa de juros baseada na renda mensal (valores aproximados do mercado)
+            getInterestRateByIncome: function(renda) {
+                const rendaNum = typeof renda === 'number' ? renda : 0;
+                if (rendaNum < 3000) return 5.5;      // Faixa mais baixa (ex: MCMV)
+                if (rendaNum >= 3000 && rendaNum < 8000) return 7.5;  // Intermediária
+                return 9.5; // Acima de 8000 (SBPE)
+            },
             
-            // Gera PDF da ficha do imóvel (sem valor de avaliação)
+            // Gera PDF da ficha do imóvel
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3444,7 +3495,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 10;
 
-                    // Características (duas grades lado a lado)
+                    // Características
                     const body = [];
                     if (imovel.tipo !== 'terreno') {
                         body.push(
@@ -3617,7 +3668,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            // Função para formatar número de referência no padrão "Ref.: 0001"
             formatRefNumber: function(ref) {
                 if (!ref) return 'Ref.: 0000';
                 if (/^\d+$/.test(ref)) {
@@ -4253,7 +4303,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                     // Simulação de financiamento
                     const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                    const taxaJuros = settings.taxaJuros || 8.5;
+                    const taxaJuros = cliente.taxaJuros || settings.taxaJuros || 8.5;
                     const simulacao = Utils.simulateFinancing(cliente, imovel, taxaJuros);
 
                     doc.setFont("helvetica", "bold");
@@ -4328,7 +4378,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
 
-            // Função para download de documento (mantida para compatibilidade)
             downloadDocument: function(doc) {
                 const a = document.createElement('a');
                 a.href = doc.dados;
@@ -4422,7 +4471,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             envioMassaEnviados: 0,
             currentWhatsappClienteId: null,
             currentPdfImovelId: null,
-            calcObraData: null, // dados da calculadora
+            calcObraData: null,
+            cropData: null, // para guardar a imagem a ser cortada
             
             init: async () => {
                 try {
@@ -4439,7 +4489,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.data.funilEtapas = await Storage.getFunilEtapas();
                     UI.data.settings = await Storage.getSettings();
                     
-                    // Corrigir números de referência inválidos
                     await UI.migrateRefNumbers();
                     
                     console.log('Dados carregados:', {
@@ -4474,7 +4523,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
             },
             
-            // Nova função para corrigir números de referência antigos
             migrateRefNumbers: async function() {
                 let settings = UI.data.settings;
                 let maxRef = settings?.refCounter || 0;
@@ -4665,10 +4713,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                                 </div>
                                 <div class="client-actions">
                                     <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.cliente.whatsappPersonalizado('${cliente.id}')">
-                                        <i class="fab fa-whatsapp"></i> Parabéns!
+                                        <i class="fab fa-whatsapp"></i>
                                     </button>
                                     <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
-                                        <i class="fas fa-calendar-plus"></i> Agendar
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </button>
+                                    <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${cliente.id}')">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                    <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
+                                        <i class="fas fa-edit"></i>
                                     </button>
                                 </div>
                             </div>
@@ -4880,16 +4934,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
-                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                    <i class="fab fa-whatsapp"></i>
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${cliente.id}')">
-                                    <i class="fas fa-calendar-plus"></i> Agendar
+                                    <i class="fas fa-calendar-plus"></i>
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${cliente.id}')">
-                                    <i class="fas fa-envelope"></i> Email
+                                    <i class="fas fa-envelope"></i>
                                 </button>
                                 <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${cliente.id}')">
-                                    <i class="fas fa-edit"></i> Editar
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             </div>
                         </div>
@@ -5051,7 +5105,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 }
                 
                 if (links.length === 0 && !filter) {
-                    // Se não há links e não há filtro, apenas o card da calculadora aparecerá (se adicionado)
                     if (!html) {
                         html = `
                             <div class="empty-state" style="grid-column: 1 / -1;">
@@ -5069,7 +5122,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                         </div>
                     `;
                 } else {
-                    // Adiciona os links existentes
                     links.forEach(link => {
                         const categoriaIcon = {
                             'construtora': 'building',
@@ -5255,16 +5307,16 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
-                                    <i class="fab fa-whatsapp"></i> WhatsApp
+                                    <i class="fab fa-whatsapp"></i>
                                 </button>
                                 <button class="btn-sm btn-primary-soft" onclick="event.stopPropagation(); App.cliente.agendarAtividade('${c.id}')">
-                                    <i class="fas fa-calendar-plus"></i> Agendar
+                                    <i class="fas fa-calendar-plus"></i>
                                 </button>
                                 <button class="btn-email-client" onclick="event.stopPropagation(); App.cliente.email('${c.id}')">
-                                    <i class="fas fa-envelope"></i> Email
+                                    <i class="fas fa-envelope"></i>
                                 </button>
                                 <button class="btn-sm btn-light" onclick="event.stopPropagation(); App.cliente.edit('${c.id}')">
-                                    <i class="fas fa-edit"></i> Editar
+                                    <i class="fas fa-edit"></i>
                                 </button>
                             </div>
                         </div>
@@ -5682,7 +5734,8 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
 
                 const settings = UI.data.settings || {};
                 const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                const simulacao = Utils.simulateFinancing(cliente, imovel, settings.taxaJuros || 8.5);
+                const taxaJuros = cliente.taxaJuros || settings.taxaJuros || 8.5;
+                const simulacao = Utils.simulateFinancing(cliente, imovel, taxaJuros);
 
                 const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil) || { nome: 'Lead', cor: '#93c5fd' };
                 const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
@@ -7171,6 +7224,9 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 document.getElementById('c-documentos-data').value = '[]';
                 App.cliente.renderDocumentosList([]);
                 
+                // Definir taxa de juros padrão
+                document.getElementById('c-taxa-juros').value = UI.data.settings?.taxaJuros || 8.5;
+                
                 UI.openModal('cliente');
             },
 
@@ -7497,7 +7553,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); UI.enviarNotificacaoIndividual('${c.id}')">
-                                    <i class="fab fa-whatsapp"></i> Enviar Notificação
+                                    <i class="fab fa-whatsapp"></i>
                                 </button>
                             </div>
                         </div>
@@ -7721,7 +7777,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                 UI.closeModals();
             },
 
-            // NOVAS FUNÇÕES PARA CALCULADORA DE EVOLUÇÃO DE OBRA
             openCalculadoraObra: function() {
                 document.getElementById('calc-credito').value = '';
                 document.getElementById('calc-percentual').value = '';
@@ -7826,13 +7881,14 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const imovelInteresseId = document.getElementById('c-imovel-interesse').value || null;
                     const dataNascimento = document.getElementById('c-data-nascimento').value || null;
                     const rendaMensal = document.getElementById('c-renda-mensal').value ? Utils.parseCurrency(document.getElementById('c-renda-mensal').value) : 0;
+                    const taxaJuros = parseFloat(document.getElementById('c-taxa-juros').value) || 8.5;
                     const faixaPreco = document.getElementById('c-faixa-preco').value;
                     const observacoes = document.getElementById('c-observacoes').value;
                     const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
 
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, email, 
-                        imovelInteresseId, dataNascimento, rendaMensal,
+                        imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
                         faixaPreco, observacoes, documentos,
                         dataCriacao: new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0]
@@ -7876,6 +7932,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.getElementById('c-imovel-interesse').value = cliente.imovelInteresseId || '';
                     document.getElementById('c-data-nascimento').value = cliente.dataNascimento || '';
                     document.getElementById('c-renda-mensal').value = cliente.rendaMensal ? cliente.rendaMensal.toString() : '';
+                    document.getElementById('c-taxa-juros').value = cliente.taxaJuros || '';
                     document.getElementById('c-faixa-preco').value = cliente.faixaPreco || '';
                     document.getElementById('c-observacoes').value = cliente.observacoes || '';
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
@@ -7907,7 +7964,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     UI.openModal('cliente');
                 },
 
-                // Nova função: mostrar detalhes
                 showDetails: (id) => {
                     UI.showClienteDetails(id);
                 },
@@ -8081,7 +8137,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     }, 100);
                 },
 
-                // Métodos para gerenciar documentos
+                // Métodos para gerenciar documentos com crop
                 scanDocumento: function() {
                     document.getElementById('c-documento-camera').click();
                 },
@@ -8097,34 +8153,45 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const tipo = document.getElementById('c-documento-tipo').value;
                     const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
                     
-                    // Ler arquivo como data URL
-                    const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const base64 = e.target.result;
-                        
-                        // Obter documentos atuais
-                        const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
-                        
-                        // Verificar tamanho (10MB limite)
-                        if (base64.length > 10 * 1024 * 1024) {
-                            Utils.toast('Arquivo muito grande. Máximo 10MB.', 'error');
-                            return;
-                        }
-                        
-                        docs.push({
-                            tipo: tipo,
-                            tipoLabel: tipoLabel,
-                            nome: file.name,
-                            dados: base64,
-                            dataUpload: new Date().toISOString()
-                        });
-                        
-                        document.getElementById('c-documentos-data').value = JSON.stringify(docs);
-                        App.cliente.renderDocumentosList(docs);
-                        
-                        input.value = '';
-                    };
-                    reader.readAsDataURL(file);
+                    if (file.type.startsWith('image/')) {
+                        // Abrir modal de crop para imagem
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            UI.cropData = {
+                                tipo,
+                                tipoLabel,
+                                nome: file.name,
+                                data: e.target.result
+                            };
+                            UI.openCropModal(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (file.type === 'application/pdf') {
+                        // PDF vai direto
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            const base64 = e.target.result;
+                            const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
+                            if (base64.length > 10 * 1024 * 1024) {
+                                Utils.toast('Arquivo muito grande. Máximo 10MB.', 'error');
+                                return;
+                            }
+                            docs.push({
+                                tipo: tipo,
+                                tipoLabel: tipoLabel,
+                                nome: file.name,
+                                dados: base64,
+                                dataUpload: new Date().toISOString()
+                            });
+                            document.getElementById('c-documentos-data').value = JSON.stringify(docs);
+                            App.cliente.renderDocumentosList(docs);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        Utils.toast('Formato de arquivo não suportado', 'error');
+                    }
+                    
+                    input.value = '';
                 },
 
                 processCameraDocumento: async function(input) {
@@ -8135,30 +8202,61 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
 
                     const reader = new FileReader();
-                    reader.onload = async (e) => {
-                        const base64 = e.target.result;
-
-                        const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
-                        
-                        if (base64.length > 10 * 1024 * 1024) {
-                            Utils.toast('Imagem muito grande. Máximo 10MB.', 'error');
-                            return;
-                        }
-
-                        docs.push({
-                            tipo: tipo,
-                            tipoLabel: tipoLabel,
+                    reader.onload = (e) => {
+                        UI.cropData = {
+                            tipo,
+                            tipoLabel,
                             nome: file.name || 'foto_camera.jpg',
-                            dados: base64,
-                            dataUpload: new Date().toISOString()
-                        });
-
-                        document.getElementById('c-documentos-data').value = JSON.stringify(docs);
-                        App.cliente.renderDocumentosList(docs);
-
-                        input.value = '';
+                            data: e.target.result
+                        };
+                        UI.openCropModal(e.target.result);
                     };
                     reader.readAsDataURL(file);
+                    
+                    input.value = '';
+                },
+
+                confirmCrop: function() {
+                    if (!UI.cropData || !window.cropper) return;
+                    
+                    const canvas = window.cropper.getCroppedCanvas({
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        fillColor: '#fff',
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high'
+                    });
+                    
+                    canvas.toBlob(async (blob) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const base64 = e.target.result;
+                            const docs = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
+                            
+                            if (base64.length > 10 * 1024 * 1024) {
+                                Utils.toast('Imagem muito grande. Máximo 10MB.', 'error');
+                                return;
+                            }
+                            
+                            docs.push({
+                                tipo: UI.cropData.tipo,
+                                tipoLabel: UI.cropData.tipoLabel,
+                                nome: UI.cropData.nome,
+                                dados: base64,
+                                dataUpload: new Date().toISOString()
+                            });
+                            
+                            document.getElementById('c-documentos-data').value = JSON.stringify(docs);
+                            App.cliente.renderDocumentosList(docs);
+                            
+                            UI.closeCropModal();
+                        };
+                        reader.readAsDataURL(blob);
+                    }, 'image/jpeg', 0.9);
+                },
+
+                cancelCrop: function() {
+                    UI.closeCropModal();
                 },
 
                 renderDocumentosList: function(docs) {
@@ -8197,13 +8295,13 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     App.cliente.renderDocumentosList(docs);
                 },
 
-                // NOVAS FUNÇÕES PARA VISUALIZAR/BAIXAR DOCUMENTOS
                 viewDocument: function(clienteId, index) {
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (!cliente || !cliente.documentos || !cliente.documentos[index]) return;
                     const doc = cliente.documentos[index];
                     window.open(doc.dados, '_blank');
                 },
+                
                 downloadDocument: function(clienteId, index) {
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (!cliente || !cliente.documentos || !cliente.documentos[index]) return;
@@ -8214,11 +8312,17 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
+                },
+
+                calcularTaxaJurosPorRenda: function() {
+                    const rendaStr = document.getElementById('c-renda-mensal').value;
+                    const renda = Utils.parseCurrency(rendaStr);
+                    const taxa = Utils.getInterestRateByIncome(renda);
+                    document.getElementById('c-taxa-juros').value = taxa.toFixed(2);
                 }
             },
             
             imovel: {
-                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8643,7 +8747,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             agenda: {
-                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8896,7 +8999,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             link: {
-                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8974,7 +9076,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             settings: {
-                // (mesmo código existente, mantido inalterado)
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -9000,7 +9101,6 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
             },
             
             backup: {
-                // (mesmo código existente, mantido inalterado)
                 importTrigger: function() {
                     document.getElementById('import-file').click();
                 },
@@ -9016,6 +9116,7 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                             await DB.clear('clientes');
                             for (const cliente of data.clientes) {
                                 if (!cliente.documentos) cliente.documentos = [];
+                                if (!cliente.taxaJuros) cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
                                 await DB.put('clientes', cliente);
                             }
                         }
@@ -9166,6 +9267,38 @@ Pedro Costa - (11) 77777-7777 - Solicitou proposta de financiamento</textarea>
                     Utils.toast('Todos os dados foram resetados!');
                     location.reload();
                 }
+            },
+
+            // Função para abrir modal de crop
+            openCropModal: function(imageSrc) {
+                const modal = document.getElementById('crop-modal');
+                const img = document.getElementById('crop-image');
+                img.src = imageSrc;
+                modal.style.display = 'flex';
+                
+                // Inicializar cropper após a imagem carregar
+                img.onload = function() {
+                    if (window.cropper) window.cropper.destroy();
+                    window.cropper = new Cropper(img, {
+                        aspectRatio: NaN,
+                        viewMode: 1,
+                        autoCropArea: 1,
+                        responsive: true,
+                        scalable: true,
+                        zoomable: true,
+                        rotatable: true
+                    });
+                };
+            },
+
+            closeCropModal: function() {
+                const modal = document.getElementById('crop-modal');
+                modal.style.display = 'none';
+                if (window.cropper) {
+                    window.cropper.destroy();
+                    window.cropper = null;
+                }
+                UI.cropData = null;
             }
         };
 
