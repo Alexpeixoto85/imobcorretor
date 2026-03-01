@@ -4260,7 +4260,12 @@
             },
 
             // Gera PDF do relatório do cliente com simulação e documentos
-            generateClientePDF: async (cliente) => {
+            generateClientePDF: async (clienteId) => {
+                const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                if (!cliente) {
+                    Utils.toast('Cliente não encontrado', 'error');
+                    return;
+                }
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'mm', 'a4');
@@ -5904,7 +5909,7 @@
                             <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.confirmOpenCliente('${cliente.id}')">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
                             </button>
-                            <button class="btn-details btn-details-secondary" onclick="Utils.generateClientePDF(cliente)">
+                            <button class="btn-details btn-details-secondary" onclick="Utils.generateClientePDF('${cliente.id}')">
                                 <i class="fas fa-file-pdf"></i> Relatório PDF
                             </button>
                             <button class="btn-details btn-details-secondary" onclick="App.cliente.agendarAtividade('${cliente.id}')">
