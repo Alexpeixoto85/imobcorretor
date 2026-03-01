@@ -10,7 +10,6 @@
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Cropper.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -1684,8 +1683,8 @@
                 <img id="crop-image" style="max-width: 100%; max-height: 70vh;">
             </div>
             <div class="crop-actions">
-                <button class="crop-btn confirm" onclick="App.cliente.confirmCrop()">Confirmar</button>
-                <button class="crop-btn cancel" onclick="App.cliente.cancelCrop()">Cancelar</button>
+                <button class="crop-btn confirm" onclick="App.imovel.confirmCrop()">Confirmar</button>
+                <button class="crop-btn cancel" onclick="App.imovel.cancelCrop()">Cancelar</button>
             </div>
         </div>
 
@@ -1977,7 +1976,6 @@
             </div>
         </div>
 
-        <!-- NOVO MODAL: Detalhes do Cliente com simulação de financiamento e documentos -->
         <div class="modal-overlay" id="overlay-cliente-details"></div>
         <div class="modal-sheet" id="sheet-cliente-details">
             <div class="sheet-handle"></div>
@@ -2031,9 +2029,8 @@
                     <label class="form-label">Renda Mensal (R$)</label>
                     <input type="text" id="c-renda-mensal" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this); App.cliente.calcularTaxaJurosPorRenda();">
                 </div>
-                <!-- NOVO CAMPO: Taxa de Juros Anual (%) -->
                 <div class="form-group">
-                    <label class="form-label">Taxa de Juros Anual (%) <span style="font-weight:normal; color:var(--secondary);">(preenchida automaticamente, pode editar)</span></label>
+                    <label class="form-label">Taxa de Juros Anual (%)</label>
                     <input type="number" id="c-taxa-juros" class="form-control" placeholder="Ex: 8.5" min="0" max="30" step="0.01" value="8.5">
                 </div>
                 <div class="form-group">
@@ -2072,6 +2069,7 @@
             </form>
         </div>
 
+        <!-- MODAL DO IMÓVEL (MODIFICADO) -->
         <div class="modal-overlay" id="overlay-imovel"></div>
         <div class="modal-sheet" id="sheet-imovel">
             <div class="sheet-handle"></div>
@@ -2079,6 +2077,17 @@
             <form id="form-imovel" onsubmit="App.imovel.save(event)">
                 <input type="hidden" id="i-id">
                 
+                <!-- Modalidade -->
+                <div class="form-group">
+                    <label class="form-label">Modalidade</label>
+                    <select id="i-modalidade" class="form-control" onchange="App.imovel.toggleModalidadeFields()">
+                        <option value="pronto">Pronto</option>
+                        <option value="lancamento">Lançamento</option>
+                        <option value="terceiro">Terceiro (Usado)</option>
+                    </select>
+                </div>
+
+                <!-- Fotos do Imóvel (comum a todos) -->
                 <div class="form-group">
                     <label class="form-label">Fotos do Imóvel (Máx. 20)</label>
                     <div class="image-counter">Fotos adicionadas: <span id="image-counter">0</span>/20</div>
@@ -2109,6 +2118,7 @@
                     <input type="hidden" id="i-tabela-pdf-nome">
                 </div>
 
+                <!-- Vídeos -->
                 <div class="form-group">
                     <label class="form-label">Vídeos do Imóvel (Links do YouTube/Vimeo)</label>
                     <div class="image-counter">Vídeos adicionados: <span id="video-counter">0</span>/5</div>
@@ -2126,6 +2136,7 @@
                     <input type="hidden" id="i-videos-data">
                 </div>
 
+                <!-- Campos básicos -->
                 <div class="form-group">
                     <label class="form-label">Título do Anúncio</label>
                     <input type="text" id="i-titulo" class="form-control" placeholder="Ex: Apartamento 3 quartos com vista..." required>
@@ -2163,7 +2174,6 @@
                     </div>
                 </div>
 
-                <!-- Novo campo: Valor de Avaliação (apenas visualização interna) -->
                 <div class="form-group">
                     <label class="form-label">Valor de Avaliação (R$) <span style="font-weight:normal; color:var(--secondary);">(não aparece no PDF)</span></label>
                     <input type="text" id="i-valor-avaliacao" class="form-control" placeholder="0,00" oninput="Utils.maskMoney(this)">
@@ -2240,19 +2250,70 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Estágio do Lançamento</label>
-                    <select id="i-estagio-lancamento" class="form-control">
-                        <option value="nenhum">Nenhum (imóvel pronto)</option>
-                        <option value="pre-lancamento">Pré-lançamento</option>
-                        <option value="lancamento">Lançamento</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Data de Mudança para Lançamento</label>
-                    <input type="date" id="i-data-lancamento" class="form-control">
+                <!-- Campos específicos de lançamento (aparecem apenas quando modalidade = lancamento) -->
+                <div id="lancamento-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Estágio do Lançamento</label>
+                        <select id="i-estagio-lancamento" class="form-control">
+                            <option value="nenhum">Nenhum (imóvel pronto)</option>
+                            <option value="pre-lancamento">Pré-lançamento</option>
+                            <option value="lancamento">Lançamento</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Data de Mudança para Lançamento</label>
+                        <input type="date" id="i-data-lancamento" class="form-control">
+                    </div>
                 </div>
                 
+                <!-- Campos específicos de terceiros (proprietário e documentos) -->
+                <div id="terceiro-fields" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Nome do Proprietário</label>
+                        <input type="text" id="i-proprietario-nome" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Telefone do Proprietário</label>
+                        <input type="tel" id="i-proprietario-telefone" class="form-control" oninput="Utils.maskPhone(this)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email do Proprietário</label>
+                        <input type="email" id="i-proprietario-email" class="form-control">
+                    </div>
+
+                    <!-- Documentos do Imóvel -->
+                    <div class="form-group">
+                        <label class="form-label">Documentos do Imóvel</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <select id="i-doc-imovel-tipo" class="form-control" style="flex: 2;">
+                                <!-- preenchido via JS -->
+                            </select>
+                            <button type="button" class="btn-sm btn-primary-soft" onclick="App.imovel.adicionarDocumentoImovel()">
+                                <i class="fas fa-upload"></i> Adicionar
+                            </button>
+                        </div>
+                        <input type="file" id="i-doc-imovel-file" accept=".pdf,image/*" style="display: none;" onchange="App.imovel.processDocumentoImovel(this)">
+                        <div id="i-documentos-imovel-list" style="margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px;"></div>
+                        <input type="hidden" id="i-documentos-imovel-data" value="[]">
+                    </div>
+
+                    <!-- Documentos do Proprietário -->
+                    <div class="form-group">
+                        <label class="form-label">Documentos do Proprietário</label>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <select id="i-doc-proprietario-tipo" class="form-control" style="flex: 2;">
+                                <!-- preenchido via JS -->
+                            </select>
+                            <button type="button" class="btn-sm btn-primary-soft" onclick="App.imovel.adicionarDocumentoProprietario()">
+                                <i class="fas fa-upload"></i> Adicionar
+                            </button>
+                        </div>
+                        <input type="file" id="i-doc-proprietario-file" accept=".pdf,image/*" style="display: none;" onchange="App.imovel.processDocumentoProprietario(this)">
+                        <div id="i-documentos-proprietario-list" style="margin-top: 8px; max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 8px;"></div>
+                        <input type="hidden" id="i-documentos-proprietario-data" value="[]">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Descrição</label>
                     <textarea id="i-descricao" class="form-control" placeholder="Descreva o imóvel, comodidades, localização..."></textarea>
@@ -2695,7 +2756,7 @@
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- MODAL DE CONFIRMAÇÃO WHATSAPP (importado do DJ Manager) -->
+        <!-- MODAL DE CONFIRMAÇÃO WHATSAPP -->
         <div class="modal-overlay" id="overlay-whatsapp-confirm"></div>
         <div class="modal-sheet" id="sheet-whatsapp-confirm">
             <div class="sheet-handle"></div>
@@ -2751,7 +2812,7 @@
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- MODAL: SELEÇÃO DE FOTOS PARA PDF (agora até 8 imagens) -->
+        <!-- MODAL: SELEÇÃO DE FOTOS PARA PDF -->
         <div class="modal-overlay" id="overlay-select-images"></div>
         <div class="modal-sheet" id="sheet-select-images">
             <div class="sheet-handle"></div>
@@ -2814,10 +2875,10 @@
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, ocultar características em terrenos, simulação financiamento, botão WhatsApp com texto, e agora anexo de documentos para clientes)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos)
         const DB = {
             name: 'ImobiProDB',
-            version: 13, // Atualizado para versão 13 (novo campo taxaJuros em clientes)
+            version: 14, // Atualizado para versão 14 (modalidade, proprietário, documentosImovel, documentosProprietario)
             db: null,
             
             init: function() {
@@ -2892,30 +2953,40 @@
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                if (oldVersion < 13) {
-                    console.log('Migrando para versão 13: Adicionando taxaJuros aos clientes');
+                if (oldVersion < 14) {
+                    console.log('Migrando para versão 14: Adicionando modalidade, proprietário, documentosImovel, documentosProprietario aos imóveis');
                     try {
-                        const transaction = db.transaction(['clientes'], 'readwrite');
-                        const clientesStore = transaction.objectStore('clientes');
-                        const request = clientesStore.getAll();
+                        const transaction = db.transaction(['imoveis'], 'readwrite');
+                        const imoveisStore = transaction.objectStore('imoveis');
+                        const request = imoveisStore.getAll();
                         
                         request.onsuccess = async (event) => {
-                            const clientes = event.target.result;
-                            for (const cliente of clientes) {
-                                if (cliente.taxaJuros === undefined) {
-                                    // Definir uma taxa padrão baseada na renda se possível
-                                    cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
-                                    await new Promise((resolve, reject) => {
-                                        const putReq = clientesStore.put(cliente);
-                                        putReq.onsuccess = resolve;
-                                        putReq.onerror = reject;
-                                    });
+                            const imoveis = event.target.result;
+                            for (const imovel of imoveis) {
+                                if (!imovel.modalidade) {
+                                    // Define modalidade baseada no estagioLancamento existente
+                                    if (imovel.estagioLancamento && (imovel.estagioLancamento === 'pre-lancamento' || imovel.estagioLancamento === 'lancamento')) {
+                                        imovel.modalidade = 'lancamento';
+                                    } else {
+                                        imovel.modalidade = 'pronto'; // padrão para existentes
+                                    }
                                 }
+                                if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
+                                if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
+                                if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
+                                if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
+                                if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
+                                
+                                await new Promise((resolve, reject) => {
+                                    const putReq = imoveisStore.put(imovel);
+                                    putReq.onsuccess = resolve;
+                                    putReq.onerror = reject;
+                                });
                             }
-                            console.log('Migração clientes concluída');
+                            console.log('Migração imóveis concluída');
                         };
                     } catch (error) {
-                        console.error('Erro na migração para versão 13:', error);
+                        console.error('Erro na migração para versão 14:', error);
                     }
                 }
             },
@@ -3082,6 +3153,14 @@
                                         if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                         if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                         if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
+                                        // Novos campos
+                                        if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
+                                        if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
+                                        if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
+                                        if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
+                                        if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
+                                        if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
+                                        
                                         await this.put('imoveis', imovel);
                                     }
                                     migrated = true;
@@ -3411,7 +3490,7 @@
                 return clean;
             },
 
-            // Lista de tipos de documentos
+            // Lista de tipos de documentos (reutilizada para cliente e imóvel)
             documentTypes: [
                 { value: 'comprovante_renda_formal', label: 'Comprovante de Renda (formal)' },
                 { value: 'contracheque', label: 'Contracheque (3 últimos)' },
@@ -3425,6 +3504,10 @@
                 { value: 'renda_informal', label: 'Comprovante de Renda (informal) - declaração própria' },
                 { value: 'declaracao_autonomo', label: 'Declaração de Autônomo' },
                 { value: 'recibos', label: 'Recibos/Comprovantes de Recebimento' },
+                { value: 'escritura', label: 'Escritura do Imóvel' },
+                { value: 'matricula', label: 'Matrícula do Imóvel' },
+                { value: 'iptu', label: 'IPTU' },
+                { value: 'contrato', label: 'Contrato de Compra e Venda' },
                 { value: 'outros', label: 'Outros' }
             ],
 
@@ -4096,7 +4179,7 @@
                     if (imovel.quartos) message += `🛏️ *Quartos:* ${imovel.quartos}\n`;
                     if (imovel.banheiros) message += `🛁 *Banheiros:* ${imovel.banheiros}\n`;
                     if (imovel.vagas) message += `🚗 *Vagas:* ${imovel.vagas}\n`;
-                    if (imovel.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n`;
+                    if (imovel.gasEncanado === 'sim') message += `🔥 *Gás Encanado:* Sim\n\n`;
                     if (imovel.condominio) message += `💰 *Condomínio:* ${Utils.formatCurrency(imovel.condominio)}/mês\n\n`;
                     
                     if (imovel.precoVenda) {
@@ -5391,12 +5474,15 @@
                     badgeText = 'RESERVADO';
                 }
 
-                if (i.estagioLancamento === 'pre-lancamento') {
+                if (i.modalidade === 'lancamento' && i.estagioLancamento === 'pre-lancamento') {
                     badgeClass = 'badge-pre';
                     badgeText = 'PRÉ-LANÇAMENTO';
-                } else if (i.estagioLancamento === 'lancamento') {
+                } else if (i.modalidade === 'lancamento' && i.estagioLancamento === 'lancamento') {
                     badgeClass = 'badge-lancamento';
                     badgeText = 'LANÇAMENTO';
+                } else if (i.modalidade === 'terceiro') {
+                    badgeClass = 'badge-secondary';
+                    badgeText = 'USADO';
                 }
                 
                 const preco = i.precoVenda ? 
@@ -5568,6 +5654,80 @@
                     videos: i.videos || []
                 };
                 
+                // Informações adicionais para modalidade terceiro
+                let ownerInfo = '';
+                let docsInfo = '';
+                if (i.modalidade === 'terceiro') {
+                    if (i.proprietarioNome || i.proprietarioTelefone || i.proprietarioEmail) {
+                        ownerInfo = `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-user"></i> PROPRIETÁRIO</div>
+                                <div class="details-info-grid">
+                                    ${i.proprietarioNome ? `<div class="info-item"><div class="info-label">Nome</div><div class="info-value">${i.proprietarioNome}</div></div>` : ''}
+                                    ${i.proprietarioTelefone ? `<div class="info-item"><div class="info-label">Telefone</div><div class="info-value">${Utils.formatPhone(i.proprietarioTelefone)}</div></div>` : ''}
+                                    ${i.proprietarioEmail ? `<div class="info-item"><div class="info-label">Email</div><div class="info-value">${i.proprietarioEmail}</div></div>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // Documentos do Imóvel
+                    if (i.documentosImovel && i.documentosImovel.length > 0) {
+                        docsInfo += `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-file-alt"></i> DOCUMENTOS DO IMÓVEL</div>
+                                ${i.documentosImovel.map((doc, index) => {
+                                    const isImage = doc.dados.startsWith('data:image');
+                                    const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                                    return `
+                                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border);">
+                                            <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                            <div style="flex: 1;">
+                                                <div><strong>${doc.tipoLabel}</strong></div>
+                                                <div style="font-size: 0.8rem; color: var(--secondary);">${doc.nome}</div>
+                                            </div>
+                                            <button class="icon-btn" onclick="event.stopPropagation(); window.open('${doc.dados}', '_blank')" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="icon-btn" onclick="event.stopPropagation(); Utils.downloadDocument(doc)" title="Download">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    }
+                    
+                    // Documentos do Proprietário
+                    if (i.documentosProprietario && i.documentosProprietario.length > 0) {
+                        docsInfo += `
+                            <div class="details-section">
+                                <div class="details-section-title"><i class="fas fa-user-tie"></i> DOCUMENTOS DO PROPRIETÁRIO</div>
+                                ${i.documentosProprietario.map((doc, index) => {
+                                    const isImage = doc.dados.startsWith('data:image');
+                                    const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                                    return `
+                                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--border);">
+                                            <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                            <div style="flex: 1;">
+                                                <div><strong>${doc.tipoLabel}</strong></div>
+                                                <div style="font-size: 0.8rem; color: var(--secondary);">${doc.nome}</div>
+                                            </div>
+                                            <button class="icon-btn" onclick="event.stopPropagation(); window.open('${doc.dados}', '_blank')" title="Visualizar">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="icon-btn" onclick="event.stopPropagation(); Utils.downloadDocument(doc)" title="Download">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        `;
+                    }
+                }
+                
                 const detailsContent = `
                     <div class="details-card">
                         <div class="details-header">
@@ -5575,6 +5735,9 @@
                             <div style="display: flex; gap: 8px; align-items: center;">
                                 ${statusBadge}
                                 <span class="badge badge-secondary">${Utils.formatRefNumber(i.refNumber || i.id)}</span>
+                                <span class="badge badge-${i.modalidade === 'pronto' ? 'success' : i.modalidade === 'lancamento' ? 'warning' : 'secondary'}">
+                                    ${i.modalidade === 'pronto' ? 'Pronto' : i.modalidade === 'lancamento' ? 'Lançamento' : 'Terceiro'}
+                                </span>
                             </div>
                         </div>
                         
@@ -5685,6 +5848,9 @@
                             </div>
                         </div>
                         
+                        ${ownerInfo}
+                        ${docsInfo}
+                        
                         <div class="details-section">
                             <div class="details-section-title"><i class="fas fa-align-left"></i> DESCRIÇÃO</div>
                             <div class="info-item">
@@ -5732,7 +5898,6 @@
                 UI.openModal('imovel-details');
             },
 
-            // NOVA FUNÇÃO: mostrar detalhes do cliente (com simulação e documentos)
             showClienteDetails: (id) => {
                 const cliente = UI.data.clientes.find(x => x.id === id);
                 if (!cliente) return;
@@ -7243,6 +7408,7 @@
                 document.getElementById('i-id').value = '';
                 document.getElementById('title-imovel').innerText = 'Novo Imóvel';
                 
+                // Galeria de fotos
                 const gallery = document.getElementById('image-gallery');
                 if (gallery) {
                     gallery.innerHTML = `
@@ -7269,6 +7435,23 @@
                 document.getElementById('i-tabela-pdf-nome').value = '';
                 document.getElementById('tabela-pdf-info').innerHTML = '';
                 document.getElementById('btn-remove-pdf').style.display = 'none';
+                
+                // Campos de terceiro
+                document.getElementById('i-proprietario-nome').value = '';
+                document.getElementById('i-proprietario-telefone').value = '';
+                document.getElementById('i-proprietario-email').value = '';
+                document.getElementById('i-documentos-imovel-data').value = '[]';
+                document.getElementById('i-documentos-proprietario-data').value = '[]';
+                App.imovel.renderDocumentosImovelList([]);
+                App.imovel.renderDocumentosProprietarioList([]);
+                
+                // Preencher selects de documentos
+                App.imovel.populateDocumentoTipoSelect('i-doc-imovel-tipo');
+                App.imovel.populateDocumentoTipoSelect('i-doc-proprietario-tipo');
+                
+                // Definir modalidade padrão e mostrar campos corretos
+                document.getElementById('i-modalidade').value = 'pronto';
+                App.imovel.toggleModalidadeFields();
                 
                 UI.openModal('imovel');
             },
@@ -7506,8 +7689,7 @@
             verificarLancamentos: () => {
                 const hoje = Utils.getToday();
                 const imoveisLancados = UI.data.imoveis.filter(i => 
-                    i.estagioLancamento === 'lancamento' && 
-                    i.dataLancamento === hoje
+                    i.modalidade === 'lancamento' && i.estagioLancamento === 'lancamento' && i.dataLancamento === hoje
                 );
                 if (imoveisLancados.length > 0) {
                     UI.mostrarAlertaLancamento(imoveisLancados);
@@ -7866,7 +8048,7 @@
             }
         };
 
-        // Função auxiliar para preencher o select de tipos de documento
+        // Função auxiliar para preencher o select de tipos de documento (cliente)
         function populateDocumentoTipoSelect() {
             const select = document.getElementById('c-documento-tipo');
             if (!select) return;
@@ -8328,6 +8510,259 @@
             },
             
             imovel: {
+                // Função para alternar campos baseado na modalidade
+                toggleModalidadeFields: function() {
+                    const modalidade = document.getElementById('i-modalidade').value;
+                    const lancamentoFields = document.getElementById('lancamento-fields');
+                    const terceiroFields = document.getElementById('terceiro-fields');
+                    
+                    // Esconder ambos primeiro
+                    lancamentoFields.style.display = 'none';
+                    terceiroFields.style.display = 'none';
+                    
+                    if (modalidade === 'lancamento') {
+                        lancamentoFields.style.display = 'block';
+                    } else if (modalidade === 'terceiro') {
+                        terceiroFields.style.display = 'block';
+                    }
+                },
+
+                // Funções para documentos do imóvel (similar ao cliente)
+                populateDocumentoTipoSelect: function(selectId) {
+                    const select = document.getElementById(selectId);
+                    if (!select) return;
+                    select.innerHTML = Utils.documentTypes.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
+                },
+
+                adicionarDocumentoImovel: function() {
+                    document.getElementById('i-doc-imovel-file').click();
+                },
+
+                adicionarDocumentoProprietario: function() {
+                    document.getElementById('i-doc-proprietario-file').click();
+                },
+
+                processDocumentoImovel: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    const tipo = document.getElementById('i-doc-imovel-tipo').value;
+                    const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
+                    
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            UI.cropData = {
+                                tipo,
+                                tipoLabel,
+                                nome: file.name,
+                                data: e.target.result,
+                                target: 'imovel'
+                            };
+                            App.openCropModal(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (file.type === 'application/pdf') {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            const base64 = e.target.result;
+                            const docs = JSON.parse(document.getElementById('i-documentos-imovel-data').value || '[]');
+                            if (base64.length > 10 * 1024 * 1024) {
+                                Utils.toast('Arquivo muito grande. Máximo 10MB.', 'error');
+                                return;
+                            }
+                            docs.push({
+                                tipo: tipo,
+                                tipoLabel: tipoLabel,
+                                nome: file.name,
+                                dados: base64,
+                                dataUpload: new Date().toISOString()
+                            });
+                            document.getElementById('i-documentos-imovel-data').value = JSON.stringify(docs);
+                            App.imovel.renderDocumentosImovelList(docs);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        Utils.toast('Formato de arquivo não suportado', 'error');
+                    }
+                    
+                    input.value = '';
+                },
+
+                processDocumentoProprietario: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    const tipo = document.getElementById('i-doc-proprietario-tipo').value;
+                    const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
+                    
+                    if (file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            UI.cropData = {
+                                tipo,
+                                tipoLabel,
+                                nome: file.name,
+                                data: e.target.result,
+                                target: 'proprietario'
+                            };
+                            App.openCropModal(e.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (file.type === 'application/pdf') {
+                        const reader = new FileReader();
+                        reader.onload = async (e) => {
+                            const base64 = e.target.result;
+                            const docs = JSON.parse(document.getElementById('i-documentos-proprietario-data').value || '[]');
+                            if (base64.length > 10 * 1024 * 1024) {
+                                Utils.toast('Arquivo muito grande. Máximo 10MB.', 'error');
+                                return;
+                            }
+                            docs.push({
+                                tipo: tipo,
+                                tipoLabel: tipoLabel,
+                                nome: file.name,
+                                dados: base64,
+                                dataUpload: new Date().toISOString()
+                            });
+                            document.getElementById('i-documentos-proprietario-data').value = JSON.stringify(docs);
+                            App.imovel.renderDocumentosProprietarioList(docs);
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        Utils.toast('Formato de arquivo não suportado', 'error');
+                    }
+                    
+                    input.value = '';
+                },
+
+                renderDocumentosImovelList: function(docs) {
+                    const container = document.getElementById('i-documentos-imovel-list');
+                    if (!container) return;
+                    
+                    if (docs.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; color: var(--secondary); padding: 8px;">Nenhum documento anexado.</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    docs.forEach((doc, index) => {
+                        const isImage = doc.dados.startsWith('data:image');
+                        const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                        html += `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid var(--border);">
+                                <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                <div style="flex: 1; font-size: 0.85rem;">
+                                    <div><strong>${doc.tipoLabel}</strong></div>
+                                    <div style="color: var(--secondary);">${doc.nome}</div>
+                                </div>
+                                <button class="icon-btn" onclick="App.imovel.removerDocumentoImovel(${index})" style="color: var(--danger);">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                },
+
+                renderDocumentosProprietarioList: function(docs) {
+                    const container = document.getElementById('i-documentos-proprietario-list');
+                    if (!container) return;
+                    
+                    if (docs.length === 0) {
+                        container.innerHTML = '<div style="text-align: center; color: var(--secondary); padding: 8px;">Nenhum documento anexado.</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    docs.forEach((doc, index) => {
+                        const isImage = doc.dados.startsWith('data:image');
+                        const icon = isImage ? 'fa-image' : 'fa-file-pdf';
+                        html += `
+                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid var(--border);">
+                                <i class="fas ${icon}" style="color: var(--primary);"></i>
+                                <div style="flex: 1; font-size: 0.85rem;">
+                                    <div><strong>${doc.tipoLabel}</strong></div>
+                                    <div style="color: var(--secondary);">${doc.nome}</div>
+                                </div>
+                                <button class="icon-btn" onclick="App.imovel.removerDocumentoProprietario(${index})" style="color: var(--danger);">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    container.innerHTML = html;
+                },
+
+                removerDocumentoImovel: function(index) {
+                    const docs = JSON.parse(document.getElementById('i-documentos-imovel-data').value || '[]');
+                    docs.splice(index, 1);
+                    document.getElementById('i-documentos-imovel-data').value = JSON.stringify(docs);
+                    App.imovel.renderDocumentosImovelList(docs);
+                },
+
+                removerDocumentoProprietario: function(index) {
+                    const docs = JSON.parse(document.getElementById('i-documentos-proprietario-data').value || '[]');
+                    docs.splice(index, 1);
+                    document.getElementById('i-documentos-proprietario-data').value = JSON.stringify(docs);
+                    App.imovel.renderDocumentosProprietarioList(docs);
+                },
+
+                confirmCrop: function() {
+                    if (!UI.cropData || !window.cropper) return;
+                    
+                    const canvas = window.cropper.getCroppedCanvas({
+                        maxWidth: 1024,
+                        maxHeight: 1024,
+                        fillColor: '#fff',
+                        imageSmoothingEnabled: true,
+                        imageSmoothingQuality: 'high'
+                    });
+                    
+                    canvas.toBlob(async (blob) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const base64 = e.target.result;
+                            
+                            if (base64.length > 10 * 1024 * 1024) {
+                                Utils.toast('Imagem muito grande. Máximo 10MB.', 'error');
+                                return;
+                            }
+                            
+                            if (UI.cropData.target === 'imovel') {
+                                const docs = JSON.parse(document.getElementById('i-documentos-imovel-data').value || '[]');
+                                docs.push({
+                                    tipo: UI.cropData.tipo,
+                                    tipoLabel: UI.cropData.tipoLabel,
+                                    nome: UI.cropData.nome,
+                                    dados: base64,
+                                    dataUpload: new Date().toISOString()
+                                });
+                                document.getElementById('i-documentos-imovel-data').value = JSON.stringify(docs);
+                                App.imovel.renderDocumentosImovelList(docs);
+                            } else if (UI.cropData.target === 'proprietario') {
+                                const docs = JSON.parse(document.getElementById('i-documentos-proprietario-data').value || '[]');
+                                docs.push({
+                                    tipo: UI.cropData.tipo,
+                                    tipoLabel: UI.cropData.tipoLabel,
+                                    nome: UI.cropData.nome,
+                                    dados: base64,
+                                    dataUpload: new Date().toISOString()
+                                });
+                                document.getElementById('i-documentos-proprietario-data').value = JSON.stringify(docs);
+                                App.imovel.renderDocumentosProprietarioList(docs);
+                            }
+                            
+                            App.closeCropModal();
+                        };
+                        reader.readAsDataURL(blob);
+                    }, 'image/jpeg', 0.9);
+                },
+
+                cancelCrop: function() {
+                    App.closeCropModal();
+                },
+
                 save: async (e) => {
                     e.preventDefault();
                     
@@ -8365,13 +8800,21 @@
                         const videos = videosData ? JSON.parse(videosData) : [];
                         const comissao = parseFloat(document.getElementById('i-comissao').value) || 0;
                         
-                        const estagioLancamento = document.getElementById('i-estagio-lancamento').value;
-                        let dataLancamento = document.getElementById('i-data-lancamento').value;
+                        const modalidade = document.getElementById('i-modalidade').value;
+                        const estagioLancamento = modalidade === 'lancamento' ? document.getElementById('i-estagio-lancamento').value : 'nenhum';
+                        const dataLancamento = modalidade === 'lancamento' ? document.getElementById('i-data-lancamento').value : '';
                         
                         const valorAvaliacao = document.getElementById('i-valor-avaliacao').value ? Utils.parseCurrency(document.getElementById('i-valor-avaliacao').value) : 0;
                         
                         const tabelaPDF = document.getElementById('i-tabela-pdf-data').value;
                         const tabelaPDFNome = document.getElementById('i-tabela-pdf-nome').value;
+                        
+                        // Campos de terceiro
+                        const proprietarioNome = modalidade === 'terceiro' ? document.getElementById('i-proprietario-nome').value : '';
+                        const proprietarioTelefone = modalidade === 'terceiro' ? document.getElementById('i-proprietario-telefone').value : '';
+                        const proprietarioEmail = modalidade === 'terceiro' ? document.getElementById('i-proprietario-email').value : '';
+                        const documentosImovel = modalidade === 'terceiro' ? JSON.parse(document.getElementById('i-documentos-imovel-data').value || '[]') : [];
+                        const documentosProprietario = modalidade === 'terceiro' ? JSON.parse(document.getElementById('i-documentos-proprietario-data').value || '[]') : [];
                         
                         const imovelExistente = UI.data.imoveis.find(i => i.id === id);
                         
@@ -8386,9 +8829,9 @@
                         
                         const waitingList = imovelExistente?.waitingList || [];
                         
-                        if (imovelExistente && imovelExistente.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
+                        if (modalidade === 'lancamento' && imovelExistente?.modalidade === 'lancamento' && imovelExistente?.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
-                        } else if (!imovelExistente && estagioLancamento === 'lancamento') {
+                        } else if (!imovelExistente && modalidade === 'lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
                         }
                         
@@ -8416,12 +8859,18 @@
                             imagens,
                             videos,
                             comissao,
+                            modalidade,
                             estagioLancamento,
                             dataLancamento,
                             waitingList,
                             valorAvaliacao,
                             tabelaPDF,
                             tabelaPDFNome,
+                            proprietarioNome,
+                            proprietarioTelefone,
+                            proprietarioEmail,
+                            documentosImovel,
+                            documentosProprietario,
                             dataCriacao: imovelExistente ? imovelExistente.dataCriacao : new Date().toISOString(),
                             dataAtualizacao: new Date().toISOString()
                         };
@@ -8480,6 +8929,9 @@
                         document.getElementById('i-data-entrega').value = imovel.dataEntrega || '';
                         document.getElementById('i-comissao').value = imovel.comissao || '';
                         
+                        document.getElementById('i-modalidade').value = imovel.modalidade || 'pronto';
+                        
+                        // Campos de lançamento
                         document.getElementById('i-estagio-lancamento').value = imovel.estagioLancamento || 'nenhum';
                         document.getElementById('i-data-lancamento').value = imovel.dataLancamento || '';
                         
@@ -8493,6 +8945,25 @@
                         } else {
                             document.getElementById('tabela-pdf-info').innerHTML = '';
                             document.getElementById('btn-remove-pdf').style.display = 'none';
+                        }
+                        
+                        // Campos de terceiro
+                        if (imovel.modalidade === 'terceiro') {
+                            document.getElementById('i-proprietario-nome').value = imovel.proprietarioNome || '';
+                            document.getElementById('i-proprietario-telefone').value = imovel.proprietarioTelefone || '';
+                            document.getElementById('i-proprietario-email').value = imovel.proprietarioEmail || '';
+                            document.getElementById('i-documentos-imovel-data').value = JSON.stringify(imovel.documentosImovel || []);
+                            document.getElementById('i-documentos-proprietario-data').value = JSON.stringify(imovel.documentosProprietario || []);
+                            App.imovel.renderDocumentosImovelList(imovel.documentosImovel || []);
+                            App.imovel.renderDocumentosProprietarioList(imovel.documentosProprietario || []);
+                        } else {
+                            document.getElementById('i-proprietario-nome').value = '';
+                            document.getElementById('i-proprietario-telefone').value = '';
+                            document.getElementById('i-proprietario-email').value = '';
+                            document.getElementById('i-documentos-imovel-data').value = '[]';
+                            document.getElementById('i-documentos-proprietario-data').value = '[]';
+                            App.imovel.renderDocumentosImovelList([]);
+                            App.imovel.renderDocumentosProprietarioList([]);
                         }
                         
                         document.getElementById('title-imovel').innerText = 'Editar Imóvel';
@@ -8510,6 +8981,11 @@
                         App.imovel.renderVideoList(videos);
                         
                         App.imovel.toggleAluguelFields();
+                        App.imovel.toggleModalidadeFields();
+                        
+                        // Preencher selects de documentos
+                        App.imovel.populateDocumentoTipoSelect('i-doc-imovel-tipo');
+                        App.imovel.populateDocumentoTipoSelect('i-doc-proprietario-tipo');
                         
                         UI.openModal('imovel');
                         
@@ -9133,6 +9609,13 @@
                                 if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                 if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                 if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
+                                // Novos campos
+                                if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
+                                if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
+                                if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
+                                if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
+                                if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
+                                if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
                                 await DB.put('imoveis', imovel);
                             }
                         }
@@ -9214,6 +9697,13 @@
                                 if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                 if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                 if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
+                                // Novos campos
+                                if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
+                                if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
+                                if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
+                                if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
+                                if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
+                                if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
                                 await DB.put('imoveis', imovel);
                             }
                             
