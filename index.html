@@ -318,11 +318,19 @@
         }
 
         .client-actions {
-            display: flex; gap: 8px; margin-top: 12px;
-            padding-top: 12px; border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
             width: 100%;
             flex-wrap: wrap;
-            justify-content: flex-end;
+        }
+
+        .client-actions > * {
+            flex: 1 1 0;
+            min-width: 0;
+            white-space: nowrap;
         }
 
         .btn-whatsapp-client {
@@ -339,8 +347,6 @@
             gap: 6px;
             cursor: pointer;
             transition: transform 0.2s;
-            flex: 0 0 auto;
-            min-width: auto;
             min-height: 36px;
         }
         
@@ -362,8 +368,6 @@
             gap: 6px;
             cursor: pointer;
             transition: transform 0.2s;
-            flex: 0 0 auto;
-            min-width: 36px;
             min-height: 36px;
             justify-content: center;
         }
@@ -1629,6 +1633,42 @@
         input, select, textarea {
             font-size: 16px !important;
         }
+
+        /* Estilo para lista de espera no dashboard */
+        .waiting-item {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .waiting-item:active {
+            transform: scale(0.98);
+        }
+        .waiting-item h4 {
+            font-size: 1rem;
+            color: #92400e;
+            margin-bottom: 4px;
+        }
+        .waiting-clients {
+            font-size: 0.85rem;
+            color: #78350f;
+            list-style: none;
+            padding-left: 0;
+        }
+        .waiting-clients li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+            padding: 4px 0;
+            border-bottom: 1px dashed #fbbf24;
+        }
+        .waiting-clients li:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
@@ -1738,6 +1778,13 @@
                     <span class="badge badge-primary" id="visitas-badge" style="display:none">!</span>
                 </div>
                 <div id="visitas-list">
+                </div>
+
+                <div class="section-title">
+                    Lista de Espera (Lançamentos)
+                    <span class="badge badge-warning" id="waiting-badge" style="display:none">!</span>
+                </div>
+                <div id="waiting-list-dashboard">
                 </div>
                 
                 <div class="section-title">
@@ -2010,6 +2057,11 @@
                     <label class="form-label">Telefone (WhatsApp)</label>
                     <input type="tel" id="c-telefone" class="form-control" placeholder="(00) 00000-0000" required oninput="Utils.maskPhone(this)">
                 </div>
+                <!-- NOVO: CPF/CNPJ -->
+                <div class="form-group">
+                    <label class="form-label">CPF/CNPJ</label>
+                    <input type="text" id="c-cpf" class="form-control" placeholder="000.000.000-00" oninput="Utils.maskCPF(this)">
+                </div>
                 <div class="form-group">
                     <label class="form-label">Email</label>
                     <input type="email" id="c-email" class="form-control">
@@ -2275,6 +2327,11 @@
                     <div class="form-group">
                         <label class="form-label">Telefone do Proprietário</label>
                         <input type="tel" id="i-proprietario-telefone" class="form-control" oninput="Utils.maskPhone(this)">
+                    </div>
+                    <!-- NOVO: CPF/CNPJ do Proprietário -->
+                    <div class="form-group">
+                        <label class="form-label">CPF/CNPJ do Proprietário</label>
+                        <input type="text" id="i-proprietario-cpf" class="form-control" placeholder="000.000.000-00" oninput="Utils.maskCPF(this)">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Email do Proprietário</label>
@@ -2875,10 +2932,10 @@
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: CPF, contrato autorização PDF, área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos)
         const DB = {
             name: 'ImobiProDB',
-            version: 14, // Atualizado para versão 14 (modalidade, proprietário, documentosImovel, documentosProprietario)
+            version: 15, // Atualizado para versão 15 (CPF e proprietarioCpf)
             db: null,
             
             init: function() {
@@ -2953,8 +3010,35 @@
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                if (oldVersion < 14) {
-                    console.log('Migrando para versão 14: Adicionando modalidade, proprietário, documentosImovel, documentosProprietario aos imóveis');
+                // Migração para versão 15: adicionar cpf em clientes e proprietarioCpf em imoveis
+                if (oldVersion < 15) {
+                    console.log('Migrando para versão 15: Adicionando cpf e proprietarioCpf');
+                    
+                    // Atualizar clientes
+                    try {
+                        const transaction = db.transaction(['clientes'], 'readwrite');
+                        const clientesStore = transaction.objectStore('clientes');
+                        const request = clientesStore.getAll();
+                        
+                        request.onsuccess = async (event) => {
+                            const clientes = event.target.result;
+                            for (const cliente of clientes) {
+                                if (cliente.cpf === undefined) {
+                                    cliente.cpf = '';
+                                    await new Promise((resolve, reject) => {
+                                        const putReq = clientesStore.put(cliente);
+                                        putReq.onsuccess = resolve;
+                                        putReq.onerror = reject;
+                                    });
+                                }
+                            }
+                            console.log('Migração clientes concluída');
+                        };
+                    } catch (error) {
+                        console.error('Erro na migração de clientes:', error);
+                    }
+
+                    // Atualizar imoveis
                     try {
                         const transaction = db.transaction(['imoveis'], 'readwrite');
                         const imoveisStore = transaction.objectStore('imoveis');
@@ -2963,30 +3047,19 @@
                         request.onsuccess = async (event) => {
                             const imoveis = event.target.result;
                             for (const imovel of imoveis) {
-                                if (!imovel.modalidade) {
-                                    // Define modalidade baseada no estagioLancamento existente
-                                    if (imovel.estagioLancamento && (imovel.estagioLancamento === 'pre-lancamento' || imovel.estagioLancamento === 'lancamento')) {
-                                        imovel.modalidade = 'lancamento';
-                                    } else {
-                                        imovel.modalidade = 'pronto'; // padrão para existentes
-                                    }
+                                if (imovel.proprietarioCpf === undefined) {
+                                    imovel.proprietarioCpf = '';
+                                    await new Promise((resolve, reject) => {
+                                        const putReq = imoveisStore.put(imovel);
+                                        putReq.onsuccess = resolve;
+                                        putReq.onerror = reject;
+                                    });
                                 }
-                                if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
-                                if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
-                                if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
-                                if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
-                                if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
-                                
-                                await new Promise((resolve, reject) => {
-                                    const putReq = imoveisStore.put(imovel);
-                                    putReq.onsuccess = resolve;
-                                    putReq.onerror = reject;
-                                });
                             }
                             console.log('Migração imóveis concluída');
                         };
                     } catch (error) {
-                        console.error('Erro na migração para versão 14:', error);
+                        console.error('Erro na migração de imóveis:', error);
                     }
                 }
             },
@@ -3130,6 +3203,7 @@
                                         if (cliente.taxaJuros === undefined) {
                                             cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
                                         }
+                                        if (cliente.cpf === undefined) cliente.cpf = '';
                                         await this.put('clientes', cliente);
                                     }
                                     migrated = true;
@@ -3153,13 +3227,13 @@
                                         if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                         if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                         if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
-                                        // Novos campos
                                         if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
                                         if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
                                         if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
                                         if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
                                         if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
                                         if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
+                                        if (imovel.proprietarioCpf === undefined) imovel.proprietarioCpf = '';
                                         
                                         await this.put('imoveis', imovel);
                                     }
@@ -3261,6 +3335,22 @@
                     v = v.replace(/(\d)(\d{4})$/, "$1-$2");
                 }
                 input.value = v.substring(0, 15);
+            },
+            
+            // NOVO: máscara para CPF/CNPJ
+            maskCPF: (input) => {
+                let v = input.value.replace(/\D/g, "");
+                if (v.length <= 11) {
+                    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                    v = v.replace(/(\d{3})(\d)/, "$1.$2");
+                    v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+                } else {
+                    v = v.replace(/^(\d{2})(\d)/, "$1.$2");
+                    v = v.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3");
+                    v = v.replace(/\.(\d{3})(\d)/, ".$1/$2");
+                    v = v.replace(/(\d{4})(\d)/, "$1-$2");
+                }
+                input.value = v.substring(0, 18);
             },
             
             formatPhone: (phone) => {
@@ -4139,6 +4229,219 @@
                 }
             },
             
+            // NOVA FUNÇÃO: gerar contrato de autorização de venda/aluguel (CORRIGIDA)
+            generateAutorizacaoPDF: async function(imovelId) {
+                const imovel = UI.data.imoveis.find(i => i.id === imovelId);
+                if (!imovel || imovel.modalidade !== 'terceiro') {
+                    Utils.toast('Imóvel não encontrado ou não é de terceiro.', 'error');
+                    return;
+                }
+                
+                // Encontrar proprietário (cliente com mesmo telefone)
+                let proprietario = UI.data.clientes.find(c => c.telefone === imovel.proprietarioTelefone);
+                if (!proprietario) {
+                    // Se não encontrar, usa os dados do imóvel
+                    proprietario = {
+                        nome: imovel.proprietarioNome || 'Não informado',
+                        telefone: imovel.proprietarioTelefone || 'Não informado',
+                        cpf: imovel.proprietarioCpf || 'Não informado',
+                        email: imovel.proprietarioEmail || 'Não informado'
+                    };
+                }
+                
+                const settings = await DB.get('settings', 'main') || {};
+                const dataHoje = Utils.formatDate(Utils.getToday());
+                
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF('p', 'mm', 'a4');
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    const pageHeight = doc.internal.pageSize.getHeight();
+                    const margin = 15;
+                    let yPos = 30;
+
+                    // Cabeçalho
+                    doc.setFillColor(37, 99, 235);
+                    doc.rect(0, 0, pageWidth, 25, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("CONTRATO DE AUTORIZAÇÃO DE VENDA/ALUGUEL", pageWidth/2, 15, { align: "center" });
+                    doc.setFontSize(9);
+                    doc.text(settings.imobiliaria || "ImobiPro", pageWidth/2, 22, { align: "center" });
+
+                    // Título
+                    doc.setTextColor(30, 41, 59);
+                    doc.setFontSize(16);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("AUTORIZAÇÃO EXCLUSIVA", margin, yPos);
+                    yPos += 10;
+
+                    // Data
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Data: ${dataHoje}`, pageWidth - margin, yPos - 5, { align: "right" });
+                    
+                    // Partes
+                    yPos += 5;
+                    doc.setFontSize(11);
+                    doc.text("Pelo presente instrumento particular de autorização, de um lado:", margin, yPos);
+                    yPos += 8;
+                    
+                    doc.setFont("helvetica", "bold");
+                    doc.text("AUTORIZANTE (PROPRIETÁRIO):", margin, yPos);
+                    yPos += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Nome: ${proprietario.nome}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`CPF/CNPJ: ${proprietario.cpf}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`Telefone: ${proprietario.telefone}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`E-mail: ${proprietario.email}`, margin+5, yPos);
+                    yPos += 8;
+                    
+                    doc.setFont("helvetica", "bold");
+                    doc.text("AUTORIZADO (CORRETOR/IMOBILIÁRIA):", margin, yPos);
+                    yPos += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Corretor(a): ${settings.nome || 'Não informado'}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`CRECI: ${settings.creci || 'Não informado'}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`Imobiliária: ${settings.imobiliaria || 'Não informado'}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`Telefone: ${settings.telefone || 'Não informado'}`, margin+5, yPos);
+                    yPos += 10;
+
+                    // Verificar espaço antes de continuar
+                    if (yPos > pageHeight - 60) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    // Imóvel
+                    doc.setFont("helvetica", "bold");
+                    doc.text("IMÓVEL OBJETO DA AUTORIZAÇÃO:", margin, yPos);
+                    yPos += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Título: ${imovel.titulo}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`Endereço: ${imovel.endereco}`, margin+5, yPos);
+                    yPos += 5;
+                    doc.text(`Tipo: ${Utils.getTipoText(imovel.tipo)}`, margin+5, yPos);
+                    yPos += 5;
+                    if (imovel.area) {
+                        doc.text(`Área: ${imovel.area} m²`, margin+5, yPos); yPos += 5;
+                    }
+                    if (imovel.quartos) {
+                        doc.text(`Quartos: ${imovel.quartos}`, margin+5, yPos); yPos += 5;
+                    }
+                    if (imovel.banheiros) {
+                        doc.text(`Banheiros: ${imovel.banheiros}`, margin+5, yPos); yPos += 5;
+                    }
+                    if (imovel.vagas) {
+                        doc.text(`Vagas: ${imovel.vagas}`, margin+5, yPos); yPos += 5;
+                    }
+                    if (imovel.condominio) {
+                        doc.text(`Condomínio: ${Utils.formatCurrency(imovel.condominio)}/mês`, margin+5, yPos); yPos += 5;
+                    }
+                    if (imovel.gasEncanado === 'sim') {
+                        doc.text(`Gás Encanado: Sim`, margin+5, yPos); yPos += 5;
+                    }
+
+                    // Valores e condições
+                    doc.setFont("helvetica", "bold");
+                    doc.text("CONDIÇÕES DA AUTORIZAÇÃO:", margin, yPos);
+                    yPos += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Modalidade: ${imovel.transacao === 'venda' ? 'Venda' : imovel.transacao === 'aluguel' ? 'Aluguel' : 'Venda e/ou Aluguel'}`, margin+5, yPos);
+                    yPos += 5;
+                    if (imovel.precoVenda) {
+                        doc.text(`Preço de Venda (a partir de): ${Utils.formatCurrency(imovel.precoVenda)}`, margin+5, yPos);
+                        yPos += 5;
+                    }
+                    if (imovel.precoAluguel) {
+                        doc.text(`Preço de Aluguel (a partir de): ${Utils.formatCurrency(imovel.precoAluguel)}/mês`, margin+5, yPos);
+                        yPos += 5;
+                    }
+                    if (imovel.comissao) {
+                        doc.text(`Comissão do corretor: ${imovel.comissao}%`, margin+5, yPos);
+                        yPos += 5;
+                    }
+                    if (imovel.formaPagamento) {
+                        doc.text(`Forma de Pagamento: ${imovel.formaPagamento}`, margin+5, yPos);
+                        yPos += 5;
+                    }
+                    yPos += 5;
+
+                    // Cláusulas padrão
+                    if (yPos > pageHeight - 80) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    doc.setFont("helvetica", "bold");
+                    doc.text("CLÁUSULAS GERAIS:", margin, yPos);
+                    yPos += 6;
+                    doc.setFont("helvetica", "normal");
+                    doc.setFontSize(9);
+                    
+                    const clauses = [
+                        "1. O AUTORIZANTE concede ao AUTORIZADO, com exclusividade, o direito de comercializar o imóvel descrito, pelo prazo de 90 (noventa) dias, contados a partir da assinatura deste contrato.",
+                        "2. O AUTORIZADO compromete-se a envidar os melhores esforços para encontrar um comprador/locatário para o imóvel, realizando ações de marketing, visitas e negociações.",
+                        "3. Em caso de concretização de negócio (venda ou locação) durante a vigência desta autorização, o AUTORIZADO fará jus à comissão estipulada, a ser paga pelo AUTORIZANTE no ato da assinatura do contrato definitivo.",
+                        "4. O AUTORIZANTE declara que o imóvel encontra-se em condições de ser negociado e que não existem pendências judiciais ou extrajudiciais que impeçam a transação.",
+                        "5. Fica eleito o foro da comarca do imóvel para dirimir quaisquer dúvidas oriundas do presente contrato."
+                    ];
+                    
+                    clauses.forEach(clause => {
+                        const splitClause = doc.splitTextToSize(clause, pageWidth - margin*2);
+                        doc.text(splitClause, margin, yPos);
+                        yPos += splitClause.length * 5 + 3; // Espaçamento adequado
+                        
+                        // Verifica se precisa de nova página
+                        if (yPos > pageHeight - 30) {
+                            doc.addPage();
+                            yPos = 20;
+                        }
+                    });
+                    
+                    yPos += 5;
+
+                    // Assinaturas
+                    if (yPos > pageHeight - 30) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "bold");
+                    doc.text("Por estarem assim justos e contratados, assinam o presente em 2 (duas) vias de igual teor e forma.", margin, yPos);
+                    yPos += 15;
+                    
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.text("_________________________________________", margin+20, yPos);
+                    doc.text("_________________________________________", pageWidth/2+20, yPos);
+                    yPos += 5;
+                    doc.text("AUTORIZANTE", margin+35, yPos);
+                    doc.text("AUTORIZADO", pageWidth/2+35, yPos);
+                    
+                    // Rodapé
+                    const finalY = doc.internal.pageSize.getHeight() - 10;
+                    doc.setFontSize(8);
+                    doc.setTextColor(100, 100, 100);
+                    doc.text(`Gerado por ImobiPro em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth/2, finalY, { align: "center" });
+                    
+                    doc.save(`Autorizacao_${imovel.titulo.substring(0, 15).replace(/[^a-z0-9]/gi, '_')}.pdf`);
+                    Utils.toast("Contrato de autorização gerado com sucesso!");
+                    
+                } catch (err) {
+                    console.error('Erro ao gerar contrato de autorização:', err);
+                    Utils.toast('Erro ao gerar contrato', 'error');
+                }
+            },
+            
             getGreeting: () => {
                 const hour = new Date().getHours();
                 if (hour >= 5 && hour < 12) return "Bom dia";
@@ -4377,6 +4680,7 @@
                     doc.setFont("helvetica", "normal");
                     const telefone = cliente.telefone ? Utils.formatPhone(cliente.telefone) : '-';
                     const email = cliente.email || '-';
+                    const cpf = cliente.cpf || '-';
                     const nascimento = cliente.dataNascimento ? Utils.formatDate(cliente.dataNascimento) : '-';
                     const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
                     const renda = cliente.rendaMensal ? Utils.formatCurrency(cliente.rendaMensal) : '-';
@@ -4384,6 +4688,7 @@
                     const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil)?.nome || cliente.etapaFunil;
 
                     doc.text(`Telefone: ${telefone}`, margin, yPos); yPos += 6;
+                    doc.text(`CPF/CNPJ: ${cpf}`, margin, yPos); yPos += 6;
                     doc.text(`Email: ${email}`, margin, yPos); yPos += 6;
                     doc.text(`Nascimento: ${nascimento} (${idade} anos)`, margin, yPos); yPos += 6;
                     doc.text(`Renda Mensal: ${renda}`, margin, yPos); yPos += 6;
@@ -4749,6 +5054,9 @@
                 } else {
                     visitasList.innerHTML = visitasHoje.map(v => UI.createVisitaCard(v)).join('');
                 }
+
+                // Lista de espera
+                UI.renderWaitingList();
                 
                 const negociacoesList = document.getElementById('negociacoes-list');
                 const imoveisReservados = imoveis.filter(i => i.status === 'reservado').slice(0, 3);
@@ -4761,6 +5069,53 @@
                 
                 document.getElementById('visitas-badge').style.display = visitasHoje.length > 0 ? 'inline-block' : 'none';
                 document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
+            },
+
+            renderWaitingList: function() {
+                const container = document.getElementById('waiting-list-dashboard');
+                if (!container) return;
+                
+                // Filtra imóveis que possuem lista de espera
+                const imoveisComEspera = UI.data.imoveis.filter(i => i.waitingList && i.waitingList.length > 0);
+                
+                if (imoveisComEspera.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-clock"></i><p>Nenhum cliente na lista de espera no momento.</p></div>`;
+                    document.getElementById('waiting-badge').style.display = 'none';
+                    return;
+                }
+                
+                let html = '';
+                imoveisComEspera.forEach(imovel => {
+                    const clientesEspera = imovel.waitingList.map(clienteId => 
+                        UI.data.clientes.find(c => c.id === clienteId)
+                    ).filter(c => c); // remove nulls
+                    
+                    if (clientesEspera.length === 0) return;
+                    
+                    html += `
+                        <div class="waiting-item" onclick="UI.showImovelDetails('${imovel.id}')">
+                            <h4>${imovel.titulo}</h4>
+                            <ul class="waiting-clients">
+                                ${clientesEspera.map(c => `
+                                    <li>
+                                        <i class="fas fa-user"></i> ${c.nome} (${c.telefone})
+                                        <button class="icon-btn" style="color: #25D366; margin-left: auto;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </button>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    `;
+                });
+                
+                if (html === '') {
+                    container.innerHTML = `<div class="empty-state"><i class="fas fa-clock"></i><p>Nenhum cliente na lista de espera.</p></div>`;
+                    document.getElementById('waiting-badge').style.display = 'none';
+                } else {
+                    container.innerHTML = html;
+                    document.getElementById('waiting-badge').style.display = 'inline-block';
+                }
             },
             
             renderAniversariantes: () => {
@@ -5356,7 +5711,8 @@
                     filtered = filtered.filter(c => 
                         c.nome.toLowerCase().includes(termo) ||
                         (c.email && c.email.toLowerCase().includes(termo)) ||
-                        c.telefone.toLowerCase().includes(termo)
+                        c.telefone.toLowerCase().includes(termo) ||
+                        (c.cpf && c.cpf.includes(termo))
                     );
                 }
                 
@@ -5387,6 +5743,7 @@
                             </div>
                             <div class="client-info">
                                 <div class="client-row"><i class="fas fa-phone"></i> ${c.telefone}</div>
+                                <div class="client-row"><i class="fas fa-id-card"></i> ${c.cpf || 'CPF não informado'}</div>
                                 ${c.email ? `<div class="client-row"><i class="fas fa-envelope"></i> ${c.email}</div>` : ''}
                                 ${c.dataNascimento ? `<div class="client-row"><i class="fas fa-birthday-cake"></i> ${Utils.formatDate(c.dataNascimento)}</div>` : ''}
                                 ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
@@ -5658,12 +6015,13 @@
                 let ownerInfo = '';
                 let docsInfo = '';
                 if (i.modalidade === 'terceiro') {
-                    if (i.proprietarioNome || i.proprietarioTelefone || i.proprietarioEmail) {
+                    if (i.proprietarioNome || i.proprietarioTelefone || i.proprietarioEmail || i.proprietarioCpf) {
                         ownerInfo = `
                             <div class="details-section">
                                 <div class="details-section-title"><i class="fas fa-user"></i> PROPRIETÁRIO</div>
                                 <div class="details-info-grid">
                                     ${i.proprietarioNome ? `<div class="info-item"><div class="info-label">Nome</div><div class="info-value">${i.proprietarioNome}</div></div>` : ''}
+                                    ${i.proprietarioCpf ? `<div class="info-item"><div class="info-label">CPF/CNPJ</div><div class="info-value">${i.proprietarioCpf}</div></div>` : ''}
                                     ${i.proprietarioTelefone ? `<div class="info-item"><div class="info-label">Telefone</div><div class="info-value">${Utils.formatPhone(i.proprietarioTelefone)}</div></div>` : ''}
                                     ${i.proprietarioEmail ? `<div class="info-item"><div class="info-label">Email</div><div class="info-value">${i.proprietarioEmail}</div></div>` : ''}
                                 </div>
@@ -5887,8 +6245,13 @@
                                 <i class="fas fa-clock"></i> Lista de Espera
                             </button>
                             <button class="btn-details btn-pdf" onclick="event.stopPropagation(); UI.openSelectImagesForPDF('${i.id}')">
-                                <i class="fas fa-file-pdf"></i> PDF
+                                <i class="fas fa-file-pdf"></i> PDF Ficha
                             </button>
+                            ${i.modalidade === 'terceiro' ? `
+                            <button class="btn-details btn-details-secondary" style="background: #10b981; color: white;" onclick="event.stopPropagation(); Utils.generateAutorizacaoPDF('${i.id}')">
+                                <i class="fas fa-file-contract"></i> Contrato Autorização
+                            </button>
+                            ` : ''}
                         </div>
                     </div>
                     <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
@@ -6011,6 +6374,10 @@
                                 <div class="info-item">
                                     <div class="info-label">Telefone</div>
                                     <div class="info-value">${cliente.telefone}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">CPF/CNPJ</div>
+                                    <div class="info-value">${cliente.cpf || '-'}</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Email</div>
@@ -7440,6 +7807,7 @@
                 document.getElementById('i-proprietario-nome').value = '';
                 document.getElementById('i-proprietario-telefone').value = '';
                 document.getElementById('i-proprietario-email').value = '';
+                document.getElementById('i-proprietario-cpf').value = '';
                 document.getElementById('i-documentos-imovel-data').value = '[]';
                 document.getElementById('i-documentos-proprietario-data').value = '[]';
                 App.imovel.renderDocumentosImovelList([]);
@@ -8064,6 +8432,7 @@
                     const tipo = document.getElementById('c-tipo').value;
                     const etapaFunil = document.getElementById('c-etapa-funil').value || 'lead';
                     const telefone = document.getElementById('c-telefone').value;
+                    const cpf = document.getElementById('c-cpf').value;
                     const email = document.getElementById('c-email').value;
                     const imovelInteresseId = document.getElementById('c-imovel-interesse').value || null;
                     const dataNascimento = document.getElementById('c-data-nascimento').value || null;
@@ -8074,7 +8443,7 @@
                     const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
 
                     const newClient = { 
-                        id, nome, tipo, etapaFunil, telefone, email, 
+                        id, nome, tipo, etapaFunil, telefone, cpf, email, 
                         imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
                         faixaPreco, observacoes, documentos,
                         dataCriacao: new Date().toISOString(),
@@ -8115,6 +8484,7 @@
                     document.getElementById('c-nome').value = cliente.nome || '';
                     document.getElementById('c-tipo').value = cliente.tipo || 'comprador';
                     document.getElementById('c-telefone').value = cliente.telefone || '';
+                    document.getElementById('c-cpf').value = cliente.cpf || '';
                     document.getElementById('c-email').value = cliente.email || '';
                     document.getElementById('c-imovel-interesse').value = cliente.imovelInteresseId || '';
                     document.getElementById('c-data-nascimento').value = cliente.dataNascimento || '';
@@ -8813,6 +9183,7 @@
                         const proprietarioNome = modalidade === 'terceiro' ? document.getElementById('i-proprietario-nome').value : '';
                         const proprietarioTelefone = modalidade === 'terceiro' ? document.getElementById('i-proprietario-telefone').value : '';
                         const proprietarioEmail = modalidade === 'terceiro' ? document.getElementById('i-proprietario-email').value : '';
+                        const proprietarioCpf = modalidade === 'terceiro' ? document.getElementById('i-proprietario-cpf').value : '';
                         const documentosImovel = modalidade === 'terceiro' ? JSON.parse(document.getElementById('i-documentos-imovel-data').value || '[]') : [];
                         const documentosProprietario = modalidade === 'terceiro' ? JSON.parse(document.getElementById('i-documentos-proprietario-data').value || '[]') : [];
                         
@@ -8870,6 +9241,7 @@
                             proprietarioNome,
                             proprietarioTelefone,
                             proprietarioEmail,
+                            proprietarioCpf,
                             documentosImovel,
                             documentosProprietario,
                             dataCriacao: imovelExistente ? imovelExistente.dataCriacao : new Date().toISOString(),
@@ -8896,6 +9268,7 @@
                             if (ownerClient) {
                                 // Atualiza dados do proprietário existente
                                 ownerClient.nome = proprietarioNome || ownerClient.nome;
+                                ownerClient.cpf = proprietarioCpf || ownerClient.cpf;
                                 ownerClient.email = proprietarioEmail || ownerClient.email;
                                 ownerClient.tipo = 'vendedor'; // garante tipo vendedor
                                 ownerClient.imovelInteresseId = id; // vincula ao imóvel atual
@@ -8910,6 +9283,7 @@
                                     tipo: 'vendedor',
                                     etapaFunil: UI.data.funilEtapas[0]?.id || 'lead',
                                     telefone: proprietarioTelefone,
+                                    cpf: proprietarioCpf || '',
                                     email: proprietarioEmail || '',
                                     imovelInteresseId: id,
                                     dataNascimento: null,
@@ -8993,6 +9367,7 @@
                             document.getElementById('i-proprietario-nome').value = imovel.proprietarioNome || '';
                             document.getElementById('i-proprietario-telefone').value = imovel.proprietarioTelefone || '';
                             document.getElementById('i-proprietario-email').value = imovel.proprietarioEmail || '';
+                            document.getElementById('i-proprietario-cpf').value = imovel.proprietarioCpf || '';
                             document.getElementById('i-documentos-imovel-data').value = JSON.stringify(imovel.documentosImovel || []);
                             document.getElementById('i-documentos-proprietario-data').value = JSON.stringify(imovel.documentosProprietario || []);
                             App.imovel.renderDocumentosImovelList(imovel.documentosImovel || []);
@@ -9001,6 +9376,7 @@
                             document.getElementById('i-proprietario-nome').value = '';
                             document.getElementById('i-proprietario-telefone').value = '';
                             document.getElementById('i-proprietario-email').value = '';
+                            document.getElementById('i-proprietario-cpf').value = '';
                             document.getElementById('i-documentos-imovel-data').value = '[]';
                             document.getElementById('i-documentos-proprietario-data').value = '[]';
                             App.imovel.renderDocumentosImovelList([]);
@@ -9639,6 +10015,7 @@
                             for (const cliente of data.clientes) {
                                 if (!cliente.documentos) cliente.documentos = [];
                                 if (!cliente.taxaJuros) cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
+                                if (cliente.cpf === undefined) cliente.cpf = '';
                                 await DB.put('clientes', cliente);
                             }
                         }
@@ -9650,13 +10027,13 @@
                                 if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                 if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                 if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
-                                // Novos campos
                                 if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
                                 if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
                                 if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
                                 if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
                                 if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
                                 if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
+                                if (imovel.proprietarioCpf === undefined) imovel.proprietarioCpf = '';
                                 await DB.put('imoveis', imovel);
                             }
                         }
@@ -9738,13 +10115,13 @@
                                 if (imovel.valorAvaliacao === undefined) imovel.valorAvaliacao = 0;
                                 if (imovel.tabelaPDF === undefined) imovel.tabelaPDF = '';
                                 if (imovel.tabelaPDFNome === undefined) imovel.tabelaPDFNome = '';
-                                // Novos campos
                                 if (imovel.modalidade === undefined) imovel.modalidade = 'pronto';
                                 if (imovel.proprietarioNome === undefined) imovel.proprietarioNome = '';
                                 if (imovel.proprietarioTelefone === undefined) imovel.proprietarioTelefone = '';
                                 if (imovel.proprietarioEmail === undefined) imovel.proprietarioEmail = '';
                                 if (imovel.documentosImovel === undefined) imovel.documentosImovel = [];
                                 if (imovel.documentosProprietario === undefined) imovel.documentosProprietario = [];
+                                if (imovel.proprietarioCpf === undefined) imovel.proprietarioCpf = '';
                                 await DB.put('imoveis', imovel);
                             }
                             
