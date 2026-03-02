@@ -6050,7 +6050,7 @@
                                 <div class="info-label">Preço</div>
                                 <div class="info-value">${imovel.precoVenda ? Utils.formatCurrency(imovel.precoVenda) : (imovel.precoAluguel ? Utils.formatCurrency(imovel.precoAluguel) + '/mês' : '-')}</div>
                             </div>
-                            <button class="btn-sm btn-primary-soft" style="margin-top:8px;" onclick="event.stopPropagation(); UI.showImovelDetails('${imovel.id}')">
+                            <button class="btn-sm btn-primary-soft" style="margin-top:8px;" onclick="event.stopPropagation(); UI.closeModals(); UI.showImovelDetails('${imovel.id}')">
                                 <i class="fas fa-eye"></i> Ver Imóvel
                             </button>
                         </div>
@@ -8829,6 +8829,7 @@
                         
                         const waitingList = imovelExistente?.waitingList || [];
                         
+                        // Lógica para data de lançamento
                         if (modalidade === 'lancamento' && imovelExistente?.modalidade === 'lancamento' && imovelExistente?.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
                         } else if (!imovelExistente && modalidade === 'lancamento' && estagioLancamento === 'lancamento') {
@@ -8887,6 +8888,46 @@
                             UI.data.imoveis.push(newImovel);
                             await DB.put('imoveis', newImovel);
                         }
+                        
+                        // --- INÍCIO DA MODIFICAÇÃO: criar/atualizar proprietário como cliente ---
+                        if (modalidade === 'terceiro' && proprietarioTelefone) {
+                            // Verifica se já existe um cliente com este telefone
+                            let ownerClient = UI.data.clientes.find(c => c.telefone === proprietarioTelefone);
+                            if (ownerClient) {
+                                // Atualiza dados do proprietário existente
+                                ownerClient.nome = proprietarioNome || ownerClient.nome;
+                                ownerClient.email = proprietarioEmail || ownerClient.email;
+                                ownerClient.tipo = 'vendedor'; // garante tipo vendedor
+                                ownerClient.imovelInteresseId = id; // vincula ao imóvel atual
+                                ownerClient.observacoes = (ownerClient.observacoes ? ownerClient.observacoes + '\n' : '') + `Proprietário do imóvel ${titulo} (atualizado)`;
+                                await DB.put('clientes', ownerClient);
+                            } else {
+                                // Cria novo cliente proprietário
+                                const settings = UI.data.settings;
+                                ownerClient = {
+                                    id: Utils.id(),
+                                    nome: proprietarioNome || 'Proprietário',
+                                    tipo: 'vendedor',
+                                    etapaFunil: UI.data.funilEtapas[0]?.id || 'lead',
+                                    telefone: proprietarioTelefone,
+                                    email: proprietarioEmail || '',
+                                    imovelInteresseId: id,
+                                    dataNascimento: null,
+                                    rendaMensal: 0,
+                                    taxaJuros: settings?.taxaJuros || 8.5,
+                                    faixaPreco: '',
+                                    observacoes: `Proprietário do imóvel ${titulo}`,
+                                    documentos: [],
+                                    dataCriacao: new Date().toISOString(),
+                                    dataEntradaFunil: new Date().toISOString().split('T')[0]
+                                };
+                                UI.data.clientes.push(ownerClient);
+                                await DB.put('clientes', ownerClient);
+                            }
+                            // Atualiza a lista de clientes
+                            UI.data.clientes = await Storage.getClientes();
+                        }
+                        // --- FIM DA MODIFICAÇÃO ---
                         
                         UI.data.imoveis = await Storage.getImoveis();
                         
