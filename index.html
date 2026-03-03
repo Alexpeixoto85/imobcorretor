@@ -62,16 +62,13 @@
             --shadow-float: 0 10px 15px -3px rgb(0 0 0 / 0.1);
         }
 
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
+        /* Fundo com imagem de empreendimento moderno e overlay */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f1f5f9;
+            background-image: url('https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
             color: var(--dark);
             height: 100vh;
             height: 100dvh;
@@ -83,6 +80,18 @@
             width: 100%;
             top: 0;
             left: 0;
+        }
+
+        /* Overlay semi-transparente para melhor legibilidade */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.92);
+            z-index: -1;
         }
 
         header {
@@ -142,6 +151,99 @@
             to { opacity: 1; transform: translateY(0); } 
         }
 
+        /* Estilo do banner na dashboard */
+        .dashboard-banner {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 24px;
+            color: white;
+            box-shadow: var(--shadow-md);
+            position: relative;
+            overflow: hidden;
+        }
+        .dashboard-banner::after {
+            content: "🏢";
+            font-size: 6rem;
+            position: absolute;
+            bottom: -20px;
+            right: -10px;
+            opacity: 0.15;
+            transform: rotate(-10deg);
+        }
+        .banner-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        .banner-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Carrossel de imóveis na dashboard */
+        .property-carousel {
+            margin-bottom: 24px;
+            width: 100%;
+        }
+        .carousel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+        .carousel-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .carousel-item {
+            flex: 0 0 280px;
+            scroll-snap-align: start;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--surface);
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            height: 180px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .carousel-item:active {
+            transform: scale(0.98);
+        }
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .carousel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            color: white;
+            padding: 12px 10px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .carousel-empty {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 40px;
+            text-align: center;
+            color: var(--secondary);
+        }
+
+        /* Restante do CSS original (mantido) */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -627,6 +729,12 @@
         
         .btn-details-secondary {
             background: var(--light); color: var(--secondary);
+        }
+
+        /* Botão de exclusão vermelho */
+        .btn-details-danger {
+            background: var(--danger);
+            color: white;
         }
 
         .image-gallery {
@@ -1730,6 +1838,20 @@
 
         <main>
             <div id="dashboard-view" class="view active">
+                <!-- Banner promocional -->
+                <div class="dashboard-banner">
+                    <div class="banner-title">Bem-vindo ao ImobiPro</div>
+                    <div class="banner-subtitle">Gerencie seus imóveis com eficiência e alcance melhores resultados</div>
+                </div>
+
+                <!-- Carrossel de imóveis -->
+                <div class="property-carousel">
+                    <div class="carousel-title">🏢 Imóveis em Destaque</div>
+                    <div id="dashboard-carousel" class="carousel-scroll">
+                        <!-- Será preenchido via JS -->
+                    </div>
+                </div>
+
                 <div class="section-title">Visão Geral</div>
                 <div class="stats-grid">
                     <div class="stat-card" onclick="UI.navigate('imoveis')">
@@ -5069,6 +5191,33 @@
                 
                 document.getElementById('visitas-badge').style.display = visitasHoje.length > 0 ? 'inline-block' : 'none';
                 document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
+
+                // Renderizar carrossel na dashboard
+                UI.renderDashboardCarousel();
+            },
+
+            renderDashboardCarousel: function() {
+                const container = document.getElementById('dashboard-carousel');
+                if (!container) return;
+                
+                const imoveisComImagem = UI.data.imoveis.filter(i => i.imagens && i.imagens.length > 0);
+                
+                if (imoveisComImagem.length === 0) {
+                    container.innerHTML = '<div class="carousel-empty">Nenhuma imagem de imóvel disponível</div>';
+                    return;
+                }
+                
+                let html = '';
+                imoveisComImagem.forEach(imovel => {
+                    html += `
+                        <div class="carousel-item" onclick="UI.showImovelDetails('${imovel.id}')">
+                            <img src="${imovel.imagens[0]}" alt="${imovel.titulo}">
+                            <div class="carousel-overlay">${imovel.titulo}</div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
             },
 
             renderWaitingList: function() {
@@ -6252,6 +6401,9 @@
                                 <i class="fas fa-file-contract"></i> Contrato Autorização
                             </button>
                             ` : ''}
+                            <button class="btn-details btn-details-danger" onclick="if(confirm('Tem certeza que deseja excluir este imóvel?')) App.imovel.delete('${i.id}')">
+                                <i class="fas fa-trash"></i> Excluir
+                            </button>
                         </div>
                     </div>
                     <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
@@ -6446,6 +6598,9 @@
                             </button>
                             <button class="btn-details btn-details-secondary" onclick="App.cliente.agendarAtividade('${cliente.id}')">
                                 <i class="fas fa-calendar-plus"></i> Agendar
+                            </button>
+                            <button class="btn-details btn-details-danger" onclick="if(confirm('Tem certeza que deseja excluir este cliente?')) App.cliente.delete('${cliente.id}')">
+                                <i class="fas fa-trash"></i> Excluir
                             </button>
                         </div>
                     </div>
