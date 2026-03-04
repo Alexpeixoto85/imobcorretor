@@ -1507,7 +1507,6 @@
             text-decoration: none;
         }
 
-        /* Estilos do modal de confirmação WhatsApp (importados do DJ Manager) */
         .confirm-whatsapp-modal {
             background: var(--surface);
             border-radius: var(--radius-lg);
@@ -1575,7 +1574,6 @@
             color: var(--secondary);
         }
 
-        /* Modal de crop */
         .crop-modal {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -1650,7 +1648,6 @@
             font-size: 16px !important;
         }
 
-        /* Estilo para lista de espera no dashboard */
         .waiting-item {
             background: #fef3c7;
             border-left: 4px solid #f59e0b;
@@ -2659,6 +2656,23 @@
                     <small class="form-text text-muted">Use {nome} para inserir o nome do cliente. O emoji será adicionado automaticamente se não houver.</small>
                 </div>
 
+                <!-- NOVA SEÇÃO: Imagem de Fundo -->
+                <div class="form-group">
+                    <label class="form-label">Imagem de Fundo</label>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button type="button" class="btn-sm btn-light" onclick="document.getElementById('s-bg-input').click()">
+                            <i class="fas fa-image"></i> Selecionar imagem
+                        </button>
+                        <button type="button" class="btn-sm btn-light" onclick="App.settings.removeBackground()" id="btn-remove-bg" style="display: none;">
+                            <i class="fas fa-trash"></i> Remover
+                        </button>
+                    </div>
+                    <input type="file" id="s-bg-input" accept="image/*" style="display: none;" onchange="App.settings.handleBackgroundUpload(this)">
+                    <div id="s-bg-preview" style="margin-top: 10px; width: 100%; height: 120px; background-size: cover; background-position: center; border-radius: 8px; border: 1px solid var(--border);"></div>
+                    <input type="hidden" id="s-background-image" value="">
+                    <small style="color: var(--secondary);">A imagem será redimensionada e aplicada como plano de fundo.</small>
+                </div>
+
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
                 <div class="section-title" style="font-size: 1rem; margin-bottom: 10px;">Backup Geral</div>
                 <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
@@ -2948,10 +2962,10 @@
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: CPF, contrato autorização PDF, área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: CPF, contrato autorização PDF, área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos, e imagem de fundo)
         const DB = {
             name: 'ImobiProDB',
-            version: 15, // Atualizado para versão 15 (CPF e proprietarioCpf)
+            version: 16, // Atualizado para versão 16 (backgroundImage)
             db: null,
             
             init: function() {
@@ -3076,6 +3090,26 @@
                         };
                     } catch (error) {
                         console.error('Erro na migração de imóveis:', error);
+                    }
+                }
+
+                // Migração para versão 16: adicionar backgroundImage nas configurações
+                if (oldVersion < 16) {
+                    console.log('Migrando para versão 16: Adicionando backgroundImage às configurações');
+                    try {
+                        const transaction = db.transaction(['settings'], 'readwrite');
+                        const settingsStore = transaction.objectStore('settings');
+                        const request = settingsStore.get('main');
+                        
+                        request.onsuccess = (event) => {
+                            const settings = event.target.result;
+                            if (settings && settings.backgroundImage === undefined) {
+                                settings.backgroundImage = '';
+                                settingsStore.put(settings);
+                            }
+                        };
+                    } catch (error) {
+                        console.error('Erro na migração de settings:', error);
                     }
                 }
             },
@@ -3281,6 +3315,7 @@
                                         parsedData.refCounter = 0;
                                     }
                                     if (parsedData.taxaJuros === undefined) parsedData.taxaJuros = 8.5;
+                                    if (parsedData.backgroundImage === undefined) parsedData.backgroundImage = '';
                                     await this.put('settings', { id: 'main', ...parsedData });
                                     migrated = true;
                                     console.log('Settings migrados do localStorage');
@@ -4826,7 +4861,8 @@
                     comissao: 5,
                     refCounter: 0,
                     taxaJuros: 8.5,
-                    msgPadrao: '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡'
+                    msgPadrao: '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡',
+                    backgroundImage: ''
                 };
             },
             
@@ -4881,7 +4917,7 @@
             currentWhatsappClienteId: null,
             currentPdfImovelId: null,
             calcObraData: null,
-            cropData: null, // para guardar a imagem a ser cortada
+            cropData: null,
             
             init: async () => {
                 try {
@@ -4914,6 +4950,9 @@
                     document.getElementById('report-date-start').value = firstDay.toISOString().split('T')[0];
                     document.getElementById('report-date-end').value = today.toISOString().split('T')[0];
                     
+                    // Aplicar imagem de fundo das configurações
+                    UI.applyBackground();
+                    
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('app').style.display = 'flex';
                     
@@ -4929,6 +4968,14 @@
                     
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('app').style.display = 'flex';
+                }
+            },
+            
+            applyBackground: function() {
+                if (UI.data.settings && UI.data.settings.backgroundImage) {
+                    document.body.style.backgroundImage = `url('${UI.data.settings.backgroundImage}')`;
+                } else {
+                    document.body.style.backgroundImage = "url('https://images.unsplash.com/photo-1564501049412-61c2a3793081?q=80&w=1932&auto=format&fit=crop')";
                 }
             },
             
@@ -7946,6 +7993,16 @@
                 document.getElementById('s-ref-counter').value = s.refCounter || 0;
                 document.getElementById('s-msg-padrao').value = s.msgPadrao || '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
                 
+                // Carregar imagem de fundo
+                document.getElementById('s-background-image').value = s.backgroundImage || '';
+                if (s.backgroundImage) {
+                    document.getElementById('s-bg-preview').style.backgroundImage = `url('${s.backgroundImage}')`;
+                    document.getElementById('btn-remove-bg').style.display = 'inline-block';
+                } else {
+                    document.getElementById('s-bg-preview').style.backgroundImage = '';
+                    document.getElementById('btn-remove-bg').style.display = 'none';
+                }
+                
                 UI.openModal('settings');
             },
 
@@ -10018,14 +10075,41 @@
                         comissao: parseFloat(document.getElementById('s-comissao').value) || 5,
                         taxaJuros: parseFloat(document.getElementById('s-taxa-juros').value) || 8.5,
                         refCounter: UI.data.settings?.refCounter || 0,
-                        msgPadrao: document.getElementById('s-msg-padrao').value
+                        msgPadrao: document.getElementById('s-msg-padrao').value,
+                        backgroundImage: document.getElementById('s-background-image').value
                     };
                     
                     await DB.put('settings', settings);
                     
+                    UI.data.settings = settings;
+                    UI.applyBackground();
+                    
                     Utils.toast('Configurações salvas!');
                     
                     UI.closeModals();
+                },
+
+                handleBackgroundUpload: async function(input) {
+                    const file = input.files[0];
+                    if (!file) return;
+                    
+                    try {
+                        const base64 = await Utils.readImage(file);
+                        const compressed = await Utils.compressImage(base64, 0.8, 1920);
+                        document.getElementById('s-background-image').value = compressed;
+                        document.getElementById('s-bg-preview').style.backgroundImage = `url('${compressed}')`;
+                        document.getElementById('btn-remove-bg').style.display = 'inline-block';
+                    } catch (error) {
+                        console.error(error);
+                        Utils.toast('Erro ao carregar imagem', 'error');
+                    }
+                    input.value = '';
+                },
+
+                removeBackground: function() {
+                    document.getElementById('s-background-image').value = '';
+                    document.getElementById('s-bg-preview').style.backgroundImage = '';
+                    document.getElementById('btn-remove-bg').style.display = 'none';
                 }
             },
             
