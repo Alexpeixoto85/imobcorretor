@@ -18,6 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
     <style>
+        /* (todo o CSS permanece exatamente igual) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -9260,7 +9261,8 @@
                         
                         const modalidade = document.getElementById('i-modalidade').value;
                         const estagioLancamento = modalidade === 'lancamento' ? document.getElementById('i-estagio-lancamento').value : 'nenhum';
-                        const dataLancamento = modalidade === 'lancamento' ? document.getElementById('i-data-lancamento').value : '';
+                        // ALTERAÇÃO: usar let em vez de const para poder reatribuir
+                        let dataLancamento = modalidade === 'lancamento' ? document.getElementById('i-data-lancamento').value : '';
                         
                         const valorAvaliacao = document.getElementById('i-valor-avaliacao').value ? Utils.parseCurrency(document.getElementById('i-valor-avaliacao').value) : 0;
                         
