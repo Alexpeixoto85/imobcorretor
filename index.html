@@ -1683,6 +1683,16 @@
         .waiting-clients li:last-child {
             border-bottom: none;
         }
+
+        /* Badge de contatos */
+        .contact-count {
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
@@ -2071,7 +2081,6 @@
                     <label class="form-label">Telefone (WhatsApp)</label>
                     <input type="tel" id="c-telefone" class="form-control" placeholder="(00) 00000-0000" required oninput="Utils.maskPhone(this)">
                 </div>
-                <!-- NOVO: CPF/CNPJ -->
                 <div class="form-group">
                     <label class="form-label">CPF/CNPJ</label>
                     <input type="text" id="c-cpf" class="form-control" placeholder="000.000.000-00" oninput="Utils.maskCPF(this)">
@@ -2342,7 +2351,6 @@
                         <label class="form-label">Telefone do Proprietário</label>
                         <input type="tel" id="i-proprietario-telefone" class="form-control" oninput="Utils.maskPhone(this)">
                     </div>
-                    <!-- NOVO: CPF/CNPJ do Proprietário -->
                     <div class="form-group">
                         <label class="form-label">CPF/CNPJ do Proprietário</label>
                         <input type="text" id="i-proprietario-cpf" class="form-control" placeholder="000.000.000-00" oninput="Utils.maskCPF(this)">
@@ -2844,7 +2852,7 @@
             <button class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
         </div>
 
-        <!-- MODAL DE CONFIRMAÇÃO WHATSAPP -->
+        <!-- MODAL DE CONFIRMAÇÃO WHATSAPP (MODIFICADO) -->
         <div class="modal-overlay" id="overlay-whatsapp-confirm"></div>
         <div class="modal-sheet" id="sheet-whatsapp-confirm">
             <div class="sheet-handle"></div>
@@ -2853,7 +2861,7 @@
                     <i class="fab fa-whatsapp"></i>
                 </div>
                 <div class="modal-title">Enviar para WhatsApp</div>
-                <div class="modal-description">
+                <div class="modal-description" id="whatsapp-confirm-description">
                     Como você gostaria de iniciar a conversa com o cliente?
                 </div>
                 <div class="confirm-whatsapp-options">
@@ -2963,10 +2971,10 @@
     </div>
 
     <script>
-        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: CPF, contrato autorização PDF, área decimal, upload PDF, valor avaliação, 20 fotos, modalidade, proprietário, documentos, e imagem de fundo)
+        // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: contador de contatos e alerta de cliente parado)
         const DB = {
             name: 'ImobiProDB',
-            version: 16, // Atualizado para versão 16 (backgroundImage)
+            version: 17, // Atualizado para versão 17 (contatos)
             db: null,
             
             init: function() {
@@ -3041,11 +3049,10 @@
             },
             
             migrateDatabase: async function(db, oldVersion) {
-                // Migração para versão 15: adicionar cpf em clientes e proprietarioCpf em imoveis
-                if (oldVersion < 15) {
-                    console.log('Migrando para versão 15: Adicionando cpf e proprietarioCpf');
+                // Migração para versão 17: adicionar contatos em clientes
+                if (oldVersion < 17) {
+                    console.log('Migrando para versão 17: Adicionando contatos aos clientes');
                     
-                    // Atualizar clientes
                     try {
                         const transaction = db.transaction(['clientes'], 'readwrite');
                         const clientesStore = transaction.objectStore('clientes');
@@ -3054,8 +3061,8 @@
                         request.onsuccess = async (event) => {
                             const clientes = event.target.result;
                             for (const cliente of clientes) {
-                                if (cliente.cpf === undefined) {
-                                    cliente.cpf = '';
+                                if (cliente.contatos === undefined) {
+                                    cliente.contatos = 0;
                                     await new Promise((resolve, reject) => {
                                         const putReq = clientesStore.put(cliente);
                                         putReq.onsuccess = resolve;
@@ -3063,54 +3070,10 @@
                                     });
                                 }
                             }
-                            console.log('Migração clientes concluída');
+                            console.log('Migração clientes (contatos) concluída');
                         };
                     } catch (error) {
                         console.error('Erro na migração de clientes:', error);
-                    }
-
-                    // Atualizar imoveis
-                    try {
-                        const transaction = db.transaction(['imoveis'], 'readwrite');
-                        const imoveisStore = transaction.objectStore('imoveis');
-                        const request = imoveisStore.getAll();
-                        
-                        request.onsuccess = async (event) => {
-                            const imoveis = event.target.result;
-                            for (const imovel of imoveis) {
-                                if (imovel.proprietarioCpf === undefined) {
-                                    imovel.proprietarioCpf = '';
-                                    await new Promise((resolve, reject) => {
-                                        const putReq = imoveisStore.put(imovel);
-                                        putReq.onsuccess = resolve;
-                                        putReq.onerror = reject;
-                                    });
-                                }
-                            }
-                            console.log('Migração imóveis concluída');
-                        };
-                    } catch (error) {
-                        console.error('Erro na migração de imóveis:', error);
-                    }
-                }
-
-                // Migração para versão 16: adicionar backgroundImage nas configurações
-                if (oldVersion < 16) {
-                    console.log('Migrando para versão 16: Adicionando backgroundImage às configurações');
-                    try {
-                        const transaction = db.transaction(['settings'], 'readwrite');
-                        const settingsStore = transaction.objectStore('settings');
-                        const request = settingsStore.get('main');
-                        
-                        request.onsuccess = (event) => {
-                            const settings = event.target.result;
-                            if (settings && settings.backgroundImage === undefined) {
-                                settings.backgroundImage = '';
-                                settingsStore.put(settings);
-                            }
-                        };
-                    } catch (error) {
-                        console.error('Erro na migração de settings:', error);
                     }
                 }
             },
@@ -3255,6 +3218,7 @@
                                             cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
                                         }
                                         if (cliente.cpf === undefined) cliente.cpf = '';
+                                        if (cliente.contatos === undefined) cliente.contatos = 0;
                                         await this.put('clientes', cliente);
                                     }
                                     migrated = true;
@@ -3389,7 +3353,6 @@
                 input.value = v.substring(0, 15);
             },
             
-            // NOVO: máscara para CPF/CNPJ
             maskCPF: (input) => {
                 let v = input.value.replace(/\D/g, "");
                 if (v.length <= 11) {
@@ -3644,7 +3607,6 @@
                 return clean;
             },
 
-            // Lista de tipos de documentos (reutilizada para cliente e imóvel)
             documentTypes: [
                 { value: 'comprovante_renda_formal', label: 'Comprovante de Renda (formal)' },
                 { value: 'contracheque', label: 'Contracheque (3 últimos)' },
@@ -3665,15 +3627,13 @@
                 { value: 'outros', label: 'Outros' }
             ],
 
-            // Função para determinar taxa de juros baseada na renda mensal (valores aproximados do mercado)
             getInterestRateByIncome: function(renda) {
                 const rendaNum = typeof renda === 'number' ? renda : 0;
-                if (rendaNum < 3000) return 5.5;      // Faixa mais baixa (ex: MCMV)
-                if (rendaNum >= 3000 && rendaNum < 8000) return 7.5;  // Intermediária
-                return 9.5; // Acima de 8000 (SBPE)
+                if (rendaNum < 3000) return 5.5;
+                if (rendaNum >= 3000 && rendaNum < 8000) return 7.5;
+                return 9.5;
             },
             
-            // Gera PDF da ficha do imóvel
             generatePDF: async (imovel) => {
                 try {
                     const { jsPDF } = window.jspdf;
@@ -3683,7 +3643,6 @@
                     const margin = 15;
                     let yPos = 20;
 
-                    // Cabeçalho
                     doc.setFillColor(37, 99, 235);
                     doc.rect(0, 0, pageWidth, 30, 'F');
                     doc.setTextColor(255, 255, 255);
@@ -3699,7 +3658,6 @@
 
                     yPos = 45;
 
-                    // Título
                     doc.setTextColor(30, 41, 59);
                     doc.setFontSize(16);
                     doc.setFont("helvetica", "bold");
@@ -3707,7 +3665,6 @@
                     doc.text(tituloSplit, margin, yPos);
                     yPos += (tituloSplit.length * 7) + 5;
 
-                    // Preço e referência
                     doc.setFontSize(18);
                     doc.setTextColor(37, 99, 235);
                     let precoTexto = '';
@@ -3732,7 +3689,6 @@
                     doc.line(margin, yPos, pageWidth - margin, yPos);
                     yPos += 10;
 
-                    // Características
                     const body = [];
                     if (imovel.tipo !== 'terreno') {
                         body.push(
@@ -3799,7 +3755,6 @@
 
                     yPos = Math.max(finalY1, finalY2) + 10;
 
-                    // Descrição
                     if (imovel.descricao) {
                         if (yPos > pageHeight - 40) {
                             doc.addPage();
@@ -3819,7 +3774,6 @@
                         yPos += (descSplit.length * 5) + 10;
                     }
 
-                    // Vídeos
                     if (imovel.videos && imovel.videos.length > 0) {
                         if (yPos > pageHeight - 40) {
                             doc.addPage();
@@ -3841,7 +3795,6 @@
                         yPos += 5;
                     }
 
-                    // Imagens (até 8)
                     if (imovel.imagens && imovel.imagens.length > 0) {
                         if (yPos > pageHeight - 100) {
                             doc.addPage();
@@ -3887,7 +3840,6 @@
                         }
                     }
 
-                    // Rodapé em todas as páginas
                     const pageCount = doc.getNumberOfPages();
                     for (let i = 1; i <= pageCount; i++) {
                         doc.setPage(i);
@@ -4293,7 +4245,6 @@
                 }
             },
             
-            // NOVA FUNÇÃO: gerar contrato de autorização de venda/aluguel (CORRIGIDA)
             generateAutorizacaoPDF: async function(imovelId) {
                 const imovel = UI.data.imoveis.find(i => i.id === imovelId);
                 if (!imovel || imovel.modalidade !== 'terceiro') {
@@ -4301,10 +4252,8 @@
                     return;
                 }
                 
-                // Encontrar proprietário (cliente com mesmo telefone)
                 let proprietario = UI.data.clientes.find(c => c.telefone === imovel.proprietarioTelefone);
                 if (!proprietario) {
-                    // Se não encontrar, usa os dados do imóvel
                     proprietario = {
                         nome: imovel.proprietarioNome || 'Não informado',
                         telefone: imovel.proprietarioTelefone || 'Não informado',
@@ -4324,7 +4273,6 @@
                     const margin = 15;
                     let yPos = 30;
 
-                    // Cabeçalho
                     doc.setFillColor(37, 99, 235);
                     doc.rect(0, 0, pageWidth, 25, 'F');
                     doc.setTextColor(255, 255, 255);
@@ -4334,19 +4282,16 @@
                     doc.setFontSize(9);
                     doc.text(settings.imobiliaria || "ImobiPro", pageWidth/2, 22, { align: "center" });
 
-                    // Título
                     doc.setTextColor(30, 41, 59);
                     doc.setFontSize(16);
                     doc.setFont("helvetica", "bold");
                     doc.text("AUTORIZAÇÃO EXCLUSIVA", margin, yPos);
                     yPos += 10;
 
-                    // Data
                     doc.setFontSize(10);
                     doc.setFont("helvetica", "normal");
                     doc.text(`Data: ${dataHoje}`, pageWidth - margin, yPos - 5, { align: "right" });
                     
-                    // Partes
                     yPos += 5;
                     doc.setFontSize(11);
                     doc.text("Pelo presente instrumento particular de autorização, de um lado:", margin, yPos);
@@ -4378,13 +4323,11 @@
                     doc.text(`Telefone: ${settings.telefone || 'Não informado'}`, margin+5, yPos);
                     yPos += 10;
 
-                    // Verificar espaço antes de continuar
                     if (yPos > pageHeight - 60) {
                         doc.addPage();
                         yPos = 20;
                     }
 
-                    // Imóvel
                     doc.setFont("helvetica", "bold");
                     doc.text("IMÓVEL OBJETO DA AUTORIZAÇÃO:", margin, yPos);
                     yPos += 6;
@@ -4414,7 +4357,6 @@
                         doc.text(`Gás Encanado: Sim`, margin+5, yPos); yPos += 5;
                     }
 
-                    // Valores e condições
                     doc.setFont("helvetica", "bold");
                     doc.text("CONDIÇÕES DA AUTORIZAÇÃO:", margin, yPos);
                     yPos += 6;
@@ -4439,7 +4381,6 @@
                     }
                     yPos += 5;
 
-                    // Cláusulas padrão
                     if (yPos > pageHeight - 80) {
                         doc.addPage();
                         yPos = 20;
@@ -4462,9 +4403,8 @@
                     clauses.forEach(clause => {
                         const splitClause = doc.splitTextToSize(clause, pageWidth - margin*2);
                         doc.text(splitClause, margin, yPos);
-                        yPos += splitClause.length * 5 + 3; // Espaçamento adequado
+                        yPos += splitClause.length * 5 + 3;
                         
-                        // Verifica se precisa de nova página
                         if (yPos > pageHeight - 30) {
                             doc.addPage();
                             yPos = 20;
@@ -4473,7 +4413,6 @@
                     
                     yPos += 5;
 
-                    // Assinaturas
                     if (yPos > pageHeight - 30) {
                         doc.addPage();
                         yPos = 20;
@@ -4491,7 +4430,6 @@
                     doc.text("AUTORIZANTE", margin+35, yPos);
                     doc.text("AUTORIZADO", pageWidth/2+35, yPos);
                     
-                    // Rodapé
                     const finalY = doc.internal.pageSize.getHeight() - 10;
                     doc.setFontSize(8);
                     doc.setTextColor(100, 100, 100);
@@ -4637,7 +4575,6 @@
                 document.body.removeChild(a);
             },
 
-            // Função para simular financiamento
             simulateFinancing: (cliente, imovel, taxaJurosAnual) => {
                 if (!cliente.rendaMensal || cliente.rendaMensal <= 0) {
                     return { error: "Renda mensal não informada." };
@@ -4650,30 +4587,28 @@
                 }
 
                 const valorImovel = imovel.precoVenda || imovel.precoAluguel || 0;
-                const maxFinanciamento = valorImovel * 0.8; // 80% LTV
+                const maxFinanciamento = valorImovel * 0.8;
 
                 const idadeAtual = Utils.calculateAge(cliente.dataNascimento);
                 if (idadeAtual === null) return { error: "Idade não calculada." };
-                const idadeMax = 70.6; // anos
+                const idadeMax = 70.6;
                 const maxMesesIdade = Math.max(0, (idadeMax - idadeAtual) * 12);
-                const maxMeses = Math.min(420, Math.floor(maxMesesIdade)); // prazo máximo 420 meses
+                const maxMeses = Math.min(420, Math.floor(maxMesesIdade));
 
                 if (maxMeses <= 0) {
                     return { error: "Cliente excede a idade máxima para financiamento." };
                 }
 
                 const rendaMensal = cliente.rendaMensal;
-                const maxPrestacao = rendaMensal * 0.3; // 30% da renda
+                const maxPrestacao = rendaMensal * 0.3;
 
-                // Taxa mensal
                 const i = taxaJurosAnual / 100 / 12;
 
-                // Cálculo do valor máximo financiável pela renda: PV = PMT * (1 - (1+i)^-n) / i
                 let maxPelaRenda = 0;
                 if (i > 0) {
                     maxPelaRenda = maxPrestacao * (1 - Math.pow(1 + i, -maxMeses)) / i;
                 } else {
-                    maxPelaRenda = maxPrestacao * maxMeses; // juros zero
+                    maxPelaRenda = maxPrestacao * maxMeses;
                 }
 
                 const valorFinanciavel = Math.min(maxFinanciamento, maxPelaRenda);
@@ -4697,7 +4632,6 @@
                 };
             },
 
-            // Gera PDF do relatório do cliente com simulação e documentos
             generateClientePDF: async (clienteId) => {
                 const cliente = UI.data.clientes.find(c => c.id === clienteId);
                 if (!cliente) {
@@ -4738,15 +4672,16 @@
                     const renda = cliente.rendaMensal ? Utils.formatCurrency(cliente.rendaMensal) : '-';
                     const tipo = Utils.getTipoClienteText(cliente.tipo);
                     const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil)?.nome || cliente.etapaFunil;
+                    const contatos = cliente.contatos || 0;
 
                     doc.text(`Telefone: ${telefone}`, margin, yPos); yPos += 6;
                     doc.text(`CPF/CNPJ: ${cpf}`, margin, yPos); yPos += 6;
                     doc.text(`Email: ${email}`, margin, yPos); yPos += 6;
                     doc.text(`Nascimento: ${nascimento} (${idade} anos)`, margin, yPos); yPos += 6;
                     doc.text(`Renda Mensal: ${renda}`, margin, yPos); yPos += 6;
-                    doc.text(`Tipo: ${tipo} | Etapa Funil: ${etapa}`, margin, yPos); yPos += 10;
+                    doc.text(`Tipo: ${tipo} | Etapa Funil: ${etapa}`, margin, yPos); yPos += 6;
+                    doc.text(`Contatos realizados: ${contatos}`, margin, yPos); yPos += 10;
 
-                    // Simulação de financiamento
                     const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
                     const taxaJuros = cliente.taxaJuros || settings.taxaJuros || 8.5;
                     const simulacao = Utils.simulateFinancing(cliente, imovel, taxaJuros);
@@ -4784,7 +4719,6 @@
                         }
                     }
 
-                    // Observações
                     if (cliente.observacoes) {
                         yPos += 5;
                         doc.setFont("helvetica", "bold");
@@ -4796,7 +4730,6 @@
                         yPos += (obsSplit.length * 6) + 10;
                     }
 
-                    // Documentos anexados
                     if (cliente.documentos && cliente.documentos.length > 0) {
                         doc.setFont("helvetica", "bold");
                         doc.setTextColor(37, 99, 235);
@@ -4951,7 +4884,6 @@
                     document.getElementById('report-date-start').value = firstDay.toISOString().split('T')[0];
                     document.getElementById('report-date-end').value = today.toISOString().split('T')[0];
                     
-                    // Aplicar imagem de fundo das configurações
                     UI.applyBackground();
                     
                     document.getElementById('loading').style.display = 'none';
@@ -5119,7 +5051,6 @@
                     visitasList.innerHTML = visitasHoje.map(v => UI.createVisitaCard(v)).join('');
                 }
 
-                // Lista de espera
                 UI.renderWaitingList();
                 
                 const negociacoesList = document.getElementById('negociacoes-list');
@@ -5139,7 +5070,6 @@
                 const container = document.getElementById('waiting-list-dashboard');
                 if (!container) return;
                 
-                // Filtra imóveis que possuem lista de espera
                 const imoveisComEspera = UI.data.imoveis.filter(i => i.waitingList && i.waitingList.length > 0);
                 
                 if (imoveisComEspera.length === 0) {
@@ -5152,7 +5082,7 @@
                 imoveisComEspera.forEach(imovel => {
                     const clientesEspera = imovel.waitingList.map(clienteId => 
                         UI.data.clientes.find(c => c.id === clienteId)
-                    ).filter(c => c); // remove nulls
+                    ).filter(c => c);
                     
                     if (clientesEspera.length === 0) return;
                     
@@ -5428,7 +5358,7 @@
                     return `
                         <div class="client-card" onclick="App.cliente.showDetails('${cliente.id}')">
                             <div class="client-header">
-                                <div class="client-name">${cliente.nome}</div>
+                                <div class="client-name">${cliente.nome} <span class="badge badge-primary contact-count">${cliente.contatos || 0}</span></div>
                                 <span class="client-type" style="background: ${etapa?.cor || '#93c5fd'}; color: white;">
                                     ${etapa?.nome || 'Lead'}
                                 </span>
@@ -5598,7 +5528,6 @@
                 
                 let html = '';
                 
-                // Adiciona card da calculadora se não houver filtro ou se o filtro corresponder
                 if (!filter || filter.toLowerCase().includes('calculadora') || filter.toLowerCase().includes('obra')) {
                     html += `
                         <div class="link-card" onclick="UI.openCalculadoraObra()">
@@ -5802,7 +5731,7 @@
                         <div class="client-card" onclick="App.cliente.showDetails('${c.id}')">
                             ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
                             <div class="client-header">
-                                <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''}</div>
+                                <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''} <span class="badge badge-primary contact-count">${c.contatos || 0}</span></div>
                                 <span class="client-type" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
                             </div>
                             <div class="client-info">
@@ -6075,7 +6004,6 @@
                     videos: i.videos || []
                 };
                 
-                // Informações adicionais para modalidade terceiro
                 let ownerInfo = '';
                 let docsInfo = '';
                 if (i.modalidade === 'terceiro') {
@@ -6093,7 +6021,6 @@
                         `;
                     }
                     
-                    // Documentos do Imóvel
                     if (i.documentosImovel && i.documentosImovel.length > 0) {
                         docsInfo += `
                             <div class="details-section">
@@ -6121,7 +6048,6 @@
                         `;
                     }
                     
-                    // Documentos do Proprietário
                     if (i.documentosProprietario && i.documentosProprietario.length > 0) {
                         docsInfo += `
                             <div class="details-section">
@@ -6340,6 +6266,7 @@
                 const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil) || { nome: 'Lead', cor: '#93c5fd' };
                 const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
                 const renda = cliente.rendaMensal ? Utils.formatCurrency(cliente.rendaMensal) : '-';
+                const contatos = cliente.contatos || 0;
 
                 let simulacaoHTML = '';
                 if (simulacao.error) {
@@ -6397,7 +6324,6 @@
                     `;
                 }
 
-                // Documentos anexados
                 let docsHTML = '';
                 if (cliente.documentos && cliente.documentos.length > 0) {
                     docsHTML = `
@@ -6431,6 +6357,7 @@
                         <div class="details-header">
                             <div class="details-title">${cliente.nome}</div>
                             <div style="display: flex; gap: 8px;">
+                                <span class="badge badge-primary contact-count">${contatos} contatos</span>
                                 <span class="badge" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
                             </div>
                         </div>
@@ -7713,7 +7640,7 @@
                         html += `
                             <div class="client-card" style="border-left: 4px solid ${Utils.getEtapaFunilColor(c.etapaFunil)}">
                                 <div class="client-header">
-                                    <div class="client-name">${c.nome}</div>
+                                    <div class="client-name">${c.nome} <span class="badge badge-primary contact-count">${c.contatos || 0}</span></div>
                                     <div style="display:flex; gap: 8px;">
                                         <button class="icon-btn" style="color: var(--primary);" title="Editar Observação" onclick="UI.editPlantaoObs('${c.id}')">
                                             <i class="fas fa-pen"></i>
@@ -7826,12 +7753,10 @@
                     });
                 }
                 
-                // Preencher tipos de documentos e resetar lista
                 populateDocumentoTipoSelect();
                 document.getElementById('c-documentos-data').value = '[]';
                 App.cliente.renderDocumentosList([]);
                 
-                // Definir taxa de juros padrão
                 document.getElementById('c-taxa-juros').value = UI.data.settings?.taxaJuros || 8.5;
                 
                 UI.openModal('cliente');
@@ -7845,7 +7770,6 @@
                 document.getElementById('i-id').value = '';
                 document.getElementById('title-imovel').innerText = 'Novo Imóvel';
                 
-                // Galeria de fotos
                 const gallery = document.getElementById('image-gallery');
                 if (gallery) {
                     gallery.innerHTML = `
@@ -7873,7 +7797,6 @@
                 document.getElementById('tabela-pdf-info').innerHTML = '';
                 document.getElementById('btn-remove-pdf').style.display = 'none';
                 
-                // Campos de terceiro
                 document.getElementById('i-proprietario-nome').value = '';
                 document.getElementById('i-proprietario-telefone').value = '';
                 document.getElementById('i-proprietario-email').value = '';
@@ -7883,11 +7806,9 @@
                 App.imovel.renderDocumentosImovelList([]);
                 App.imovel.renderDocumentosProprietarioList([]);
                 
-                // Preencher selects de documentos
                 App.imovel.populateDocumentoTipoSelect('i-doc-imovel-tipo');
                 App.imovel.populateDocumentoTipoSelect('i-doc-proprietario-tipo');
                 
-                // Definir modalidade padrão e mostrar campos corretos
                 document.getElementById('i-modalidade').value = 'pronto';
                 App.imovel.toggleModalidadeFields();
                 
@@ -7994,7 +7915,6 @@
                 document.getElementById('s-ref-counter').value = s.refCounter || 0;
                 document.getElementById('s-msg-padrao').value = s.msgPadrao || '{nome}, tudo bem? Me chamo [Seu Nome] e sou corretor da [Imobiliária]. Gostaria de saber se ainda tem interesse em adquirir um imóvel. Fico à disposição! 🏡';
                 
-                // Carregar imagem de fundo
                 document.getElementById('s-background-image').value = s.backgroundImage || '';
                 if (s.backgroundImage) {
                     document.getElementById('s-bg-preview').style.backgroundImage = `url('${s.backgroundImage}')`;
@@ -8496,7 +8416,6 @@
             }
         };
 
-        // Função auxiliar para preencher o select de tipos de documento (cliente)
         function populateDocumentoTipoSelect() {
             const select = document.getElementById('c-documento-tipo');
             if (!select) return;
@@ -8513,7 +8432,6 @@
                     const etapaFunil = document.getElementById('c-etapa-funil').value || 'lead';
                     const telefone = document.getElementById('c-telefone').value;
                     
-                    // Verificar duplicidade de telefone
                     const telefoneLimpo = Utils.cleanPhoneNumber(telefone);
                     const duplicate = UI.data.clientes.find(c => c.id !== id && Utils.cleanPhoneNumber(c.telefone) === telefoneLimpo);
                     if (duplicate) {
@@ -8531,12 +8449,16 @@
                     const observacoes = document.getElementById('c-observacoes').value;
                     const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
 
+                    const clienteExistente = UI.data.clientes.find(c => c.id === id);
+                    const contatos = clienteExistente?.contatos || 0;
+
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, cpf, email, 
                         imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
                         faixaPreco, observacoes, documentos,
-                        dataCriacao: new Date().toISOString(),
-                        dataEntradaFunil: new Date().toISOString().split('T')[0]
+                        dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
+                        dataEntradaFunil: new Date().toISOString().split('T')[0],
+                        contatos
                     };
                     
                     const existingIdx = UI.data.clientes.findIndex(c => c.id === id);
@@ -8601,7 +8523,6 @@
                         etapaSelect.value = cliente.etapaFunil || 'lead';
                     }
 
-                    // Carregar documentos
                     populateDocumentoTipoSelect();
                     const documentos = cliente.documentos || [];
                     document.getElementById('c-documentos-data').value = JSON.stringify(documentos);
@@ -8630,6 +8551,11 @@
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
                     if(!cliente) return;
                     
+                    // Incrementa contatos
+                    cliente.contatos = (cliente.contatos || 0) + 1;
+                    await DB.put('clientes', cliente);
+                    UI.data.clientes = await Storage.getClientes();
+
                     const settings = await Storage.getSettings();
                     let message = '';
                     
@@ -8662,6 +8588,8 @@
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     
                     Utils.openWhatsApp(url);
+                    UI.renderClientes();
+                    UI.renderFunil();
                 },
                 
                 email: (clienteId) => {
@@ -8670,6 +8598,11 @@
                         Utils.toast('Cliente sem email', 'error');
                         return;
                     }
+                    
+                    // Incrementa contatos (email também conta como contato)
+                    cliente.contatos = (cliente.contatos || 0) + 1;
+                    DB.put('clientes', cliente);
+                    UI.data.clientes = Storage.getClientes();
                     
                     const hour = new Date().getHours();
                     let greeting = "Boa noite";
@@ -8723,7 +8656,7 @@
                         body += `Gostaria de agendar uma conversa para entendermos melhor suas necessidades e apresentar algumas opções de imóveis que podem te interessar.\n\n`;
                     }
                     
-                    const settings = Storage.getSettings();
+                    const settings = UI.data.settings;
                     body += `\n📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
                     body += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}\n`;
                     body += `👨‍💼 *Corretor:* ${settings.nome || 'Alex Peixoto'}\n`;
@@ -8783,7 +8716,6 @@
                     }, 100);
                 },
 
-                // Métodos para gerenciar documentos com crop
                 scanDocumento: function() {
                     document.getElementById('c-documento-camera').click();
                 },
@@ -8800,7 +8732,6 @@
                     const tipoLabel = Utils.documentTypes.find(t => t.value === tipo)?.label || tipo;
                     
                     if (file.type.startsWith('image/')) {
-                        // Abrir modal de crop para imagem
                         const reader = new FileReader();
                         reader.onload = (e) => {
                             UI.cropData = {
@@ -8813,7 +8744,6 @@
                         };
                         reader.readAsDataURL(file);
                     } else if (file.type === 'application/pdf') {
-                        // PDF vai direto
                         const reader = new FileReader();
                         reader.onload = async (e) => {
                             const base64 = e.target.result;
@@ -8969,13 +8899,11 @@
             },
             
             imovel: {
-                // Função para alternar campos baseado na modalidade
                 toggleModalidadeFields: function() {
                     const modalidade = document.getElementById('i-modalidade').value;
                     const lancamentoFields = document.getElementById('lancamento-fields');
                     const terceiroFields = document.getElementById('terceiro-fields');
                     
-                    // Esconder ambos primeiro
                     lancamentoFields.style.display = 'none';
                     terceiroFields.style.display = 'none';
                     
@@ -8986,7 +8914,6 @@
                     }
                 },
 
-                // Funções para documentos do imóvel (similar ao cliente)
                 populateDocumentoTipoSelect: function(selectId) {
                     const select = document.getElementById(selectId);
                     if (!select) return;
@@ -9261,7 +9188,6 @@
                         
                         const modalidade = document.getElementById('i-modalidade').value;
                         const estagioLancamento = modalidade === 'lancamento' ? document.getElementById('i-estagio-lancamento').value : 'nenhum';
-                        // ALTERAÇÃO: usar let em vez de const para poder reatribuir
                         let dataLancamento = modalidade === 'lancamento' ? document.getElementById('i-data-lancamento').value : '';
                         
                         const valorAvaliacao = document.getElementById('i-valor-avaliacao').value ? Utils.parseCurrency(document.getElementById('i-valor-avaliacao').value) : 0;
@@ -9269,7 +9195,6 @@
                         const tabelaPDF = document.getElementById('i-tabela-pdf-data').value;
                         const tabelaPDFNome = document.getElementById('i-tabela-pdf-nome').value;
                         
-                        // Campos de terceiro
                         const proprietarioNome = modalidade === 'terceiro' ? document.getElementById('i-proprietario-nome').value : '';
                         const proprietarioTelefone = modalidade === 'terceiro' ? document.getElementById('i-proprietario-telefone').value : '';
                         const proprietarioEmail = modalidade === 'terceiro' ? document.getElementById('i-proprietario-email').value : '';
@@ -9290,7 +9215,6 @@
                         
                         const waitingList = imovelExistente?.waitingList || [];
                         
-                        // Lógica para data de lançamento
                         if (modalidade === 'lancamento' && imovelExistente?.modalidade === 'lancamento' && imovelExistente?.estagioLancamento === 'pre-lancamento' && estagioLancamento === 'lancamento') {
                             dataLancamento = Utils.getToday();
                         } else if (!imovelExistente && modalidade === 'lancamento' && estagioLancamento === 'lancamento') {
@@ -9351,21 +9275,17 @@
                             await DB.put('imoveis', newImovel);
                         }
                         
-                        // --- INÍCIO DA MODIFICAÇÃO: criar/atualizar proprietário como cliente ---
                         if (modalidade === 'terceiro' && proprietarioTelefone) {
-                            // Verifica se já existe um cliente com este telefone
                             let ownerClient = UI.data.clientes.find(c => c.telefone === proprietarioTelefone);
                             if (ownerClient) {
-                                // Atualiza dados do proprietário existente
                                 ownerClient.nome = proprietarioNome || ownerClient.nome;
                                 ownerClient.cpf = proprietarioCpf || ownerClient.cpf;
                                 ownerClient.email = proprietarioEmail || ownerClient.email;
-                                ownerClient.tipo = 'vendedor'; // garante tipo vendedor
-                                ownerClient.imovelInteresseId = id; // vincula ao imóvel atual
+                                ownerClient.tipo = 'vendedor';
+                                ownerClient.imovelInteresseId = id;
                                 ownerClient.observacoes = (ownerClient.observacoes ? ownerClient.observacoes + '\n' : '') + `Proprietário do imóvel ${titulo} (atualizado)`;
                                 await DB.put('clientes', ownerClient);
                             } else {
-                                // Cria novo cliente proprietário
                                 const settings = UI.data.settings;
                                 ownerClient = {
                                     id: Utils.id(),
@@ -9383,15 +9303,14 @@
                                     observacoes: `Proprietário do imóvel ${titulo}`,
                                     documentos: [],
                                     dataCriacao: new Date().toISOString(),
-                                    dataEntradaFunil: new Date().toISOString().split('T')[0]
+                                    dataEntradaFunil: new Date().toISOString().split('T')[0],
+                                    contatos: 0
                                 };
                                 UI.data.clientes.push(ownerClient);
                                 await DB.put('clientes', ownerClient);
                             }
-                            // Atualiza a lista de clientes
                             UI.data.clientes = await Storage.getClientes();
                         }
-                        // --- FIM DA MODIFICAÇÃO ---
                         
                         UI.data.imoveis = await Storage.getImoveis();
                         
@@ -9436,7 +9355,6 @@
                         
                         document.getElementById('i-modalidade').value = imovel.modalidade || 'pronto';
                         
-                        // Campos de lançamento
                         document.getElementById('i-estagio-lancamento').value = imovel.estagioLancamento || 'nenhum';
                         document.getElementById('i-data-lancamento').value = imovel.dataLancamento || '';
                         
@@ -9452,7 +9370,6 @@
                             document.getElementById('btn-remove-pdf').style.display = 'none';
                         }
                         
-                        // Campos de terceiro
                         if (imovel.modalidade === 'terceiro') {
                             document.getElementById('i-proprietario-nome').value = imovel.proprietarioNome || '';
                             document.getElementById('i-proprietario-telefone').value = imovel.proprietarioTelefone || '';
@@ -9490,7 +9407,6 @@
                         App.imovel.toggleAluguelFields();
                         App.imovel.toggleModalidadeFields();
                         
-                        // Preencher selects de documentos
                         App.imovel.populateDocumentoTipoSelect('i-doc-imovel-tipo');
                         App.imovel.populateDocumentoTipoSelect('i-doc-proprietario-tipo');
                         
@@ -9948,9 +9864,38 @@
                     Utils.openWhatsApp(whatsappUrl);
                 },
 
+                // Nova função: verificar tempo na etapa e alertar
+                verificarTempoEtapa: async function(cliente) {
+                    if (!cliente || !cliente.dataEntradaFunil) return true; // se não tem data, segue
+                    
+                    const dias = Utils.calculateDaysInStage(cliente.dataEntradaFunil);
+                    if (dias > 30) {
+                        // Exibe alerta personalizado
+                        const mensagem = `⚠️ Cliente ${cliente.nome} está na etapa "${Utils.getEtapaFunilText(cliente.etapaFunil)}" há mais de 30 dias.\n\nConsidere mudar a estratégia ou arquivar o cliente antes de um novo contato.\n\nDeseja continuar com o envio da mensagem?`;
+                        if (confirm(mensagem)) {
+                            return true; // usuário confirmou que quer enviar
+                        } else {
+                            return false; // usuário cancelou
+                        }
+                    }
+                    return true;
+                },
+
                 confirmOpenCliente: (clienteId) => {
                     UI.currentWhatsappClienteId = clienteId;
-                    UI.openModal('whatsapp-confirm');
+                    
+                    // Verifica tempo na etapa antes de abrir o modal de opções
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+                    
+                    App.whatsapp.verificarTempoEtapa(cliente).then(continuar => {
+                        if (continuar) {
+                            UI.openModal('whatsapp-confirm');
+                        } else {
+                            // Usuário cancelou, não faz nada
+                            Utils.toast('Contato cancelado.');
+                        }
+                    });
                 },
 
                 openConversaSimplesCliente: async () => {
@@ -9963,6 +9908,12 @@
                         UI.closeModals();
                         return;
                     }
+                    
+                    // Incrementa contatos
+                    cliente.contatos = (cliente.contatos || 0) + 1;
+                    await DB.put('clientes', cliente);
+                    UI.data.clientes = await Storage.getClientes();
+
                     const saudacao = Utils.getGreeting();
                     const message = `${saudacao}, ${cliente.nome.split(' ')[0]}! Tudo bem? Gostaria de conversar sobre imóveis. Podemos bater um papo?`;
                     const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
@@ -9970,6 +9921,8 @@
                     const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
                     Utils.openWhatsApp(url);
                     UI.closeModals();
+                    UI.renderClientes();
+                    UI.renderFunil();
                 },
 
                 openMensagemPersonalizadaCliente: async () => {
@@ -9977,6 +9930,8 @@
                         UI.closeModals();
                         return;
                     }
+                    
+                    // Incrementa contatos (dentro de whatsappPersonalizado)
                     await App.cliente.whatsappPersonalizado(UI.currentWhatsappClienteId);
                     UI.closeModals();
                 },
@@ -10133,6 +10088,7 @@
                                 if (!cliente.documentos) cliente.documentos = [];
                                 if (!cliente.taxaJuros) cliente.taxaJuros = Utils.getInterestRateByIncome(cliente.rendaMensal || 0);
                                 if (cliente.cpf === undefined) cliente.cpf = '';
+                                if (cliente.contatos === undefined) cliente.contatos = 0;
                                 await DB.put('clientes', cliente);
                             }
                         }
@@ -10299,14 +10255,12 @@
                 }
             },
 
-            // Função para abrir modal de crop
             openCropModal: function(imageSrc) {
                 const modal = document.getElementById('crop-modal');
                 const img = document.getElementById('crop-image');
                 img.src = imageSrc;
                 modal.style.display = 'flex';
                 
-                // Inicializar cropper após a imagem carregar
                 img.onload = function() {
                     if (window.cropper) window.cropper.destroy();
                     window.cropper = new Cropper(img, {
@@ -10332,7 +10286,6 @@
             }
         };
 
-        // Mapear função showDetails para cliente
         App.cliente.showDetails = UI.showClienteDetails.bind(UI);
 
         document.addEventListener('DOMContentLoaded', () => {
