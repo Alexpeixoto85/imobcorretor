@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -19,7 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
     <style>
-        /* (todo o CSS permanece exatamente igual) */
+        /* (todo o CSS permanece exatamente igual ao original) */
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
@@ -2040,7 +2039,7 @@
             </a>
         </nav>
 
-        <!-- Modais -->
+        <!-- Modais (mantidos iguais ao original) -->
         <div class="modal-overlay" id="overlay-imovel-details"></div>
         <div class="modal-sheet" id="sheet-imovel-details">
             <div class="sheet-handle"></div>
@@ -6723,12 +6722,42 @@
                 
                 const datasOrdenadas = Object.keys(clientesPorData).sort();
                 
+                // Resumo estatístico
+                const compradoresTotal = clientesFiltrados.filter(c => c.tipo === 'comprador').length;
+                const vendedoresTotal = clientesFiltrados.filter(c => c.tipo === 'vendedor').length;
+                const ambosTotal = clientesFiltrados.filter(c => c.tipo === 'ambos').length;
+                
+                // HTML do relatório
                 let html = `
                     <div class="report-summary">
                         <h3>Relatório de Clientes</h3>
                         <p><strong>Período:</strong> ${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}</p>
                         <p><strong>Total de Clientes:</strong> ${clientesFiltrados.length}</p>
                         <p><strong>Dias com cadastros:</strong> ${datasOrdenadas.length}</p>
+                    </div>
+                    
+                    <div class="section-title">Resumo Estatístico</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon bg-blue"><i class="fas fa-shopping-cart"></i></div>
+                            <div class="stat-value">${compradoresTotal}</div>
+                            <div class="stat-label">Compradores</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-green"><i class="fas fa-home"></i></div>
+                            <div class="stat-value">${vendedoresTotal}</div>
+                            <div class="stat-label">Vendedores</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-purple"><i class="fas fa-exchange-alt"></i></div>
+                            <div class="stat-value">${ambosTotal}</div>
+                            <div class="stat-label">Ambos</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon bg-cyan"><i class="fas fa-percentage"></i></div>
+                            <div class="stat-value">${clientesFiltrados.length > 0 ? ((compradoresTotal / clientesFiltrados.length) * 100).toFixed(1) : 0}%</div>
+                            <div class="stat-label">% Compradores</div>
+                        </div>
                     </div>
                 `;
                 
@@ -6767,56 +6796,72 @@
                     `;
                 }
                 
-                const compradoresTotal = clientesFiltrados.filter(c => c.tipo === 'comprador').length;
-                const vendedoresTotal = clientesFiltrados.filter(c => c.tipo === 'vendedor').length;
-                const ambosTotal = clientesFiltrados.filter(c => c.tipo === 'ambos').length;
+                // Lista detalhada de clientes
+                html += `
+                    <div class="section-title">Lista Detalhada de Clientes</div>
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Tipo</th>
+                                <th>Etapa do Funil</th>
+                                <th>Data Cadastro</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                clientesFiltrados.forEach(cliente => {
+                    const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil)?.nome || cliente.etapaFunil;
+                    const dataCadastro = cliente.dataCriacao ? Utils.formatDate(cliente.dataCriacao.split('T')[0]) : '-';
+                    html += `
+                        <tr>
+                            <td>${cliente.nome}</td>
+                            <td>${cliente.telefone}</td>
+                            <td>${cliente.email || '-'}</td>
+                            <td>${Utils.getTipoClienteText(cliente.tipo)}</td>
+                            <td>${etapa}</td>
+                            <td>${dataCadastro}</td>
+                        </tr>
+                    `;
+                });
                 
                 html += `
-                    <div class="section-title">Resumo Estatístico</div>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-icon bg-blue"><i class="fas fa-shopping-cart"></i></div>
-                            <div class="stat-value">${compradoresTotal}</div>
-                            <div class="stat-label">Compradores</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-green"><i class="fas fa-home"></i></div>
-                            <div class="stat-value">${vendedoresTotal}</div>
-                            <div class="stat-label">Vendedores</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-purple"><i class="fas fa-exchange-alt"></i></div>
-                            <div class="stat-value">${ambosTotal}</div>
-                            <div class="stat-label">Ambos</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-icon bg-cyan"><i class="fas fa-percentage"></i></div>
-                            <div class="stat-value">${clientesFiltrados.length > 0 ? ((compradoresTotal / clientesFiltrados.length) * 100).toFixed(1) : 0}%</div>
-                            <div class="stat-label">% Compradores</div>
-                        </div>
-                    </div>
+                        </tbody>
+                    </table>
                 `;
+                
+                // Preparar dados para exportação PDF
+                const dados = clientesFiltrados.map(cliente => {
+                    const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil)?.nome || cliente.etapaFunil;
+                    return {
+                        Nome: cliente.nome,
+                        Telefone: cliente.telefone,
+                        Email: cliente.email || '-',
+                        Tipo: Utils.getTipoClienteText(cliente.tipo),
+                        Etapa: etapa,
+                        'Data Cadastro': cliente.dataCriacao ? Utils.formatDate(cliente.dataCriacao.split('T')[0]) : '-'
+                    };
+                });
+                
+                const resumo = {
+                    'Total de Clientes': clientesFiltrados.length,
+                    'Compradores': compradoresTotal,
+                    'Vendedores': vendedoresTotal,
+                    'Ambos': ambosTotal,
+                    'Média por Dia': (clientesFiltrados.length / Math.max(datasOrdenadas.length, 1)).toFixed(1)
+                };
                 
                 return {
                     html,
                     data: {
                         periodo: `${Utils.formatDate(start.toISOString().split('T')[0])} a ${Utils.formatDate(end.toISOString().split('T')[0])}`,
                         total: clientesFiltrados.length,
-                        dados: datasOrdenadas.map(data => ({
-                            data: Utils.formatDate(data),
-                            total: clientesPorData[data].length,
-                            compradores: clientesPorData[data].filter(c => c.tipo === 'comprador').length,
-                            vendedores: clientesPorData[data].filter(c => c.tipo === 'vendedor').length,
-                            ambos: clientesPorData[data].filter(c => c.tipo === 'ambos').length
-                        })),
-                        headers: ['Data', 'Total', 'Compradores', 'Vendedores', 'Ambos'],
-                        resumo: {
-                            'Total de Clientes': clientesFiltrados.length,
-                            'Compradores': compradoresTotal,
-                            'Vendedores': vendedoresTotal,
-                            'Ambos': ambosTotal,
-                            'Média por Dia': (clientesFiltrados.length / datasOrdenadas.length).toFixed(1)
-                        }
+                        dados: dados,
+                        headers: ['Nome', 'Telefone', 'Email', 'Tipo', 'Etapa', 'Data Cadastro'],
+                        resumo: resumo
                     },
                     type: 'clientes'
                 };
@@ -9865,18 +9910,16 @@
                     Utils.openWhatsApp(whatsappUrl);
                 },
 
-                // Nova função: verificar tempo na etapa e alertar
                 verificarTempoEtapa: async function(cliente) {
-                    if (!cliente || !cliente.dataEntradaFunil) return true; // se não tem data, segue
+                    if (!cliente || !cliente.dataEntradaFunil) return true;
                     
                     const dias = Utils.calculateDaysInStage(cliente.dataEntradaFunil);
                     if (dias > 30) {
-                        // Exibe alerta personalizado
                         const mensagem = `⚠️ Cliente ${cliente.nome} está na etapa "${Utils.getEtapaFunilText(cliente.etapaFunil)}" há mais de 30 dias.\n\nConsidere mudar a estratégia ou arquivar o cliente antes de um novo contato.\n\nDeseja continuar com o envio da mensagem?`;
                         if (confirm(mensagem)) {
-                            return true; // usuário confirmou que quer enviar
+                            return true;
                         } else {
-                            return false; // usuário cancelou
+                            return false;
                         }
                     }
                     return true;
@@ -9885,7 +9928,6 @@
                 confirmOpenCliente: (clienteId) => {
                     UI.currentWhatsappClienteId = clienteId;
                     
-                    // Verifica tempo na etapa antes de abrir o modal de opções
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (!cliente) return;
                     
@@ -9893,7 +9935,6 @@
                         if (continuar) {
                             UI.openModal('whatsapp-confirm');
                         } else {
-                            // Usuário cancelou, não faz nada
                             Utils.toast('Contato cancelado.');
                         }
                     });
@@ -9910,7 +9951,6 @@
                         return;
                     }
                     
-                    // Incrementa contatos
                     cliente.contatos = (cliente.contatos || 0) + 1;
                     await DB.put('clientes', cliente);
                     UI.data.clientes = await Storage.getClientes();
@@ -9932,7 +9972,6 @@
                         return;
                     }
                     
-                    // Incrementa contatos (dentro de whatsappPersonalizado)
                     await App.cliente.whatsappPersonalizado(UI.currentWhatsappClienteId);
                     UI.closeModals();
                 },
