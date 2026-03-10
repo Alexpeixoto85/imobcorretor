@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -20,58 +21,58 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 
     <style>
-        /* ===== PALETA IMOBILIÁRIA PREMIUM ===== */
+        /* ===== PALETA FUNIL PRO — aplicada ao sistema imobiliário ===== */
         :root {
-            --primary: #1B3A5C;        /* Azul marinho profissional */
-            --primary-dark: #122840;
-            --primary-light: #2A5180;
-            --secondary: #5C7A8C;      /* Azul acinzentado */
-            --accent: #C9985A;         /* Âmbar dourado premium */
-            --accent-light: #E8C48A;
-            --success: #2E7D55;        /* Verde escuro elegante */
-            --warning: #E8A020;        /* Âmbar */
-            --danger: #C0392B;
-            --dark: #1A2433;
-            --text-secondary: #5A6880;
-            --light: #F0F4F8;
+            --primary: #2E4A31;        /* Verde florestal principal */
+            --primary-dark: #1A2B1C;
+            --primary-light: #3D6142;
+            --secondary: #445447;      /* Verde médio */
+            --accent: #C4724A;         /* Terracota */
+            --accent-light: #D98A62;
+            --success: #2E7D42;        /* Verde ok */
+            --warning: #B87020;        /* Âmbar quente */
+            --danger: #B83030;         /* Vermelho */
+            --dark: #1A2B1C;
+            --text-secondary: #7A8A7C;
+            --light: #EFF0EC;
             --surface: #FFFFFF;
-            --border: #D8E2EC;
+            --border: #DDE0D8;
             --surface-glass: rgba(255, 255, 255, 0.72);
-            --surface-glass-dark: rgba(27, 58, 92, 0.08);
-            
+            --surface-glass-dark: rgba(46, 74, 49, 0.08);
+
             /* CORES ESPECIAIS */
-            --gold: #C9985A;      /* Dourado âmbar imobiliário */
-            --verm: #C0392B;      /* Vermelho elegante */
-            
-            --type-visita: #1B3A5C;
-            --type-reuniao-construtor: #5C7A8C;
-            --type-reuniao-equipe: #3D6B8C;
-            --type-documentacao: #2E7D55;
-            --type-plantao: #C9985A;
-            --type-outro: #8A6C4A;
-            --type-ligacao: #4A6680;
+            --gold: #C4724A;      /* Terracota (substitui dourado) */
+            --verm: #B83030;      /* Vermelho */
+
+            --type-visita: #2E4A31;
+            --type-reuniao-construtor: #445447;
+            --type-reuniao-equipe: #3D6142;
+            --type-documentacao: #2E7D42;
+            --type-plantao: #C4724A;
+            --type-outro: #7A8A7C;
+            --type-ligacao: #445447;
             --type-whatsapp: #25D366;
-            --type-reuniao: #1B3A5C;
-            
-            --funnel-lead: #5C7A8C;
-            --funnel-contato: #3D6B8C;
-            --funnel-cpf: #C9985A;
-            --funnel-sem-restricao: #E8A020;
-            --funnel-documentacao: #8A6C4A;
-            --funnel-aprovado: #2E7D55;
-            --funnel-contrato: #1B3A5C;
-            --funnel-venda: #122840;
-            
+            --type-reuniao: #2E4A31;
+
+            --funnel-lead: #445447;
+            --funnel-contato: #3D6142;
+            --funnel-cpf: #C4724A;
+            --funnel-sem-restricao: #B87020;
+            --funnel-documentacao: #7A8A7C;
+            --funnel-aprovado: #2E7D42;
+            --funnel-contrato: #2E4A31;
+            --funnel-venda: #1A2B1C;
+
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
             --header-height: calc(60px + var(--safe-top));
             --nav-height: calc(65px + var(--safe-bottom));
             --radius-lg: 18px;
             --radius-md: 14px;
-            --shadow-sm: 0 2px 8px rgba(27,58,92,0.06);
-            --shadow-md: 0 4px 20px rgba(27,58,92,0.10);
-            --shadow-float: 0 10px 40px rgba(27,58,92,0.16);
-            --shadow-3d: 0 8px 20px rgba(27,58,92,0.18), 0 2px 6px rgba(27,58,92,0.10);
+            --shadow-sm: 0 2px 8px rgba(30,50,32,0.06);
+            --shadow-md: 0 4px 20px rgba(30,50,32,0.10);
+            --shadow-float: 0 10px 40px rgba(30,50,32,0.16);
+            --shadow-3d: 0 8px 20px rgba(30,50,32,0.18), 0 2px 6px rgba(30,50,32,0.10);
         }
 
         * { 
@@ -83,7 +84,7 @@
         
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(150deg, #EEF3F8 0%, #E4EDF5 40%, #DDE8F0 100%);
+            background: linear-gradient(150deg, #EFF0EC 0%, #E8EBE4 40%, #DDE0D8 100%);
             color: var(--dark);
             height: 100vh;
             height: 100dvh;
@@ -109,8 +110,8 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 50;
-            border-bottom: 1px solid rgba(27,58,92,0.08);
-            box-shadow: 0 2px 20px rgba(27,58,92,0.08);
+            border-bottom: 1px solid rgba(30,50,32,0.08);
+            box-shadow: 0 2px 20px rgba(30,50,32,0.08);
         }
 
         .brand {
@@ -198,7 +199,7 @@
         }
         .stat-card:active { 
             transform: scale(0.95) rotateX(5deg);
-            box-shadow: 0 15px 35px rgba(201,152,90,0.35), 0 5px 12px rgba(27,58,92,0.15);
+            box-shadow: 0 15px 35px rgba(196,114,74,0.35), 0 5px 12px rgba(30,50,32,0.15);
         }
         .stat-card:active .stat-icon {
             transform: scale(1.2) translateZ(20px);
@@ -211,19 +212,19 @@
             display: flex; align-items: center; justify-content: center;
             font-size: 1rem;
             transition: transform 0.1s;
-            box-shadow: 0 3px 8px rgba(27,58,92,0.15);
+            box-shadow: 0 3px 8px rgba(30,50,32,0.15);
         }
         .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
         .stat-label { font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.3px; }
 
         /* Classes de fundo com transparência baseada na nova paleta */
-        .bg-blue { background: rgba(27,58,92,0.12); color: var(--primary); }
+        .bg-blue { background: rgba(30,50,32,0.12); color: var(--primary); }
         .bg-green { background: rgba(46,125,85,0.12); color: var(--success); }
         .bg-orange { background: rgba(232,160,32,0.12); color: var(--warning); }
         .bg-red { background: rgba(192,57,43,0.12); color: var(--danger); }
-        .bg-purple { background: rgba(201,152,90,0.12); color: var(--accent); }
+        .bg-purple { background: rgba(196,114,74,0.12); color: var(--accent); }
         .bg-cyan { background: rgba(92,122,140,0.12); color: var(--secondary); }
-        .bg-gold { background: rgba(201,152,90,0.15); color: var(--gold); }
+        .bg-gold { background: rgba(196,114,74,0.15); color: var(--gold); }
         .bg-verm { background: rgba(192,57,43,0.12); color: var(--verm); }
 
         .section-title {
@@ -245,7 +246,7 @@
             font-family: 'Inter', sans-serif;
             color: var(--dark);
         }
-        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(27,58,92,0.10); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30,50,32,0.10); }
         .search-icon {
             position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
             color: var(--text-secondary);
@@ -268,7 +269,7 @@
         }
         .property-card:active { 
             transform: scale(0.97) translateY(2px);
-            box-shadow: 0 15px 40px rgba(201,152,90,0.30), 0 4px 12px rgba(27,58,92,0.15);
+            box-shadow: 0 15px 40px rgba(196,114,74,0.30), 0 4px 12px rgba(30,50,32,0.15);
         }
 
         /* ===== CARD CAROUSEL (auto-slide on property cards) ===== */
@@ -370,7 +371,7 @@
             min-height: 36px;
         }
         .btn-light { background: var(--light); color: var(--text-secondary); }
-        .btn-primary-soft { background: rgba(27,58,92,0.08); color: var(--primary); }
+        .btn-primary-soft { background: rgba(30,50,32,0.08); color: var(--primary); }
         .btn-whatsapp { background: #dcfce7; color: #16a34a; }
 
         /* client-card defined below in calendar section */
@@ -499,12 +500,12 @@
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(20px) saturate(1.6);
             -webkit-backdrop-filter: blur(20px) saturate(1.6);
-            border-top: 1px solid rgba(27,58,92,0.07);
+            border-top: 1px solid rgba(30,50,32,0.07);
             display: flex; justify-content: space-around;
             padding-bottom: var(--safe-bottom);
             z-index: 50;
             width: 100%;
-            box-shadow: 0 -4px 20px rgba(27,58,92,0.06);
+            box-shadow: 0 -4px 20px rgba(30,50,32,0.06);
         }
 
         .nav-item {
@@ -518,7 +519,7 @@
         .nav-item i { font-size: 1.25rem; margin-bottom: 2px; }
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { 
-            filter: drop-shadow(0 2px 4px rgba(27,58,92,0.30));
+            filter: drop-shadow(0 2px 4px rgba(30,50,32,0.30));
         }
 
         .fab {
@@ -531,7 +532,7 @@
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem;
-            box-shadow: 0 6px 20px rgba(27,58,92,0.35);
+            box-shadow: 0 6px 20px rgba(30,50,32,0.35);
             z-index: 40;
             border: none;
             cursor: pointer;
@@ -1048,7 +1049,7 @@
         }
 
         .plantoes-info {
-            background: rgba(201,152,90,0.10);
+            background: rgba(196,114,74,0.10);
             border-radius: 8px;
             padding: 12px;
             margin-top: 12px;
@@ -1113,7 +1114,7 @@
         .filter-chip.active.reuniao { background: var(--type-reuniao); color: white; }
 
         .birthday-alert {
-            background: linear-gradient(135deg, rgba(201,152,90,0.10), rgba(201,152,90,0.05));
+            background: linear-gradient(135deg, rgba(196,114,74,0.10), rgba(196,114,74,0.05));
             border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 16px;
@@ -1277,12 +1278,12 @@
         /* Estágios do funil com as novas cores */
         .stage-lead { border-left-color: var(--funnel-lead); background: linear-gradient(90deg, rgba(112,112,112,0.1) 0%, rgba(112,112,112,0.05) 100%); }
         .stage-contato { border-left-color: var(--funnel-contato); background: linear-gradient(90deg, rgba(141,141,141,0.1) 0%, rgba(141,141,141,0.05) 100%); }
-        .stage-cpf { border-left-color: var(--funnel-cpf); background: linear-gradient(90deg, rgba(201,152,90,0.10) 0%, rgba(201,152,90,0.05) 100%); }
+        .stage-cpf { border-left-color: var(--funnel-cpf); background: linear-gradient(90deg, rgba(196,114,74,0.10) 0%, rgba(196,114,74,0.05) 100%); }
         .stage-sem-restricao { border-left-color: var(--funnel-sem-restricao); background: linear-gradient(90deg, rgba(200,169,126,0.1) 0%, rgba(200,169,126,0.05) 100%); }
         .stage-documentacao { border-left-color: var(--funnel-documentacao); background: linear-gradient(90deg, rgba(162,123,96,0.1) 0%, rgba(162,123,96,0.05) 100%); }
         .stage-aprovado { border-left-color: var(--funnel-aprovado); background: linear-gradient(90deg, rgba(76,175,80,0.1) 0%, rgba(76,175,80,0.05) 100%); }
         .stage-contrato { border-left-color: var(--funnel-contrato); background: linear-gradient(90deg, rgba(96,108,96,0.1) 0%, rgba(96,108,96,0.05) 100%); }
-        .stage-venda { border-left-color: var(--funnel-venda); background: linear-gradient(90deg, rgba(27,58,92,0.08) 0%, rgba(27,58,92,0.04) 100%); }
+        .stage-venda { border-left-color: var(--funnel-venda); background: linear-gradient(90deg, rgba(30,50,32,0.08) 0%, rgba(30,50,32,0.04) 100%); }
 
         .links-grid {
             display: grid;
@@ -1367,7 +1368,7 @@
         }
 
         .drop-zone {
-            background: rgba(27,58,92,0.04);
+            background: rgba(30,50,32,0.04);
             border: 2px dashed var(--primary);
             border-radius: 8px;
             padding: 20px;
@@ -1379,7 +1380,7 @@
         }
 
         .drop-zone:hover {
-            background: rgba(27,58,92,0.08);
+            background: rgba(30,50,32,0.08);
         }
         
         .loading {
@@ -1441,7 +1442,7 @@
         }
 
         .btn-video-secondary {
-            background: rgba(201,152,90,0.10);
+            background: rgba(196,114,74,0.10);
             color: var(--accent);
         }
 
@@ -1633,12 +1634,12 @@
         .confirm-whatsapp-btn:active { transform: scale(0.98); }
 
         .confirm-whatsapp-btn.conversa {
-            background: rgba(27,58,92,0.08);
+            background: rgba(30,50,32,0.08);
             color: var(--primary);
         }
 
         .confirm-whatsapp-btn.orcamento {
-            background: rgba(201,152,90,0.10);
+            background: rgba(196,114,74,0.10);
             color: var(--accent);
         }
 
@@ -1783,7 +1784,7 @@
         body.dark-mode .link-card,
         body.dark-mode .report-summary,
         body.dark-mode .modal-sheet {
-            background: #1e1e30;
+            background: #1E2E20;
             border-color: #333;
             color: #e0e0e0;
         }
@@ -1797,7 +1798,7 @@
         body.dark-mode .stat-label { color: #aaa; }
         body.dark-mode .form-control,
         body.dark-mode .search-input {
-            background: #2a2a40;
+            background: #1E2E20;
             border-color: #444;
             color: #e0e0e0;
         }
@@ -1809,16 +1810,16 @@
         }
         body.dark-mode .nav-item { color: #aaa; }
         body.dark-mode .nav-item.active { color: var(--primary); }
-        body.dark-mode .btn-light { background: #2a2a40; color: #ccc; }
-        body.dark-mode .btn-primary-soft { background: rgba(27,58,92,0.25); }
-        body.dark-mode .report-table th { background: #2a2a40; color: #e0e0e0; }
+        body.dark-mode .btn-light { background: #1E2E20; color: #ccc; }
+        body.dark-mode .btn-primary-soft { background: rgba(30,50,32,0.25); }
+        body.dark-mode .report-table th { background: #1E2E20; color: #e0e0e0; }
         body.dark-mode .report-table td { color: #ccc; border-bottom-color: #333; }
-        body.dark-mode .filter-chip { background: #2a2a40; color: #ccc; border-color: #444; }
+        body.dark-mode .filter-chip { background: #1E2E20; color: #ccc; border-color: #444; }
         body.dark-mode .form-label { color: #ccc; }
         body.dark-mode main { background: transparent; }
         body.dark-mode .icon-btn { color: #ccc; }
-        body.dark-mode .property-image { background: #2a2a40; }
-        body.dark-mode .funnel-stage { background: #1e1e30; border-color: #333; }
+        body.dark-mode .property-image { background: #1E2E20; }
+        body.dark-mode .funnel-stage { background: #1E2E20; border-color: #333; }
         body.dark-mode .waiting-item { background: rgba(255,193,7,0.08); }
         body.dark-mode .modal-overlay { background: rgba(0,0,0,0.75); }
         body.dark-mode .alert-lancamento { background: rgba(255,193,7,0.08); }
@@ -1870,7 +1871,7 @@
         }
         .quick-chip.active { background: var(--primary); color: white; }
         .quick-chip:not(.active) { background: var(--light); color: var(--secondary); }
-        body.dark-mode .quick-chip:not(.active) { background: #2a2a40; color: #ccc; }
+        body.dark-mode .quick-chip:not(.active) { background: #1E2E20; color: #ccc; }
 
         /* ===== CHART MINI ===== */
         /* mini-chart-container - defined in calendar section */
@@ -1965,17 +1966,17 @@
             color: var(--dark);
         }
         .calendar-day:empty { cursor: default; }
-        .calendar-day:not(:empty):hover { background: rgba(27,58,92,0.08); }
+        .calendar-day:not(:empty):hover { background: rgba(30,50,32,0.08); }
         .calendar-day:active { transform: scale(0.90); }
         .calendar-day.other-month { color: var(--border); }
         .calendar-day.today {
             background: var(--primary);
             color: white;
             font-weight: 800;
-            box-shadow: 0 3px 10px rgba(27,58,92,0.35);
+            box-shadow: 0 3px 10px rgba(30,50,32,0.35);
         }
         .calendar-day.selected:not(.today) {
-            background: rgba(201,152,90,0.20);
+            background: rgba(196,114,74,0.20);
             color: var(--accent);
             font-weight: 700;
             border: 1.5px solid var(--accent);
@@ -1998,7 +1999,7 @@
             display: flex; align-items: center; justify-content: space-between;
         }
         .calendar-selected-badge {
-            background: rgba(27,58,92,0.08);
+            background: rgba(30,50,32,0.08);
             color: var(--primary);
             padding: 3px 10px; border-radius: 20px;
             font-size: 0.75rem; font-weight: 700;
@@ -2032,7 +2033,7 @@
         }
         .client-card:active { 
             transform: scale(0.98) translateY(1px);
-            box-shadow: 0 15px 35px rgba(201,152,90,0.25), 0 4px 10px rgba(27,58,92,0.12);
+            box-shadow: 0 15px 35px rgba(196,114,74,0.25), 0 4px 10px rgba(30,50,32,0.12);
         }
 
         .schedule-card {
@@ -2052,7 +2053,7 @@
         }
         .schedule-card:active { 
             transform: scale(0.98);
-            box-shadow: 0 15px 35px rgba(201,152,90,0.25), 0 4px 10px rgba(27,58,92,0.12);
+            box-shadow: 0 15px 35px rgba(196,114,74,0.25), 0 4px 10px rgba(30,50,32,0.12);
         }
     </style>
 </head>
@@ -6862,7 +6863,7 @@
                     simulacaoHTML = `<div class="warning-note">${simulacao.error}</div>`;
                 } else {
                     simulacaoHTML = `
-                        <div class="details-section" style="background: rgba(201,152,90,0.10); border-left-color: var(--accent);">
+                        <div class="details-section" style="background: rgba(196,114,74,0.10); border-left-color: var(--accent);">
                             <div class="details-section-title"><i class="fas fa-calculator"></i> SIMULAÇÃO DE FINANCIAMENTO</div>
                             <div class="details-info-grid">
                                 <div class="info-item">
@@ -8361,7 +8362,7 @@
                 });
 
                 let html = `
-                    <div class="report-summary" style="border-left: 4px solid var(--accent); background: rgba(201,152,90,0.10);">
+                    <div class="report-summary" style="border-left: 4px solid var(--accent); background: rgba(196,114,74,0.10);">
                         <h3 style="color: #5b21b6;">📋 Relatório de Plantão</h3>
                         <p><strong>Data:</strong> ${Utils.formatDate(selectedDateStr)}</p>
                         <p><strong>Total de atendimentos:</strong> ${clientesPlantao.length}</p>
