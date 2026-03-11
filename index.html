@@ -3014,10 +3014,87 @@
         }
         .vc-posv-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
         .vc-posv-info { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
-        .vc-posv-btn {
-            margin-left: auto; background: #25D366; color: white; border: none;
-            border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700;
-            cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+        /* ===== COACH IA EXPANDIDO ===== */
+        .vc-ia-quick-btn {
+            color: white; border: none; border-radius: 12px;
+            padding: 14px 10px; font-size: 0.82rem; font-weight: 700;
+            cursor: pointer; display: flex; flex-direction: column;
+            align-items: center; gap: 6px; transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .vc-ia-quick-btn:active { transform: scale(0.95); }
+        .vc-ia-quick-icon { font-size: 1.4rem; }
+        .vc-ia-quick-label { font-size: 0.78rem; line-height: 1.2; text-align: center; }
+
+        /* Chat messages */
+        .vc-chat-msg {
+            display: flex; gap: 8px; align-items: flex-end;
+        }
+        .vc-chat-msg.vc-chat-bot { flex-direction: row; }
+        .vc-chat-msg.vc-chat-user { flex-direction: row-reverse; }
+        .vc-chat-avatar {
+            width: 30px; height: 30px; border-radius: 50%;
+            background: var(--light); display: flex; align-items: center;
+            justify-content: center; font-size: 1rem; flex-shrink: 0;
+        }
+        .vc-chat-bubble {
+            max-width: 80%; padding: 10px 14px; border-radius: 14px;
+            font-size: 0.83rem; line-height: 1.55; white-space: pre-wrap;
+        }
+        .vc-chat-bubble.bot {
+            background: rgba(46,74,49,0.08); color: var(--dark);
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(46,74,49,0.12);
+        }
+        .vc-chat-bubble.user {
+            background: var(--primary); color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .vc-chat-bubble.typing {
+            background: rgba(46,74,49,0.06); min-width: 50px;
+        }
+        .vc-chat-dots {
+            display: flex; gap: 4px; align-items: center; padding: 4px 0;
+        }
+        .vc-chat-dots span {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--primary); opacity: 0.5;
+            animation: vcDot 1s infinite;
+        }
+        .vc-chat-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .vc-chat-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        /* Sugestões do chat */
+        .vc-chat-sugg {
+            background: rgba(46,74,49,0.07); border: 1px solid rgba(46,74,49,0.18);
+            border-radius: 20px; padding: 6px 12px; font-size: 0.75rem;
+            font-weight: 600; color: var(--primary); cursor: pointer;
+            transition: background 0.15s;
+        }
+        .vc-chat-sugg:active { background: rgba(46,74,49,0.15); }
+
+        /* Follow-up buttons */
+        .vc-ia-followup {
+            background: rgba(46,74,49,0.08); border: 1px solid rgba(46,74,49,0.2);
+            border-radius: 8px; padding: 6px 12px; font-size: 0.75rem;
+            font-weight: 700; color: var(--primary); cursor: pointer;
+        }
+
+        /* Dicas cards */
+        .vc-dica-card {
+            background: var(--surface-glass); border-radius: var(--radius-md);
+            padding: 14px 16px; margin-bottom: 10px;
+            box-shadow: var(--shadow-sm); border: 1px solid rgba(255,255,255,0.75);
+            border-left: 4px solid var(--accent);
+        }
+        .vc-dica-title {
+            font-size: 0.85rem; font-weight: 800; color: var(--dark); margin-bottom: 4px;
+        }
+        .vc-dica-text {
+            font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5;
+        }
+        .vc-dica-autor {
+            font-size: 0.7rem; font-weight: 700; color: var(--accent); margin-top: 6px;
         }
     </style>
 </head>
@@ -3547,57 +3624,112 @@
 
                 <!-- TAB: COACH IA -->
                 <div id="vc-tab-ia" class="coach-tab-panel">
-                    <div style="background:linear-gradient(135deg,#1A2B1C,#2E4A31);border-radius:16px;padding:20px 16px;margin-bottom:16px;color:white;">
-                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
-                            <div style="width:44px;height:44px;background:rgba(196,114,74,0.4);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">🤖</div>
+                    <!-- Hero Header -->
+                    <div style="background:linear-gradient(135deg,#1A2B1C,#2E4A31);border-radius:16px;padding:20px 16px;margin-bottom:16px;color:white;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:-15px;right:-15px;width:80px;height:80px;border-radius:50%;background:rgba(196,114,74,0.2);"></div>
+                        <div style="position:absolute;bottom:-20px;left:40px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.05);"></div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+                            <div style="width:46px;height:46px;background:linear-gradient(135deg,#C4724A,#D98A62);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;box-shadow:0 4px 12px rgba(196,114,74,0.5);">🤖</div>
                             <div>
-                                <div style="font-size:1.1rem;font-weight:800;">Coach IA Personalizado</div>
-                                <div style="font-size:0.8rem;opacity:0.75;">Análise baseada nos seus dados reais do CRM</div>
+                                <div style="font-size:1.05rem;font-weight:800;letter-spacing:-0.3px;">Coach IA Personalizado</div>
+                                <div style="font-size:0.75rem;opacity:0.7;margin-top:2px;">Análise inteligente baseada nos seus dados reais do CRM</div>
                             </div>
                         </div>
-                        <div style="font-size:0.82rem;opacity:0.85;line-height:1.5;">
-                            Análise inteligente do seu funil, identificação de gargalos e estratégias personalizadas baseadas nos dados reais do seu ImobiPro.
-                        </div>
+                        <div id="vc-ia-crm-snapshot" style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 12px;font-size:0.78rem;color:rgba(255,255,255,0.85);line-height:1.6;"></div>
                     </div>
 
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
-                        <button onclick="VendaCerta.coachIA('pipeline')" style="background:var(--primary);color:white;border:none;border-radius:12px;padding:14px 10px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
-                            <span style="font-size:1.3rem;">📊</span> Analisar Pipeline
+                    <!-- Análises rápidas -->
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">⚡ Análise Rápida</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                        <button onclick="VendaCerta.coachIA('pipeline')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#2E4A31,#3D6142);">
+                            <span class="vc-ia-quick-icon">📊</span>
+                            <span class="vc-ia-quick-label">Pipeline</span>
                         </button>
-                        <button onclick="VendaCerta.coachIA('gargalos')" style="background:var(--accent);color:white;border:none;border-radius:12px;padding:14px 10px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
-                            <span style="font-size:1.3rem;">🔍</span> Identificar Gargalos
+                        <button onclick="VendaCerta.coachIA('gargalos')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#C4724A,#D98A62);">
+                            <span class="vc-ia-quick-icon">🔍</span>
+                            <span class="vc-ia-quick-label">Gargalos</span>
                         </button>
-                        <button onclick="VendaCerta.coachIA('prospectar')" style="background:var(--secondary);color:white;border:none;border-radius:12px;padding:14px 10px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
-                            <span style="font-size:1.3rem;">📡</span> Estratégia de Prospecção
+                        <button onclick="VendaCerta.coachIA('prospectar')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#445447,#3D6142);">
+                            <span class="vc-ia-quick-icon">📡</span>
+                            <span class="vc-ia-quick-label">Prospecção</span>
                         </button>
-                        <button onclick="VendaCerta.coachIA('metas')" style="background:var(--warning);color:white;border:none;border-radius:12px;padding:14px 10px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;">
-                            <span style="font-size:1.3rem;">🎯</span> Plano de Metas
+                        <button onclick="VendaCerta.coachIA('metas')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#B87020,#F59E0B);">
+                            <span class="vc-ia-quick-icon">🎯</span>
+                            <span class="vc-ia-quick-label">Metas</span>
+                        </button>
+                        <button onclick="VendaCerta.coachIA('objecoes')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#B83030,#EF4444);">
+                            <span class="vc-ia-quick-icon">💬</span>
+                            <span class="vc-ia-quick-label">Objeções</span>
+                        </button>
+                        <button onclick="VendaCerta.coachIA('script')" class="vc-ia-quick-btn" style="background:linear-gradient(135deg,#1A2B1C,#2E4A31);">
+                            <span class="vc-ia-quick-icon">📝</span>
+                            <span class="vc-ia-quick-label">Script de Venda</span>
                         </button>
                     </div>
 
-                    <div id="vc-ia-loading" style="display:none;text-align:center;padding:24px;">
-                        <div style="font-size:2rem;margin-bottom:8px;">⏳</div>
-                        <div style="font-size:0.9rem;color:var(--text-secondary);">Analisando seus dados com IA...</div>
-                        <div style="margin-top:12px;display:flex;justify-content:center;gap:6px;">
-                            <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite;"></div>
-                            <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite 0.4s;"></div>
-                            <div style="width:8px;height:8px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite 0.8s;"></div>
+                    <!-- Resultado da análise rápida -->
+                    <div id="vc-ia-loading" style="display:none;background:rgba(46,74,49,0.06);border-radius:14px;padding:24px;text-align:center;margin-bottom:16px;">
+                        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;">
+                            <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite;"></div>
+                            <div style="width:10px;height:10px;background:var(--accent);border-radius:50%;animation:vcDot 1.2s infinite 0.4s;"></div>
+                            <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite 0.8s;"></div>
                         </div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;">Analisando seus dados com IA...</div>
                     </div>
                     <style>@keyframes vcDot { 0%,100%{opacity:0.2;transform:scale(1);}50%{opacity:1;transform:scale(1.3);}}</style>
 
-                    <div id="vc-ia-response" style="display:none;">
-                        <div style="font-weight:700;font-size:1rem;color:var(--primary);margin-bottom:10px;display:flex;align-items:center;gap:8px;">
-                            <span>🤖</span> <span id="vc-ia-title">Análise do Coach IA</span>
+                    <div id="vc-ia-response" style="display:none;margin-bottom:20px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+                            <div style="font-weight:800;font-size:0.95rem;color:var(--primary);display:flex;align-items:center;gap:8px;">
+                                <span>🤖</span> <span id="vc-ia-title">Análise do Coach IA</span>
+                            </div>
+                            <div style="display:flex;gap:6px;">
+                                <button onclick="VendaCerta.copyAnalysis()" style="background:rgba(46,74,49,0.1);border:none;border-radius:8px;padding:5px 10px;font-size:0.72rem;font-weight:700;color:var(--primary);cursor:pointer;">📋 Copiar</button>
+                                <button onclick="VendaCerta.downloadPDF()" style="background:linear-gradient(135deg,#C4724A,#D98A62);border:none;border-radius:8px;padding:5px 10px;font-size:0.72rem;font-weight:700;color:white;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="fas fa-file-pdf"></i> PDF</button>
+                            </div>
                         </div>
-                        <div id="vc-ia-text" style="font-size:0.88rem;color:var(--dark);line-height:1.7;background:rgba(46,74,49,0.05);padding:16px;border-radius:12px;border-left:3px solid var(--primary);white-space:pre-wrap;"></div>
+                        <div id="vc-ia-text" style="font-size:0.85rem;color:var(--dark);line-height:1.75;background:rgba(46,74,49,0.05);padding:16px;border-radius:12px;border-left:4px solid var(--primary);white-space:pre-wrap;"></div>
+                        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;" id="vc-ia-followup-btns"></div>
                     </div>
 
-                    <div id="vc-ia-placeholder" style="text-align:center;padding:32px 16px;color:var(--text-secondary);">
-                        <div style="font-size:3rem;margin-bottom:12px;">🤖</div>
-                        <div style="font-size:0.9rem;font-weight:600;margin-bottom:6px;">Coach IA pronto para analisar</div>
-                        <div style="font-size:0.8rem;">Clique em uma das opções acima para receber orientações personalizadas baseadas no seu CRM real.</div>
+                    <div id="vc-ia-placeholder" style="text-align:center;padding:20px 16px;color:var(--text-secondary);margin-bottom:16px;">
+                        <div style="font-size:2.5rem;margin-bottom:10px;opacity:0.6;">🤖</div>
+                        <div style="font-size:0.85rem;font-weight:600;margin-bottom:4px;color:var(--dark);">Coach IA pronto para analisar</div>
+                        <div style="font-size:0.78rem;">Clique em uma das opções acima para receber orientações personalizadas baseadas no seu CRM real.</div>
                     </div>
+
+                    <!-- Chat livre com IA -->
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">💬 Chat com Coach IA</div>
+                    <div id="vc-chat-container" style="background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:12px;">
+                        <div id="vc-chat-messages" style="min-height:180px;max-height:320px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                            <!-- Mensagem inicial do coach -->
+                            <div class="vc-chat-msg vc-chat-bot" style="animation:fadeIn 0.3s ease;">
+                                <div class="vc-chat-avatar">🤖</div>
+                                <div class="vc-chat-bubble bot">Olá! Sou seu Coach IA. Posso analisar seu funil, sugerir estratégias de prospecção, scripts de vendas, como superar objeções e muito mais. O que você precisa hoje?</div>
+                            </div>
+                        </div>
+                        <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:rgba(239,240,236,0.5);">
+                            <textarea id="vc-chat-input" placeholder="Pergunte qualquer coisa sobre vendas imobiliárias..." style="flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;resize:none;min-height:42px;max-height:100px;font-family:'Inter',sans-serif;background:white;outline:none;color:var(--dark);" rows="1" onkeydown="VendaCerta.chatKeyDown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';"></textarea>
+                            <button onclick="VendaCerta.sendChat()" id="vc-chat-send-btn" style="background:var(--primary);color:white;border:none;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:transform 0.15s;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                                <i class="fas fa-paper-plane" style="font-size:0.9rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Perguntas rápidas para o chat -->
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Perguntas frequentes:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;" id="vc-chat-suggestions">
+                        <button onclick="VendaCerta.chatSuggest('Como aumentar minha taxa de conversão?')" class="vc-chat-sugg">📈 Converter mais</button>
+                        <button onclick="VendaCerta.chatSuggest('Me dê um script para abordar um lead frio por WhatsApp')" class="vc-chat-sugg">📱 Script WhatsApp</button>
+                        <button onclick="VendaCerta.chatSuggest('Como responder a objeção: o preço está muito alto')" class="vc-chat-sugg">💰 Objeção de preço</button>
+                        <button onclick="VendaCerta.chatSuggest('Quais são as melhores técnicas de fechamento de vendas imobiliárias?')" class="vc-chat-sugg">🔑 Técnicas de fechamento</button>
+                        <button onclick="VendaCerta.chatSuggest('Como fazer follow-up sem ser chato?')" class="vc-chat-sugg">🔄 Follow-up ideal</button>
+                        <button onclick="VendaCerta.chatSuggest('Como captar mais clientes pelo Instagram?')" class="vc-chat-sugg">📸 Instagram</button>
+                    </div>
+
+                    <!-- Dicas do Dia -->
+                    <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">💡 Dicas de Alta Performance</div>
+                    <div id="vc-ia-dicas-container"></div>
                 </div>
 
             </div>
@@ -3788,6 +3920,9 @@
                         </button>
                         <button class="coach-ia-btn" style="margin-top:8px; background: rgba(184,48,48,0.6);" onclick="Coach.requestAnalysis('objecoes')">
                             <i class="fas fa-comments"></i> Como Superar Objeções
+                        </button>
+                        <button id="coach-pdf-btn" class="coach-ia-btn" style="margin-top:12px; background: linear-gradient(135deg,#C4724A,#D98A62); display:none;" onclick="Coach.downloadPDF()">
+                            <i class="fas fa-file-pdf"></i> ⬇️ Baixar em PDF
                         </button>
                     </div>
 
@@ -12988,66 +13123,120 @@
             async requestAnalysis(tipo) {
                 const elText = document.getElementById('coach-ia-text');
                 const elLoading = document.getElementById('coach-ia-loading');
+                const pdfBtn = document.getElementById('coach-pdf-btn');
                 if (!elText || !elLoading) return;
 
                 elText.style.display = 'none';
                 elLoading.style.display = 'flex';
+                if (pdfBtn) pdfBtn.style.display = 'none';
 
                 const clientes = this.data.clientes || [];
-                const visitas = this.data.visitas || [];
-                const imoveis = this.data.imoveis || [];
-                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
-                const taxa = clientes.length > 0 ? ((vendas / clientes.length) * 100).toFixed(1) : 0;
-                const now = new Date();
+                const visitas  = this.data.visitas  || [];
+                const imoveis  = this.data.imoveis  || [];
+                const now      = new Date();
                 const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
-                const leadsmes = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+
+                // ── métricas ──────────────────────────────
+                const totalClientes = clientes.length;
+                const vendas        = clientes.filter(c => c.etapaFunil === 'venda').length;
+                const taxa          = totalClientes > 0 ? ((vendas / totalClientes) * 100).toFixed(1) : '0';
+                const leadsmes      = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+                const visitasMes    = visitas.filter(v => v.data && new Date(v.data) >= inicioMes).length;
+                const vendasMes     = clientes.filter(c => c.etapaFunil === 'venda' && c.dataEntradaFunil && new Date(c.dataEntradaFunil) >= inicioMes).length;
+                const travados      = clientes.filter(c => {
+                    if (c.etapaFunil === 'venda') return false;
+                    const d = c.dataEntradaFunil ? new Date(c.dataEntradaFunil) : (c.dataCriacao ? new Date(c.dataCriacao) : null);
+                    return d && Math.floor((now - d) / 86400000) > 14;
+                }).length;
+
+                // ── funil detalhado ───────────────────────
+                const etapaMap  = { lead:'Lead', contato:'Contato', cpf:'CPF', 'sem-restricao':'Sem Restrição', documentacao:'Documentação', aprovado:'Aprovado', contrato:'Contrato', venda:'Venda' };
+                const contEtapa = {};
+                clientes.forEach(c => { const e = c.etapaFunil || 'lead'; contEtapa[e] = (contEtapa[e]||0)+1; });
+                const funilStr  = Object.entries(contEtapa).map(([k,v]) => `${etapaMap[k]||k}: ${v}`).join(' | ') || 'nenhum cliente';
+
+                // ── canais de origem ──────────────────────
+                const contCanal = {};
+                clientes.forEach(c => { const o = c.origemLead||'Não informado'; contCanal[o] = (contCanal[o]||0)+1; });
+                const canaisStr = Object.entries(contCanal).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}(${v})`).join(', ') || 'não informado';
+
+                // ── imóveis ───────────────────────────────
+                const imovDisp  = imoveis.filter(i => i.status === 'disponivel').length;
+                const imovVend  = imoveis.filter(i => i.status === 'vendido').length;
+                const valorPort = imoveis.filter(i=>i.precoVenda).reduce((s,i)=>s+(i.precoVenda||0),0);
+
+                // ── dias do mês ───────────────────────────
+                const diasMes  = now.getDate();
+                const diasTot  = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                const diasRest = diasTot - diasMes;
 
                 const dadosCorretor = `
-Dados do corretor (Sistema ImobiPro):
-- Total de clientes cadastrados: ${clientes.length}
-- Leads novos este mês: ${leadsmes}
-- Total de agendamentos/visitas: ${visitas.length}
-- Total de imóveis no portfólio: ${imoveis.length}
-- Vendas concluídas: ${vendas}
-- Taxa de conversão geral: ${taxa}%
-- Etapas do funil: Lead(${clientes.filter(c=>c.etapaFunil==='lead').length}), Contato(${clientes.filter(c=>c.etapaFunil==='contato').length}), Negociação(${clientes.filter(c=>c.etapaFunil==='sem-restricao'||c.etapaFunil==='cpf').length}), Documentação(${clientes.filter(c=>c.etapaFunil==='documentacao'||c.etapaFunil==='aprovado').length}), Venda(${vendas})
-                `.trim();
+═══════════════════════════════════════
+DADOS REAIS DO CRM ImobiPro — ${now.toLocaleDateString('pt-BR')}
+═══════════════════════════════════════
+CLIENTES / LEADS:
+  Total na carteira: ${totalClientes}
+  Leads novos este mês: ${leadsmes}
+  Vendas totais concluídas: ${vendas}
+  Vendas este mês: ${vendasMes}
+  Taxa de conversão geral: ${taxa}%
+  Leads travados (+14 dias sem avanço): ${travados}
+
+DISTRIBUIÇÃO DO FUNIL:
+  ${funilStr}
+
+CANAIS DE ORIGEM:
+  ${canaisStr}
+
+ATIVIDADES:
+  Total de visitas cadastradas: ${visitas.length}
+  Visitas realizadas este mês: ${visitasMes}
+
+PORTFÓLIO DE IMÓVEIS:
+  Total cadastrado: ${imoveis.length}
+  Disponíveis para venda: ${imovDisp}
+  Já vendidos: ${imovVend}
+  Valor total disponível: ${valorPort > 0 ? 'R$ ' + valorPort.toLocaleString('pt-BR') : 'não informado'}
+
+PERÍODO:
+  Dia ${diasMes} de ${diasTot} (${diasRest} dias restantes no mês)
+═══════════════════════════════════════`.trim();
 
                 const prompts = {
-                    performance: `Você é um coach imobiliário de elite, especialista nos métodos de Tom Ferry, Grant Cardone, Gary Keller e Ryan Serhant. 
-                    
-Analise os dados abaixo de um corretor brasileiro e forneça:
-1. Um diagnóstico honesto e direto da performance
-2. Os 3 maiores problemas/gargalos identificados
-3. Um plano de ação imediato (esta semana) com 3 ações específicas
+                    performance: `Você é um coach imobiliário de elite com os métodos de Tom Ferry, Grant Cardone, Gary Keller e Ryan Serhant.
+
+Analise os dados reais deste corretor brasileiro e entregue:
+1. DIAGNÓSTICO — avaliação honesta e direta da performance atual
+2. TOP 3 GARGALOS — os maiores pontos de perda com impacto financeiro estimado
+3. PLANO DA SEMANA — 3 ações específicas e mensuráveis para executar ESTA semana
 
 ${dadosCorretor}
 
-Responda em português do Brasil, de forma direta, motivadora e prática. Máximo 200 palavras.`,
+Seja direto, cite os números reais, seja motivador mas realista. Máximo 250 palavras. Português do Brasil.`,
 
-                    rotina: `Você é um coach imobiliário expert em produtividade e rotinas de alta performance.
+                    rotina: `Você é um coach imobiliário especialista em produtividade e rotinas de alta performance.
 
-Com base nos dados deste corretor, crie uma rotina diária personalizada e específica para aumentar seus resultados:
-
-${dadosCorretor}
-
-Formate como blocos de tempo (ex: 06h-07h: ...). Seja específico e prático. Máximo 200 palavras. Português do Brasil.`,
-
-                    prospectar: `Você é um especialista em prospecção imobiliária com os métodos de Grant Cardone e Tom Ferry.
-
-Com base nos dados deste corretor, liste as 5 melhores estratégias de prospecção personalizadas para sua situação atual:
+Com base nos dados reais deste corretor, crie a ROTINA DIÁRIA IDEAL personalizada para maximizar seus resultados. Considere o perfil real dele:
 
 ${dadosCorretor}
 
-Seja específico, prático e motivador. Inclua ações que ele pode implementar hoje. Máximo 200 palavras. Português do Brasil.`,
+Formate em blocos de horário (ex: 06h00–07h00: ...) do acordar até dormir. Seja específico, cite os números reais do CRM (ex: ligar para os X leads travados). Máximo 300 palavras. Português do Brasil.`,
 
-                    objecoes: `Você é um mestre em negociação e fechamento imobiliário.
+                    prospectar: `Você é especialista em prospecção imobiliária com os métodos de Grant Cardone e Tom Ferry.
 
-Com base nos dados deste corretor, identifique as prováveis objeções que ele enfrenta e forneça scripts práticos para superá-las:
+Com base nos dados reais deste corretor, crie um PLANO DE PROSPECÇÃO para os próximos 30 dias:
 
 ${dadosCorretor}
 
-Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 200 palavras. Português do Brasil.`
+Inclua: canais prioritários baseados nos dados reais, metas diárias numéricas realistas, e um script de abordagem pronto para usar hoje. Máximo 250 palavras. Português do Brasil.`,
+
+                    objecoes: `Você é mestre em negociação e fechamento imobiliário no mercado brasileiro.
+
+Com base nos dados deste corretor, identifique as objeções mais prováveis que ele enfrenta e forneça scripts práticos prontos para usar:
+
+${dadosCorretor}
+
+Para cada objeção: a causa-raiz + o script exato em português + a técnica psicológica usada. Cubra as 5 principais objeções. Máximo 300 palavras.`
                 };
 
                 try {
@@ -13056,8 +13245,8 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             model: 'claude-sonnet-4-20250514',
-                            max_tokens: 1000,
-                            messages: [{ role: 'user', content: prompts[tipo] }]
+                            max_tokens: 1200,
+                            messages: [{ role: 'user', content: prompts[tipo] || prompts.performance }]
                         })
                     });
                     const data = await response.json();
@@ -13066,10 +13255,138 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                     elLoading.style.display = 'none';
                     elText.style.display = 'block';
                     elText.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                    // guarda para PDF
+                    Coach._pdfContent  = text;
+                    Coach._pdfTipo     = tipo;
+                    Coach._pdfDadosCRM = dadosCorretor;
+                    if (pdfBtn) pdfBtn.style.display = 'block';
                 } catch(err) {
                     elLoading.style.display = 'none';
                     elText.style.display = 'block';
                     elText.textContent = 'Erro de conexão. Verifique sua internet e tente novamente.';
+                }
+            },
+
+            _pdfContent: '',
+            _pdfTipo: '',
+            _pdfDadosCRM: '',
+
+            downloadPDF() {
+                if (!this._pdfContent) {
+                    if (window.UI && UI.showToast) UI.showToast('⚠️ Gere uma análise antes de baixar!', 'error');
+                    return;
+                }
+                const TITULOS = { performance: 'Análise de Performance', rotina: 'Rotina Diária Personalizada', prospectar: 'Plano de Prospecção 30 Dias', objecoes: 'Scripts para Superar Objeções' };
+                const titulo  = TITULOS[this._pdfTipo] || 'Análise Coach IA';
+                this._gerarPDF(titulo, this._pdfContent, this._pdfDadosCRM);
+            },
+
+            _gerarPDF(titulo, conteudo, dadosCRM) {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const PW   = doc.internal.pageSize.getWidth();
+                    const PH   = doc.internal.pageSize.getHeight();
+                    const M    = 15;
+                    const CW   = PW - M * 2;
+                    let y      = 0;
+
+                    // ── cabeçalho ──────────────────────────
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(0, 0, PW, 40, 'F');
+                    doc.setFillColor(196, 114, 74);
+                    doc.rect(0, 37, PW, 3, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20); doc.setFont('helvetica','bold');
+                    doc.text('ImobiPro', M, 16);
+                    doc.setFontSize(10); doc.setFont('helvetica','normal');
+                    doc.text('Coach IA — ' + titulo, M, 26);
+                    doc.setFontSize(8);
+                    doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), M, 34);
+                    y = 50;
+
+                    // ── bloco CRM ──────────────────────────
+                    doc.setFillColor(239, 240, 236);
+                    const crmH = 32;
+                    doc.rect(M, y, CW, crmH, 'F');
+                    doc.setDrawColor(46, 74, 49); doc.setLineWidth(0.5);
+                    doc.rect(M, y, CW, crmH, 'S');
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(M, y, 3, crmH, 'F');
+
+                    const clientes = (window.UI && UI.data && UI.data.clientes) || [];
+                    const imoveis  = (window.UI && UI.data && UI.data.imoveis)  || [];
+                    const visitas  = (window.UI && UI.data && UI.data.visitas)  || [];
+                    const vendas   = clientes.filter(c => c.etapaFunil === 'venda').length;
+                    const taxa     = clientes.length > 0 ? ((vendas/clientes.length)*100).toFixed(1) : '0';
+                    const now2     = new Date();
+                    const im2      = new Date(now2.getFullYear(), now2.getMonth(), 1);
+                    const lm       = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= im2).length;
+                    const vm       = visitas.filter(v => v.data && new Date(v.data) >= im2).length;
+                    const trav     = clientes.filter(c => {
+                        if (c.etapaFunil==='venda') return false;
+                        const d = c.dataEntradaFunil ? new Date(c.dataEntradaFunil) : (c.dataCriacao ? new Date(c.dataCriacao) : null);
+                        return d && Math.floor((now2-d)/86400000) > 14;
+                    }).length;
+
+                    doc.setTextColor(46, 74, 49);
+                    doc.setFontSize(8); doc.setFont('helvetica','bold');
+                    doc.text('SNAPSHOT DO CRM', M+6, y+8);
+                    doc.setFont('helvetica','normal'); doc.setTextColor(50, 50, 50);
+                    doc.text(`Clientes: ${clientes.length}   |   Vendas totais: ${vendas}   |   Conversão: ${taxa}%   |   Travados: ${trav}`, M+6, y+16);
+                    doc.text(`Leads este mês: ${lm}   |   Visitas este mês: ${vm}   |   Imóveis no portfólio: ${imoveis.length}`, M+6, y+23);
+                    doc.text(`Gerado em: ${now2.toLocaleDateString('pt-BR')} às ${now2.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}`, M+6, y+30);
+                    y += crmH + 10;
+
+                    // ── divisor ────────────────────────────
+                    doc.setDrawColor(196, 114, 74); doc.setLineWidth(0.8);
+                    doc.line(M, y, PW-M, y);
+                    y += 6;
+
+                    // ── título da análise ──────────────────
+                    doc.setTextColor(46, 74, 49);
+                    doc.setFontSize(14); doc.setFont('helvetica','bold');
+                    doc.text(titulo, M, y);
+                    y += 8;
+
+                    // ── conteúdo ───────────────────────────
+                    doc.setFontSize(10); doc.setFont('helvetica','normal');
+                    doc.setTextColor(30, 30, 30);
+                    const LH  = 5.8;
+                    const linhas = doc.splitTextToSize(conteudo, CW);
+                    for (let i = 0; i < linhas.length; i++) {
+                        if (y + LH > PH - 18) {
+                            doc.addPage(); y = 20;
+                        }
+                        const l = linhas[i];
+                        const isHead = /^[━═─]{4,}/.test(l) || /^\d️⃣/.test(l) || /^[A-ZÁÉÍÓÚ\s]{6,}:/.test(l);
+                        if (isHead) {
+                            doc.setFont('helvetica','bold'); doc.setTextColor(46, 74, 49);
+                        } else {
+                            doc.setFont('helvetica','normal'); doc.setTextColor(30, 30, 30);
+                        }
+                        doc.text(l, M, y);
+                        y += LH;
+                    }
+
+                    // ── rodapé em todas as páginas ─────────
+                    const pages = doc.internal.getNumberOfPages();
+                    for (let p = 1; p <= pages; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(46, 74, 49);
+                        doc.rect(0, PH-12, PW, 12, 'F');
+                        doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','normal');
+                        doc.text('ImobiPro — Sistema de Gestão Imobiliária', M, PH-5);
+                        doc.text(`Página ${p} / ${pages}`, PW-M-16, PH-5);
+                    }
+
+                    const dataStr = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+                    doc.save(`ImobiPro_CoachIA_${titulo.replace(/\s+/g,'_')}_${dataStr}.pdf`);
+                    if (window.UI && UI.showToast) UI.showToast('✅ PDF baixado com sucesso!');
+                } catch(e) {
+                    console.error(e);
+                    if (window.UI && UI.showToast) UI.showToast('Erro ao gerar PDF. Tente novamente.', 'error');
                 }
             }
         };
@@ -13105,7 +13422,7 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                     case 'kpis': this.renderKPIs(data); break;
                     case 'metas': this.renderMetas(data); break;
                     case 'posvenda': this.renderPosVenda(data); break;
-                    case 'ia': break; // on-demand
+                    case 'ia': this._renderIAResumo(); break;
                 }
             },
 
@@ -13851,18 +14168,405 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                 this.renderConquistas(clientes, visitas);
             },
 
-            async coachIA(tipo) {
+            // ===== COACH IA ENGINE LOCAL =====
+            _getIAContext() {
                 const data = this.getData();
                 const clientes = data.clientes || [];
                 const visitas = data.visitas || [];
                 const imoveis = data.imoveis || [];
-
-                // Montar contexto do CRM
-                const totalLeads = clientes.length;
-                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
-                const taxa = totalLeads > 0 ? ((vendas / totalLeads) * 100).toFixed(1) : 0;
                 const now = new Date();
                 const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+                const totalLeads = clientes.length;
+                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
+                const taxa = totalLeads > 0 ? +((vendas / totalLeads) * 100).toFixed(1) : 0;
+                const leadsMes = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+                const visitasMes = visitas.filter(v => v.data && new Date(v.data) >= inicioMes).length;
+                const vendasMes = clientes.filter(c => c.etapaFunil === 'venda' && c.dataEntradaFunil && new Date(c.dataEntradaFunil) >= inicioMes).length;
+                const travados = clientes.filter(c => {
+                    if (c.etapaFunil === 'venda') return false;
+                    const e = c.dataEntradaFunil ? new Date(c.dataEntradaFunil) : (c.dataCriacao ? new Date(c.dataCriacao) : null);
+                    return e && Math.floor((now - e) / 86400000) > 14;
+                }).length;
+                const semContato = clientes.filter(c => {
+                    if (c.etapaFunil === 'venda') return false;
+                    const e = c.dataCriacao ? new Date(c.dataCriacao) : null;
+                    return e && Math.floor((now - e) / 86400000) > 7;
+                }).length;
+                const etapas = {};
+                clientes.forEach(c => { etapas[c.etapaFunil||'lead'] = (etapas[c.etapaFunil||'lead']||0)+1; });
+                const canais = {};
+                clientes.forEach(c => { const o = c.origemLead||'outro'; canais[o] = (canais[o]||0)+1; });
+                const canaisOrdenados = Object.entries(canais).sort((a,b) => b[1]-a[1]);
+                const canalTop = canaisOrdenados[0]?.[0] || 'não cadastrado';
+                const diasNoMes = now.getDate();
+                const diasRestantes = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate() - diasNoMes;
+                const metaVendas = this.metas?.vendas || 0;
+                const metaLeads = this.metas?.leads || 0;
+                const ritmoVendas = diasNoMes > 0 ? (vendasMes / diasNoMes * 30).toFixed(1) : 0;
+                const leadsPorDia = diasNoMes > 0 ? (leadsMes / diasNoMes).toFixed(1) : 0;
+                const scorePipeline = Math.min(100, Math.round((taxa * 2) + (visitasMes * 3) + (vendasMes * 10) - (travados * 5)));
+                return {
+                    clientes, visitas, imoveis, totalLeads, vendas, taxa, leadsMes, visitasMes,
+                    vendasMes, travados, semContato, etapas, canaisOrdenados, canalTop,
+                    diasNoMes, diasRestantes, metaVendas, metaLeads, ritmoVendas, leadsPorDia,
+                    scorePipeline, now
+                };
+            },
+
+            _renderIAResumo() {
+                this._updateCRMSnapshot();
+                this._renderDicasIA();
+            },
+
+            _gerarAnalise(tipo) {
+                const c = this._getIAContext();
+                const ETAPA_LABEL = { lead:'Lead', contato:'Contato', cpf:'CPF', 'sem-restricao':'Sem Restrição', documentacao:'Documentação', aprovado:'Aprovado', contrato:'Contrato', venda:'Venda' };
+
+                if (tipo === 'pipeline') {
+                    const etapasHTML = Object.entries(c.etapas).map(([k, v]) => {
+                        const pct = c.totalLeads > 0 ? Math.round((v/c.totalLeads)*100) : 0;
+                        const cor = k==='venda'?'var(--success)':k==='aprovado'?'var(--primary)':k==='contrato'?'var(--primary-dark)':'var(--accent)';
+                        return `<div style="margin-bottom:8px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:3px;">
+                                <span style="font-weight:600;">${ETAPA_LABEL[k]||k}</span>
+                                <span style="color:var(--text-secondary);">${v} leads · ${pct}%</span>
+                            </div>
+                            <div class="vc-ia-score-bar"><div class="vc-ia-score-fill" style="width:${pct}%;background:${cor};"></div></div>
+                        </div>`;
+                    }).join('');
+
+                    let diagnostico = [];
+                    if (c.taxa < 3) diagnostico.push({ tipo:'danger', icone:'🚨', texto:`<strong>Taxa de conversão crítica: ${c.taxa}%</strong> — A média do mercado imobiliário é 5-8%. Você precisa revisar urgentemente sua qualificação de leads e processo de follow-up.` });
+                    else if (c.taxa < 8) diagnostico.push({ tipo:'warning', icone:'⚠️', texto:`<strong>Taxa de conversão abaixo da média: ${c.taxa}%</strong> — Você tem potencial para melhorar. Foque em qualificar melhor os leads na entrada e aumentar a frequência de follow-up.` });
+                    else diagnostico.push({ tipo:'success', icone:'✅', texto:`<strong>Taxa de conversão excelente: ${c.taxa}%</strong> — Você está acima da média do mercado. Mantenha o ritmo e foque em escalar a captação de leads.` });
+
+                    if (c.travados > 5) diagnostico.push({ tipo:'danger', icone:'🔒', texto:`<strong>${c.travados} clientes travados há +14 dias</strong> — Esses leads estão "morrendo" no funil. Prioridade máxima: contate-os hoje com uma proposta de valor renovada.` });
+                    if (c.visitasMes < 3) diagnostico.push({ tipo:'warning', icone:'🏠', texto:`<strong>Apenas ${c.visitasMes} visitas este mês</strong> — Visita é o coração da venda imobiliária. Meta mínima: 10 visitas/mês. Você precisa aumentar ${10 - c.visitasMes} visitas.` });
+                    if (c.leadsMes >= 5) diagnostico.push({ tipo:'success', icone:'📈', texto:`<strong>${c.leadsMes} novos leads este mês</strong> — Boa captação! Canal principal: <strong>${c.canalTop}</strong>. Continue investindo nesse canal.` });
+
+                    return `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">📊 Distribuição do Funil</div>
+                        ${etapasHTML || '<div style="font-size:0.82rem;color:var(--text-secondary);">Nenhum cliente cadastrado ainda.</div>'}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🩺 Diagnóstico do Pipeline</div>
+                        ${diagnostico.map(d => `<div class="vc-ia-item ${d.tipo}">${d.icone} ${d.texto}</div>`).join('')}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🎯 3 Ações Para Esta Semana</div>
+                        ${this._acoesPipeline(c).map(a => `<div class="vc-ia-item">${a}</div>`).join('')}
+                    </div>`;
+                }
+
+                if (tipo === 'gargalos') {
+                    const gargalos = [];
+                    if (c.travados > 0) {
+                        const pctTravado = c.totalLeads > 0 ? Math.round((c.travados/c.totalLeads)*100) : 0;
+                        gargalos.push({
+                            titulo: `🔒 Gargalo #1 — ${c.travados} Leads Parados (${pctTravado}% do funil)`,
+                            tipo: 'danger',
+                            causa: 'Leads sem atividade por mais de 14 dias. Causa mais comum: falta de follow-up estruturado e abandono pós-visita.',
+                            solucao: `Bloqueie as próximas 2 horas e ligue para os ${Math.min(c.travados, 5)} mais antigos. Script: "Olá [Nome], vi que estamos em contato há um tempo. Encontrei um imóvel que pode ser exatamente o que você procura. Posso compartilhar?"`
+                        });
+                    }
+                    if (c.visitasMes < 5) {
+                        gargalos.push({
+                            titulo: `🏠 Gargalo #2 — Baixa Conversão para Visita (${c.visitasMes} visitas/mês)`,
+                            tipo: 'warning',
+                            causa: 'Poucos leads chegam à etapa de visita. Problema: abordagem inicial não gera urgência ou interesse suficiente.',
+                            solucao: 'Mude o script de primeiro contato. Em vez de "quer visitar?", use: "Tenho uma janela na [dia próximo] às [hora] — você consegue?" — perguntas fechadas dobram o agendamento de visitas.'
+                        });
+                    }
+                    if (c.taxa < 5 && c.totalLeads > 0) {
+                        gargalos.push({
+                            titulo: `📉 Gargalo #3 — Taxa de Conversão de ${c.taxa}%`,
+                            tipo: 'danger',
+                            causa: 'A maioria dos leads não chega ao fechamento. Possíveis causas: qualificação fraca, leads frios, falta de proposta de valor clara.',
+                            solucao: 'Implemente o BANT imobiliário: Budget (qual o valor máximo?), Authority (quem decide?), Need (qual a urgência real?), Timeline (quando precisa se mudar?). Só avance leads que passarem no BANT.'
+                        });
+                    }
+                    if (gargalos.length === 0) {
+                        gargalos.push({ titulo: '✅ Nenhum gargalo crítico identificado', tipo: 'success', causa: 'Seu funil está funcionando bem com os dados atuais.', solucao: 'Foque em escalar: aumente o volume de entrada de leads e mantenha a qualidade do processo.' });
+                    }
+                    return `<div class="vc-ia-secao">
+                        ${gargalos.map(g => `<div class="vc-ia-item ${g.tipo}" style="margin-bottom:12px;">
+                            <div style="font-weight:800;margin-bottom:6px;">${g.titulo}</div>
+                            <div style="margin-bottom:6px;"><span style="font-weight:700;">🔎 Causa:</span> ${g.causa}</div>
+                            <div><span style="font-weight:700;">💊 Solução:</span> ${g.solucao}</div>
+                        </div>`).join('')}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">💡 Matriz de Prioridade</div>
+                        <div class="vc-ia-item">
+                            <strong>1º Prioridade (hoje):</strong> Ligar para leads travados<br>
+                            <strong>2º Prioridade (essa semana):</strong> Agendar novas visitas<br>
+                            <strong>3º Prioridade (esse mês):</strong> Otimizar captação de leads qualificados
+                        </div>
+                    </div>`;
+                }
+
+                if (tipo === 'prospectar') {
+                    const canaisPlano = this._planoCanais(c);
+                    return `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">📡 Análise dos Seus Canais</div>
+                        ${c.canaisOrdenados.length > 0 ? c.canaisOrdenados.map(([canal, qtd]) => `
+                        <div class="vc-ia-item" style="margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;">
+                            <span><strong>${canal}</strong></span>
+                            <span style="background:var(--primary);color:white;border-radius:20px;padding:2px 10px;font-size:0.75rem;font-weight:700;">${qtd} leads</span>
+                        </div>`).join('') : '<div class="vc-ia-item warning">⚠️ Nenhuma origem de lead cadastrada ainda. Adicione a origem ao cadastrar clientes.</div>'}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🗓️ Plano de 30 Dias</div>
+                        ${canaisPlano.map(p => `<div class="vc-ia-item">${p}</div>`).join('')}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">📞 Metas Diárias de Atividade</div>
+                        <div class="vc-ia-kpi-grid">
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val">5</div><div class="vc-ia-kpi-lbl">Ligações por dia</div></div>
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val">10</div><div class="vc-ia-kpi-lbl">Msgs WhatsApp</div></div>
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val">2</div><div class="vc-ia-kpi-lbl">Novos leads</div></div>
+                        </div>
+                        <div class="vc-ia-item success">💡 <strong>Script de abordagem fria:</strong> "Olá [Nome]! Sou [Seu Nome], especialista em imóveis na [região]. Vi seu perfil e tenho uma oportunidade exclusiva que combina com o que você busca. Posso te mostrar em 2 minutos?"</div>
+                    </div>`;
+                }
+
+                if (tipo === 'metas') {
+                    const metaV = c.metaVendas || 2;
+                    const taxaNum = c.taxa > 0 ? c.taxa : 5;
+                    const leadsNecessarios = Math.ceil((metaV / (taxaNum/100)));
+                    const visitasNecessarias = Math.ceil(metaV * 8);
+                    const propostasNecessarias = Math.ceil(metaV * 3);
+                    const onTrack = c.ritmoVendas >= metaV * 0.8;
+                    const deficit = Math.max(0, metaV - c.vendasMes);
+                    return `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">📊 Projeção do Mês</div>
+                        <div class="vc-ia-kpi-grid">
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val" style="color:${onTrack?'var(--success)':'var(--danger)'}">${c.vendasMes}</div><div class="vc-ia-kpi-lbl">Vendas feitas</div></div>
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val">${metaV}</div><div class="vc-ia-kpi-lbl">Meta do mês</div></div>
+                            <div class="vc-ia-kpi"><div class="vc-ia-kpi-val" style="color:${onTrack?'var(--success)':'var(--warning)'}">${c.ritmoVendas}</div><div class="vc-ia-kpi-lbl">Projeção (ritmo)</div></div>
+                        </div>
+                        <div class="vc-ia-item ${onTrack?'success':'danger'}">
+                            ${onTrack ? `✅ <strong>Você está no caminho certo!</strong> Ao ritmo atual, projeta ${c.ritmoVendas} vendas no mês.` : `🚨 <strong>Atenção: déficit de ${deficit} venda(s)</strong> — Faltam ${c.diasRestantes} dias. Você precisa intensificar agora.`}
+                        </div>
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🔢 Funil Necessário Para a Meta</div>
+                        <div class="vc-ia-item"><strong>📥 Leads necessários:</strong> ${leadsNecessarios} (baseado na sua taxa de ${taxaNum}%)</div>
+                        <div class="vc-ia-item"><strong>🏠 Visitas necessárias:</strong> ${visitasNecessarias}</div>
+                        <div class="vc-ia-item"><strong>📝 Propostas necessárias:</strong> ${propostasNecessarias}</div>
+                    </div>
+                    ${!onTrack ? `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🚀 Plano de Recuperação (${c.diasRestantes} dias)</div>
+                        <div class="vc-ia-item danger">📞 <strong>Semana 1:</strong> Reative TODOS os leads travados. Ligue para todos que não responderam. Meta: reagendar ${deficit * 4} visitas.</div>
+                        <div class="vc-ia-item warning">🏠 <strong>Semana 2:</strong> Execute ${deficit * 3} visitas. Use urgência real: "Tenho outro comprador interessado nesse imóvel."</div>
+                        <div class="vc-ia-item">📝 <strong>Semana 3-4:</strong> Acelere propostas. Apresente ${deficit * 2} propostas com condições especiais de fechamento.</div>
+                    </div>` : ''}`;
+                }
+
+                if (tipo === 'followup') {
+                    return `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">💬 Scripts para Clientes que Sumiram</div>
+                        <div class="vc-ia-item accent">
+                            <div style="font-weight:700;margin-bottom:4px;">📱 WhatsApp — Cliente sem resposta há +7 dias:</div>
+                            "Olá [Nome]! Tudo bem? Vi que você estava interessado no [imóvel/tipo]. Acabei de receber um imóvel com exatamente o perfil que você mencionou, mas tenho outras pessoas interessadas. Posso te mostrar com prioridade ainda essa semana?"
+                        </div>
+                        <div class="vc-ia-item accent">
+                            <div style="font-weight:700;margin-bottom:4px;">📱 WhatsApp — Após visita sem fechamento:</div>
+                            "Olá [Nome]! Como você está pensando sobre o imóvel que visitamos? Aconteceu uma coisa interessante: o proprietário tem flexibilidade para [condição especial]. Isso muda seu cenário?"
+                        </div>
+                        <div class="vc-ia-item accent">
+                            <div style="font-weight:700;margin-bottom:4px;">📞 Ligação — Lead que pediu para ligar depois:</div>
+                            "Olá [Nome], aqui é [Seu Nome]! Falamos [X dias] atrás sobre sua busca por imóvel. Consegui encontrar algo que encaixa perfeitamente no que você estava procurando. Tem 3 minutos para eu te contar?"
+                        </div>
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">🔥 Scripts para Acelerar o Fechamento</div>
+                        <div class="vc-ia-item">
+                            <div style="font-weight:700;margin-bottom:4px;">Contornar "vou pensar":</div>
+                            "Entendo! O que especificamente você ainda precisa resolver para tomar a decisão? Posso ajudar com essa parte agora?"
+                        </div>
+                        <div class="vc-ia-item">
+                            <div style="font-weight:700;margin-bottom:4px;">Urgência real:</div>
+                            "Posso verificar a disponibilidade desse imóvel para você? Tive outro cliente perguntando essa semana, e não quero que você perca essa oportunidade."
+                        </div>
+                        <div class="vc-ia-item">
+                            <div style="font-weight:700;margin-bottom:4px;">Objeção de preço:</div>
+                            "Entendo que o valor é importante. Me diz: qual seria o valor ideal para você? Deixa eu ver o que posso negociar com o proprietário."
+                        </div>
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">⏰ Cadência de Follow-up</div>
+                        <div class="vc-ia-item success">Dia 1 (após visita): Mensagem de agradecimento + resumo dos pontos positivos</div>
+                        <div class="vc-ia-item success">Dia 3: Resposta a dúvidas + novo ponto de interesse</div>
+                        <div class="vc-ia-item">Dia 7: Ligação direta + urgência</div>
+                        <div class="vc-ia-item warning">Dia 14: Última tentativa + oferta especial</div>
+                    </div>`;
+                }
+
+                if (tipo === 'rotina') {
+                    const horaAtual = c.now.getHours();
+                    const periodo = horaAtual < 12 ? 'manhã' : horaAtual < 18 ? 'tarde' : 'noite';
+                    return `<div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">⏰ Sua Rotina Ideal de Corretor de Elite</div>
+                        <div class="vc-ia-item success">
+                            <div style="font-weight:700;margin-bottom:4px;">🌅 Manhã (07h–09h) — Preparação Mental</div>
+                            Revise suas metas do dia. Estude 1 imóvel do seu portfólio. Prepare 5 argumentos de venda. Defina os 3 clientes que VOCÊ VAI FECHAR essa semana.
+                        </div>
+                        <div class="vc-ia-item">
+                            <div style="font-weight:700;margin-bottom:4px;">📞 Manhã (09h–12h) — Bloco de Prospecção</div>
+                            Ligue para ${Math.max(3, c.travados)} leads (os mais quentes primeiro). Meta: agendar pelo menos 2 visitas. Envie 10 mensagens de follow-up no WhatsApp.
+                        </div>
+                        <div class="vc-ia-item">
+                            <div style="font-weight:700;font-size:0.82rem;margin-bottom:4px;">🏠 Tarde (13h–17h) — Visitas e Negociação</div>
+                            Execute as visitas agendadas. Apresente propostas pendentes. Atualize o CRM após cada contato.
+                        </div>
+                        <div class="vc-ia-item accent">
+                            <div style="font-weight:700;margin-bottom:4px;">📊 Fim do Dia (17h–18h) — Revisão e Planejamento</div>
+                            Atualize todos os leads no CRM. Planeje o dia seguinte. Anote os 3 insights do dia. Defina sua meta para amanhã.
+                        </div>
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">📌 Para Hoje Especificamente</div>
+                        ${this._acoesPipeline(c).map(a => `<div class="vc-ia-item">${a}</div>`).join('')}
+                    </div>
+                    <div class="vc-ia-secao">
+                        <div class="vc-ia-secao-title">💎 Hábitos dos Top 1% dos Corretores</div>
+                        <div class="vc-ia-item success">✅ Nunca termina o dia sem atualizar o CRM</div>
+                        <div class="vc-ia-item success">✅ Faz pelo menos 5 ligações de follow-up por dia</div>
+                        <div class="vc-ia-item success">✅ Estuda o mercado 30 min por dia</div>
+                        <div class="vc-ia-item success">✅ Pede indicação para CADA cliente fechado</div>
+                    </div>`;
+                }
+
+                return `<div class="vc-ia-item">Análise não encontrada.</div>`;
+            },
+
+            _acoesPipeline(c) {
+                const acoes = [];
+                if (c.travados > 0) acoes.push(`📞 <strong>Reativar ${Math.min(c.travados, 3)} leads travados</strong> — Ligue hoje para os clientes parados há mais de 14 dias. Use o script: "Encontrei algo novo que combina com você."`);
+                if (c.visitasMes < 5) acoes.push(`🏠 <strong>Agendar ${5 - c.visitasMes} visitas esta semana</strong> — Contate ${(5 - c.visitasMes) * 3} leads e use perguntas fechadas para agendar.`);
+                if (c.leadsMes < 10) acoes.push(`📥 <strong>Captar ${10 - c.leadsMes} novos leads</strong> — Poste conteúdo no Instagram, peça indicação para ${Math.ceil((10-c.leadsMes)/2)} clientes antigos.`);
+                if (acoes.length === 0) acoes.push(`🚀 <strong>Escalar a operação</strong> — Seu funil está saudável. Foque em aumentar o volume de leads e delegar tarefas administrativas.`);
+                return acoes.slice(0, 3);
+            },
+
+            _planoCanais(c) {
+                const plano = [];
+                if (c.canalTop === 'indicacao' || c.canaisOrdenados.find(([k])=>k==='indicacao')) {
+                    plano.push(`🤝 <strong>Indicações (seu melhor canal):</strong> Contate 5 clientes antigos por semana pedindo indicação. Script: "Estou com disponibilidade para 2 novos clientes. Você conhece alguém procurando imóvel?"`);
+                }
+                plano.push(`📱 <strong>Instagram/Redes Sociais:</strong> Poste 1 imóvel por dia com storytelling. Exemplo: "Esse apartamento tem uma vista que você precisa ver pessoalmente" + link na bio`);
+                plano.push(`🌐 <strong>Portais (OLX, ZAP, Viva Real):</strong> Atualize seus anúncios semanalmente. Imóveis com fotos profissionais recebem 3x mais contatos.`);
+                plano.push(`🏘️ <strong>Prospecção ativa na região:</strong> Visite 1 novo bairro por semana. Deixe cartões em comércios locais e condomínios próximos.`);
+                return plano;
+            },
+
+            // ===== CHAT IA LOCAL =====
+            chatIA(perguntaFixa) {
+                const input = document.getElementById('vc-ia-chat-input');
+                const pergunta = (perguntaFixa || (input ? input.value.trim() : '')).toLowerCase();
+                if (!pergunta) return;
+                if (input && !perguntaFixa) input.value = '';
+                const msgs = document.getElementById('vc-ia-chat-msgs');
+                if (!msgs) return;
+                // Adiciona msg do usuário
+                const userDiv = document.createElement('div');
+                userDiv.className = 'vc-ia-chat-user';
+                userDiv.textContent = perguntaFixa || pergunta;
+                msgs.appendChild(userDiv);
+                // Gera resposta
+                const resposta = this._responderChat(pergunta);
+                setTimeout(() => {
+                    const botDiv = document.createElement('div');
+                    botDiv.className = 'vc-ia-chat-bot';
+                    botDiv.innerHTML = `<div class="vc-ia-chat-bot-label">🤖 COACH IA</div>${resposta}`;
+                    msgs.appendChild(botDiv);
+                    msgs.scrollTop = msgs.scrollHeight;
+                }, 600);
+                msgs.scrollTop = msgs.scrollHeight;
+            },
+
+            _responderChat(p) {
+                const c = this._getIAContext();
+                // Objeção de preço
+                if (p.includes('preço') || p.includes('caro') || p.includes('valor') || p.includes('objeção')) {
+                    return `<strong>💰 Contornando objeção de preço:</strong><br><br>
+                    <strong>1. Valide primeiro:</strong> "Entendo, o valor é um ponto importante."<br><br>
+                    <strong>2. Reframe:</strong> "Vamos calcular: R$ [valor] por ${(30*12)} meses = R$ [parcela]/mês. Isso é menos que um aluguel na mesma região."<br><br>
+                    <strong>3. Pergunte o real:</strong> "Além do valor, tem alguma outra dúvida que está te segurando?"<br><br>
+                    <strong>4. Negocie com foco:</strong> "Me diz o valor ideal para você. Vou ver o que consigo negociar com o proprietário."`;
+                }
+                // Cliente sumiu / sem resposta
+                if (p.includes('sumiu') || p.includes('não respond') || p.includes('sem resposta') || p.includes('ghosting')) {
+                    return `<strong>👻 Cliente que sumiu — Script de reativação:</strong><br><br>
+                    <strong>WhatsApp (curto, direto):</strong><br>
+                    "Oi [Nome]! Tudo bem? Acabei de ver um imóvel que me lembrou exatamente do que você procurava. Vale você dar uma olhada? 📸"<br><br>
+                    <strong>Se não responder em 3 dias:</strong><br>
+                    "Olá! Só confirmando que tenho novidades sobre imóveis na [região]. Continua com interesse? Um sim ou não já me ajuda muito 😊"<br><br>
+                    <strong>Regra:</strong> Nunca mande mais de 3 mensagens sem resposta. Depois ligue diretamente.`;
+                }
+                // Indicação
+                if (p.includes('indicação') || p.includes('indicar') || p.includes('referência')) {
+                    return `<strong>🤝 Script para pedir indicação:</strong><br><br>
+                    <strong>Logo após fechar:</strong><br>
+                    "Que ótima notícia! Antes de fechar tudo, me ajuda com uma coisa rápida? Você conhece alguém — amigo, familiar, colega de trabalho — que também está pensando em comprar ou alugar? Sua indicação é o maior presente que você pode me dar."<br><br>
+                    <strong>Para clientes antigos:</strong><br>
+                    "Oi [Nome]! Tudo bem com o imóvel? Estou com disponibilidade para 2 novos clientes este mês. Você conhece alguém que precisa de ajuda com imóvel? Te agradeço muito por isso."<br><br>
+                    <strong>Dica:</strong> 78% dos clientes indicariam seu corretor se fossem perguntados. A maioria nunca é perguntada.`;
+                }
+                // Crédito / financiamento
+                if (p.includes('crédito') || p.includes('financiamento') || p.includes('banco') || p.includes('aprovação')) {
+                    return `<strong>🏦 Como acelerar o crédito:</strong><br><br>
+                    <strong>1. Prepare o cliente antes:</strong> Envie a lista de documentos no momento do cadastro. Cada dia a mais é uma chance de perder a venda.<br><br>
+                    <strong>2. Use correspondentes bancários:</strong> Eles têm acesso a múltiplos bancos e agilizam aprovações em 30-50%.<br><br>
+                    <strong>3. Acompanhe semanalmente:</strong> Ligue para o banco/correspondente toda segunda-feira. Quem acompanha fecha 2x mais rápido.<br><br>
+                    <strong>4. Tenha um plano B:</strong> Sempre apresente 2-3 opções de financiamento. Se um banco reprovar, já tem outro pronto.`;
+                }
+                // Negociação
+                if (p.includes('negoci') || p.includes('desconto') || p.includes('proprietário')) {
+                    return `<strong>🤝 Técnicas de Negociação Imobiliária:</strong><br><br>
+                    <strong>NUNCA peça desconto sem âncora:</strong> "O comprador tem capacidade de pagamento imediato e fechamento rápido. O proprietário tem flexibilidade para R$ [valor X]?"<br><br>
+                    <strong>Crie urgência real:</strong> "Tenho outro cliente interessado. Para garantir a prioridade do meu cliente, preciso da sua resposta ainda hoje."<br><br>
+                    <strong>Troque concessão por concessão:</strong> Se der desconto, peça algo em troca: "Consigo esse valor se fecharmos até [data]."<br><br>
+                    <strong>Separe emoção de negócio:</strong> Nunca diga que o cliente "adorou" o imóvel. Isso tira seu poder de negociação.`;
+                }
+                // Como fechar
+                if (p.includes('fechar') || p.includes('fechamento') || p.includes('assinar') || p.includes('contrato')) {
+                    return `<strong>🔑 Técnicas de Fechamento:</strong><br><br>
+                    <strong>Fechamento por alternativa:</strong> "Você prefere assinar na quinta ou na sexta?" (nunca "quer assinar?")<br><br>
+                    <strong>Fechamento por resumo:</strong> "Então, você tem o valor, gostou do imóvel, a localização é ideal para você... o que falta para a gente fechar hoje?"<br><br>
+                    <strong>Fechamento por urgência:</strong> "Preciso confirmar para o proprietário hoje. Você consegue dar um sinal de R$ [valor] para garantir?"<br><br>
+                    <strong>Regra dos 3 nãos:</strong> A maioria das vendas acontece após a 3ª tentativa de fechamento. Não desista na 1ª negativa.`;
+                }
+                // Visita
+                if (p.includes('visit') || p.includes('agendar') || p.includes('imóvel')) {
+                    return `<strong>🏠 Como aumentar agendamentos de visita:</strong><br><br>
+                    <strong>Script de agendamento:</strong> "Tenho uma janela na [dia próximo] às [hora manhã] e outra às [hora tarde]. Qual fica melhor para você?" — pergunta fechada dobra a taxa de agendamento.<br><br>
+                    <strong>Antes da visita:</strong> Envie foto do imóvel, localização no mapa e 1 benefício específico para o perfil do cliente.<br><br>
+                    <strong>Durante a visita:</strong> Não mostre tudo logo. Deixe o cliente explorar e faça perguntas: "Consegue se imaginar aqui?" "Como ficaria seu móvel favorito nesse espaço?"`;
+                }
+                // Resposta genérica inteligente
+                const respostasGenericas = [
+                    `<strong>💡 Dica de alta performance:</strong><br><br>O maior erro dos corretores é focar em ter mais leads em vez de converter melhor os que já tem.<br><br>Com ${c.totalLeads} leads e taxa de ${c.taxa}%, você ${c.taxa >= 8 ? 'está acima da média' : c.taxa >= 4 ? 'está na média do mercado' : 'tem muito espaço para crescer'}.<br><br>Minha sugestão: reserve 1 hora hoje para ligar para os ${c.travados} leads parados. Esse é o dinheiro que já está no seu funil esperando para ser fechado.`,
+                    `<strong>🎯 Foco no que mais importa:</strong><br><br>Tom Ferry diz: "O corretor que faz mais contatos vence, não o que tem mais talento." Baseado no seu CRM, você teve ${c.visitasMes} visitas este mês. A meta de um corretor de alta performance é 15-20/mês.<br><br>Quer um plano para chegar lá? Use os botões de análise acima.`,
+                    `<strong>📊 Insight do seu CRM:</strong><br><br>Seu canal principal de leads é <strong>${c.canalTop}</strong>. Isso significa que você deve dobrar o investimento nesse canal.<br><br>Se ainda não tem mais de 3 canais ativos simultaneamente, está deixando dinheiro na mesa. Recomendo adicionar: ${c.canalTop !== 'indicacao' ? 'indicações de clientes' : 'portais imobiliários'} como canal prioritário.`
+                ];
+                return respostasGenericas[Math.floor(Math.random() * respostasGenericas.length)];
+            },
+
+            // ── COACH IA ENGINE (Offline — baseado nos dados reais do CRM) ─────────
+            _iaChat: [],
+
+            _getCRMContext() {
+                const data = this.getData();
+                const clientes = data.clientes || [];
+                const visitas = data.visitas || [];
+                const imoveis = data.imoveis || [];
+                const now = new Date();
+                const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+                const totalLeads = clientes.length;
+                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
+                const taxaConversao = totalLeads > 0 ? ((vendas / totalLeads) * 100).toFixed(1) : '0';
                 const leadsMes = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
                 const visitasMes = visitas.filter(v => v.data && new Date(v.data) >= inicioMes).length;
                 const vendasMes = clientes.filter(c => c.etapaFunil === 'venda' && c.dataEntradaFunil && new Date(c.dataEntradaFunil) >= inicioMes).length;
@@ -13874,36 +14578,213 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                 const etapas = {};
                 clientes.forEach(c => { etapas[c.etapaFunil] = (etapas[c.etapaFunil]||0)+1; });
                 const canais = {};
-                clientes.forEach(c => { const o = c.origemLead||'outro'; canais[o] = (canais[o]||0)+1; });
+                clientes.forEach(c => { const o = c.origemLead||'orgânico'; canais[o] = (canais[o]||0)+1; });
                 const canalTop = Object.entries(canais).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'não cadastrado';
+                const diasMes = now.getDate();
+                const diasTotalMes = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                const diasRestantes = diasTotalMes - diasMes;
+                const metaVendas = this.metas.vendas || 0;
+                const metaLeads = this.metas.leads || 0;
+                return { totalLeads, vendas, taxaConversao, leadsMes, visitasMes, vendasMes, travados, etapas, canais, canalTop, diasMes, diasRestantes, diasTotalMes, metaVendas, metaLeads, totalImoveis: imoveis.length };
+            },
 
-                const contexto = `Dados reais do CRM ImobiPro:
-- Total de clientes/leads: ${totalLeads}
-- Vendas totais: ${vendas} (taxa de conversão: ${taxa}%)
-- Este mês: ${leadsMes} leads, ${visitasMes} visitas, ${vendasMes} vendas
-- Clientes travados (>14 dias sem avançar): ${travados}
-- Distribuição do funil: ${JSON.stringify(etapas)}
-- Canal principal de leads: ${canalTop}
-- Total de imóveis cadastrados: ${imoveis.length}
-- Metas: ${JSON.stringify(this.metas)}`;
+            _updateCRMSnapshot() {
+                const el = document.getElementById('vc-ia-crm-snapshot');
+                if (!el) return;
+                const c = this._getCRMContext();
+                el.innerHTML = `📊 CRM ao vivo: <strong>${c.totalLeads}</strong> leads · <strong>${c.vendasMes}</strong> vendas este mês · <strong>${c.taxaConversao}%</strong> conversão · <strong>${c.travados}</strong> clientes travados · Canal top: <strong>${c.canalTop}</strong>`;
+            },
 
-                const PROMPTS = {
-                    pipeline: `Você é um coach especialista em vendas imobiliárias de alto desempenho. Analise estes dados reais do CRM de um corretor e dê uma análise precisa e acionável do pipeline de vendas dele. Identifique o maior problema atual, o que está funcionando bem, e dê 3 ações concretas e específicas para melhorar os resultados esta semana. Seja direto e prático, como Tom Ferry ou Grant Cardone. Responda em português brasileiro, máximo 300 palavras.`,
-                    gargalos: `Você é um especialista em otimização de funil de vendas imobiliário. Com esses dados do CRM, identifique os 2-3 maiores gargalos no processo de vendas deste corretor. Para cada gargalo, explique o problema, a causa provável e a solução específica e imediata. Seja cirúrgico e direto. Responda em português brasileiro, máximo 300 palavras.`,
-                    prospectar: `Você é um especialista em prospecção imobiliária. Com base nesses dados do CRM, crie uma estratégia de prospecção personalizada para este corretor para os próximos 30 dias. Inclua: quais canais priorizar (baseado na origem atual dos leads), metas diárias de atividade e scripts de abordagem. Seja muito específico e prático. Responda em português brasileiro, máximo 300 palavras.`,
-                    metas: `Você é um coach de metas e alta performance para corretores imobiliários. Com base nos dados reais do CRM, crie um plano de metas SMART para o próximo mês. Calcule quantos leads, visitas e propostas são necessários para bater a meta de vendas. Dê também um "plano de recuperação" se as metas do mês atual estiverem atrasadas. Responda em português brasileiro, máximo 300 palavras.`,
+            _generateAnalysis(tipo) {
+                const c = this._getCRMContext();
+                const { totalLeads, vendas, taxaConversao, leadsMes, visitasMes, vendasMes, travados, etapas, canalTop, diasRestantes, metaVendas } = c;
+                const faltamVendas = Math.max(0, metaVendas - vendasMes);
+                const txNum = parseFloat(taxaConversao);
+                const etapaNomes = { lead:'Lead', contato:'Contato', cpf:'CPF', 'sem-restricao':'Sem Restrição', documentacao:'Documentação', aprovado:'Aprovado', contrato:'Contrato', venda:'Venda' };
+                const etapasList = Object.entries(etapas).map(([k,v]) => `${etapaNomes[k]||k}: ${v}`).join(', ') || 'Sem clientes';
+
+                const A = {
+                    pipeline: () => {
+                        let t = `📊 ANÁLISE DO PIPELINE — ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+                        t += `━━━ SITUAÇÃO ATUAL ━━━\n• ${totalLeads} leads | Conversão: ${taxaConversao}%\n• Este mês: ${leadsMes} leads, ${visitasMes} visitas, ${vendasMes} venda(s)\n• Travados (+14 dias): ${travados}\n• Funil: ${etapasList}\n\n`;
+                        t += `━━━ DIAGNÓSTICO ━━━\n`;
+                        if (totalLeads === 0) t += `⚠️ Nenhum lead ainda. Comece cadastrando todos os contatos ativos.\n\n`;
+                        else if (txNum < 3) t += `🔴 Taxa crítica (${taxaConversao}%). Média do mercado: 5-8%. Há perda significativa no funil.\n\n`;
+                        else if (txNum < 6) t += `🟡 Taxa abaixo da média (${taxaConversao}%). Espaço de crescimento significativo.\n\n`;
+                        else t += `🟢 Taxa saudável (${taxaConversao}%). Foco em aumentar volume.\n\n`;
+                        if (travados > 0) t += `⚠️ URGENTE: ${travados} cliente(s) parado(s) há +2 semanas. Cada dia, a chance de conversão cai 30%.\n\n`;
+                        t += `━━━ 3 AÇÕES PARA ESTA SEMANA ━━━\n`;
+                        if (travados > 0) t += `1️⃣ Reativar ${travados} leads travados — ligue hoje, não amanhã\n`;
+                        else t += `1️⃣ Captar ${Math.max(5, Math.ceil((metaVendas - vendasMes) * 8))} novos leads\n`;
+                        t += `2️⃣ Agendar ${Math.max(2, Math.ceil(faltamVendas * 3))} visitas nos próximos 7 dias\n`;
+                        if (diasRestantes > 0) t += `3️⃣ Ritmo necessário: ${Math.ceil(faltamVendas / Math.max(1, diasRestantes) * 30)} contatos/dia`;
+                        return t;
+                    },
+                    gargalos: () => {
+                        if (totalLeads === 0) return `🔍 GARGALOS\n\nCRM sem dados. Cadastre seus clientes e leads para análise.\n\n💡 Dica: Cadastre todos os contatos ativos, mesmo os antigos.`;
+                        let t = `🔍 GARGALOS IDENTIFICADOS\n\n━━━ GARGALO #1 — Volume ━━━\n`;
+                        if (leadsMes < 10) { t += `🔴 CRÍTICO: ${leadsMes} leads/mês. Precisa de ~${Math.ceil(metaVendas / Math.max(0.01, txNum/100))}/mês para a meta.\n✅ Ative 3+ canais: WhatsApp Business, Instagram e indicações.\n\n`; }
+                        else { t += `✅ Volume razoável (${leadsMes}/mês).\n\n`; }
+                        t += `━━━ GARGALO #2 — Leads Travados ━━━\n`;
+                        if (travados > 0) { t += `🔴 ${travados} sem avanço há +14 dias.\n✅ Script de reativação: "Oi [Nome], tenho novidade exclusiva. Tem 5 min?"\n\n`; }
+                        else { t += `✅ Sem leads travados!\n\n`; }
+                        t += `━━━ GARGALO #3 — Conversão ━━━\n`;
+                        if (txNum < 5) { t += `🔴 ${taxaConversao}% — abaixo da média.\n✅ Qualifique melhor: use BANT (Budget, Authority, Need, Timeline).`; }
+                        else { t += `🟢 ${taxaConversao}% — acima da média. Escale o volume!`; }
+                        return t;
+                    },
+                    prospectar: () => {
+                        const canaisOrdenados = Object.entries(c.canais).sort((a,b)=>b[1]-a[1]);
+                        let t = `📡 ESTRATÉGIA DE PROSPECÇÃO — 30 DIAS\n\n━━━ SEUS CANAIS ATUAIS ━━━\n`;
+                        if (canaisOrdenados.length === 0) t += `• Nenhum canal registrado\n`;
+                        else canaisOrdenados.forEach(([canal, qty]) => { t += `• ${canal}: ${qty} lead(s)\n`; });
+                        t += `\n━━━ CANAIS PRIORITÁRIOS ━━━\n1️⃣ WhatsApp Status — 70% de visualização, custo zero\n2️⃣ Instagram Reels — imóveis filmados vendem 3x mais rápido\n3️⃣ Indicações — mais barato e com maior conversão\n4️⃣ Google Meu Negócio — 65% das buscas são locais\n\n━━━ METAS DIÁRIAS ━━━\n📞 5 ligações para leads inativos\n💬 10 follow-ups no WhatsApp\n📸 1 post/reels por dia\n🤝 3 pedidos de indicação\n\n━━━ SCRIPT DE ABORDAGEM ━━━\n"Oi [Nome]! Sou [Seu Nome], especialista em [região]. Tenho 2 opções exclusivas que chegaram esta semana. Posso enviar os detalhes? 🏡"`;
+                        return t;
+                    },
+                    metas: () => {
+                        const diasPassados = c.diasMes;
+                        const projecaoVendas = diasPassados > 0 ? Math.round((vendasMes / diasPassados) * c.diasTotalMes) : 0;
+                        let t = `🎯 PLANO DE METAS — ${new Date().toLocaleString('pt-BR',{month:'long'}).toUpperCase()}\n\n━━━ METAS vs REALIZADO ━━━\n• Leads: meta ${c.metaLeads} | real ${leadsMes} (${c.metaLeads>0?Math.round((leadsMes/c.metaLeads)*100):0}%)\n• Visitas: meta ${this.metas.visitas||0} | real ${visitasMes}\n• Vendas: meta ${metaVendas} | real ${vendasMes}\n\n━━━ PROJEÇÃO DO MÊS ━━━\n📈 No ritmo atual: ${projecaoVendas} venda(s) — meta: ${metaVendas}\n`;
+                        if (projecaoVendas < metaVendas && metaVendas > 0) {
+                            t += `⚠️ ${metaVendas - projecaoVendas} venda(s) abaixo do ritmo.\n\n━━━ PLANO DE RECUPERAÇÃO ━━━\nNos ${c.diasRestantes} dias restantes:\n• ${Math.ceil(faltamVendas * 15)} novos leads\n• ${faltamVendas * 3} visitas agendadas\n• Reativar ${travados} leads travados HOJE\n• Follow-ups 2x/dia com propostas ativas\n`;
+                        } else if (metaVendas === 0) {
+                            t += `\n💡 Configure suas metas na aba Metas para um plano personalizado.\n`;
+                        } else {
+                            t += `🟢 No caminho certo! Mantenha o ritmo.\n`;
+                        }
+                        const leadsNecessarios = txNum > 0 ? Math.ceil(metaVendas / (txNum/100)) : metaVendas * 20;
+                        t += `\n━━━ MATEMÁTICA ━━━\nPrecisa de ~${leadsNecessarios} leads para ${metaVendas} venda(s) (${taxaConversao}% conversão).\n= ${Math.ceil(leadsNecessarios/c.diasTotalMes)} leads/dia.`;
+                        return t;
+                    },
+                    objecoes: () => `💬 COMO SUPERAR AS PRINCIPAIS OBJEÇÕES\n\n━━━ "O PREÇO ESTÁ MUITO ALTO" ━━━\n"Entendo. O custo de esperar: imóveis aqui valorizaram X% em 12 meses. Cada mês que espera pode custar R$[valor]. Vamos calcular juntos?"\n\n━━━ "PRECISO PENSAR MAIS" ━━━\n"Claro. O que especificamente ainda gera dúvida? Posso resolver agora, ou você teme que outra pessoa feche antes? (60% dos bons imóveis saem em menos de 2 semanas)"\n\n━━━ "AINDA NÃO É O MOMENTO" ━━━\n"Quando seria? No mercado imobiliário, esperar quase sempre custa mais. Vamos simular: comprar agora vs. daqui 6 meses?"\n\n━━━ "NÃO TENHO ENTRADA" ━━━\n"FGTS, subsídio e consórcio podem substituir parte da entrada. Vamos verificar sua situação?"\n\n━━━ "VOU PESQUISAR MAIS" ━━━\n"O que exatamente você ainda busca que este imóvel não tem? Se eu resolver isso, faz sentido decidir agora?"\n\n💡 REGRA DE OURO: Toda objeção é pedido de mais segurança. Nunca argumente — sempre pergunte.`,
+                    script: () => `📝 SCRIPT COMPLETO DE VENDA\n\n━━━ ETAPA 1: ABERTURA (30 segundos) ━━━\n"[Nome]! Antes de tudo, obrigado por confiar em mim. Hoje quero entender exatamente o que você procura para mostrar só o que realmente faz sentido. Pode ser?"\n\n━━━ ETAPA 2: LEVANTAMENTO ━━━\n• "Qual o maior problema do seu imóvel atual?"\n• "Em qual prazo precisa resolver?"\n• "Qual o máximo que se sente confortável investindo?"\n• "Quem mais participa desta decisão?"\n\n━━━ ETAPA 3: APRESENTAÇÃO ━━━\nSempre em função das necessidades:\n"Você disse que precisa de [X]. Este imóvel resolve exatamente isso porque [Z]."\n\n━━━ ETAPA 4: FECHAMENTO ━━━\n• Alternativo: "Prefere assinar na segunda ou na quarta?"\n• Escassez: "Tenho 3 pessoas interessadas. Posso garantir pra você hoje?"\n• Direto: "Está pronto para dar o próximo passo?"\n\n💡 Tom Ferry: "Feche sempre com uma pergunta. Quem pergunta, controla."`,
                 };
-                const TITULOS = { pipeline: 'Análise do Pipeline', gargalos: 'Gargalos Identificados', prospectar: 'Estratégia de Prospecção', metas: 'Plano de Metas' };
+                return (A[tipo] || A.pipeline)();
+            },
 
-                const loading = document.getElementById('vc-ia-loading');
-                const resp = document.getElementById('vc-ia-response');
-                const placeholder = document.getElementById('vc-ia-placeholder');
+            copyAnalysis() {
                 const textEl = document.getElementById('vc-ia-text');
-                const titleEl = document.getElementById('vc-ia-title');
+                if (textEl && textEl.textContent) {
+                    if (navigator.clipboard) {
+                        navigator.clipboard.writeText(textEl.textContent);
+                        if (window.UI && UI.showToast) UI.showToast('✅ Análise copiada!');
+                    }
+                }
+            },
+
+            async coachIA(tipo) {
+                this._updateCRMSnapshot();
+                const loading     = document.getElementById('vc-ia-loading');
+                const resp        = document.getElementById('vc-ia-response');
+                const placeholder = document.getElementById('vc-ia-placeholder');
+                const textEl      = document.getElementById('vc-ia-text');
+                const titleEl     = document.getElementById('vc-ia-title');
+                const followupEl  = document.getElementById('vc-ia-followup-btns');
+
+                const TITULOS  = { pipeline:'📊 Análise do Pipeline', gargalos:'🔍 Gargalos Identificados', prospectar:'📡 Estratégia de Prospecção', metas:'🎯 Plano de Metas', objecoes:'💬 Como Superar Objeções', script:'📝 Script de Venda' };
+                const FOLLOWUPS = { pipeline:['gargalos','metas'], gargalos:['pipeline','prospectar'], prospectar:['objecoes','metas'], metas:['pipeline','prospectar'], objecoes:['script','pipeline'], script:['objecoes','pipeline'] };
+                const FL = { pipeline:'📊 Pipeline', gargalos:'🔍 Gargalos', prospectar:'📡 Prospecção', metas:'🎯 Metas', objecoes:'💬 Objeções', script:'📝 Script' };
 
                 if (loading) loading.style.display = 'block';
                 if (resp) resp.style.display = 'none';
                 if (placeholder) placeholder.style.display = 'none';
+
+                // ── coleta dados reais do CRM ───────────────────────────
+                const c        = this._getCRMContext();
+                const data     = this.getData();
+                const imoveis  = data.imoveis || [];
+                const imovDisp = imoveis.filter(i => i.status === 'disponivel').length;
+                const imovVend = imoveis.filter(i => i.status === 'vendido').length;
+                const valorPort = imoveis.filter(i=>i.precoVenda).reduce((s,i)=>s+(i.precoVenda||0),0);
+
+                const etapaNames = { lead:'Lead', contato:'Contato', cpf:'CPF', 'sem-restricao':'Sem Restrição', documentacao:'Documentação', aprovado:'Aprovado', contrato:'Contrato', venda:'Venda' };
+                const funilDetalhe  = Object.entries(c.etapas).map(([k,v]) => `${etapaNames[k]||k}: ${v}`).join(' | ') || 'nenhum cliente';
+                const canaisDetalhe = Object.entries(c.canais).sort((a,b)=>b[1]-a[1]).map(([k,v]) => `${k}(${v})`).join(', ') || 'não informado';
+
+                const now = new Date();
+                const dadosCRM = `
+═══════════════════════════════════════
+DADOS REAIS DO CRM ImobiPro — ${now.toLocaleDateString('pt-BR')}
+═══════════════════════════════════════
+CLIENTES / LEADS:
+  Total na carteira: ${c.totalLeads}
+  Leads novos este mês: ${c.leadsMes}
+  Vendas totais concluídas: ${c.vendas}
+  Vendas este mês: ${c.vendasMes}
+  Taxa de conversão geral: ${c.taxaConversao}%
+  Leads travados (+14 dias sem avanço): ${c.travados}
+
+DISTRIBUIÇÃO DO FUNIL:
+  ${funilDetalhe}
+
+CANAIS DE ORIGEM DOS LEADS:
+  ${canaisDetalhe}
+
+ATIVIDADES:
+  Visitas realizadas este mês: ${c.visitasMes}
+
+PORTFÓLIO DE IMÓVEIS:
+  Total cadastrado: ${c.totalImoveis}
+  Disponíveis para venda: ${imovDisp}
+  Já vendidos: ${imovVend}
+  Valor total disponível: ${valorPort > 0 ? 'R$ ' + valorPort.toLocaleString('pt-BR') : 'não informado'}
+
+METAS CONFIGURADAS:
+  Meta de leads: ${this.metas.leads || 'não definida'}
+  Meta de visitas: ${this.metas.visitas || 'não definida'}
+  Meta de vendas: ${this.metas.vendas || 'não definida'}
+
+PERÍODO:
+  Dia ${c.diasMes} de ${c.diasTotalMes} — ${c.diasRestantes} dias restantes no mês
+═══════════════════════════════════════`.trim();
+
+                const PROMPTS = {
+                    pipeline: `Você é um coach imobiliário de elite com os métodos de Tom Ferry, Grant Cardone e Gary Keller.
+
+Analise o pipeline real deste corretor e entregue:
+1. DIAGNÓSTICO DA SAÚDE DO PIPELINE — avaliação clara e honesta
+2. TOP 3 GARGALOS — com impacto financeiro estimado em vendas perdidas
+3. PLANO DA SEMANA — 3 ações específicas e mensuráveis para executar agora
+
+${dadosCRM}
+
+Cite os números reais. Seja direto e motivador. Máximo 280 palavras. Português do Brasil.`,
+
+                    gargalos: `Você é analista de funil de vendas imobiliárias especialista em otimização de conversão.
+
+Identifique os gargalos críticos com base nos dados reais deste corretor:
+${dadosCRM}
+
+Para cada gargalo: (1) o problema específico, (2) o impacto em reais ou vendas perdidas, (3) a solução exata e o prazo. Liste 3 gargalos principais. Máximo 280 palavras. Português do Brasil.`,
+
+                    prospectar: `Você é especialista em prospecção imobiliária com os métodos de Grant Cardone e Tom Ferry.
+
+Crie um PLANO DE PROSPECÇÃO 30 DIAS personalizado para este corretor:
+${dadosCRM}
+
+Inclua: (1) canais prioritários baseados nos dados reais, (2) metas diárias numéricas realistas, (3) script de abordagem pronto para usar hoje. Máximo 280 palavras. Português do Brasil.`,
+
+                    metas: `Você é coach de metas e planejamento para corretores de imóveis brasileiros.
+
+Com base nos dados reais, crie um PLANO DE ACELERAÇÃO para bater as metas do mês:
+${dadosCRM}
+
+Inclua: diagnóstico do ritmo atual vs necessário, a matemática de vendas (quantos leads/visitas/propostas), e as ações diárias específicas para os dias restantes. Máximo 280 palavras. Português do Brasil.`,
+
+                    objecoes: `Você é mestre em negociação e fechamento imobiliário no mercado brasileiro.
+
+Com base nos dados reais deste corretor, forneça scripts específicos para as 5 objeções mais comuns:
+${dadosCRM}
+
+Para cada objeção: causa-raiz + script exato em português + técnica psicológica usada. Scripts prontos para usar amanhã. Máximo 300 palavras.`,
+
+                    script: `Você é especialista em scripts de vendas imobiliárias (métodos Ryan Serhant e Tom Ferry).
+
+Crie um SCRIPT COMPLETO DE VENDA personalizado para este corretor:
+${dadosCRM}
+
+Cubra: abertura (30 seg), qualificação BANT adaptada ao perfil, apresentação do imóvel orientada ao benefício, e 3 técnicas de fechamento. Prático e direto. Máximo 300 palavras. Português do Brasil.`
+                };
 
                 try {
                     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -13911,21 +14792,268 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             model: 'claude-sonnet-4-20250514',
-                            max_tokens: 1000,
-                            system: PROMPTS[tipo],
-                            messages: [{ role: 'user', content: contexto }]
+                            max_tokens: 1200,
+                            messages: [{ role: 'user', content: PROMPTS[tipo] || PROMPTS.pipeline }]
                         })
                     });
-                    const result = await response.json();
-                    const texto = result.content?.[0]?.text || 'Não foi possível gerar análise.';
+                    const apiData = await response.json();
+                    const texto   = apiData.content && apiData.content[0] ? apiData.content[0].text : this._generateAnalysis(tipo);
+
+                    if (loading) loading.style.display = 'none';
+                    if (resp) resp.style.display = 'block';
+                    if (titleEl) titleEl.textContent = TITULOS[tipo] || 'Análise IA';
+                    if (textEl) textEl.innerHTML = texto.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+                    // guarda para PDF
+                    this._pdfContent  = texto;
+                    this._pdfTipo     = TITULOS[tipo] || 'Análise Coach IA';
+                    this._pdfDadosCRM = dadosCRM;
+                } catch(err) {
+                    // fallback para engine local
+                    const texto = this._generateAnalysis(tipo);
                     if (loading) loading.style.display = 'none';
                     if (resp) resp.style.display = 'block';
                     if (titleEl) titleEl.textContent = TITULOS[tipo] || 'Análise IA';
                     if (textEl) textEl.textContent = texto;
-                } catch(e) {
-                    if (loading) loading.style.display = 'none';
-                    if (placeholder) { placeholder.style.display = 'block'; placeholder.innerHTML = `<div style="font-size:2rem;margin-bottom:8px;">⚠️</div><div style="font-size:0.85rem;color:var(--danger);">Erro ao conectar com a IA. Verifique sua conexão e tente novamente.</div>`; }
+                    this._pdfContent  = texto;
+                    this._pdfTipo     = TITULOS[tipo] || 'Análise Coach IA';
+                    this._pdfDadosCRM = dadosCRM;
                 }
+
+                if (followupEl) {
+                    const fups = FOLLOWUPS[tipo] || [];
+                    followupEl.innerHTML = fups.map(f => `<button class="vc-ia-followup" onclick="VendaCerta.coachIA('${f}')">➜ ${FL[f]}</button>`).join('');
+                }
+                setTimeout(() => { if (resp) resp.scrollIntoView({ behavior:'smooth', block:'start' }); }, 300);
+            },
+
+            _pdfContent: '',
+            _pdfTipo: '',
+            _pdfDadosCRM: '',
+
+            downloadPDF() {
+                if (!this._pdfContent) {
+                    if (window.UI && UI.showToast) UI.showToast('⚠️ Gere uma análise antes de baixar!', 'error');
+                    return;
+                }
+                this._gerarPDF(this._pdfTipo, this._pdfContent, this._pdfDadosCRM);
+            },
+
+            _gerarPDF(titulo, conteudo, dadosCRM) {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc  = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const PW   = doc.internal.pageSize.getWidth();
+                    const PH   = doc.internal.pageSize.getHeight();
+                    const M    = 15;
+                    const CW   = PW - M * 2;
+                    let y      = 0;
+
+                    // ── cabeçalho ──────────────────────────
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(0, 0, PW, 40, 'F');
+                    doc.setFillColor(196, 114, 74);
+                    doc.rect(0, 37, PW, 3, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(20); doc.setFont('helvetica','bold');
+                    doc.text('ImobiPro', M, 16);
+                    doc.setFontSize(10); doc.setFont('helvetica','normal');
+                    doc.text('Coach IA — ' + titulo, M, 26);
+                    doc.setFontSize(8);
+                    doc.text('Gerado em ' + new Date().toLocaleString('pt-BR'), M, 34);
+                    y = 50;
+
+                    // ── snapshot CRM ───────────────────────
+                    const c2     = this._getCRMContext();
+                    const imoveis2 = (this.getData().imoveis) || [];
+                    const crmH   = 32;
+                    doc.setFillColor(239, 240, 236);
+                    doc.rect(M, y, CW, crmH, 'F');
+                    doc.setDrawColor(46, 74, 49); doc.setLineWidth(0.5);
+                    doc.rect(M, y, CW, crmH, 'S');
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(M, y, 3, crmH, 'F');
+                    doc.setTextColor(46, 74, 49);
+                    doc.setFontSize(8); doc.setFont('helvetica','bold');
+                    doc.text('SNAPSHOT DO CRM', M+6, y+8);
+                    doc.setFont('helvetica','normal'); doc.setTextColor(50, 50, 50);
+                    doc.text(`Clientes: ${c2.totalLeads}   |   Vendas totais: ${c2.vendas}   |   Conversão: ${c2.taxaConversao}%   |   Travados: ${c2.travados}`, M+6, y+16);
+                    doc.text(`Leads este mês: ${c2.leadsMes}   |   Visitas este mês: ${c2.visitasMes}   |   Imóveis: ${imoveis2.length}   |   Dias restantes: ${c2.diasRestantes}`, M+6, y+23);
+                    doc.text(`Canal principal: ${c2.canalTop}   |   Vendas este mês: ${c2.vendasMes}`, M+6, y+30);
+                    y += crmH + 10;
+
+                    // ── divisor ────────────────────────────
+                    doc.setDrawColor(196, 114, 74); doc.setLineWidth(0.8);
+                    doc.line(M, y, PW-M, y);
+                    y += 6;
+
+                    // ── título ─────────────────────────────
+                    doc.setTextColor(46, 74, 49);
+                    doc.setFontSize(14); doc.setFont('helvetica','bold');
+                    doc.text(titulo, M, y);
+                    y += 8;
+
+                    // ── conteúdo ───────────────────────────
+                    doc.setFontSize(10); doc.setFont('helvetica','normal');
+                    doc.setTextColor(30, 30, 30);
+                    const LH     = 5.8;
+                    const linhas = doc.splitTextToSize(conteudo, CW);
+                    for (let i = 0; i < linhas.length; i++) {
+                        if (y + LH > PH - 18) { doc.addPage(); y = 20; }
+                        const l      = linhas[i];
+                        const isHead = /^[━═─]{4,}/.test(l) || /^\d+️/.test(l) || /^[A-ZÁÉÍÓÚ ]{6,}:/.test(l);
+                        if (isHead) { doc.setFont('helvetica','bold'); doc.setTextColor(46,74,49); }
+                        else        { doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30); }
+                        doc.text(l, M, y);
+                        y += LH;
+                    }
+
+                    // ── rodapé ─────────────────────────────
+                    const pages = doc.internal.getNumberOfPages();
+                    for (let p = 1; p <= pages; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(46, 74, 49);
+                        doc.rect(0, PH-12, PW, 12, 'F');
+                        doc.setTextColor(255,255,255); doc.setFontSize(7); doc.setFont('helvetica','normal');
+                        doc.text('ImobiPro — Sistema de Gestão Imobiliária', M, PH-5);
+                        doc.text(`Página ${p} / ${pages}`, PW-M-18, PH-5);
+                    }
+
+                    const dataStr = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+                    doc.save(`ImobiPro_CoachIA_${titulo.replace(/[^\w]/g,'_')}_${dataStr}.pdf`);
+                    if (window.UI && UI.showToast) UI.showToast('✅ PDF baixado com sucesso!');
+                } catch(e) {
+                    console.error(e);
+                    if (window.UI && UI.showToast) UI.showToast('Erro ao gerar PDF.', 'error');
+                }
+            },
+
+            // ── CHAT ─────────────────────────────────────────────────────
+            chatKeyDown(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.sendChat(); }
+            },
+
+            chatSuggest(msg) {
+                const input = document.getElementById('vc-chat-input');
+                if (input) { input.value = msg; this.sendChat(); }
+            },
+
+            async sendChat() {
+                const input = document.getElementById('vc-chat-input');
+                if (!input || !input.value.trim()) return;
+                const msg = input.value.trim();
+                input.value = ''; input.style.height = 'auto';
+                const messagesEl = document.getElementById('vc-chat-messages');
+                if (!messagesEl) return;
+
+                messagesEl.innerHTML += `<div class="vc-chat-msg vc-chat-user" style="animation:fadeIn 0.3s ease;"><div class="vc-chat-bubble user">${msg.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</div><div class="vc-chat-avatar" style="background:var(--primary);color:white;">👤</div></div>`;
+                const typingId = 'vc-typing-' + Date.now();
+                messagesEl.innerHTML += `<div id="${typingId}" class="vc-chat-msg vc-chat-bot" style="animation:fadeIn 0.3s ease;"><div class="vc-chat-avatar">🤖</div><div class="vc-chat-bubble typing"><div class="vc-chat-dots"><span></span><span></span><span></span></div></div></div>`;
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+
+                // contexto CRM para o sistema
+                const c = this._getCRMContext();
+                const sysCtx = `Você é o Coach IA do ImobiPro, assistente especializado em vendas imobiliárias para o mercado brasileiro.
+
+Dados reais do CRM do corretor agora:
+- ${c.totalLeads} leads na carteira | Taxa de conversão: ${c.taxaConversao}%
+- Leads novos este mês: ${c.leadsMes} | Visitas este mês: ${c.visitasMes}
+- Vendas este mês: ${c.vendasMes} | Leads travados (+14 dias): ${c.travados}
+- Canal principal de leads: ${c.canalTop}
+
+Regras: responda em português do Brasil, seja direto e prático, cite números reais quando relevante, máximo 180 palavras por resposta.`;
+
+                this._iaChat.push({ role: 'user', content: msg });
+
+                try {
+                    // monta histórico (máx 8 mensagens + sistema)
+                    const hist  = this._iaChat.slice(-8);
+                    const msgs  = [{ role:'user', content: sysCtx }, { role:'assistant', content:'Entendido! Vou usar os dados reais do seu CRM em todas as respostas.' }, ...hist];
+
+                    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:600, messages: msgs })
+                    });
+                    const apiData  = await resp.json();
+                    const resposta = apiData.content && apiData.content[0] ? apiData.content[0].text : this._chatEngine(msg);
+                    this._iaChat.push({ role:'assistant', content: resposta });
+
+                    const typingEl = document.getElementById(typingId);
+                    if (typingEl) typingEl.remove();
+                    messagesEl.innerHTML += `<div class="vc-chat-msg vc-chat-bot" style="animation:fadeIn 0.3s ease;"><div class="vc-chat-avatar">🤖</div><div class="vc-chat-bubble bot">${resposta.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div></div>`;
+                } catch(e) {
+                    // fallback offline
+                    const resposta = this._chatEngine(msg);
+                    this._iaChat.push({ role:'assistant', content: resposta });
+                    const typingEl = document.getElementById(typingId);
+                    if (typingEl) typingEl.remove();
+                    messagesEl.innerHTML += `<div class="vc-chat-msg vc-chat-bot" style="animation:fadeIn 0.3s ease;"><div class="vc-chat-avatar">🤖</div><div class="vc-chat-bubble bot">${resposta.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div></div>`;
+                }
+                messagesEl.scrollTop = messagesEl.scrollHeight;
+            },
+
+            _chatEngine(msg) {
+                const c = this._getCRMContext();
+                const lower = msg.toLowerCase();
+                if (lower.includes('taxa') || lower.includes('conversão') || lower.includes('converter')) {
+                    const tx = parseFloat(c.taxaConversao);
+                    if (tx < 3) return `Sua taxa atual é ${c.taxaConversao}% — abaixo da média do mercado (5-8%). 🔴\n\nPara melhorar:\n1️⃣ Qualifique melhor: pergunte prazo, verba, quem decide\n2️⃣ Lead sem contato em 24h perde 80% das chances\n3️⃣ Foque nos ${c.travados} leads travados primeiro\n\nQuer um script de reativação?`;
+                    if (tx < 6) return `Sua taxa é ${c.taxaConversao}% — pode melhorar! 🟡\n\n• Melhore qualificação na prospecção (BANT)\n• Mais visitas = mais vendas\n• Peça feedback de quem não comprou\n\nCom ${c.totalLeads} leads e taxa de 6%, você fecharia mais ${Math.round(c.totalLeads * 0.06) - parseInt(c.vendas)} vendas adicionais!`;
+                    return `Parabéns! Sua taxa de ${c.taxaConversao}% está acima da média! ✅\n\nPróximo nível: escale o volume. ${c.totalLeads} leads × 2 = o dobro de vendas.\n\nQuer uma estratégia de captação para dobrar o volume?`;
+                }
+                if (lower.includes('script') || (lower.includes('whatsapp') && lower.includes('script')) || lower.includes('abordagem')) {
+                    return `📱 Script de WhatsApp (lead frio):\n\n"Oi [Nome]! Aqui é o/a [Seu Nome], corretor(a) especialista em [região]. 🏡\n\nTenho uma novidade exclusiva que surgiu esta semana e me lembrei de você — pode ser exatamente o que você procura.\n\nPosso enviar os detalhes? Leva só 2 minutinhos! 😊"\n\n💡 Melhor horário: 8h-9h ou 18h-19h\n• Personalize com o nome\n• Use "exclusivo" e "me lembrei de você"\n• Sem resposta? Ligue 24h depois`;
+                }
+                if (lower.includes('follow') || lower.includes('chato') || lower.includes('acompanhamento')) {
+                    return `🔄 Follow-up que não incomoda — "método do valor"\n\n• Dia 1: "Encontrei artigo sobre [bairro] que pode te ajudar"\n• Dia 3: "Saiu imóvel similar mais barato — você ainda procura?"\n• Dia 7: "Relatório de valorização da região que te mencionei"\n• Dia 14: "Proprietário tem flexibilidade no valor. Posso contar mais?"\n\n📌 Cada contato = nova informação ou urgência real. Nunca "só verificar".`;
+                }
+                if (lower.includes('instagram') || lower.includes('redes sociais')) {
+                    return `📸 Estratégia Instagram para imóveis:\n\n🎬 Reels (3x/semana): tour 60s, "3 coisas que ninguém conta", antes/depois\n📸 Feed (5x/semana): foto + preço + CTA, depoimento, dica do mercado\n💬 Stories (diário): bastidores, enquetes, status do mercado\n\n📊 Bio: "Corretor(a) em [bairro] | +[N] famílias | 📞 Link"\n\n🎯 Meta: 20-30 leads orgânicos/mês com 30 dias de consistência!`;
+                }
+                if (lower.includes('objeç') || lower.includes('caro') || lower.includes('preço alto')) {
+                    return `💰 Objeção de preço — 3 respostas:\n\n1️⃣ VALOR vs PREÇO:\n"Vamos calcular o valor por m²? Na mesma região, a média é R$Y/m². Você está economizando."\n\n2️⃣ CUSTO DE ESPERAR:\n"O que acontece com esse valor em 6 meses? Imóveis aqui valorizam ~8%/ano."\n\n3️⃣ REFORMULAÇÃO:\n"Caro em relação a quê? Ao aluguel? Em X anos, já se pagou e ainda é seu."\n\n💡 Tom Ferry: "O preço só é problema quando o valor não é percebido."`;
+                }
+                if (lower.includes('fecha') || lower.includes('fechamento') || lower.includes('assinar')) {
+                    return `🔑 Técnicas de fechamento:\n\n1️⃣ ALTERNATIVO (elimina o "não"):\n"Prefere assinar segunda ou quarta?"\n\n2️⃣ ESCASSEZ REAL:\n"2 pessoas visitam amanhã. Para garantir, preciso avançar hoje."\n\n3️⃣ EMOCIONAL:\n"Imagine acordar aqui em 3 meses, tomando café nessa sacada..."\n\n4️⃣ RESUMO:\n"Você quer [X] em [Y] com [Z]. Este imóvel tem tudo. O que falta para o sim?"\n\n📌 Sempre feche com pergunta!`;
+                }
+                if (lower.includes('indicação') || lower.includes('indicar') || lower.includes('referência')) {
+                    return `🤝 Como conseguir mais indicações:\n\nVocê tem ${c.vendas} cliente(s) comprador(es) — cada um pode gerar 3+!\n\n📋 Script:\n"[Nome], você foi incrível. Tenho disponibilidade para 2 novos clientes este mês. Conhece alguém pensando em comprar ou vender?"\n\n💡 Peça sempre por voz, seja específico ("2 clientes"), ofereça algo em troca.\n\nCom ${c.vendas} clientes → ~${c.vendas * 2} leads qualificados potenciais!`;
+                }
+                if (lower.includes('meu crm') || lower.includes('meus dados') || lower.includes('minha situação')) {
+                    return `📊 Situação atual:\n\n• ${c.totalLeads} leads no CRM\n• ${c.vendasMes} venda(s) este mês (meta: ${c.metaVendas})\n• Conversão: ${c.taxaConversao}%\n• ${c.travados} lead(s) travado(s) +14 dias\n• ${c.visitasMes} visita(s) este mês\n• Canal principal: ${c.canalTop}\n\n${c.travados > 0 ? `⚠️ PRIORIDADE: Reative os ${c.travados} leads travados hoje!` : '✅ Funil saudável. Foque em captar mais!'}`;
+                }
+                if (lower.includes('olá') || lower.includes('oi ') || lower.includes('oi!') || lower.includes('bom dia') || lower.includes('boa tarde') || lower.includes('boa noite')) {
+                    return `Olá! 👋 Sou seu Coach IA do ImobiPro.\n\n${c.totalLeads} lead(s) no CRM, ${c.taxaConversao}% de conversão. ${c.travados > 0 ? `⚠️ ${c.travados} cliente(s) travado(s) precisam de atenção hoje!` : '✅ Funil em boa forma!'}\n\nComo posso ajudar? Scripts de venda, análise do funil, estratégias de prospecção ou como superar objeções?`;
+                }
+                if (lower.includes('dica') || lower.includes('conselho') || lower.includes('melhorar')) {
+                    const DICAS = [
+                        `💡 As primeiras 5h do dia são ouro. Reserve 8h-13h para prospecção ativa — mente mais afiada, clientes mais receptivos.`,
+                        `💡 Gary Keller: "Sua capacidade de gerar leads = sua capacidade de vender." Nunca pare de prospectar, mesmo ao fechar vendas.`,
+                        `💡 80% das vendas requerem 5+ contatos, mas 44% dos corretores desistem no 1º. Persista!`,
+                        `💡 Velocidade de resposta: leads respondidos em -5 min têm 21x mais conversão. Configure alertas!`,
+                    ];
+                    return DICAS[Math.floor(Math.random()*DICAS.length)] + `\n\nVocê tem ${c.totalLeads} leads. Quer dicas específicas para sua situação?`;
+                }
+                const RESPS = [
+                    `Boa pergunta! Com ${c.totalLeads} leads e ${c.taxaConversao}% de conversão, o foco agora deve ser ${parseFloat(c.taxaConversao) < 5 ? `melhorar follow-up e reativar ${c.travados} leads parados` : 'escalar captação mantendo qualidade'}.\n\nPoderia ser mais específico? Posso ajudar com scripts, prospecção, análise do funil ou objeções.`,
+                    `Com base nos seus dados: ${c.vendasMes} venda(s), ${c.leadsMes} leads novos, ${c.travados} travados.\n\nRecomendação imediata: ${c.travados > 2 ? `Reative os ${c.travados} leads travados — já custaram tempo, só precisam de um contato estratégico.` : 'Aumente captação — com sua conversão, mais leads = mais vendas.'}\n\nQuer um script ou estratégia detalhada?`,
+                ];
+                return RESPS[Math.floor(Math.random()*RESPS.length)];
+            },
+
+            _renderDicasIA() {
+                const el = document.getElementById('vc-ia-dicas-container');
+                if (!el) return;
+                const DICAS = [
+                    { title:'⚡ Velocidade é vantagem competitiva', text:'Leads respondidos em -5 min têm 21x mais conversão. Configure notificações e responda antes do concorrente.', autor:'— MIT Lead Response Study' },
+                    { title:'🧠 Qualifique antes de apresentar', text:'BANT: Budget (quanto pode pagar?), Authority (quem decide?), Need (problema real?), Timeline (quando resolve?). Imóvel sem qualificação = visita perdida.', autor:'— Tom Ferry, Coach #1 Imobiliário' },
+                    { title:'🔄 80% das vendas levam 5+ contatos', text:'A maioria desiste no 2º ou 3º contato. Top performers fazem follow-up de 7-12 vezes — cada vez com conteúdo novo de valor.', autor:'— National Sales Executive Association' },
+                    { title:'📱 WhatsApp é seu maior aliado', text:'Taxa de abertura do WhatsApp: 98%. E-mail: 22%. Priorize mensagens de voz (mais pessoais) e foto do imóvel no primeiro contato.', autor:'— Estudo ImobiTech 2024' },
+                    { title:'🏆 Indicação vale 3x mais', text:'Lead por indicação converte 3x mais e custa 5x menos que anúncios. Após cada venda, peça 2 indicações. A maioria nunca pede.', autor:'— Gary Keller, Billion Dollar Agent' },
+                    { title:'📸 Imagem vende antes do corretor', text:'Imóveis com fotos profissionais vendem 32% mais rápido e por preços maiores. Mínimo 15 fotos, boa luz, ângulos amplos.', autor:'— Zillow Research Report' },
+                ];
+                el.innerHTML = DICAS.map(d => `<div class="vc-dica-card"><div class="vc-dica-title">${d.title}</div><div class="vc-dica-text">${d.text}</div><div class="vc-dica-autor">${d.autor}</div></div>`).join('');
             },
 
             salvarMetas() {
