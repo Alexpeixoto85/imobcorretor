@@ -1,7 +1,3 @@
-
-
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -2696,6 +2692,329 @@
         body.dark-mode .meta-input-field { background: #1E2E20; color: #e0e0e0; border-color: #444; }
         body.dark-mode .perf-bar-track,
         body.dark-mode .meta-progress-track { background: #1E2E20; }
+
+        /* ===== VENDA CERTA STYLES ===== */
+        .vc-hero {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, #3a5f3e 100%);
+            border-radius: var(--radius-lg);
+            padding: 22px 18px 18px;
+            margin-bottom: 20px;
+            color: white;
+            box-shadow: 0 12px 40px rgba(46,74,49,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        .vc-hero::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -30px;
+            width: 120px; height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.07);
+        }
+        .vc-hero::after {
+            content: '';
+            position: absolute;
+            bottom: -20px; left: -20px;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+        }
+        .vc-hero-title { font-size: 1.1rem; font-weight: 800; opacity: 0.9; margin-bottom: 2px; }
+        .vc-hero-sub { font-size: 0.8rem; opacity: 0.7; margin-bottom: 16px; }
+        .vc-score-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; }
+        .vc-score-item { text-align: center; background: rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 6px; }
+        .vc-score-val { font-size: 1.4rem; font-weight: 900; line-height: 1; }
+        .vc-score-lbl { font-size: 0.65rem; opacity: 0.8; margin-top: 3px; font-weight: 600; }
+
+        .vc-section-title {
+            font-size: 0.9rem; font-weight: 800; color: var(--dark);
+            margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+            letter-spacing: -0.3px;
+        }
+        .vc-section-title i { color: var(--primary); }
+
+        .vc-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px) saturate(1.4);
+            -webkit-backdrop-filter: blur(12px) saturate(1.4);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            box-shadow: var(--shadow-3d);
+            border: 1px solid rgba(255,255,255,0.75);
+            margin-bottom: 12px;
+        }
+
+        /* Pipeline Stage Cards */
+        .vc-stage {
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+            transition: transform 0.2s;
+        }
+        .vc-stage:active { transform: scale(0.98); }
+        .vc-stage-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .vc-stage-icon {
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; font-weight: 700; color: white; flex-shrink: 0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+        .vc-stage-info { flex: 1; }
+        .vc-stage-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-stage-meta { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .vc-stage-count {
+            background: var(--primary); color: white;
+            border-radius: 20px; padding: 3px 10px;
+            font-size: 0.8rem; font-weight: 700;
+            min-width: 28px; text-align: center;
+        }
+        .vc-stage-chevron { color: var(--text-secondary); font-size: 0.85rem; transition: transform 0.3s; }
+        .vc-stage.open .vc-stage-chevron { transform: rotate(180deg); }
+        .vc-stage-body {
+            display: none;
+            padding: 0 16px 16px;
+            border-top: 1px solid var(--border);
+        }
+        .vc-stage.open .vc-stage-body { display: block; }
+        .vc-stage-progress-bar {
+            height: 4px; border-radius: 2px; background: var(--light);
+            margin: 0 16px 12px; overflow: hidden;
+        }
+        .vc-stage-progress-fill { height: 100%; border-radius: 2px; transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); }
+
+        .vc-checklist { margin-top: 10px; }
+        .vc-checklist-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer;
+        }
+        .vc-checklist-item:last-child { border-bottom: none; }
+        .vc-check-box {
+            width: 20px; height: 20px; border-radius: 5px; border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 1px; transition: all 0.2s;
+        }
+        .vc-checklist-item.done .vc-check-box {
+            background: var(--success); border-color: var(--success); color: white;
+        }
+        .vc-checklist-item.done .vc-check-text { text-decoration: line-through; color: var(--text-secondary); }
+        .vc-check-text { font-size: 0.85rem; color: var(--dark); line-height: 1.4; }
+        .vc-check-tip { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+
+        /* Action cards */
+        .vc-acao-card {
+            border-radius: var(--radius-md); padding: 14px;
+            margin-bottom: 10px; border-left: 4px solid;
+            background: var(--surface-glass);
+            box-shadow: var(--shadow-sm);
+            display: flex; align-items: flex-start; gap: 12px;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        .vc-acao-card:active { transform: scale(0.98); }
+        .vc-acao-icon { font-size: 1.4rem; flex-shrink: 0; }
+        .vc-acao-title { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-acao-desc { font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+        .vc-acao-badge {
+            margin-left: auto; background: var(--danger); color: white;
+            border-radius: 20px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700;
+            white-space: nowrap; flex-shrink: 0; align-self: center;
+        }
+
+        /* KPI Cards */
+        .vc-kpi-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; margin-bottom: 4px; }
+        .vc-kpi-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: var(--radius-md);
+            padding: 16px 14px;
+            box-shadow: var(--shadow-3d);
+            border: 1px solid rgba(255,255,255,0.8);
+            text-align: center;
+            position: relative; overflow: hidden;
+        }
+        .vc-kpi-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        }
+        .vc-kpi-val { font-size: 1.6rem; font-weight: 900; color: var(--dark); line-height: 1; }
+        .vc-kpi-lbl { font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; margin-top: 4px; }
+        .vc-kpi-trend { font-size: 0.72rem; font-weight: 700; margin-top: 4px; }
+        .vc-kpi-trend.up { color: var(--success); }
+        .vc-kpi-trend.down { color: var(--danger); }
+
+        /* Funil Visual */
+        .vc-funil-bar {
+            display: flex; align-items: center; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .vc-funil-label { font-size: 0.78rem; color: var(--dark); font-weight: 600; width: 110px; flex-shrink: 0; }
+        .vc-funil-track { flex: 1; height: 22px; background: var(--light); border-radius: 11px; overflow: hidden; }
+        .vc-funil-fill { height: 100%; border-radius: 11px; display: flex; align-items: center; padding-left: 10px; font-size: 0.72rem; font-weight: 700; color: white; transition: width 1s cubic-bezier(0.34,1.56,0.64,1); }
+        .vc-funil-num { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); width: 28px; text-align: right; flex-shrink: 0; }
+
+        /* Canais */
+        .vc-canal-card {
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+            display: flex; align-items: center; gap: 12px;
+        }
+        .vc-canal-icon { font-size: 1.6rem; flex-shrink: 0; }
+        .vc-canal-info { flex: 1; }
+        .vc-canal-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-canal-desc { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .vc-canal-pct { font-size: 0.9rem; font-weight: 800; color: var(--primary); }
+        .vc-canal-bar-track { height: 4px; background: var(--light); border-radius: 2px; margin-top: 6px; }
+        .vc-canal-bar-fill { height: 100%; border-radius: 2px; background: var(--primary); transition: width 1s; }
+
+        /* Scripts */
+        .vc-script-card {
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--accent);
+        }
+        .vc-script-title { font-size: 0.85rem; font-weight: 700; color: var(--dark); margin-bottom: 6px; }
+        .vc-script-body {
+            font-size: 0.8rem; color: var(--secondary); line-height: 1.5;
+            background: rgba(196,114,74,0.05); border-radius: 8px; padding: 10px;
+            font-style: italic;
+        }
+
+        /* Metas */
+        .vc-meta-row {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 12px;
+        }
+        .vc-meta-label { font-size: 0.85rem; font-weight: 600; color: var(--dark); flex: 1; }
+        .vc-meta-input {
+            width: 80px; padding: 8px 10px; border: 1.5px solid var(--border);
+            border-radius: 8px; font-size: 1rem; font-weight: 700; text-align: center;
+            color: var(--dark); background: var(--light);
+            -webkit-appearance: none; font-family: 'Inter', sans-serif;
+        }
+        .vc-meta-input:focus { border-color: var(--primary); outline: none; background: white; }
+        .vc-meta-prog-card {
+            border-radius: var(--radius-md); padding: 14px;
+            background: var(--surface-glass);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+            margin-bottom: 10px;
+        }
+        .vc-meta-prog-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .vc-meta-prog-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-meta-prog-vals { font-size: 0.8rem; color: var(--text-secondary); }
+        .vc-meta-prog-track { height: 10px; background: var(--light); border-radius: 5px; overflow: hidden; }
+        .vc-meta-prog-fill { height: 100%; border-radius: 5px; transition: width 1s cubic-bezier(0.34,1.56,0.64,1); }
+        .vc-meta-prog-pct { font-size: 0.75rem; font-weight: 700; margin-top: 5px; }
+
+        /* Conquistas */
+        .vc-conquista-card {
+            display: flex; align-items: center; gap: 12px;
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+            opacity: 0.45;
+        }
+        .vc-conquista-card.unlocked { opacity: 1; border-color: gold; box-shadow: 0 4px 16px rgba(196,114,74,0.25); }
+        .vc-conquista-icon { font-size: 1.8rem; }
+        .vc-conquista-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-conquista-desc { font-size: 0.75rem; color: var(--text-secondary); }
+        .vc-conquista-status { margin-left: auto; font-size: 0.75rem; font-weight: 700; color: var(--success); }
+
+        /* Timeline Pós-Venda */
+        .vc-timeline { position: relative; padding-left: 30px; }
+        .vc-timeline::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .vc-timeline-item { position: relative; margin-bottom: 16px; }
+        .vc-timeline-dot {
+            position: absolute; left: -24px; top: 2px;
+            width: 18px; height: 18px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.6rem; font-weight: 700; color: white;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .vc-timeline-content {
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            padding: 12px 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+        }
+        .vc-timeline-day { font-size: 0.75rem; font-weight: 800; color: var(--primary); margin-bottom: 3px; }
+        .vc-timeline-action { font-size: 0.85rem; font-weight: 700; color: var(--dark); }
+        .vc-timeline-tip { font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px; line-height: 1.4; }
+
+        /* Indicações */
+        .vc-indicacao-card {
+            background: linear-gradient(135deg, rgba(196,114,74,0.08), rgba(196,114,74,0.02));
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(196,114,74,0.25);
+        }
+
+        /* Bar Chart SVG style */
+        .vc-bar-chart { width: 100%; overflow: hidden; }
+        .vc-bar-chart-label { font-size: 0.7rem; fill: var(--text-secondary); }
+
+        /* BANT */
+        .vc-bant-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .vc-bant-card {
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+        }
+        .vc-bant-letter { font-size: 1.6rem; font-weight: 900; color: var(--primary); line-height: 1; }
+        .vc-bant-word { font-size: 0.8rem; font-weight: 700; color: var(--dark); margin-bottom: 4px; }
+        .vc-bant-desc { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.4; }
+        .vc-bant-question { font-size: 0.75rem; color: var(--accent); font-weight: 600; margin-top: 6px; font-style: italic; }
+
+        /* Projeção */
+        .vc-projecao-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+        .vc-projecao-item { text-align: center; padding: 12px 8px; background: var(--light); border-radius: 10px; }
+        .vc-projecao-val { font-size: 1.2rem; font-weight: 900; color: var(--dark); }
+        .vc-projecao-lbl { font-size: 0.68rem; color: var(--text-secondary); margin-top: 2px; font-weight: 600; }
+
+        /* Clientes pós-venda */
+        .vc-posv-cliente {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px;
+            background: var(--surface-glass);
+            border-radius: var(--radius-md);
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(255,255,255,0.75);
+        }
+        .vc-posv-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: 800; font-size: 1rem; flex-shrink: 0;
+        }
+        .vc-posv-name { font-size: 0.9rem; font-weight: 700; color: var(--dark); }
+        .vc-posv-info { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+        .vc-posv-btn {
+            margin-left: auto; background: #25D366; color: white; border: none;
+            border-radius: 8px; padding: 6px 12px; font-size: 0.78rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+        }
     </style>
 </head>
 <body>
@@ -3075,6 +3394,134 @@
                 </div>
             </div>
 
+            <!-- ===== VENDA CERTA VIEW ===== -->
+            <div id="venda-certa-view" class="view">
+                <!-- Sub-tabs -->
+                <div class="coach-tabs" id="vc-tabs">
+                    <button class="coach-tab-btn active" onclick="VendaCerta.switchTab('pipeline', this)">🎯 Pipeline</button>
+                    <button class="coach-tab-btn" onclick="VendaCerta.switchTab('prospecao', this)">📡 Prospecção</button>
+                    <button class="coach-tab-btn" onclick="VendaCerta.switchTab('kpis', this)">📊 KPIs</button>
+                    <button class="coach-tab-btn" onclick="VendaCerta.switchTab('metas', this)">🏆 Metas</button>
+                    <button class="coach-tab-btn" onclick="VendaCerta.switchTab('posvenda', this)">⭐ Pós-Venda</button>
+                </div>
+
+                <!-- TAB: PIPELINE -->
+                <div id="vc-tab-pipeline" class="coach-tab-panel active">
+                    <!-- Hero -->
+                    <div class="vc-hero">
+                        <div class="vc-hero-title">🏆 Venda Certa</div>
+                        <div class="vc-hero-sub">Seu processo de venda de ponta a ponta</div>
+                        <div class="vc-score-row">
+                            <div class="vc-score-item">
+                                <div class="vc-score-val" id="vc-score-leads">0</div>
+                                <div class="vc-score-lbl">Leads Ativos</div>
+                            </div>
+                            <div class="vc-score-item">
+                                <div class="vc-score-val" id="vc-score-visitas">0</div>
+                                <div class="vc-score-lbl">Visitas</div>
+                            </div>
+                            <div class="vc-score-item">
+                                <div class="vc-score-val" id="vc-score-conversao">0%</div>
+                                <div class="vc-score-lbl">Conversão</div>
+                            </div>
+                            <div class="vc-score-item">
+                                <div class="vc-score-val" id="vc-score-vendas">0</div>
+                                <div class="vc-score-lbl">Vendas</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Visual -->
+                    <div class="vc-section-title"><i class="fas fa-stream"></i> Jornada de Vendas</div>
+                    <div id="vc-pipeline-stages"></div>
+
+                    <!-- Alerta de Ações Prioritárias -->
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-fire"></i> Ações Prioritárias Agora</div>
+                    <div id="vc-acoes-prioritarias"></div>
+
+                    <!-- Mini Funil Gráfico -->
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-filter"></i> Funil Visual</div>
+                    <div id="vc-funil-grafico" class="vc-card"></div>
+                </div>
+
+                <!-- TAB: PROSPECÇÃO -->
+                <div id="vc-tab-prospecao" class="coach-tab-panel">
+                    <div class="vc-section-title"><i class="fas fa-satellite-dish"></i> Canais de Captação</div>
+                    <div id="vc-canais-captacao"></div>
+                    
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-tasks"></i> Processo de Qualificação (BANT)</div>
+                    <div id="vc-qualificacao-bant"></div>
+                    
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-comments"></i> Scripts de Abordagem</div>
+                    <div id="vc-scripts-abordagem"></div>
+                    
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-check-circle"></i> Checklist Diário do Prospector</div>
+                    <div id="vc-checklist-prospector"></div>
+                </div>
+
+                <!-- TAB: KPIs -->
+                <div id="vc-tab-kpis" class="coach-tab-panel">
+                    <div class="vc-section-title"><i class="fas fa-chart-line"></i> Indicadores de Performance</div>
+                    <div id="vc-kpi-cards"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-chart-bar"></i> Conversão por Etapa</div>
+                    <div id="vc-conversao-etapas" class="vc-card"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-chart-pie"></i> Origem dos Leads</div>
+                    <div id="vc-origem-leads" class="vc-card"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-calendar-week"></i> Performance Semanal</div>
+                    <div id="vc-perf-semanal" class="vc-card"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-stopwatch"></i> Tempo Médio por Etapa</div>
+                    <div id="vc-tempo-etapas" class="vc-card"></div>
+                </div>
+
+                <!-- TAB: METAS -->
+                <div id="vc-tab-metas" class="coach-tab-panel">
+                    <div class="vc-section-title"><i class="fas fa-bullseye"></i> Minhas Metas</div>
+                    
+                    <!-- Meta do Mês -->
+                    <div class="vc-card" style="margin-bottom:16px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                            <div style="font-weight:700;font-size:1rem;color:var(--dark);">📅 Metas do Mês</div>
+                            <button onclick="VendaCerta.salvarMetas()" style="background:var(--primary);color:white;border:none;border-radius:8px;padding:6px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;">Salvar</button>
+                        </div>
+                        <div id="vc-metas-inputs"></div>
+                    </div>
+
+                    <div class="vc-section-title" style="margin-top:4px;"><i class="fas fa-chart-bar"></i> Progresso das Metas</div>
+                    <div id="vc-metas-progresso"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-calendar-alt"></i> Projeção do Mês</div>
+                    <div id="vc-projecao-mes" class="vc-card"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-trophy"></i> Ranking de Conquistas</div>
+                    <div id="vc-conquistas"></div>
+                </div>
+
+                <!-- TAB: PÓS-VENDA -->
+                <div id="vc-tab-posvenda" class="coach-tab-panel">
+                    <div class="vc-section-title"><i class="fas fa-heart"></i> Gestão do Pós-Venda</div>
+                    
+                    <div class="vc-card" style="margin-bottom:16px;background:linear-gradient(135deg,rgba(46,74,49,0.06),rgba(46,74,49,0.02));">
+                        <div style="font-weight:700;color:var(--primary);margin-bottom:8px;">Por que o Pós-Venda é fundamental?</div>
+                        <div style="font-size:0.85rem;color:var(--secondary);line-height:1.6;">
+                            Segundo pesquisas do mercado imobiliário, <strong>78% dos clientes indicariam</strong> seu corretor para amigos e família — mas apenas <strong>12% recebem contato após a venda</strong>. Um cliente satisfeito gera em média <strong>3 novas indicações</strong>.
+                        </div>
+                    </div>
+
+                    <div class="vc-section-title" style="margin-top:4px;"><i class="fas fa-timeline"></i> Linha do Tempo Pós-Venda</div>
+                    <div id="vc-timeline-posvenda"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-star"></i> Programa de Indicações</div>
+                    <div id="vc-programa-indicacoes"></div>
+
+                    <div class="vc-section-title" style="margin-top:20px;"><i class="fas fa-users"></i> Clientes para Contato</div>
+                    <div id="vc-clientes-posvenda"></div>
+                </div>
+            </div>
+
             <!-- ===== COACH VIEW ===== -->
             <div id="coach-view" class="view">
 
@@ -3307,6 +3754,9 @@
             </a>
             <a href="#" class="nav-item" data-target="coach-view" onclick="UI.switchTab(this); Coach.init(); return false;">
                 <i class="fas fa-trophy"></i> <span>Coach</span>
+            </a>
+            <a href="#" class="nav-item" data-target="venda-certa-view" onclick="UI.switchTab(this); VendaCerta.init(); return false;">
+                <i class="fas fa-bullseye"></i> <span>Venda Certa</span>
             </a>
         </nav>
 
@@ -12544,6 +12994,685 @@ Dê scripts reais e diretos que ele pode usar em ligações e visitas. Máximo 2
         };
 
         App.cliente.showDetails = UI.showClienteDetails.bind(UI);
+
+        // ===== VENDA CERTA OBJECT =====
+        const VendaCerta = {
+            metas: { leads: 30, visitas: 20, propostas: 10, vendas: 3, receitaMeta: 30000 },
+            checklistState: {},
+
+            getData() {
+                return (window.UI && UI.data) ? UI.data : { clientes: [], visitas: [], imoveis: [] };
+            },
+
+            init() {
+                this.metas = JSON.parse(localStorage.getItem('vc_metas') || JSON.stringify(this.metas));
+                this.checklistState = JSON.parse(localStorage.getItem('vc_checklist') || '{}');
+                this.renderAll();
+            },
+
+            switchTab(tab, btn) {
+                document.querySelectorAll('#vc-tabs .coach-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#vc-tab-pipeline, #vc-tab-prospecao, #vc-tab-kpis, #vc-tab-metas, #vc-tab-posvenda').forEach(p => p.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                const panel = document.getElementById('vc-tab-' + tab);
+                if (panel) panel.classList.add('active');
+                // Re-render specific tab
+                const data = this.getData();
+                switch(tab) {
+                    case 'pipeline': this.renderPipeline(data); break;
+                    case 'prospecao': this.renderProspeccao(data); break;
+                    case 'kpis': this.renderKPIs(data); break;
+                    case 'metas': this.renderMetas(data); break;
+                    case 'posvenda': this.renderPosVenda(data); break;
+                }
+            },
+
+            renderAll() {
+                const data = this.getData();
+                this.renderPipeline(data);
+                this.renderProspeccao(data);
+                this.renderKPIs(data);
+                this.renderMetas(data);
+                this.renderPosVenda(data);
+            },
+
+            // ── PIPELINE ──────────────────────────────────
+            renderPipeline(data) {
+                const clientes = data.clientes || [];
+                const visitas = data.visitas || [];
+                const vendas = clientes.filter(c => c.etapaFunil === 'venda');
+                const leads = clientes.filter(c => c.etapaFunil === 'lead');
+                const taxa = clientes.length > 0 ? Math.round((vendas.length / clientes.length) * 100) : 0;
+
+                // Hero scores
+                const s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+                s('vc-score-leads', leads.length);
+                s('vc-score-visitas', visitas.length);
+                s('vc-score-conversao', taxa + '%');
+                s('vc-score-vendas', vendas.length);
+
+                // Pipeline stages
+                const STAGES = [
+                    { id: 'captacao', nome: '1. Captação do Lead', icon: '📡', cor: '#445447', desc: 'Identificar e atrair potenciais compradores', etapas: ['lead'], atividades: [
+                        { txt: 'Publicar imóveis nas redes sociais (Instagram, Facebook)', tip: 'Poste stories e reels diariamente para maior alcance' },
+                        { txt: 'Prospectar ativamente por telefone — 15 ligações por dia', tip: 'Use o horário entre 9h-11h e 17h-19h para maior receptividade' },
+                        { txt: 'Solicitar indicações para clientes da carteira', tip: '"Você conhece alguém que esteja pensando em comprar ou vender?" — Tom Ferry' },
+                        { txt: 'Verificar portais: Zap, Viva Real, OLX', tip: 'Responda leads em até 5 minutos para triplicar as chances de conversão' },
+                        { txt: 'Fazer plantão / atender portaria do empreendimento', tip: 'Vista-se profissionalmente e tenha material impresso disponível' },
+                    ]},
+                    { id: 'qualificacao', nome: '2. Qualificação', icon: '🔍', cor: '#3D6142', desc: 'Avaliar perfil, capacidade financeira e intenção de compra', etapas: ['contato'], atividades: [
+                        { txt: 'Aplicar qualificação BANT (Budget, Authority, Need, Timeline)', tip: 'Budget = capacidade financeira real. Sem isso, você perde tempo.' },
+                        { txt: 'Verificar capacidade de financiamento / score de crédito', tip: 'Pergunte sobre renda, FGTS e situação no SPC/Serasa logo na 1ª conversa' },
+                        { txt: 'Entender necessidades reais (tamanho, localização, prazo)', tip: 'Pergunte: "O que você PRECISA x o que você QUER?" — são diferentes!' },
+                        { txt: 'Registrar perfil detalhado no sistema', tip: 'Dados completos = comunicação personalizada = mais conversão' },
+                        { txt: 'Enviar materiais iniciais via WhatsApp (fotos, vídeos)', tip: 'Use um catálogo digital profissional para causar boa impressão' },
+                    ]},
+                    { id: 'apresentacao', nome: '3. Apresentação / Visita', icon: '🏠', cor: '#C4724A', desc: 'Mostrar o imóvel com técnica e emoção', etapas: ['cpf', 'sem-restricao'], atividades: [
+                        { txt: 'Preparar o imóvel antes da visita (Home Staging básico)', tip: 'Ambiente limpo, iluminado e sem cheiros fortes converte 23% mais' },
+                        { txt: 'Chegar 10 minutos antes para verificar condições', tip: 'Profissionalismo começa antes do cliente chegar' },
+                        { txt: 'Usar técnica Benefício-Benefício: falar vantagens, não características', tip: '"São 3 quartos" x "Espaço para toda a família crescer"' },
+                        { txt: 'Identificar o Ponto de Dor do cliente (o que o motiva)', tip: 'O que acontece se ele NÃO comprar? Isso é o real motivador de compra.' },
+                        { txt: 'Registrar feedback detalhado após a visita', tip: 'Objeções = oportunidades. Anote tudo para personalizar a próxima etapa.' },
+                    ]},
+                    { id: 'negociacao', nome: '4. Negociação', icon: '🤝', cor: '#B87020', desc: 'Superar objeções e avançar para o fechamento', etapas: ['documentacao'], atividades: [
+                        { txt: 'Antecipar as 5 objeções mais comuns e preparar respostas', tip: '"Está caro / Preciso pensar / Vou falar com a família / Não é agora / Tenho outra opção"' },
+                        { txt: 'Apresentar simulação de financiamento personalizada', tip: 'Mostre o valor da PARCELA, não o preço total — reduz o impacto psicológico' },
+                        { txt: 'Usar técnica do Silêncio após fazer a proposta', tip: 'Quem fala primeiro depois de uma proposta, perde a negociação — Grant Cardone' },
+                        { txt: 'Criar senso de urgência real (disponibilidade, condições)', tip: 'Escassez real = ética. Escassez falsa = perda de credibilidade.' },
+                        { txt: 'Envolver todos os tomadores de decisão na conversa', tip: 'Marido, esposa, pais — todos que influenciam a decisão devem estar presentes' },
+                    ]},
+                    { id: 'fechamento', nome: '5. Fechamento', icon: '🔑', cor: '#2E7D42', desc: 'Concluir o processo de venda com excelência', etapas: ['aprovado'], atividades: [
+                        { txt: 'Usar técnica do fechamento por alternativa: "Prefere assinar hoje ou amanhã?"', tip: 'Nunca pergunte SE quer assinar — pergunte QUANDO e COMO' },
+                        { txt: 'Ter toda a documentação pré-preenchida e pronta', tip: 'Burocracia travada = cliente que desiste. Prepare tudo com antecedência.' },
+                        { txt: 'Confirmar forma de pagamento e condições antes do contrato', tip: 'Surpresas no contrato são a maior causa de desistências' },
+                        { txt: 'Acompanhar assinatura presencialmente', tip: 'Sua presença dá segurança e profissionalismo ao momento mais importante' },
+                        { txt: 'Registrar venda no sistema e atualizar status do cliente', tip: 'Dados atualizados = relatórios precisos = metas reais' },
+                    ]},
+                    { id: 'posvenda', nome: '6. Pós-Venda', icon: '⭐', cor: '#1A2B1C', desc: 'Fidelizar e gerar indicações — o maior ativo do corretor', etapas: ['venda'], atividades: [
+                        { txt: 'Entrar em contato 3 dias após a assinatura', tip: '"Como está se sentindo? Alguma dúvida sobre o processo?" — simples e poderoso' },
+                        { txt: 'Enviar presente simbólico ou cartão personalizado', tip: 'Um gesto pequeno cria uma memória grande — faz você ser lembrado sempre' },
+                        { txt: 'Solicitar avaliação no Google / redes sociais', tip: '72% dos compradores pesquisam corretores online antes de contatar' },
+                        { txt: 'Ligar no aniversário do cliente e da compra', tip: 'Gary Keller: "Seu banco de dados é seu negócio"' },
+                        { txt: 'Pedir indicação formalmente: "Você conhece alguém que precise comprar?"', tip: 'Clientes satisfeitos ADORAM indicar — só precisam ser convidados' },
+                    ]},
+                ];
+
+                const cont = document.getElementById('vc-pipeline-stages');
+                if (!cont) return;
+                cont.innerHTML = STAGES.map(s => {
+                    const countInStage = clientes.filter(c => s.etapas.includes(c.etapaFunil)).length;
+                    const maxInStage = clientes.length || 1;
+                    const pct = Math.round((countInStage / maxInStage) * 100);
+                    return `
+                    <div class="vc-stage" id="vc-stage-${s.id}">
+                        <div class="vc-stage-header" onclick="VendaCerta.toggleStage('${s.id}')">
+                            <div class="vc-stage-icon" style="background:${s.cor};">${s.icon}</div>
+                            <div class="vc-stage-info">
+                                <div class="vc-stage-name">${s.nome}</div>
+                                <div class="vc-stage-meta">${s.desc}</div>
+                            </div>
+                            <div class="vc-stage-count" style="background:${s.cor};">${countInStage}</div>
+                            <i class="fas fa-chevron-down vc-stage-chevron"></i>
+                        </div>
+                        <div class="vc-stage-progress-bar">
+                            <div class="vc-stage-progress-fill" style="width:${pct}%;background:${s.cor};"></div>
+                        </div>
+                        <div class="vc-stage-body">
+                            <div style="font-size:0.78rem;color:var(--text-secondary);margin-bottom:8px;">✅ Atividades desta etapa:</div>
+                            <div class="vc-checklist">
+                                ${s.atividades.map((a, i) => {
+                                    const key = `${s.id}_${i}`;
+                                    const done = this.checklistState[key];
+                                    return `<div class="vc-checklist-item ${done ? 'done' : ''}" onclick="VendaCerta.toggleCheck('${key}', this)">
+                                        <div class="vc-check-box">${done ? '<i class="fas fa-check" style="font-size:0.7rem;"></i>' : ''}</div>
+                                        <div>
+                                            <div class="vc-check-text">${a.txt}</div>
+                                            <div class="vc-check-tip">💡 ${a.tip}</div>
+                                        </div>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Ações prioritárias
+                this.renderAcoesPrioritarias(clientes, visitas);
+                // Funil gráfico
+                this.renderFunilGrafico(clientes, STAGES);
+            },
+
+            toggleStage(id) {
+                const el = document.getElementById('vc-stage-' + id);
+                if (el) el.classList.toggle('open');
+            },
+
+            toggleCheck(key, el) {
+                this.checklistState[key] = !this.checklistState[key];
+                localStorage.setItem('vc_checklist', JSON.stringify(this.checklistState));
+                el.classList.toggle('done', this.checklistState[key]);
+                const box = el.querySelector('.vc-check-box');
+                if (box) box.innerHTML = this.checklistState[key] ? '<i class="fas fa-check" style="font-size:0.7rem;"></i>' : '';
+            },
+
+            renderAcoesPrioritarias(clientes, visitas) {
+                const el = document.getElementById('vc-acoes-prioritarias');
+                if (!el) return;
+                const now = new Date();
+                const hoje = now.toISOString().split('T')[0];
+                const acoes = [];
+
+                // Leads sem contato
+                const semContato = clientes.filter(c => c.etapaFunil === 'lead').length;
+                if (semContato > 0) acoes.push({ icon: '📞', title: `${semContato} lead(s) para contato inicial`, desc: 'Leads respondidos em até 5 minutos convertem 3x mais. Ligue agora!', cor: '#B83030', badge: 'URGENTE', action: `UI.switchTab(document.querySelector('[data-target=clientes-view]')); UI.setClienteOrigemFilter(null, '')` });
+
+                // Sem visitas hoje
+                const visitasHoje = visitas.filter(v => v.data === hoje).length;
+                if (visitasHoje === 0) acoes.push({ icon: '🏠', title: 'Nenhuma visita agendada hoje', desc: 'Corretores de alta performance fazem pelo menos 2 visitas por dia. Agende agora!', cor: '#B87020', badge: 'IMPORTANTE' });
+
+                // Em negociação sem follow-up
+                const negociando = clientes.filter(c => c.etapaFunil === 'documentacao' || c.etapaFunil === 'aprovado').length;
+                if (negociando > 0) acoes.push({ icon: '🤝', title: `${negociando} cliente(s) em negociação`, desc: 'Faça follow-up hoje. Silêncio = desistência. Entre em contato e avance o processo.', cor: '#C4724A', badge: 'AÇÃO' });
+
+                // Clientes em pós-venda para indicação
+                const vendidos = clientes.filter(c => c.etapaFunil === 'venda').length;
+                if (vendidos >= 3) acoes.push({ icon: '⭐', title: `Solicitar indicações dos ${vendidos} clientes satisfeitos`, desc: 'Um pedido simples pode gerar 3 novos leads. Ligue para seus clientes mais recentes!', cor: '#2E7D42', badge: 'POTENCIAL' });
+
+                if (acoes.length === 0) acoes.push({ icon: '🎉', title: 'Tudo em dia! Continue prospectando.', desc: 'Ótimo trabalho! Mantenha o ritmo e busque novos leads para seu funil.', cor: '#2E7D42', badge: null });
+
+                el.innerHTML = acoes.map(a => `
+                    <div class="vc-acao-card" style="border-left-color:${a.cor};">
+                        <div class="vc-acao-icon">${a.icon}</div>
+                        <div style="flex:1;">
+                            <div class="vc-acao-title">${a.title}</div>
+                            <div class="vc-acao-desc">${a.desc}</div>
+                        </div>
+                        ${a.badge ? `<div class="vc-acao-badge" style="background:${a.cor};">${a.badge}</div>` : ''}
+                    </div>`).join('');
+            },
+
+            renderFunilGrafico(clientes, STAGES) {
+                const el = document.getElementById('vc-funil-grafico');
+                if (!el) return;
+                const maxC = clientes.length || 1;
+                el.innerHTML = STAGES.map(s => {
+                    const cnt = clientes.filter(c => s.etapas.includes(c.etapaFunil)).length;
+                    const pct = Math.max(8, Math.round((cnt / maxC) * 100));
+                    return `<div class="vc-funil-bar">
+                        <div class="vc-funil-label">${s.icon} ${s.nome.split('. ')[1] || s.nome}</div>
+                        <div class="vc-funil-track">
+                            <div class="vc-funil-fill" style="width:${pct}%;background:${s.cor};">${cnt > 0 ? cnt : ''}</div>
+                        </div>
+                        <div class="vc-funil-num">${cnt}</div>
+                    </div>`;
+                }).join('');
+            },
+
+            // ── PROSPECÇÃO ────────────────────────────────
+            renderProspeccao(data) {
+                const clientes = data.clientes || [];
+                this.renderCanais(clientes);
+                this.renderBANT();
+                this.renderScripts();
+                this.renderChecklistProspector();
+            },
+
+            renderCanais(clientes) {
+                const el = document.getElementById('vc-canais-captacao');
+                if (!el) return;
+                const total = clientes.length || 1;
+                const CANAIS = [
+                    { icon: '📱', nome: 'Instagram / Reels', chave: 'instagram', desc: 'Stories, reels e posts de imóveis. Alta visibilidade orgânica.', cor: '#E1306C' },
+                    { icon: '💚', nome: 'WhatsApp / Status', chave: 'whatsapp', desc: 'Status com novidades diárias. Canal de resposta mais rápida.', cor: '#25D366' },
+                    { icon: '🏢', nome: 'Indicações', chave: 'indicacao', desc: 'O canal mais barato e com maior taxa de conversão. Priorize!', cor: '#2E4A31' },
+                    { icon: '🌐', nome: 'Zap / Viva Real', chave: 'zapimoveis', desc: 'Portais com alta intenção de compra. Responda em < 5 min.', cor: '#2196F3' },
+                    { icon: '🔍', nome: 'Google / SEO', chave: 'google', desc: 'Leads altamente qualificados. Invista em perfil Google Meu Negócio.', cor: '#FBBC05' },
+                    { icon: '🏗', nome: 'Plantão', chave: 'plantao', desc: 'Alta conversão quando bem preparado. Vista-se profissionalmente.', cor: '#C4724A' },
+                ];
+                el.innerHTML = CANAIS.map(c => {
+                    const cnt = clientes.filter(cl => cl.origemLead === c.chave).length;
+                    const pct = Math.round((cnt / total) * 100);
+                    return `<div class="vc-canal-card">
+                        <div class="vc-canal-icon">${c.icon}</div>
+                        <div class="vc-canal-info">
+                            <div class="vc-canal-name">${c.nome}</div>
+                            <div class="vc-canal-desc">${c.desc}</div>
+                            <div class="vc-canal-bar-track"><div class="vc-canal-bar-fill" style="width:${pct}%;background:${c.cor};"></div></div>
+                        </div>
+                        <div style="text-align:center;flex-shrink:0;min-width:50px;">
+                            <div class="vc-canal-pct" style="color:${c.cor};">${cnt}</div>
+                            <div style="font-size:0.68rem;color:var(--text-secondary);">${pct}%</div>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            renderBANT() {
+                const el = document.getElementById('vc-qualificacao-bant');
+                if (!el) return;
+                const BANT = [
+                    { l: 'B', w: 'Budget', cor: '#2E4A31', desc: 'Capacidade financeira real do cliente', q: '"Qual sua faixa de investimento? Possui entrada ou FGTS?"' },
+                    { l: 'A', w: 'Authority', cor: '#C4724A', desc: 'Quem decide a compra na família', q: '"Além de você, mais alguém participará da decisão?"' },
+                    { l: 'N', w: 'Need', cor: '#B87020', desc: 'Necessidade real e urgência da compra', q: '"O que te faz buscar um imóvel agora? Qual o prazo ideal?"' },
+                    { l: 'T', w: 'Timeline', cor: '#2E7D42', desc: 'Prazo para tomar a decisão de compra', q: '"Em quanto tempo você deseja estar no imóvel novo?"' },
+                ];
+                el.innerHTML = `<div class="vc-bant-grid">${BANT.map(b => `
+                    <div class="vc-bant-card">
+                        <div class="vc-bant-letter" style="color:${b.cor};">${b.l}</div>
+                        <div class="vc-bant-word">${b.w}</div>
+                        <div class="vc-bant-desc">${b.desc}</div>
+                        <div class="vc-bant-question">${b.q}</div>
+                    </div>`).join('')}</div>`;
+            },
+
+            renderScripts() {
+                const el = document.getElementById('vc-scripts-abordagem');
+                if (!el) return;
+                const SCRIPTS = [
+                    { title: '📞 Abordagem por Telefone (Portais)', body: '"Olá [Nome]! Aqui é [Seu Nome], corretor especialista na região [bairro]. Vi que você demonstrou interesse no imóvel em [endereço]. Tenho 2 minutos para confirmar sua disponibilidade para uma visita esta semana?"' },
+                    { title: '💚 Primeira Mensagem WhatsApp', body: '"Olá [Nome]! 😊 Sou [Seu Nome], corretor da [Imobiliária]. Você entrou em contato sobre o apartamento de [X quartos] em [bairro]. Tenho mais detalhes e adoraria entender o que você procura. Posso te ligar agora ou prefere continuar aqui?"' },
+                    { title: '🤝 Solicitação de Indicação', body: '"[Nome], que alegria que você está feliz com a sua nova casa! Uma coisa que me ajuda muito: você conhece algum amigo, familiar ou colega que esteja pensando em comprar ou vender um imóvel? Sua indicação significa muito para mim."' },
+                    { title: '🔄 Follow-up após Visita', body: '"[Nome], boa tarde! Ontem você visitou o apartamento em [endereço]. Quero saber o que achou e se ficou alguma dúvida. Já estou consultando as condições especiais de financiamento para te apresentar. Podemos conversar hoje?"' },
+                ];
+                el.innerHTML = SCRIPTS.map(s => `
+                    <div class="vc-script-card">
+                        <div class="vc-script-title">${s.title}</div>
+                        <div class="vc-script-body">${s.body}</div>
+                    </div>`).join('');
+            },
+
+            renderChecklistProspector() {
+                const el = document.getElementById('vc-checklist-prospector');
+                if (!el) return;
+                const DIARIO = [
+                    { txt: '15 ligações ativas para leads e clientes', tip: 'Bloco de tempo: 9h-11h ou 16h-18h' },
+                    { txt: '3 stories ou 1 post no Instagram com imóvel', tip: 'Consistência > qualidade. Poste todos os dias.' },
+                    { txt: 'Atualizar status de 5 clientes no funil', tip: 'CRM atualizado = pipeline transparente' },
+                    { txt: 'Solicitar 1 indicação para cliente da carteira', tip: '"Cada cliente é uma fonte de 3 novos leads"' },
+                    { txt: 'Responder todos os leads em até 1 hora', tip: 'Velocidade de resposta é o maior diferencial competitivo' },
+                    { txt: 'Fazer 1 visita ou apresentação de imóvel', tip: 'Sem visitas = sem vendas. É a regra do jogo.' },
+                    { txt: 'Estudar 15 minutos sobre mercado/produto', tip: 'Você não vende o que não conhece profundamente' },
+                ];
+                const todayKey = new Date().toISOString().split('T')[0];
+                el.innerHTML = `<div class="vc-card"><div class="vc-checklist">` +
+                    DIARIO.map((item, i) => {
+                        const key = `diario_${todayKey}_${i}`;
+                        const done = this.checklistState[key];
+                        return `<div class="vc-checklist-item ${done ? 'done' : ''}" onclick="VendaCerta.toggleCheck('${key}', this)">
+                            <div class="vc-check-box">${done ? '<i class="fas fa-check" style="font-size:0.7rem;"></i>' : ''}</div>
+                            <div>
+                                <div class="vc-check-text">${item.txt}</div>
+                                <div class="vc-check-tip">💡 ${item.tip}</div>
+                            </div>
+                        </div>`;
+                    }).join('') + `</div></div>`;
+            },
+
+            // ── KPIs ──────────────────────────────────────
+            renderKPIs(data) {
+                const clientes = data.clientes || [];
+                const visitas = data.visitas || [];
+                const now = new Date();
+                const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                const totalLeads = clientes.length;
+                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
+                const taxa = totalLeads > 0 ? ((vendas / totalLeads) * 100).toFixed(1) : 0;
+                const visitasMes = visitas.filter(v => v.data && new Date(v.data) >= inicioMes).length;
+                const leadsMes = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+                const ticketMedio = vendas > 0 && clientes.filter(c=>c.etapaFunil==='venda'&&c.precoVenda).length > 0
+                    ? clientes.filter(c=>c.etapaFunil==='venda'&&c.precoVenda).reduce((a,c)=>a+(parseFloat(c.precoVenda)||0),0) / vendas : 0;
+                const taxaVisita = visitasMes > 0 && leadsMes > 0 ? ((visitasMes/leadsMes)*100).toFixed(0) : 0;
+
+                // KPI Cards
+                const elKpi = document.getElementById('vc-kpi-cards');
+                if (elKpi) {
+                    const KPIS = [
+                        { val: totalLeads, lbl: 'Total de Leads', trend: `+${leadsMes} este mês`, cls: 'up', cor: '#2E4A31' },
+                        { val: taxa + '%', lbl: 'Taxa de Conversão', trend: parseFloat(taxa)>=5?'✓ Acima da média':'⚠ Meta: 5%', cls: parseFloat(taxa)>=5?'up':'down', cor: '#C4724A' },
+                        { val: visitasMes, lbl: 'Visitas no Mês', trend: visitasMes >= this.metas.visitas ? '✓ Meta atingida':'Faltam '+(this.metas.visitas-visitasMes), cls: visitasMes>=this.metas.visitas?'up':'down', cor: '#3D6142' },
+                        { val: vendas, lbl: 'Vendas Totais', trend: vendas >= this.metas.vendas ? '🏆 Meta atingida':'Faltam '+(this.metas.vendas-vendas), cls: vendas>=this.metas.vendas?'up':'down', cor: '#2E7D42' },
+                        { val: taxaVisita + '%', lbl: 'Lead → Visita', trend: taxaVisita>=30?'✓ Excelente':'⚠ Meta: 30%', cls: taxaVisita>=30?'up':'down', cor: '#B87020' },
+                        { val: ticketMedio > 0 ? 'R$'+Math.round(ticketMedio/1000)+'k' : 'N/A', lbl: 'Ticket Médio', trend: '↑ Dados do sistema', cls: 'up', cor: '#445447' },
+                    ];
+                    elKpi.innerHTML = `<div class="vc-kpi-grid">${KPIS.map(k => `
+                        <div class="vc-kpi-card" style="--kpi-cor:${k.cor};">
+                            <div style="height:3px;background:${k.cor};border-radius:3px 3px 0 0;margin:-16px -14px 12px;"></div>
+                            <div class="vc-kpi-val">${k.val}</div>
+                            <div class="vc-kpi-lbl">${k.lbl}</div>
+                            <div class="vc-kpi-trend ${k.cls}">${k.trend}</div>
+                        </div>`).join('')}</div>`;
+                }
+
+                // Conversão por etapa
+                this.renderConversaoEtapas(clientes);
+                // Origem dos leads
+                this.renderOrigemLeads(clientes);
+                // Performance semanal
+                this.renderPerfSemanal(visitas);
+                // Tempo por etapa
+                this.renderTempoEtapas(clientes);
+            },
+
+            renderConversaoEtapas(clientes) {
+                const el = document.getElementById('vc-conversao-etapas');
+                if (!el) return;
+                const ETAPAS = [
+                    { nome: 'Lead', chave: 'lead', cor: '#445447' },
+                    { nome: 'Contato', chave: 'contato', cor: '#3D6142' },
+                    { nome: 'Análise CPF', chave: 'cpf', cor: '#C4724A' },
+                    { nome: 'Qualificado', chave: 'sem-restricao', cor: '#B87020' },
+                    { nome: 'Documentação', chave: 'documentacao', cor: '#7A8A7C' },
+                    { nome: 'Aprovado', chave: 'aprovado', cor: '#2E7D42' },
+                    { nome: 'Venda', chave: 'venda', cor: '#1A2B1C' },
+                ];
+                const total = clientes.length || 1;
+                el.innerHTML = `<div style="padding:4px 0;">` +
+                    ETAPAS.map(e => {
+                        const cnt = clientes.filter(c => c.etapaFunil === e.chave).length;
+                        const pct = Math.round((cnt / total) * 100);
+                        return `<div style="margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600;margin-bottom:4px;">
+                                <span>${e.nome}</span><span style="color:${e.cor};">${cnt} (${pct}%)</span>
+                            </div>
+                            <div style="height:8px;background:var(--light);border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;border-radius:4px;background:${e.cor};width:${Math.max(pct,1)}%;transition:width 1s;"></div>
+                            </div>
+                        </div>`;
+                    }).join('') + `</div>`;
+            },
+
+            renderOrigemLeads(clientes) {
+                const el = document.getElementById('vc-origem-leads');
+                if (!el) return;
+                const total = clientes.length || 1;
+                const origens = {};
+                clientes.forEach(c => {
+                    const o = c.origemLead || 'outro';
+                    origens[o] = (origens[o] || 0) + 1;
+                });
+                const sorted = Object.entries(origens).sort((a,b) => b[1]-a[1]).slice(0, 6);
+                const CORES = ['#2E4A31','#C4724A','#3D6142','#B87020','#2E7D42','#445447'];
+                el.innerHTML = sorted.length === 0
+                    ? '<div style="text-align:center;padding:20px;color:var(--text-secondary);font-size:0.85rem;">Nenhum dado disponível ainda</div>'
+                    : sorted.map(([origem, cnt], i) => {
+                        const pct = Math.round((cnt/total)*100);
+                        return `<div style="margin-bottom:10px;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600;margin-bottom:4px;">
+                                <span style="text-transform:capitalize;">${origem}</span><span style="color:${CORES[i]};">${cnt} leads (${pct}%)</span>
+                            </div>
+                            <div style="height:8px;background:var(--light);border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;border-radius:4px;background:${CORES[i]};width:${pct}%;transition:width 1s;"></div>
+                            </div>
+                        </div>`;
+                    }).join('');
+            },
+
+            renderPerfSemanal(visitas) {
+                const el = document.getElementById('vc-perf-semanal');
+                if (!el) return;
+                const dias = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(); d.setDate(d.getDate() - i);
+                    const dStr = d.toISOString().split('T')[0];
+                    const cnt = visitas.filter(v => v.data === dStr).length;
+                    dias.push({ label: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d.getDay()], cnt });
+                }
+                const max = Math.max(...dias.map(d => d.cnt), 1);
+                el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:8px;height:80px;padding:4px 0 4px;">` +
+                    dias.map(d => {
+                        const h = Math.max(8, Math.round((d.cnt / max) * 70));
+                        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">
+                            <div style="font-size:0.7rem;font-weight:700;color:var(--primary);">${d.cnt > 0 ? d.cnt : ''}</div>
+                            <div style="width:100%;height:${h}px;background:var(--primary);border-radius:4px 4px 0 0;opacity:${d.cnt>0?'1':'0.2'};transition:height 0.8s;"></div>
+                            <div style="font-size:0.68rem;color:var(--text-secondary);">${d.label}</div>
+                        </div>`;
+                    }).join('') + `</div>`;
+            },
+
+            renderTempoEtapas(clientes) {
+                const el = document.getElementById('vc-tempo-etapas');
+                if (!el) return;
+                const benchmarks = [
+                    { etapa: 'Lead → Primeiro Contato', ideal: '< 5 min', dica: 'Resposta rápida = 3x mais conversão' },
+                    { etapa: 'Contato → Visita Agendada', ideal: '1-3 dias', dica: 'Não deixe o lead esfriar' },
+                    { etapa: 'Visita → Proposta', ideal: '1-7 dias', dica: 'Apresente proposta enquanto a emoção está viva' },
+                    { etapa: 'Proposta → Contrato', ideal: '3-14 dias', dica: 'Follow-up diário nesta fase é essencial' },
+                    { etapa: 'Contrato → Chaves', ideal: '30-90 dias', dica: 'Mantenha contato e antecipe problemas burocráticos' },
+                ];
+                el.innerHTML = benchmarks.map(b => `
+                    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0;"></div>
+                        <div style="flex:1;">
+                            <div style="font-size:0.85rem;font-weight:700;color:var(--dark);">${b.etapa}</div>
+                            <div style="font-size:0.75rem;color:var(--text-secondary);margin-top:2px;">💡 ${b.dica}</div>
+                        </div>
+                        <div style="font-size:0.8rem;font-weight:800;color:var(--success);flex-shrink:0;">${b.ideal}</div>
+                    </div>`).join('');
+            },
+
+            // ── METAS ─────────────────────────────────────
+            renderMetas(data) {
+                const clientes = data.clientes || [];
+                const visitas = data.visitas || [];
+                const now = new Date();
+                const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+
+                // Inputs
+                const elInp = document.getElementById('vc-metas-inputs');
+                if (elInp) {
+                    const METAS_DEF = [
+                        { key: 'leads', label: '📡 Leads por mês', icon: 'fa-user-plus' },
+                        { key: 'visitas', label: '🏠 Visitas por mês', icon: 'fa-eye' },
+                        { key: 'propostas', label: '📋 Propostas por mês', icon: 'fa-file-alt' },
+                        { key: 'vendas', label: '🏆 Vendas por mês', icon: 'fa-trophy' },
+                        { key: 'receitaMeta', label: '💰 Receita meta (R$)', icon: 'fa-dollar-sign' },
+                    ];
+                    elInp.innerHTML = METAS_DEF.map(m => `
+                        <div class="vc-meta-row">
+                            <div class="vc-meta-label">${m.label}</div>
+                            <input type="number" class="vc-meta-input" id="vc-meta-${m.key}" value="${this.metas[m.key] || 0}" min="0">
+                        </div>`).join('');
+                }
+
+                // Progresso
+                const leadsMes = clientes.filter(c => c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+                const visitasMes = visitas.filter(v => v.data && new Date(v.data) >= inicioMes).length;
+                const vendasMes = clientes.filter(c => c.etapaFunil === 'venda' && c.dataEntradaFunil && new Date(c.dataEntradaFunil) >= inicioMes).length;
+                const propostasMes = clientes.filter(c => (c.etapaFunil === 'documentacao' || c.etapaFunil === 'aprovado') && c.dataCriacao && new Date(c.dataCriacao) >= inicioMes).length;
+
+                const PROGRESS = [
+                    { nome: '📡 Leads Captados', real: leadsMes, meta: this.metas.leads, cor: '#2E4A31' },
+                    { nome: '🏠 Visitas Realizadas', real: visitasMes, meta: this.metas.visitas, cor: '#3D6142' },
+                    { nome: '📋 Propostas Enviadas', real: propostasMes, meta: this.metas.propostas, cor: '#C4724A' },
+                    { nome: '🏆 Vendas Fechadas', real: vendasMes, meta: this.metas.vendas, cor: '#2E7D42' },
+                ];
+                const elProg = document.getElementById('vc-metas-progresso');
+                if (elProg) {
+                    elProg.innerHTML = PROGRESS.map(p => {
+                        const pct = Math.min(100, Math.round((p.real / (p.meta || 1)) * 100));
+                        const status = pct >= 100 ? '🏆 Meta atingida!' : pct >= 75 ? '🔥 Quase lá!' : pct >= 50 ? '📈 Na metade' : '⚡ Continue!';
+                        return `<div class="vc-meta-prog-card">
+                            <div class="vc-meta-prog-header">
+                                <div class="vc-meta-prog-name">${p.nome}</div>
+                                <div class="vc-meta-prog-vals">${p.real} / ${p.meta}</div>
+                            </div>
+                            <div class="vc-meta-prog-track">
+                                <div class="vc-meta-prog-fill" style="width:${pct}%;background:${pct>=100?'#FFD700':p.cor};"></div>
+                            </div>
+                            <div class="vc-meta-prog-pct" style="color:${p.cor};">${pct}% — ${status}</div>
+                        </div>`;
+                    }).join('');
+                }
+
+                // Projeção
+                const diasNoMes = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                const diaAtual = now.getDate();
+                const diasRestantes = diasNoMes - diaAtual;
+                const projecaoLeads = diaAtual > 0 ? Math.round((leadsMes / diaAtual) * diasNoMes) : 0;
+                const projecaoVisitas = diaAtual > 0 ? Math.round((visitasMes / diaAtual) * diasNoMes) : 0;
+                const projecaoVendas = diaAtual > 0 ? Math.round((vendasMes / diaAtual) * diasNoMes) : 0;
+
+                const elProj = document.getElementById('vc-projecao-mes');
+                if (elProj) {
+                    elProj.innerHTML = `
+                        <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:12px;">
+                            📅 Dia ${diaAtual}/${diasNoMes} — <strong>${diasRestantes} dias úteis restantes</strong> para bater as metas
+                        </div>
+                        <div class="vc-projecao-grid">
+                            <div class="vc-projecao-item">
+                                <div class="vc-projecao-val" style="color:#2E4A31;">${projecaoLeads}</div>
+                                <div class="vc-projecao-lbl">Projeção Leads</div>
+                            </div>
+                            <div class="vc-projecao-item">
+                                <div class="vc-projecao-val" style="color:#3D6142;">${projecaoVisitas}</div>
+                                <div class="vc-projecao-lbl">Projeção Visitas</div>
+                            </div>
+                            <div class="vc-projecao-item">
+                                <div class="vc-projecao-val" style="color:#2E7D42;">${projecaoVendas}</div>
+                                <div class="vc-projecao-lbl">Projeção Vendas</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;padding:12px;background:rgba(46,74,49,0.06);border-radius:10px;font-size:0.82rem;color:var(--dark);">
+                            <strong>Ritmo necessário hoje:</strong><br>
+                            ${Math.max(0, Math.ceil((this.metas.leads - leadsMes) / Math.max(1, diasRestantes)))} leads/dia · 
+                            ${Math.max(0, Math.ceil((this.metas.visitas - visitasMes) / Math.max(1, diasRestantes)))} visitas/dia · 
+                            ${Math.max(0, this.metas.vendas - vendasMes)} venda(s) ainda necessária(s)
+                        </div>`;
+                }
+
+                // Conquistas
+                this.renderConquistas(clientes, visitas);
+            },
+
+            salvarMetas() {
+                const KEYS = ['leads','visitas','propostas','vendas','receitaMeta'];
+                KEYS.forEach(k => {
+                    const el = document.getElementById('vc-meta-' + k);
+                    if (el) this.metas[k] = parseInt(el.value) || 0;
+                });
+                localStorage.setItem('vc_metas', JSON.stringify(this.metas));
+                if (window.UI && UI.showToast) UI.showToast('Metas salvas com sucesso! 🎯');
+                const data = this.getData();
+                this.renderMetas(data);
+            },
+
+            renderConquistas(clientes, visitas) {
+                const el = document.getElementById('vc-conquistas');
+                if (!el) return;
+                const vendas = clientes.filter(c => c.etapaFunil === 'venda').length;
+                const CONQUISTAS = [
+                    { icon: '🌱', nome: 'Primeiro Lead', desc: 'Cadastre seu primeiro lead no sistema', unlock: clientes.length >= 1 },
+                    { icon: '📞', nome: 'Prospector', desc: 'Cadastre 10 ou mais leads', unlock: clientes.length >= 10 },
+                    { icon: '🏠', nome: 'Visitador', desc: 'Realize 5 visitas', unlock: visitas.length >= 5 },
+                    { icon: '🔑', nome: 'Primeira Venda', desc: 'Feche sua primeira venda', unlock: vendas >= 1 },
+                    { icon: '🔥', nome: 'Em Chamas', desc: 'Feche 3 vendas', unlock: vendas >= 3 },
+                    { icon: '🏆', nome: 'Top Producer', desc: 'Feche 10 vendas', unlock: vendas >= 10 },
+                    { icon: '👥', nome: 'Carteira Sólida', desc: 'Tenha 50+ clientes no sistema', unlock: clientes.length >= 50 },
+                    { icon: '⭐', nome: 'Estrela das Indicações', desc: 'Tenha 5+ clientes por indicação', unlock: clientes.filter(c=>c.origemLead==='indicacao').length >= 5 },
+                ];
+                el.innerHTML = CONQUISTAS.map(c => `
+                    <div class="vc-conquista-card ${c.unlock ? 'unlocked' : ''}">
+                        <div class="vc-conquista-icon">${c.icon}</div>
+                        <div>
+                            <div class="vc-conquista-name">${c.nome}</div>
+                            <div class="vc-conquista-desc">${c.desc}</div>
+                        </div>
+                        ${c.unlock ? '<div class="vc-conquista-status">✓ Desbloqueado</div>' : '<div style="margin-left:auto;font-size:0.72rem;color:var(--text-secondary);">🔒 Bloqueado</div>'}
+                    </div>`).join('');
+            },
+
+            // ── PÓS-VENDA ─────────────────────────────────
+            renderPosVenda(data) {
+                const clientes = data.clientes || [];
+                this.renderTimelinePosVenda();
+                this.renderProgramaIndicacoes();
+                this.renderClientesPosVenda(clientes);
+            },
+
+            renderTimelinePosVenda() {
+                const el = document.getElementById('vc-timeline-posvenda');
+                if (!el) return;
+                const TIMELINE = [
+                    { dia: 'Dia 1 - Logo após a assinatura', cor: '#2E4A31', action: '🎉 Mensagem de parabéns personalizada', tip: 'Envie uma mensagem calorosa parabenizando pela conquista. Faça-os sentir especiais.' },
+                    { dia: 'Dia 3', cor: '#3D6142', action: '📞 Ligação de acompanhamento', tip: '"Oi [Nome], como está se sentindo? Teve alguma dúvida sobre os próximos passos?"' },
+                    { dia: 'Dia 7', cor: '#C4724A', action: '📦 Envio de presente simbólico', tip: 'Um kit de boas-vindas, planta ou cartão personalizado cria memórias duradouras.' },
+                    { dia: '1 mês', cor: '#B87020', action: '🌟 Pedido de avaliação online', tip: 'Peça avaliação no Google. 72% dos clientes pesquisam corretores online.' },
+                    { dia: '3 meses', cor: '#2E7D42', action: '🤝 Solicitação formal de indicação', tip: '"Você conhece alguém que precisa de um imóvel? Sua indicação é o maior presente."' },
+                    { dia: '6 meses', cor: '#445447', action: '🏠 Atualização do mercado', tip: 'Envie um relatório sobre valorização da região. Você vira referência e especialista.' },
+                    { dia: 'Aniversário', cor: '#1A2B1C', action: '🎂 Mensagem de aniversário', tip: 'Gary Keller: "Nunca perca uma data importante de um cliente. Isso é o seu banco de dados."' },
+                    { dia: '1 ano', cor: '#2E4A31', action: '🥂 Aniversário da compra', tip: '"Faz 1 ano que você conquistou seu lar! Como tem sido a experiência?" — Fidelização máxima.' },
+                ];
+                el.innerHTML = `<div class="vc-timeline">` +
+                    TIMELINE.map(t => `<div class="vc-timeline-item">
+                        <div class="vc-timeline-dot" style="background:${t.cor};">✓</div>
+                        <div class="vc-timeline-content">
+                            <div class="vc-timeline-day">${t.dia}</div>
+                            <div class="vc-timeline-action">${t.action}</div>
+                            <div class="vc-timeline-tip">${t.tip}</div>
+                        </div>
+                    </div>`).join('') + `</div>`;
+            },
+
+            renderProgramaIndicacoes() {
+                const el = document.getElementById('vc-programa-indicacoes');
+                if (!el) return;
+                el.innerHTML = `
+                    <div class="vc-indicacao-card">
+                        <div style="font-weight:800;font-size:1rem;color:var(--accent);margin-bottom:10px;">🎁 Programa de Indicações Estruturado</div>
+                        <div style="font-size:0.85rem;color:var(--dark);line-height:1.6;">
+                            <p style="margin-bottom:8px;"><strong>Como montar seu programa:</strong></p>
+                            <p style="margin-bottom:6px;">1. <strong>Defina um benefício</strong> — Brinde, desconto na taxa, serviço exclusivo para quem indicar</p>
+                            <p style="margin-bottom:6px;">2. <strong>Comunique ativamente</strong> — Não espere que as pessoas se lembrem. Peça diretamente.</p>
+                            <p style="margin-bottom:6px;">3. <strong>Crie urgência</strong> — "Estou com disponibilidade para 2 novos clientes este mês"</p>
+                            <p style="margin-bottom:6px;">4. <strong>Agradeça publicamente</strong> — Marque o cliente que indicou nas redes sociais (com permissão)</p>
+                            <p>5. <strong>Mantenha o ciclo</strong> — Quem indicou e fechou, indica novamente. Nutra o relacionamento.</p>
+                        </div>
+                    </div>
+                    <div class="vc-indicacao-card">
+                        <div style="font-weight:800;font-size:0.95rem;color:var(--accent);margin-bottom:8px;">📊 A Matemática das Indicações</div>
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+                            <div style="text-align:center;padding:10px 6px;background:rgba(255,255,255,0.6);border-radius:10px;">
+                                <div style="font-size:1.4rem;font-weight:900;color:var(--primary);">78%</div>
+                                <div style="font-size:0.68rem;color:var(--text-secondary);">indicariam o corretor</div>
+                            </div>
+                            <div style="text-align:center;padding:10px 6px;background:rgba(255,255,255,0.6);border-radius:10px;">
+                                <div style="font-size:1.4rem;font-weight:900;color:var(--accent);">12%</div>
+                                <div style="font-size:0.68rem;color:var(--text-secondary);">recebem contato pós-venda</div>
+                            </div>
+                            <div style="text-align:center;padding:10px 6px;background:rgba(255,255,255,0.6);border-radius:10px;">
+                                <div style="font-size:1.4rem;font-weight:900;color:var(--success);">3x</div>
+                                <div style="font-size:0.68rem;color:var(--text-secondary);">indicações por cliente</div>
+                            </div>
+                        </div>
+                    </div>`;
+            },
+
+            renderClientesPosVenda(clientes) {
+                const el = document.getElementById('vc-clientes-posvenda');
+                if (!el) return;
+                const vendidos = clientes.filter(c => c.etapaFunil === 'venda');
+                if (vendidos.length === 0) {
+                    el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;display:block;opacity:0.3;"></i>Nenhum cliente em pós-venda ainda.<br>Feche sua primeira venda e veja seus clientes aqui!</div>`;
+                    return;
+                }
+                el.innerHTML = vendidos.slice(0, 10).map(c => {
+                    const initials = (c.nome || 'C').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                    return `<div class="vc-posv-cliente">
+                        <div class="vc-posv-avatar">${initials}</div>
+                        <div>
+                            <div class="vc-posv-name">${c.nome || 'Cliente'}</div>
+                            <div class="vc-posv-info">⭐ Venda concluída · Solicitar indicação</div>
+                        </div>
+                        ${c.telefone ? `<button class="vc-posv-btn" onclick="window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}?text=Olá ${encodeURIComponent(c.nome||'')}! Tudo bem? Estou passando para saber como está sendo a experiência no seu novo imóvel. 😊')">
+                            <i class="fab fa-whatsapp"></i> Contatar
+                        </button>` : ''}
+                    </div>`;
+                }).join('');
+            },
+        };
+
+
 
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
