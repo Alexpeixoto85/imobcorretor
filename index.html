@@ -64,6 +64,27 @@
             --funnel-contrato: #2E4A31;
             --funnel-venda: #1A2B1C;
 
+            /* PALETA EXPANDIDA */
+            --indigo: #4F46E5;
+            --indigo-light: #6366F1;
+            --violet: #7C3AED;
+            --teal: #0D9488;
+            --teal-light: #14B8A6;
+            --coral: #F43F5E;
+            --amber: #F59E0B;
+            --sky: #0EA5E9;
+            --emerald: #10B981;
+            --pink: #EC4899;
+
+            /* Backgrounds de ícone extras */
+            --bg-indigo: rgba(79,70,229,0.12);
+            --bg-violet: rgba(124,58,237,0.12);
+            --bg-teal: rgba(13,148,136,0.12);
+            --bg-coral: rgba(244,63,94,0.12);
+            --bg-amber: rgba(245,158,11,0.12);
+            --bg-sky: rgba(14,165,233,0.12);
+            --bg-pink: rgba(236,72,153,0.12);
+
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
             --header-height: calc(60px + var(--safe-top));
@@ -227,6 +248,13 @@
         .bg-cyan { background: rgba(92,122,140,0.12); color: var(--secondary); }
         .bg-gold { background: rgba(196,114,74,0.15); color: var(--gold); }
         .bg-verm { background: rgba(192,57,43,0.12); color: var(--verm); }
+        .bg-indigo { background: var(--bg-indigo); color: var(--indigo); }
+        .bg-violet { background: var(--bg-violet); color: var(--violet); }
+        .bg-teal { background: var(--bg-teal); color: var(--teal); }
+        .bg-coral { background: var(--bg-coral); color: var(--coral); }
+        .bg-amber { background: var(--bg-amber); color: var(--amber); }
+        .bg-sky { background: var(--bg-sky); color: var(--sky); }
+        .bg-pink { background: var(--bg-pink); color: var(--pink); }
 
         .section-title {
             font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;
@@ -3096,6 +3124,133 @@
         .vc-dica-autor {
             font-size: 0.7rem; font-weight: 700; color: var(--accent); margin-top: 6px;
         }
+        /* ===== PAINEL LEITURA ===== */
+        .leitura-card {
+            background: var(--surface-glass);
+            backdrop-filter: blur(12px) saturate(1.4);
+            -webkit-backdrop-filter: blur(12px) saturate(1.4);
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            box-shadow: var(--shadow-3d);
+            border: 1px solid rgba(255,255,255,0.8);
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .leitura-card:active { transform: scale(0.98); }
+        .leitura-card-cover {
+            width: 100%; height: 140px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--indigo), var(--violet));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; position: relative;
+        }
+        .leitura-card-cover img { width:100%; height:100%; object-fit:cover; }
+        .leitura-card-cover-placeholder {
+            width:100%; height:140px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:3rem;
+        }
+        .leitura-card-body { padding: 14px 16px; }
+        .leitura-card-title { font-size:1rem; font-weight:800; color:var(--dark); margin-bottom:4px; line-height:1.3; }
+        .leitura-card-author { font-size:0.8rem; color:var(--text-secondary); margin-bottom:6px; }
+        .leitura-card-meta { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+        .leitura-badge {
+            padding: 3px 10px; border-radius: 20px;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.3px;
+        }
+        .leitura-badge-livro { background: rgba(79,70,229,0.15); color: var(--indigo); }
+        .leitura-badge-artigo { background: rgba(13,148,136,0.15); color: var(--teal); }
+        .leitura-badge-pdf { background: rgba(244,63,94,0.15); color: var(--coral); }
+        .leitura-badge-material { background: rgba(245,158,11,0.15); color: var(--amber); }
+        .leitura-card-progress { 
+            height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 6px;
+        }
+        .leitura-card-progress-fill { height:100%; border-radius:2px; background: linear-gradient(90deg, var(--indigo), var(--violet)); transition: width 0.5s; }
+        .leitura-card-actions {
+            display:flex; gap:8px; padding: 10px 16px;
+            border-top: 1px solid var(--border);
+            background: rgba(255,255,255,0.5);
+        }
+        .leitura-attachments { padding: 12px 16px; border-top: 1px solid var(--border); }
+        .leitura-attach-item {
+            display:flex; align-items:center; gap:10px;
+            padding: 10px 12px; border-radius: 10px;
+            background: var(--light); margin-bottom: 8px;
+            border: 1px solid var(--border); cursor: pointer;
+            transition: background 0.2s;
+        }
+        .leitura-attach-item:active { background: rgba(79,70,229,0.1); }
+        .leitura-attach-icon { font-size:1.4rem; flex-shrink:0; }
+        .leitura-attach-name { font-size:0.82rem; font-weight:600; color:var(--dark); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .leitura-attach-size { font-size:0.7rem; color:var(--text-secondary); }
+
+        /* Viewer de arquivo */
+        .file-viewer-overlay {
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:rgba(0,0,0,0.97); z-index:2000;
+            display:none; flex-direction:column;
+        }
+        .file-viewer-overlay.active { display:flex; }
+        .file-viewer-header {
+            display:flex; align-items:center; gap:12px;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.6); backdrop-filter:blur(10px);
+            flex-shrink:0;
+        }
+        .file-viewer-title { color:white; font-size:0.9rem; font-weight:700; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .file-viewer-close {
+            background: rgba(255,255,255,0.15); border:none; color:white;
+            width:36px; height:36px; border-radius:50%; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; font-size:1rem;
+            flex-shrink:0;
+        }
+        .file-viewer-body { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; }
+        .file-viewer-body iframe {
+            width:100%; height:100%; border:none;
+        }
+        .file-viewer-body img {
+            max-width:95%; max-height:95%; object-fit:contain; border-radius:4px;
+        }
+        .file-viewer-toolbar {
+            display:flex; gap:8px; padding: 10px 16px;
+            background: rgba(0,0,0,0.6); backdrop-filter:blur(10px);
+            flex-shrink:0; justify-content:center;
+        }
+        .file-viewer-btn {
+            background:rgba(255,255,255,0.15); border:none; color:white;
+            padding: 8px 16px; border-radius:8px; cursor:pointer;
+            font-size:0.82rem; font-weight:600;
+            display:flex; align-items:center; gap:6px;
+        }
+
+        /* Filtros de leitura */
+        .leitura-cats {
+            display:flex; gap:8px; overflow-x:auto;
+            padding-bottom:8px; margin-bottom:16px;
+            -webkit-overflow-scrolling:touch;
+        }
+        .leitura-cat-btn {
+            padding:8px 16px; border-radius:20px; font-size:0.8rem; font-weight:600;
+            border:1.5px solid var(--border); background:white; cursor:pointer;
+            white-space:nowrap; transition:all 0.2s; color:var(--secondary);
+            flex-shrink:0;
+        }
+        .leitura-cat-btn.active {
+            background:var(--indigo); color:white; border-color:var(--indigo);
+            box-shadow:0 3px 10px rgba(79,70,229,0.3);
+        }
+        .leitura-stats-row {
+            display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+            margin-bottom:20px;
+        }
+        .leitura-stat {
+            background:var(--surface-glass); border-radius:var(--radius-md);
+            padding:14px 10px; text-align:center; box-shadow:var(--shadow-sm);
+            border:1px solid rgba(255,255,255,0.75);
+        }
+        .leitura-stat-val { font-size:1.4rem; font-weight:900; color:var(--indigo); }
+        .leitura-stat-lbl { font-size:0.68rem; color:var(--text-secondary); font-weight:600; margin-top:2px; }
     </style>
 </head>
 <body>
@@ -3799,6 +3954,11 @@
                     <!-- Blocos da Rotina -->
                     <div id="rotina-blocos-container"></div>
 
+                    <!-- Botão exportar rotina PDF -->
+                    <button onclick="Coach.downloadRotinaPDF()" class="btn-block" style="background:linear-gradient(135deg,var(--coral),#fb7185);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <i class="fas fa-file-pdf"></i> Baixar Rotina em PDF
+                    </button>
+
                 </div>
 
                 <!-- TAB: PERFORMANCE -->
@@ -3942,6 +4102,52 @@
             </div>
             <!-- END COACH VIEW -->
 
+            <!-- ===== LEITURA VIEW ===== -->
+            <div id="leitura-view" class="view">
+                <div class="section-title">
+                    📚 Leitura
+                    <button class="icon-btn" style="background: var(--indigo); color: white; border-radius: 8px; padding: 8px;" onclick="Leitura.openNew()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Stats -->
+                <div class="leitura-stats-row">
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="leitura-stat-total">0</div>
+                        <div class="leitura-stat-lbl">Cadastros</div>
+                    </div>
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="leitura-stat-lendo">0</div>
+                        <div class="leitura-stat-lbl">Lendo</div>
+                    </div>
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="leitura-stat-concluidos">0</div>
+                        <div class="leitura-stat-lbl">Concluídos</div>
+                    </div>
+                </div>
+
+                <!-- Search -->
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar livros e materiais..." oninput="Leitura.search(this.value)">
+                </div>
+
+                <!-- Filtros de categoria -->
+                <div class="leitura-cats">
+                    <button class="leitura-cat-btn active" data-cat="" onclick="Leitura.setFilter(this,'')">Todos</button>
+                    <button class="leitura-cat-btn" data-cat="livro" onclick="Leitura.setFilter(this,'livro')">📘 Livros</button>
+                    <button class="leitura-cat-btn" data-cat="artigo" onclick="Leitura.setFilter(this,'artigo')">📄 Artigos</button>
+                    <button class="leitura-cat-btn" data-cat="pdf" onclick="Leitura.setFilter(this,'pdf')">📑 PDFs</button>
+                    <button class="leitura-cat-btn" data-cat="material" onclick="Leitura.setFilter(this,'material')">🗂 Materiais</button>
+                    <button class="leitura-cat-btn" data-cat="lendo" onclick="Leitura.setFilter(this,'lendo')">▶ Lendo</button>
+                    <button class="leitura-cat-btn" data-cat="concluido" onclick="Leitura.setFilter(this,'concluido')">✅ Concluídos</button>
+                </div>
+
+                <div id="leitura-list"></div>
+            </div>
+            <!-- END LEITURA VIEW -->
+
         <button class="fab" onclick="UI.openNewImovel()" id="main-fab">
             <i class="fas fa-plus"></i>
         </button>
@@ -3973,6 +4179,9 @@
             </a>
             <a href="#" class="nav-item" data-target="venda-certa-view" onclick="UI.switchTab(this); VendaCerta.init(); return false;">
                 <i class="fas fa-bullseye"></i> <span>Venda Certa</span>
+            </a>
+            <a href="#" class="nav-item" data-target="leitura-view" onclick="UI.switchTab(this); Leitura.init(); return false;">
+                <i class="fas fa-book-open"></i> <span>Leitura</span>
             </a>
         </nav>
 
@@ -4923,13 +5132,104 @@
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Fechar</button>
             </form>
         </div>
+
+        <!-- FILE VIEWER OVERLAY -->
+        <div class="file-viewer-overlay" id="file-viewer-overlay">
+            <div class="file-viewer-header">
+                <button class="file-viewer-close" onclick="Leitura.closeViewer()"><i class="fas fa-times"></i></button>
+                <div class="file-viewer-title" id="file-viewer-title">Arquivo</div>
+                <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" style="padding:6px 12px;font-size:0.75rem;">
+                    <i class="fas fa-download"></i>
+                </button>
+            </div>
+            <div class="file-viewer-body" id="file-viewer-body"></div>
+            <div class="file-viewer-toolbar" id="file-viewer-toolbar">
+                <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
+                <button class="file-viewer-btn" id="zoom-pct-label">100%</button>
+                <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
+            </div>
+        </div>
+
+        <!-- LEITURA MODAL -->
+        <div class="modal-overlay" id="overlay-leitura"></div>
+        <div class="modal-sheet" id="sheet-leitura">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-leitura">Novo Cadastro de Leitura</h3>
+            <form id="form-leitura" onsubmit="Leitura.save(event)">
+                <input type="hidden" id="lr-id">
+                <div class="form-group">
+                    <label class="form-label">Título *</label>
+                    <input type="text" id="lr-titulo" class="form-control" placeholder="Nome do livro ou material..." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Autor / Fonte</label>
+                    <input type="text" id="lr-autor" class="form-control" placeholder="Autor ou fonte do material">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Tipo</label>
+                        <select id="lr-tipo" class="form-control">
+                            <option value="livro">📘 Livro</option>
+                            <option value="artigo">📄 Artigo</option>
+                            <option value="pdf">📑 PDF</option>
+                            <option value="material">🗂 Material</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select id="lr-status" class="form-control">
+                            <option value="para-ler">⏳ Para ler</option>
+                            <option value="lendo">▶ Lendo</option>
+                            <option value="concluido">✅ Concluído</option>
+                            <option value="pausado">⏸ Pausado</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Progresso — <span id="lr-progresso-val">0%</span></label>
+                    <input type="range" id="lr-progresso" min="0" max="100" value="0" step="5"
+                        style="width:100%;accent-color:var(--indigo);"
+                        oninput="document.getElementById('lr-progresso-val').textContent=this.value+'%'">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição / Notas</label>
+                    <textarea id="lr-descricao" class="form-control" placeholder="Resumo, observações ou notas..." rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Capa (imagem)</label>
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:var(--light);color:var(--secondary);" onclick="document.getElementById('lr-capa-input').click()">
+                            <i class="fas fa-image"></i> Selecionar capa
+                        </button>
+                        <span id="lr-capa-nome" style="font-size:0.8rem;color:var(--text-secondary);">Nenhuma imagem</span>
+                    </div>
+                    <input type="file" id="lr-capa-input" accept="image/*" style="display:none;" onchange="Leitura.handleCapa(this)">
+                    <input type="hidden" id="lr-capa-data">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Anexos (PDF e imagens)</label>
+                    <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+                        <button type="button" class="btn-sm" style="background:var(--indigo);color:white;" onclick="document.getElementById('lr-anexo-input').click()">
+                            <i class="fas fa-paperclip"></i> Adicionar anexo
+                        </button>
+                    </div>
+                    <input type="file" id="lr-anexo-input" accept="application/pdf,image/*" multiple style="display:none;" onchange="Leitura.handleAnexos(this)">
+                    <div id="lr-anexos-list" style="margin-top:8px;"></div>
+                    <input type="hidden" id="lr-anexos-data" value="[]">
+                </div>
+                <button type="submit" class="btn-block" style="background:var(--indigo);">Salvar</button>
+                <button type="button" class="btn-block" style="background:var(--light);color:var(--secondary);margin-top:8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
+        </div>
+
     </div>
+
 
     <script>
         // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: contador de contatos e alerta de cliente parado)
         const DB = {
             name: 'ImobiProDB',
-            version: 17, // Atualizado para versão 17 (contatos)
+            version: 18, // v18: painel leitura
             db: null,
             
             init: function() {
@@ -5000,6 +5300,14 @@
                 if (!db.objectStoreNames.contains('funilEtapas')) {
                     const etapasStore = db.createObjectStore('funilEtapas', { keyPath: 'id' });
                     etapasStore.createIndex('ordem', 'ordem', { unique: false });
+                }
+
+                if (!db.objectStoreNames.contains('leitura')) {
+                    const leituraStore = db.createObjectStore('leitura', { keyPath: 'id' });
+                    leituraStore.createIndex('titulo', 'titulo', { unique: false });
+                    leituraStore.createIndex('tipo', 'tipo', { unique: false });
+                    leituraStore.createIndex('status', 'status', { unique: false });
+                    leituraStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                 }
             },
             
@@ -12880,6 +13188,90 @@
                 }).join('');
             },
 
+            // ── DOWNLOAD ROTINA PDF ───────────────────────
+            downloadRotinaPDF() {
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const PW = 210, PH = 297, M = 14, CW = PW - 2 * M;
+                    let y = M;
+
+                    // Header
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(0, 0, PW, 28, 'F');
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+                    doc.text('ImobiPro', M, 12);
+                    doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+                    doc.text('Rotina do Corretor de Elite', M, 20);
+                    doc.setFontSize(8);
+                    const settings = (window.UI && UI.data && UI.data.settings) || {};
+                    const nome = settings.nome || 'Corretor';
+                    doc.text(`${nome} · ${new Date().toLocaleDateString('pt-BR')}`, PW - M - 50, 20);
+                    y = 36;
+
+                    // Score e progresso
+                    const allTasks = this.ROTINA_BLOCOS.reduce((s, b) => s + b.tasks.length, 0);
+                    const doneTasks = Object.values(this.rotinaState || {}).filter(Boolean).length;
+                    const pct = allTasks > 0 ? Math.round((doneTasks / allTasks) * 100) : 0;
+                    doc.setFillColor(239, 240, 236);
+                    doc.rect(M, y, CW, 16, 'F');
+                    doc.setTextColor(46, 74, 49); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                    doc.text(`Progresso: ${doneTasks}/${allTasks} tarefas (${pct}%)`, M + 4, y + 7);
+                    doc.setTextColor(80, 80, 80); doc.setFont('helvetica', 'normal'); doc.setFontSize(8);
+                    doc.text(`Score Diário baseado nas tarefas completadas hoje`, M + 4, y + 13);
+                    y += 22;
+
+                    // Blocos de rotina
+                    this.ROTINA_BLOCOS.forEach(bloco => {
+                        if (y > PH - 40) { doc.addPage(); y = 20; }
+                        // Bloco header
+                        doc.setFillColor(68, 84, 71);
+                        doc.rect(M, y, CW, 10, 'F');
+                        doc.setTextColor(255, 255, 255); doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+                        doc.text(`${bloco.titulo}  ${bloco.horario}`, M + 4, y + 7);
+                        y += 12;
+
+                        bloco.tasks.forEach(task => {
+                            if (y > PH - 20) { doc.addPage(); y = 20; }
+                            const done = (this.rotinaState || {})[task.id];
+                            // Checkbox
+                            doc.setDrawColor(100, 100, 100); doc.setLineWidth(0.4);
+                            doc.rect(M + 1, y, 5, 5);
+                            if (done) {
+                                doc.setDrawColor(46, 125, 66); doc.setLineWidth(0.8);
+                                doc.line(M + 2, y + 2.5, M + 3.5, y + 4);
+                                doc.line(M + 3.5, y + 4, M + 6, y + 1);
+                            }
+                            doc.setTextColor(done ? 120 : 30, done ? 120 : 30, done ? 120 : 30);
+                            doc.setFont('helvetica', done ? 'normal' : 'normal'); doc.setFontSize(8.5);
+                            const lines = doc.splitTextToSize(`${task.texto}  [${task.tempo}]`, CW - 12);
+                            doc.text(lines, M + 9, y + 4);
+                            y += lines.length * 5 + 2;
+                        });
+                        y += 4;
+                    });
+
+                    // Footer
+                    const pages = doc.internal.getNumberOfPages();
+                    for (let p = 1; p <= pages; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(46, 74, 49);
+                        doc.rect(0, PH - 10, PW, 10, 'F');
+                        doc.setTextColor(255, 255, 255); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+                        doc.text('ImobiPro — Rotina do Corretor de Elite', M, PH - 4);
+                        doc.text(`Pág ${p}/${pages}`, PW - M - 12, PH - 4);
+                    }
+
+                    const data = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+                    doc.save(`ImobiPro_Rotina_${data}.pdf`);
+                    Utils.toast('✅ Rotina exportada em PDF!');
+                } catch (e) {
+                    console.error('Erro ao gerar PDF da rotina:', e);
+                    Utils.toast('Erro ao gerar PDF', 'error');
+                }
+            },
+
             // ── PERFORMANCE ───────────────────────────────
             renderPerformance() {
                 const clientes = this.data.clientes || [];
@@ -15228,6 +15620,349 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
         };
 
+
+        // ===== LEITURA OBJECT =====
+        const Leitura = {
+            items: [],
+            filterCat: '',
+            searchQuery: '',
+            _viewerFile: null,
+            _viewerZoom: 1,
+
+            async init() {
+                await this.load();
+                this.render();
+            },
+
+            async load() {
+                try {
+                    this.items = await DB.getAll('leitura');
+                    this.items.sort((a, b) => new Date(b.dataCriacao) - new Date(a.dataCriacao));
+                } catch(e) {
+                    console.error('Erro ao carregar leitura:', e);
+                    this.items = [];
+                }
+            },
+
+            openNew() {
+                document.getElementById('lr-id').value = '';
+                document.getElementById('lr-titulo').value = '';
+                document.getElementById('lr-autor').value = '';
+                document.getElementById('lr-tipo').value = 'livro';
+                document.getElementById('lr-status').value = 'para-ler';
+                document.getElementById('lr-progresso').value = 0;
+                document.getElementById('lr-progresso-val').textContent = '0%';
+                document.getElementById('lr-descricao').value = '';
+                document.getElementById('lr-capa-data').value = '';
+                document.getElementById('lr-capa-nome').textContent = 'Nenhuma imagem';
+                document.getElementById('lr-anexos-data').value = '[]';
+                document.getElementById('lr-anexos-list').innerHTML = '';
+                document.getElementById('title-leitura').textContent = 'Novo Cadastro de Leitura';
+                UI.openModal('leitura');
+            },
+
+            edit(id) {
+                const item = this.items.find(x => x.id === id);
+                if (!item) return;
+                document.getElementById('lr-id').value = item.id;
+                document.getElementById('lr-titulo').value = item.titulo || '';
+                document.getElementById('lr-autor').value = item.autor || '';
+                document.getElementById('lr-tipo').value = item.tipo || 'livro';
+                document.getElementById('lr-status').value = item.status || 'para-ler';
+                const prog = item.progresso || 0;
+                document.getElementById('lr-progresso').value = prog;
+                document.getElementById('lr-progresso-val').textContent = prog + '%';
+                document.getElementById('lr-descricao').value = item.descricao || '';
+                document.getElementById('lr-capa-data').value = item.capa || '';
+                document.getElementById('lr-capa-nome').textContent = item.capa ? 'Imagem definida' : 'Nenhuma imagem';
+                const anexos = item.anexos || [];
+                document.getElementById('lr-anexos-data').value = JSON.stringify(anexos);
+                this.renderAnexosList(anexos);
+                document.getElementById('title-leitura').textContent = 'Editar Cadastro';
+                UI.openModal('leitura');
+            },
+
+            async save(e) {
+                e.preventDefault();
+                const id = document.getElementById('lr-id').value || Utils.id();
+                const titulo = document.getElementById('lr-titulo').value.trim();
+                if (!titulo) { Utils.toast('Informe o título', 'error'); return; }
+                const item = {
+                    id,
+                    titulo,
+                    autor: document.getElementById('lr-autor').value.trim(),
+                    tipo: document.getElementById('lr-tipo').value,
+                    status: document.getElementById('lr-status').value,
+                    progresso: parseInt(document.getElementById('lr-progresso').value) || 0,
+                    descricao: document.getElementById('lr-descricao').value.trim(),
+                    capa: document.getElementById('lr-capa-data').value || '',
+                    anexos: JSON.parse(document.getElementById('lr-anexos-data').value || '[]'),
+                    dataCriacao: this.items.find(x => x.id === id)?.dataCriacao || new Date().toISOString(),
+                    dataAtualizacao: new Date().toISOString(),
+                };
+                try {
+                    await DB.put('leitura', item);
+                    await this.load();
+                    this.render();
+                    UI.closeModals();
+                    Utils.toast('✅ Salvo com sucesso!');
+                } catch(err) {
+                    console.error(err);
+                    Utils.toast('Erro ao salvar', 'error');
+                }
+            },
+
+            async delete(id) {
+                if (!confirm('Excluir este cadastro?')) return;
+                await DB.delete('leitura', id);
+                await this.load();
+                this.render();
+                Utils.toast('Removido!');
+            },
+
+            setFilter(btn, cat) {
+                document.querySelectorAll('.leitura-cat-btn').forEach(b => b.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+                this.filterCat = cat;
+                this.render();
+            },
+
+            search(q) {
+                this.searchQuery = q.toLowerCase();
+                this.render();
+            },
+
+            render() {
+                const list = document.getElementById('leitura-list');
+                if (!list) return;
+
+                let items = this.items;
+
+                // Filter
+                if (this.filterCat === 'lendo') {
+                    items = items.filter(x => x.status === 'lendo');
+                } else if (this.filterCat === 'concluido') {
+                    items = items.filter(x => x.status === 'concluido');
+                } else if (this.filterCat) {
+                    items = items.filter(x => x.tipo === this.filterCat);
+                }
+
+                // Search
+                if (this.searchQuery) {
+                    items = items.filter(x =>
+                        (x.titulo || '').toLowerCase().includes(this.searchQuery) ||
+                        (x.autor || '').toLowerCase().includes(this.searchQuery) ||
+                        (x.descricao || '').toLowerCase().includes(this.searchQuery)
+                    );
+                }
+
+                // Stats
+                const total = this.items.length;
+                const lendo = this.items.filter(x => x.status === 'lendo').length;
+                const concluidos = this.items.filter(x => x.status === 'concluido').length;
+                const statEl = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+                statEl('leitura-stat-total', total);
+                statEl('leitura-stat-lendo', lendo);
+                statEl('leitura-stat-concluidos', concluidos);
+
+                if (items.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-book-open"></i><p>Nenhum cadastro encontrado.<br>Adicione livros e materiais para sua leitura diária!</p></div>`;
+                    return;
+                }
+
+                const TIPO_ICONS = { livro:'📘', artigo:'📄', pdf:'📑', material:'🗂' };
+                const TIPO_BADGE_CLASS = { livro:'leitura-badge-livro', artigo:'leitura-badge-artigo', pdf:'leitura-badge-pdf', material:'leitura-badge-material' };
+                const TIPO_LABELS = { livro:'Livro', artigo:'Artigo', pdf:'PDF', material:'Material' };
+                const STATUS_LABELS = { 'para-ler':'⏳ Para ler', 'lendo':'▶ Lendo', 'concluido':'✅ Concluído', 'pausado':'⏸ Pausado' };
+                const COVER_GRADIENTS = [
+                    'linear-gradient(135deg,#4F46E5,#7C3AED)',
+                    'linear-gradient(135deg,#0D9488,#0EA5E9)',
+                    'linear-gradient(135deg,#F43F5E,#F59E0B)',
+                    'linear-gradient(135deg,#10B981,#0D9488)',
+                    'linear-gradient(135deg,#EC4899,#8B5CF6)',
+                    'linear-gradient(135deg,#2E4A31,#3D6142)',
+                    'linear-gradient(135deg,#C4724A,#D98A62)',
+                ];
+
+                list.innerHTML = items.map((item, idx) => {
+                    const icon = TIPO_ICONS[item.tipo] || '📄';
+                    const gradient = COVER_GRADIENTS[idx % COVER_GRADIENTS.length];
+                    const coverHTML = item.capa
+                        ? `<img src="${item.capa}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
+                        : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2.5rem;background:${gradient};color:white;gap:6px;"><span>${icon}</span><span style="font-size:0.7rem;font-weight:700;opacity:0.8;text-align:center;padding:0 10px;">${item.titulo.substring(0,30)}</span></div>`;
+
+                    const anexos = item.anexos || [];
+                    const anexosHTML = anexos.length > 0 ? `
+                        <div class="leitura-attachments">
+                            <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;"><i class="fas fa-paperclip"></i> Anexos (${anexos.length})</div>
+                            ${anexos.map((a, ai) => `
+                                <div class="leitura-attach-item" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
+                                    <span class="leitura-attach-icon">${a.tipo === 'application/pdf' ? '📑' : '🖼'}</span>
+                                    <div>
+                                        <div class="leitura-attach-name">${a.nome}</div>
+                                        <div class="leitura-attach-size">${a.tamanho || ''}</div>
+                                    </div>
+                                    <i class="fas fa-external-link-alt" style="color:var(--indigo);font-size:0.8rem;flex-shrink:0;"></i>
+                                </div>`).join('')}
+                        </div>` : '';
+
+                    return `
+                    <div class="leitura-card" onclick="event.stopPropagation()">
+                        <div style="height:140px;overflow:hidden;">${coverHTML}</div>
+                        <div class="leitura-card-body">
+                            <div class="leitura-card-title">${item.titulo}</div>
+                            ${item.autor ? `<div class="leitura-card-author"><i class="fas fa-user" style="font-size:0.7rem;"></i> ${item.autor}</div>` : ''}
+                            <div class="leitura-card-meta">
+                                <span class="leitura-badge ${TIPO_BADGE_CLASS[item.tipo] || 'leitura-badge-material'}">${TIPO_LABELS[item.tipo] || 'Material'}</span>
+                                <span style="font-size:0.75rem;color:var(--text-secondary);">${STATUS_LABELS[item.status] || item.status}</span>
+                            </div>
+                            ${item.descricao ? `<div style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${item.descricao}</div>` : ''}
+                            <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;font-weight:600;">${item.progresso || 0}% concluído</div>
+                            <div class="leitura-card-progress">
+                                <div class="leitura-card-progress-fill" style="width:${item.progresso || 0}%;"></div>
+                            </div>
+                        </div>
+                        ${anexosHTML}
+                        <div class="leitura-card-actions">
+                            <button class="btn-sm" style="background:var(--indigo);color:white;flex:1;" onclick="event.stopPropagation();Leitura.edit('${item.id}')">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                            <button class="btn-sm" style="background:var(--danger);color:white;" onclick="event.stopPropagation();Leitura.delete('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+
+            async handleCapa(input) {
+                const file = input.files[0];
+                if (!file) return;
+                try {
+                    const base64 = await Utils.readImage(file);
+                    const compressed = await Utils.compressImage(base64, 0.75, 800);
+                    document.getElementById('lr-capa-data').value = compressed;
+                    document.getElementById('lr-capa-nome').textContent = file.name;
+                } catch(e) {
+                    Utils.toast('Erro ao processar imagem', 'error');
+                }
+                input.value = '';
+            },
+
+            async handleAnexos(input) {
+                const files = Array.from(input.files || []);
+                if (!files.length) return;
+                const existing = JSON.parse(document.getElementById('lr-anexos-data').value || '[]');
+                const MAX = 10;
+                if (existing.length >= MAX) { Utils.toast('Máximo de 10 anexos por cadastro', 'error'); return; }
+
+                Utils.toast('Processando anexos...');
+                const newAnexos = [];
+                for (const file of files) {
+                    if (existing.length + newAnexos.length >= MAX) break;
+                    if (file.size > 20 * 1024 * 1024) { Utils.toast(`${file.name} muito grande (máx 20MB)`, 'error'); continue; }
+                    try {
+                        const data = await new Promise((res, rej) => {
+                            const r = new FileReader();
+                            r.onload = () => res(r.result);
+                            r.onerror = rej;
+                            r.readAsDataURL(file);
+                        });
+                        const sizeStr = file.size < 1024*1024 ? (file.size/1024).toFixed(0)+'KB' : (file.size/1024/1024).toFixed(1)+'MB';
+                        newAnexos.push({ nome: file.name, tipo: file.type, data, tamanho: sizeStr });
+                    } catch(err) {
+                        Utils.toast(`Erro em ${file.name}`, 'error');
+                    }
+                }
+                const all = [...existing, ...newAnexos];
+                document.getElementById('lr-anexos-data').value = JSON.stringify(all);
+                this.renderAnexosList(all);
+                Utils.toast(`✅ ${newAnexos.length} anexo(s) adicionado(s)`);
+                input.value = '';
+            },
+
+            renderAnexosList(anexos) {
+                const container = document.getElementById('lr-anexos-list');
+                if (!container) return;
+                if (!anexos || !anexos.length) { container.innerHTML = ''; return; }
+                container.innerHTML = anexos.map((a, i) => `
+                    <div class="leitura-attach-item" style="cursor:default;">
+                        <span class="leitura-attach-icon">${a.tipo === 'application/pdf' ? '📑' : '🖼'}</span>
+                        <div style="flex:1;overflow:hidden;">
+                            <div class="leitura-attach-name">${a.nome}</div>
+                            <div class="leitura-attach-size">${a.tamanho || ''}</div>
+                        </div>
+                        <button type="button" style="background:var(--danger);color:white;border:none;border-radius:6px;padding:4px 8px;font-size:0.75rem;cursor:pointer;flex-shrink:0;" onclick="Leitura.removeAnexo(${i})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>`).join('');
+            },
+
+            removeAnexo(idx) {
+                const anexos = JSON.parse(document.getElementById('lr-anexos-data').value || '[]');
+                anexos.splice(idx, 1);
+                document.getElementById('lr-anexos-data').value = JSON.stringify(anexos);
+                this.renderAnexosList(anexos);
+            },
+
+            openFile(itemId, anexoIdx) {
+                const item = this.items.find(x => x.id === itemId);
+                if (!item) return;
+                const anexo = (item.anexos || [])[anexoIdx];
+                if (!anexo) return;
+                this._viewerFile = anexo;
+                this._viewerZoom = 1;
+                document.getElementById('file-viewer-title').textContent = anexo.nome;
+                const body = document.getElementById('file-viewer-body');
+                const toolbar = document.getElementById('file-viewer-toolbar');
+                if (anexo.tipo === 'application/pdf') {
+                    body.innerHTML = `<iframe src="${anexo.data}" style="width:100%;height:100%;border:none;"></iframe>`;
+                    toolbar.style.display = 'none';
+                } else {
+                    body.innerHTML = `<img src="${anexo.data}" id="viewer-img" style="max-width:95%;max-height:90vh;object-fit:contain;transition:transform 0.2s;" alt="${anexo.nome}">`;
+                    toolbar.style.display = 'flex';
+                    this._viewerZoom = 1;
+                    document.getElementById('zoom-pct-label').textContent = '100%';
+                }
+                document.getElementById('file-viewer-overlay').classList.add('active');
+                document.body.style.overflow = 'hidden';
+            },
+
+            closeViewer() {
+                document.getElementById('file-viewer-overlay').classList.remove('active');
+                document.getElementById('file-viewer-body').innerHTML = '';
+                document.body.style.overflow = '';
+                this._viewerFile = null;
+            },
+
+            zoomIn() {
+                this._viewerZoom = Math.min(3, this._viewerZoom + 0.25);
+                this._applyZoom();
+            },
+            zoomOut() {
+                this._viewerZoom = Math.max(0.5, this._viewerZoom - 0.25);
+                this._applyZoom();
+            },
+            zoomReset() {
+                this._viewerZoom = 1;
+                this._applyZoom();
+            },
+            _applyZoom() {
+                const img = document.getElementById('viewer-img');
+                if (img) img.style.transform = `scale(${this._viewerZoom})`;
+                const lbl = document.getElementById('zoom-pct-label');
+                if (lbl) lbl.textContent = Math.round(this._viewerZoom * 100) + '%';
+            },
+
+            downloadCurrentFile() {
+                const f = this._viewerFile;
+                if (!f) return;
+                const a = document.createElement('a');
+                a.href = f.data;
+                a.download = f.nome;
+                a.click();
+            },
+        };
 
 
         document.addEventListener('DOMContentLoaded', () => {
