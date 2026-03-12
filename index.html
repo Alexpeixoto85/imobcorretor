@@ -1,3 +1,7 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3238,6 +3242,9 @@
             justify-content: center;
         }
         .file-viewer-btn:active { background: rgba(255,255,255,0.3); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #file-viewer-toolbar { flex-wrap: wrap; gap: 6px; }
+        #pdf-page-info { color:white; font-size:0.8rem; font-weight:700; min-width:70px; text-align:center; display:flex; align-items:center; justify-content:center; }
 
         /* Filtros de leitura */
         .leitura-cats {
@@ -5153,14 +5160,14 @@
             <div class="file-viewer-header">
                 <button class="file-viewer-close" onclick="Leitura.closeViewer()"><i class="fas fa-times"></i></button>
                 <div class="file-viewer-title" id="file-viewer-title">Arquivo</div>
-                <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" style="padding:6px 12px;font-size:0.75rem;">
+                <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" style="padding:6px 12px;font-size:0.75rem;flex-shrink:0;" title="Baixar arquivo">
                     <i class="fas fa-download"></i>
                 </button>
             </div>
             <div class="file-viewer-body" id="file-viewer-body"></div>
             <div class="file-viewer-toolbar" id="file-viewer-toolbar">
                 <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
-                <button class="file-viewer-btn" id="zoom-pct-label">100%</button>
+                <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()">100%</button>
                 <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
             </div>
         </div>
@@ -15920,13 +15927,39 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this.renderAnexosList(anexos);
             },
 
+            // Converte base64 data URL para Blob URL (resolve bloqueio de navegadores modernos)
+            _dataURLtoBlobURL(dataURL, mimeType) {
+                try {
+                    const base64 = dataURL.split(',')[1];
+                    if (!base64) return null;
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                    const blob = new Blob([bytes], { type: mimeType || 'application/octet-stream' });
+                    return URL.createObjectURL(blob);
+                } catch(e) {
+                    console.error('Erro ao converter base64 para blob:', e);
+                    return null;
+                }
+            },
+
             openFile(itemId, anexoIdx) {
                 const item = this.items.find(x => x.id === itemId);
                 if (!item) return;
                 const anexo = (item.anexos || [])[anexoIdx];
                 if (!anexo || !anexo.data) { Utils.toast('Anexo não disponível', 'error'); return; }
+
+                // Revoga blob URL anterior se houver
+                if (this._currentBlobURL) {
+                    URL.revokeObjectURL(this._currentBlobURL);
+                    this._currentBlobURL = null;
+                }
+
                 this._viewerFile = anexo;
                 this._viewerZoom = 1;
+                this._pdfDoc = null;
+                this._pdfPage = 1;
+                this._pdfTotalPages = 1;
 
                 const overlay = document.getElementById('file-viewer-overlay');
                 const titleEl = document.getElementById('file-viewer-title');
@@ -15936,39 +15969,180 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                 titleEl.textContent = anexo.nome || 'Arquivo';
                 body.innerHTML = '';
+                toolbar.style.display = 'none';
 
                 const isPdf = anexo.tipo === 'application/pdf' || (anexo.nome || '').toLowerCase().endsWith('.pdf');
 
                 if (isPdf) {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
-                    iframe.src = anexo.data;
-                    iframe.onerror = function() {
-                        body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">📑</div><div style="font-size:1rem;font-weight:700;margin-bottom:8px;">' + (anexo.nome||'PDF') + '</div><div style="font-size:0.85rem;opacity:0.7;margin-bottom:24px;">Use o botão para baixar o arquivo.</div><button onclick="Leitura.downloadCurrentFile()" style="background:#4F46E5;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;"><i class=\'fas fa-download\'></i> Baixar PDF</button></div>';
-                    };
-                    body.appendChild(iframe);
-                    toolbar.style.display = 'none';
+                    // Mostra loading
+                    body.innerHTML = `<div id="pdf-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;">
+                        <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        <div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div>
+                    </div>`;
+
+                    // Tenta PDF.js primeiro (renderização em canvas, sem restrição de iframe)
+                    this._openPdfWithPdfJs(anexo, body, toolbar);
                 } else {
-                    const img = document.createElement('img');
-                    img.id = 'viewer-img';
-                    img.alt = anexo.nome || 'Imagem';
-                    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;';
-                    img.onerror = function() {
-                        body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div></div>';
-                        toolbar.style.display = 'none';
-                    };
-                    img.src = anexo.data;
-                    body.appendChild(img);
-                    toolbar.style.display = 'flex';
-                    const lbl = document.getElementById('zoom-pct-label');
-                    if (lbl) lbl.textContent = '100%';
+                    // Imagem: usa Blob URL
+                    const blobURL = this._dataURLtoBlobURL(anexo.data, anexo.tipo || 'image/jpeg');
+                    if (blobURL) {
+                        this._currentBlobURL = blobURL;
+                        const img = document.createElement('img');
+                        img.id = 'viewer-img';
+                        img.alt = anexo.nome || 'Imagem';
+                        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;cursor:zoom-in;';
+                        img.ondblclick = () => { this._viewerZoom = this._viewerZoom === 1 ? 2 : 1; this._applyZoom(); };
+                        img.onerror = () => {
+                            body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div></div>';
+                            toolbar.style.display = 'none';
+                        };
+                        img.src = blobURL;
+                        body.innerHTML = '';
+                        body.appendChild(img);
+                        toolbar.style.display = 'flex';
+                        const lbl = document.getElementById('zoom-pct-label');
+                        if (lbl) lbl.textContent = '100%';
+                    } else {
+                        // Fallback direto com data URL
+                        const img = document.createElement('img');
+                        img.id = 'viewer-img';
+                        img.src = anexo.data;
+                        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;';
+                        body.innerHTML = '';
+                        body.appendChild(img);
+                        toolbar.style.display = 'flex';
+                    }
                 }
 
-                // Garante que o overlay está no topo do DOM (fora de qualquer stacking context)
+                // Garante que o overlay está no topo do DOM
                 if (overlay.parentElement !== document.body) {
                     document.body.appendChild(overlay);
                 }
                 overlay.classList.add('active');
+            },
+
+            async _openPdfWithPdfJs(anexo, body, toolbar) {
+                try {
+                    // Carrega PDF.js dinamicamente se não estiver disponível
+                    if (!window.pdfjsLib) {
+                        await new Promise((resolve, reject) => {
+                            const s = document.createElement('script');
+                            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                            s.onload = resolve;
+                            s.onerror = reject;
+                            document.head.appendChild(s);
+                        });
+                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    }
+
+                    // Converte base64 para Uint8Array para o PDF.js
+                    const base64 = anexo.data.split(',')[1];
+                    const binary = atob(base64);
+                    const bytes = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                    const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+                    this._pdfDoc = pdfDoc;
+                    this._pdfPage = 1;
+                    this._pdfTotalPages = pdfDoc.numPages;
+
+                    // Monta estrutura do viewer de PDF
+                    body.innerHTML = `
+                        <div id="pdf-viewer-wrap" style="display:flex;flex-direction:column;align-items:center;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 4px;">
+                            <canvas id="pdf-canvas" style="max-width:100%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);display:block;"></canvas>
+                        </div>`;
+
+                    // Toolbar de PDF com navegação de páginas
+                    toolbar.innerHTML = `
+                        <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn" title="Página anterior"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;line-height:44px;">1 / ${pdfDoc.numPages}</span>
+                        <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn" title="Próxima página"><i class="fas fa-chevron-right"></i></button>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomOut()" title="Diminuir"><i class="fas fa-search-minus"></i></button>
+                        <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:56px;">100%</button>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomIn()" title="Aumentar"><i class="fas fa-search-plus"></i></button>`;
+                    toolbar.style.display = 'flex';
+
+                    await this._renderPdfPage(1);
+                } catch(e) {
+                    console.error('PDF.js falhou, tentando Blob URL no iframe:', e);
+                    this._openPdfFallback(anexo, body, toolbar);
+                }
+            },
+
+            async _renderPdfPage(pageNum) {
+                if (!this._pdfDoc) return;
+                const canvas = document.getElementById('pdf-canvas');
+                if (!canvas) return;
+
+                const page = await this._pdfDoc.getPage(pageNum);
+                const wrap = document.getElementById('pdf-viewer-wrap');
+                const maxW = (wrap ? wrap.clientWidth : window.innerWidth) - 16;
+                const viewport = page.getViewport({ scale: 1 });
+                const scale = Math.min((maxW / viewport.width) * this._viewerZoom, 3);
+                const scaledViewport = page.getViewport({ scale });
+
+                canvas.width = scaledViewport.width;
+                canvas.height = scaledViewport.height;
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+
+                const info = document.getElementById('pdf-page-info');
+                if (info) info.textContent = `${pageNum} / ${this._pdfTotalPages}`;
+                const lbl = document.getElementById('zoom-pct-label');
+                if (lbl) lbl.textContent = Math.round(this._viewerZoom * 100) + '%';
+                const prev = document.getElementById('pdf-prev-btn');
+                const next = document.getElementById('pdf-next-btn');
+                if (prev) prev.style.opacity = pageNum <= 1 ? '0.4' : '1';
+                if (next) next.style.opacity = pageNum >= this._pdfTotalPages ? '0.4' : '1';
+            },
+
+            _openPdfFallback(anexo, body, toolbar) {
+                // Tenta Blob URL no iframe como fallback
+                const blobURL = this._dataURLtoBlobURL(anexo.data, 'application/pdf');
+                if (blobURL) {
+                    this._currentBlobURL = blobURL;
+                    const iframe = document.createElement('iframe');
+                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;border-radius:4px;';
+                    iframe.src = blobURL;
+                    body.innerHTML = '';
+                    body.appendChild(iframe);
+                    toolbar.style.display = 'none';
+
+                    // Timeout: se iframe não carregar, mostra botão de download
+                    const fallbackTimeout = setTimeout(() => {
+                        this._showPdfDownloadFallback(body, anexo);
+                    }, 4000);
+                    iframe.onload = () => clearTimeout(fallbackTimeout);
+                } else {
+                    this._showPdfDownloadFallback(body, anexo);
+                }
+            },
+
+            _showPdfDownloadFallback(body, anexo) {
+                body.innerHTML = `<div style="text-align:center;color:white;padding:40px 24px;max-width:320px;margin:auto;">
+                    <div style="font-size:4rem;margin-bottom:20px;">📑</div>
+                    <div style="font-size:1rem;font-weight:700;margin-bottom:8px;">${(anexo.nome||'PDF').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+                    <div style="font-size:0.82rem;opacity:0.65;margin-bottom:28px;line-height:1.5;">Visualização inline não disponível neste navegador. Baixe o arquivo para abrir no leitor de PDF do seu dispositivo.</div>
+                    <button onclick="Leitura.downloadCurrentFile()" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(79,70,229,0.4);">
+                        <i class="fas fa-download"></i> Baixar PDF
+                    </button>
+                </div>`;
+            },
+
+            async pdfNextPage() {
+                if (!this._pdfDoc || this._pdfPage >= this._pdfTotalPages) return;
+                this._pdfPage++;
+                await this._renderPdfPage(this._pdfPage);
+                const wrap = document.getElementById('pdf-viewer-wrap');
+                if (wrap) wrap.scrollTop = 0;
+            },
+
+            async pdfPrevPage() {
+                if (!this._pdfDoc || this._pdfPage <= 1) return;
+                this._pdfPage--;
+                await this._renderPdfPage(this._pdfPage);
+                const wrap = document.getElementById('pdf-viewer-wrap');
+                if (wrap) wrap.scrollTop = 0;
             },
 
             closeViewer() {
@@ -15976,20 +16150,35 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const body = document.getElementById('file-viewer-body');
                 if (overlay) overlay.classList.remove('active');
                 if (body) { body.innerHTML = ''; }
+                if (this._currentBlobURL) {
+                    URL.revokeObjectURL(this._currentBlobURL);
+                    this._currentBlobURL = null;
+                }
                 this._viewerFile = null;
                 this._viewerZoom = 1;
+                this._pdfDoc = null;
+                this._pdfPage = 1;
+                // Restaura toolbar padrão para imagens
+                const toolbar = document.getElementById('file-viewer-toolbar');
+                if (toolbar) toolbar.innerHTML = `
+                    <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
+                    <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()">100%</button>
+                    <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>`;
             },
 
             zoomIn() {
                 this._viewerZoom = Math.min(3, this._viewerZoom + 0.25);
+                if (this._pdfDoc) { this._renderPdfPage(this._pdfPage); return; }
                 this._applyZoom();
             },
             zoomOut() {
                 this._viewerZoom = Math.max(0.5, this._viewerZoom - 0.25);
+                if (this._pdfDoc) { this._renderPdfPage(this._pdfPage); return; }
                 this._applyZoom();
             },
             zoomReset() {
                 this._viewerZoom = 1;
+                if (this._pdfDoc) { this._renderPdfPage(this._pdfPage); return; }
                 this._applyZoom();
             },
             _applyZoom() {
@@ -16004,8 +16193,10 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 if (!f) return;
                 const a = document.createElement('a');
                 a.href = f.data;
-                a.download = f.nome;
+                a.download = f.nome || 'arquivo';
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
             },
         };
 
