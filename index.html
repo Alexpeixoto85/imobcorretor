@@ -1,7 +1,3 @@
-
-
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3187,16 +3183,20 @@
 
         /* Viewer de arquivo */
         .file-viewer-overlay {
-            position:fixed; top:0; left:0; width:100%; height:100%;
-            background:rgba(0,0,0,0.97); z-index:2000;
+            position:fixed; top:0; left:0; width:100vw; height:100vh;
+            height: 100dvh;
+            background:rgba(0,0,0,0.97); z-index:99999;
             display:none; flex-direction:column;
+            overflow: hidden;
         }
         .file-viewer-overlay.active { display:flex; }
         .file-viewer-header {
             display:flex; align-items:center; gap:12px;
-            padding: 14px 16px;
-            background: rgba(0,0,0,0.6); backdrop-filter:blur(10px);
+            padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+            background: rgba(20,20,20,0.95); backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
             flex-shrink:0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .file-viewer-title { color:white; font-size:0.9rem; font-weight:700; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .file-viewer-close {
@@ -3205,24 +3205,39 @@
             display:flex; align-items:center; justify-content:center; font-size:1rem;
             flex-shrink:0;
         }
-        .file-viewer-body { flex:1; overflow:auto; display:flex; align-items:center; justify-content:center; }
+        .file-viewer-close:active { background: rgba(255,255,255,0.3); }
+        .file-viewer-body {
+            flex:1; overflow:auto; display:flex;
+            align-items:center; justify-content:center;
+            -webkit-overflow-scrolling: touch;
+            min-height: 0;
+            padding: 8px;
+        }
         .file-viewer-body iframe {
             width:100%; height:100%; border:none;
+            display:block;
         }
         .file-viewer-body img {
-            max-width:95%; max-height:95%; object-fit:contain; border-radius:4px;
+            max-width:100%; max-height:100%; object-fit:contain; border-radius:4px;
+            transform-origin: center center;
+            transition: transform 0.2s ease;
         }
         .file-viewer-toolbar {
-            display:flex; gap:8px; padding: 10px 16px;
-            background: rgba(0,0,0,0.6); backdrop-filter:blur(10px);
+            display:flex; gap:8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+            background: rgba(20,20,20,0.95); backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
             flex-shrink:0; justify-content:center;
+            border-top: 1px solid rgba(255,255,255,0.1);
         }
         .file-viewer-btn {
             background:rgba(255,255,255,0.15); border:none; color:white;
             padding: 8px 16px; border-radius:8px; cursor:pointer;
             font-size:0.82rem; font-weight:600;
             display:flex; align-items:center; gap:6px;
+            min-width: 44px; min-height: 44px;
+            justify-content: center;
         }
+        .file-viewer-btn:active { background: rgba(255,255,255,0.3); }
 
         /* Filtros de leitura */
         .leitura-cats {
@@ -15909,30 +15924,60 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const item = this.items.find(x => x.id === itemId);
                 if (!item) return;
                 const anexo = (item.anexos || [])[anexoIdx];
-                if (!anexo) return;
+                if (!anexo || !anexo.data) { Utils.toast('Anexo não disponível', 'error'); return; }
                 this._viewerFile = anexo;
                 this._viewerZoom = 1;
-                document.getElementById('file-viewer-title').textContent = anexo.nome;
+
+                const overlay = document.getElementById('file-viewer-overlay');
+                const titleEl = document.getElementById('file-viewer-title');
                 const body = document.getElementById('file-viewer-body');
                 const toolbar = document.getElementById('file-viewer-toolbar');
-                if (anexo.tipo === 'application/pdf') {
-                    body.innerHTML = `<iframe src="${anexo.data}" style="width:100%;height:100%;border:none;"></iframe>`;
+                if (!overlay || !body || !toolbar) return;
+
+                titleEl.textContent = anexo.nome || 'Arquivo';
+                body.innerHTML = '';
+
+                const isPdf = anexo.tipo === 'application/pdf' || (anexo.nome || '').toLowerCase().endsWith('.pdf');
+
+                if (isPdf) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;';
+                    iframe.src = anexo.data;
+                    iframe.onerror = function() {
+                        body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">📑</div><div style="font-size:1rem;font-weight:700;margin-bottom:8px;">' + (anexo.nome||'PDF') + '</div><div style="font-size:0.85rem;opacity:0.7;margin-bottom:24px;">Use o botão para baixar o arquivo.</div><button onclick="Leitura.downloadCurrentFile()" style="background:#4F46E5;color:white;border:none;padding:12px 24px;border-radius:10px;font-size:0.9rem;font-weight:700;cursor:pointer;"><i class=\'fas fa-download\'></i> Baixar PDF</button></div>';
+                    };
+                    body.appendChild(iframe);
                     toolbar.style.display = 'none';
                 } else {
-                    body.innerHTML = `<img src="${anexo.data}" id="viewer-img" style="max-width:95%;max-height:90vh;object-fit:contain;transition:transform 0.2s;" alt="${anexo.nome}">`;
+                    const img = document.createElement('img');
+                    img.id = 'viewer-img';
+                    img.alt = anexo.nome || 'Imagem';
+                    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;';
+                    img.onerror = function() {
+                        body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div></div>';
+                        toolbar.style.display = 'none';
+                    };
+                    img.src = anexo.data;
+                    body.appendChild(img);
                     toolbar.style.display = 'flex';
-                    this._viewerZoom = 1;
-                    document.getElementById('zoom-pct-label').textContent = '100%';
+                    const lbl = document.getElementById('zoom-pct-label');
+                    if (lbl) lbl.textContent = '100%';
                 }
-                document.getElementById('file-viewer-overlay').classList.add('active');
-                document.body.style.overflow = 'hidden';
+
+                // Garante que o overlay está no topo do DOM (fora de qualquer stacking context)
+                if (overlay.parentElement !== document.body) {
+                    document.body.appendChild(overlay);
+                }
+                overlay.classList.add('active');
             },
 
             closeViewer() {
-                document.getElementById('file-viewer-overlay').classList.remove('active');
-                document.getElementById('file-viewer-body').innerHTML = '';
-                document.body.style.overflow = '';
+                const overlay = document.getElementById('file-viewer-overlay');
+                const body = document.getElementById('file-viewer-body');
+                if (overlay) overlay.classList.remove('active');
+                if (body) { body.innerHTML = ''; }
                 this._viewerFile = null;
+                this._viewerZoom = 1;
             },
 
             zoomIn() {
