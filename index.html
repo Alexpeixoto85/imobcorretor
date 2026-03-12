@@ -3185,6 +3185,71 @@
         .leitura-attach-name { font-size:0.82rem; font-weight:600; color:var(--dark); flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
         .leitura-attach-size { font-size:0.7rem; color:var(--text-secondary); }
 
+        /* ===== GALLERY GRID DE ANEXOS (novo) ===== */
+        .leitura-attach-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .leitura-attach-thumb {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s, transform 0.15s;
+            background: var(--light);
+        }
+        .leitura-attach-thumb:active { transform: scale(0.94); border-color: var(--indigo); }
+        .leitura-attach-thumb img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .leitura-attach-thumb-pdf {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, rgba(244,63,94,0.12) 0%, rgba(244,63,94,0.06) 100%);
+            gap: 4px;
+        }
+        .leitura-attach-thumb-pdf i { font-size: 1.6rem; color: var(--coral); }
+        .leitura-attach-thumb-pdf span { font-size: 0.58rem; font-weight: 700; color: var(--coral); text-align: center; padding: 0 4px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .leitura-attach-thumb-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 100%);
+            padding: 12px 6px 5px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .leitura-attach-thumb-overlay i { color: white; font-size: 0.75rem; opacity: 0.9; }
+        /* Badge de índice no thumb */
+        .leitura-attach-thumb-idx {
+            position: absolute; top: 5px; left: 5px;
+            background: rgba(0,0,0,0.55); color: white;
+            font-size: 0.55rem; font-weight: 800;
+            border-radius: 5px; padding: 2px 5px;
+            line-height: 1;
+        }
+        /* Modo lista (PDF ou >4) */
+        .leitura-attach-list-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 12px; border-radius: 10px;
+            background: var(--light); margin-bottom: 6px;
+            border: 1px solid var(--border); cursor: pointer;
+            transition: background 0.15s, transform 0.15s;
+        }
+        .leitura-attach-list-item:active { background: rgba(79,70,229,0.1); transform: scale(0.98); }
+        .leitura-attach-list-thumb {
+            width: 40px; height: 40px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
+            background: var(--border); display: flex; align-items: center; justify-content: center;
+        }
+        .leitura-attach-list-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .leitura-attach-list-pdf-icon { font-size: 1.3rem; color: var(--coral); }
+        .leitura-attach-list-info { flex: 1; min-width: 0; }
+        .leitura-attach-list-name { font-size: 0.8rem; font-weight: 700; color: var(--dark); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .leitura-attach-list-meta { font-size: 0.68rem; color: var(--text-secondary); margin-top: 2px; }
+        .leitura-attach-list-arrow { color: var(--indigo); font-size: 0.75rem; flex-shrink: 0; }
+
         /* Viewer de arquivo */
         .file-viewer-overlay {
             position:fixed; top:0; left:0; width:100vw; height:100vh;
@@ -3193,7 +3258,8 @@
             display:none; flex-direction:column;
             overflow: hidden;
         }
-        .file-viewer-overlay.active { display:flex; }
+        .file-viewer-overlay.active { display:flex; animation: fvFadeIn 0.22s ease; }
+        @keyframes fvFadeIn { from { opacity:0; } to { opacity:1; } }
         .file-viewer-header {
             display:flex; align-items:center; gap:12px;
             padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
@@ -3203,6 +3269,10 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         .file-viewer-title { color:white; font-size:0.9rem; font-weight:700; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .file-viewer-counter {
+            color: rgba(255,255,255,0.55); font-size:0.75rem; font-weight:600;
+            flex-shrink:0; white-space:nowrap;
+        }
         .file-viewer-close {
             background: rgba(255,255,255,0.15); border:none; color:white;
             width:36px; height:36px; border-radius:50%; cursor:pointer;
@@ -3216,6 +3286,7 @@
             -webkit-overflow-scrolling: touch;
             min-height: 0;
             padding: 8px;
+            position: relative;
         }
         .file-viewer-body iframe {
             width:100%; height:100%; border:none;
@@ -3226,6 +3297,39 @@
             transform-origin: center center;
             transition: transform 0.2s ease;
         }
+        /* Setas de navegação lateral */
+        .fv-nav-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.15); border: none; color: white;
+            width: 40px; height: 56px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; z-index: 10; transition: background 0.15s;
+            backdrop-filter: blur(6px);
+        }
+        .fv-nav-arrow:active { background: rgba(255,255,255,0.3); }
+        .fv-nav-arrow.left { left: 6px; }
+        .fv-nav-arrow.right { right: 6px; }
+        .fv-nav-arrow[disabled] { opacity: 0.25; pointer-events: none; }
+        /* Strip de thumbnails na parte inferior */
+        .file-viewer-strip {
+            display: flex; gap: 6px; overflow-x: auto; align-items: center;
+            padding: 8px 12px; background: rgba(15,15,15,0.92);
+            -webkit-overflow-scrolling: touch;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        .file-viewer-strip::-webkit-scrollbar { height: 0; }
+        .fv-strip-thumb {
+            width: 48px; height: 48px; border-radius: 7px; flex-shrink: 0;
+            overflow: hidden; cursor: pointer; border: 2px solid transparent;
+            transition: border-color 0.15s, transform 0.15s;
+            background: rgba(255,255,255,0.08);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fv-strip-thumb.active { border-color: var(--indigo); transform: scale(1.08); }
+        .fv-strip-thumb:active { transform: scale(0.94); }
+        .fv-strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .fv-strip-thumb-pdf { font-size: 1.5rem; }
         .file-viewer-toolbar {
             display:flex; gap:8px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
             background: rgba(20,20,20,0.95); backdrop-filter:blur(10px);
@@ -5160,11 +5264,16 @@
             <div class="file-viewer-header">
                 <button class="file-viewer-close" onclick="Leitura.closeViewer()"><i class="fas fa-times"></i></button>
                 <div class="file-viewer-title" id="file-viewer-title">Arquivo</div>
+                <div class="file-viewer-counter" id="file-viewer-counter"></div>
                 <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" style="padding:6px 12px;font-size:0.75rem;flex-shrink:0;" title="Baixar arquivo">
                     <i class="fas fa-download"></i>
                 </button>
             </div>
-            <div class="file-viewer-body" id="file-viewer-body"></div>
+            <div class="file-viewer-body" id="file-viewer-body">
+                <button class="fv-nav-arrow left" id="fv-arrow-prev" onclick="Leitura.viewerPrevFile()" style="display:none;"><i class="fas fa-chevron-left"></i></button>
+                <button class="fv-nav-arrow right" id="fv-arrow-next" onclick="Leitura.viewerNextFile()" style="display:none;"><i class="fas fa-chevron-right"></i></button>
+            </div>
+            <div class="file-viewer-strip" id="file-viewer-strip" style="display:none;"></div>
             <div class="file-viewer-toolbar" id="file-viewer-toolbar">
                 <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
                 <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()">100%</button>
@@ -15814,19 +15923,53 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         : `<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2.5rem;background:${gradient};color:white;gap:6px;"><span>${icon}</span><span style="font-size:0.7rem;font-weight:700;opacity:0.8;text-align:center;padding:0 10px;">${item.titulo.substring(0,30)}</span></div>`;
 
                     const anexos = item.anexos || [];
-                    const anexosHTML = anexos.length > 0 ? `
-                        <div class="leitura-attachments">
-                            <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;"><i class="fas fa-paperclip"></i> Anexos (${anexos.length})</div>
-                            ${anexos.map((a, ai) => `
-                                <div class="leitura-attach-item" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
-                                    <span class="leitura-attach-icon">${a.tipo === 'application/pdf' ? '📑' : '🖼'}</span>
-                                    <div>
-                                        <div class="leitura-attach-name">${a.nome}</div>
-                                        <div class="leitura-attach-size">${a.tamanho || ''}</div>
+                    const allImages = anexos.filter(a => a.tipo && a.tipo.startsWith('image/'));
+                    const allPdfs = anexos.filter(a => a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf'));
+
+                    let anexosHTML = '';
+                    if (anexos.length > 0) {
+                        // Se há só imagens (≤6) → grade de thumbnails
+                        // Se há PDFs ou mix → lista com thumb
+                        const hasOnlyImages = allPdfs.length === 0 && allImages.length === anexos.length;
+
+                        if (hasOnlyImages && anexos.length <= 6) {
+                            // Grade visual de imagens
+                            const gridItems = anexos.map((a, ai) => `
+                                <div class="leitura-attach-thumb" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
+                                    <img src="${a.data}" alt="${a.nome}" loading="lazy">
+                                    <div class="leitura-attach-thumb-overlay"><i class="fas fa-expand-alt"></i></div>
+                                    ${anexos.length > 1 ? `<div class="leitura-attach-thumb-idx">${ai+1}/${anexos.length}</div>` : ''}
+                                </div>`).join('');
+                            anexosHTML = `
+                                <div class="leitura-attachments">
+                                    <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;"><i class="fas fa-images"></i> Imagens (${anexos.length})</div>
+                                    <div class="leitura-attach-gallery">${gridItems}</div>
+                                </div>`;
+                        } else {
+                            // Lista com miniatura
+                            const listItems = anexos.map((a, ai) => {
+                                const isPdf = a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf');
+                                const thumbHTML = isPdf
+                                    ? `<div class="leitura-attach-list-thumb"><i class="fas fa-file-pdf leitura-attach-list-pdf-icon"></i></div>`
+                                    : `<div class="leitura-attach-list-thumb"><img src="${a.data}" alt="${a.nome}" loading="lazy"></div>`;
+                                const typeLabel = isPdf ? 'PDF' : 'Imagem';
+                                return `
+                                <div class="leitura-attach-list-item" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
+                                    ${thumbHTML}
+                                    <div class="leitura-attach-list-info">
+                                        <div class="leitura-attach-list-name">${a.nome}</div>
+                                        <div class="leitura-attach-list-meta">${typeLabel}${a.tamanho ? ' · ' + a.tamanho : ''}</div>
                                     </div>
-                                    <i class="fas fa-external-link-alt" style="color:var(--indigo);font-size:0.8rem;flex-shrink:0;"></i>
-                                </div>`).join('')}
-                        </div>` : '';
+                                    <i class="fas fa-chevron-right leitura-attach-list-arrow"></i>
+                                </div>`;
+                            }).join('');
+                            anexosHTML = `
+                                <div class="leitura-attachments">
+                                    <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;"><i class="fas fa-paperclip"></i> Anexos (${anexos.length})</div>
+                                    ${listItems}
+                                </div>`;
+                        }
+                    }
 
                     return `
                     <div class="leitura-card" onclick="event.stopPropagation()">
@@ -15946,9 +16089,32 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             openFile(itemId, anexoIdx) {
                 const item = this.items.find(x => x.id === itemId);
                 if (!item) return;
-                const anexo = (item.anexos || [])[anexoIdx];
+                const anexos = item.anexos || [];
+                const anexo = anexos[anexoIdx];
                 if (!anexo || !anexo.data) { Utils.toast('Anexo não disponível', 'error'); return; }
 
+                // Salva contexto do item para navegação entre anexos
+                this._viewerItemId = itemId;
+                this._viewerAnexoIdx = anexoIdx;
+                this._viewerAnexos = anexos;
+
+                this._loadViewerFile(anexo, anexoIdx, anexos);
+
+                // Garante que o overlay está no topo do DOM
+                const overlay = document.getElementById('file-viewer-overlay');
+                if (overlay.parentElement !== document.body) {
+                    document.body.appendChild(overlay);
+                }
+                overlay.classList.add('active');
+
+                // Atualiza strip de thumbnails
+                this._renderViewerStrip(anexos, anexoIdx);
+
+                // Gestos de swipe no body do viewer
+                this._initViewerSwipe();
+            },
+
+            _loadViewerFile(anexo, idx, allAnexos) {
                 // Revoga blob URL anterior se houver
                 if (this._currentBlobURL) {
                     URL.revokeObjectURL(this._currentBlobURL);
@@ -15961,29 +16127,40 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this._pdfPage = 1;
                 this._pdfTotalPages = 1;
 
-                const overlay = document.getElementById('file-viewer-overlay');
                 const titleEl = document.getElementById('file-viewer-title');
+                const counterEl = document.getElementById('file-viewer-counter');
                 const body = document.getElementById('file-viewer-body');
                 const toolbar = document.getElementById('file-viewer-toolbar');
-                if (!overlay || !body || !toolbar) return;
+                const arrowPrev = document.getElementById('fv-arrow-prev');
+                const arrowNext = document.getElementById('fv-arrow-next');
+                if (!body || !toolbar) return;
 
                 titleEl.textContent = anexo.nome || 'Arquivo';
+
+                // Contador e setas só aparecem com múltiplos anexos
+                const total = allAnexos ? allAnexos.length : 1;
+                const cur = (idx !== undefined ? idx : 0) + 1;
+                if (counterEl) counterEl.textContent = total > 1 ? `${cur} / ${total}` : '';
+                if (arrowPrev) { arrowPrev.style.display = total > 1 ? 'flex' : 'none'; arrowPrev.disabled = cur <= 1; }
+                if (arrowNext) { arrowNext.style.display = total > 1 ? 'flex' : 'none'; arrowNext.disabled = cur >= total; }
+
+                // Limpa body mantendo as setas
+                const arrows = body.querySelectorAll('.fv-nav-arrow');
                 body.innerHTML = '';
+                arrows.forEach(a => body.appendChild(a));
+
                 toolbar.style.display = 'none';
 
                 const isPdf = anexo.tipo === 'application/pdf' || (anexo.nome || '').toLowerCase().endsWith('.pdf');
 
                 if (isPdf) {
-                    // Mostra loading
-                    body.innerHTML = `<div id="pdf-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;">
-                        <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-                        <div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div>
-                    </div>`;
-
-                    // Tenta PDF.js primeiro (renderização em canvas, sem restrição de iframe)
+                    const loadingDiv = document.createElement('div');
+                    loadingDiv.id = 'pdf-loading';
+                    loadingDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;';
+                    loadingDiv.innerHTML = `<div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div>`;
+                    body.appendChild(loadingDiv);
                     this._openPdfWithPdfJs(anexo, body, toolbar);
                 } else {
-                    // Imagem: usa Blob URL
                     const blobURL = this._dataURLtoBlobURL(anexo.data, anexo.tipo || 'image/jpeg');
                     if (blobURL) {
                         this._currentBlobURL = blobURL;
@@ -15993,32 +16170,76 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;cursor:zoom-in;';
                         img.ondblclick = () => { this._viewerZoom = this._viewerZoom === 1 ? 2 : 1; this._applyZoom(); };
                         img.onerror = () => {
-                            body.innerHTML = '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div></div>';
+                            body.querySelectorAll(':not(.fv-nav-arrow)').forEach(el => el.remove());
+                            const errDiv = document.createElement('div');
+                            errDiv.style.cssText = 'text-align:center;color:white;padding:32px;';
+                            errDiv.innerHTML = '<div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div>';
+                            body.appendChild(errDiv);
                             toolbar.style.display = 'none';
                         };
                         img.src = blobURL;
-                        body.innerHTML = '';
                         body.appendChild(img);
                         toolbar.style.display = 'flex';
                         const lbl = document.getElementById('zoom-pct-label');
                         if (lbl) lbl.textContent = '100%';
                     } else {
-                        // Fallback direto com data URL
                         const img = document.createElement('img');
                         img.id = 'viewer-img';
                         img.src = anexo.data;
                         img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;';
-                        body.innerHTML = '';
                         body.appendChild(img);
                         toolbar.style.display = 'flex';
                     }
                 }
+            },
 
-                // Garante que o overlay está no topo do DOM
-                if (overlay.parentElement !== document.body) {
-                    document.body.appendChild(overlay);
-                }
-                overlay.classList.add('active');
+            _renderViewerStrip(anexos, activeIdx) {
+                const strip = document.getElementById('file-viewer-strip');
+                if (!strip) return;
+                if (!anexos || anexos.length <= 1) { strip.style.display = 'none'; return; }
+                strip.style.display = 'flex';
+                strip.innerHTML = anexos.map((a, i) => {
+                    const isPdf = a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf');
+                    const thumbContent = isPdf
+                        ? `<span class="fv-strip-thumb-pdf">📑</span>`
+                        : `<img src="${a.data}" alt="${a.nome}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`;
+                    return `<div class="fv-strip-thumb ${i === activeIdx ? 'active' : ''}" onclick="Leitura._viewerGoTo(${i})" title="${a.nome}">${thumbContent}</div>`;
+                }).join('');
+                // Scroll para thumb ativo
+                const activThumb = strip.children[activeIdx];
+                if (activThumb) { setTimeout(() => activThumb.scrollIntoView({ block:'nearest', inline:'center', behavior:'smooth' }), 80); }
+            },
+
+            _viewerGoTo(idx) {
+                const anexos = this._viewerAnexos;
+                if (!anexos || idx < 0 || idx >= anexos.length) return;
+                this._viewerAnexoIdx = idx;
+                this._loadViewerFile(anexos[idx], idx, anexos);
+                this._renderViewerStrip(anexos, idx);
+            },
+
+            viewerPrevFile() { this._viewerGoTo(this._viewerAnexoIdx - 1); },
+            viewerNextFile() { this._viewerGoTo(this._viewerAnexoIdx + 1); },
+
+            _initViewerSwipe() {
+                const body = document.getElementById('file-viewer-body');
+                if (!body || body._swipeInit) return;
+                body._swipeInit = true;
+                let startX = 0, startY = 0;
+                body.addEventListener('touchstart', e => {
+                    startX = e.touches[0].clientX;
+                    startY = e.touches[0].clientY;
+                }, { passive: true });
+                body.addEventListener('touchend', e => {
+                    const dx = e.changedTouches[0].clientX - startX;
+                    const dy = e.changedTouches[0].clientY - startY;
+                    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)) {
+                        const anexos = this._viewerAnexos || [];
+                        if (anexos.length <= 1) return;
+                        if (dx < 0) this.viewerNextFile();
+                        else this.viewerPrevFile();
+                    }
+                }, { passive: true });
             },
 
             async _openPdfWithPdfJs(anexo, body, toolbar) {
@@ -16148,8 +16369,18 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             closeViewer() {
                 const overlay = document.getElementById('file-viewer-overlay');
                 const body = document.getElementById('file-viewer-body');
+                const strip = document.getElementById('file-viewer-strip');
+                const counterEl = document.getElementById('file-viewer-counter');
                 if (overlay) overlay.classList.remove('active');
-                if (body) { body.innerHTML = ''; }
+                // Limpa body mas preserva setas
+                if (body) {
+                    const arrows = body.querySelectorAll('.fv-nav-arrow');
+                    body.innerHTML = '';
+                    arrows.forEach(a => { a.style.display = 'none'; body.appendChild(a); });
+                    body._swipeInit = false;
+                }
+                if (strip) strip.style.display = 'none';
+                if (counterEl) counterEl.textContent = '';
                 if (this._currentBlobURL) {
                     URL.revokeObjectURL(this._currentBlobURL);
                     this._currentBlobURL = null;
@@ -16158,6 +16389,9 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this._viewerZoom = 1;
                 this._pdfDoc = null;
                 this._pdfPage = 1;
+                this._viewerItemId = null;
+                this._viewerAnexoIdx = 0;
+                this._viewerAnexos = null;
                 // Restaura toolbar padrão para imagens
                 const toolbar = document.getElementById('file-viewer-toolbar');
                 if (toolbar) toolbar.innerHTML = `
@@ -16203,6 +16437,15 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
+        });
+
+        // Navegação por teclado no viewer de arquivos
+        document.addEventListener('keydown', (e) => {
+            const overlay = document.getElementById('file-viewer-overlay');
+            if (!overlay || !overlay.classList.contains('active')) return;
+            if (e.key === 'Escape') { Leitura.closeViewer(); }
+            else if (e.key === 'ArrowRight') { Leitura.viewerNextFile(); }
+            else if (e.key === 'ArrowLeft') { Leitura.viewerPrevFile(); }
         });
 
         if ('serviceWorker' in navigator) {
