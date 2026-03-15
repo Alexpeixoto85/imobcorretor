@@ -1,3 +1,8 @@
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -522,154 +527,48 @@
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             height: var(--nav-height);
-            background: rgba(255,255,255,0.97);
+            background: rgba(255,255,255,0.95);
             backdrop-filter: blur(20px) saturate(1.6);
             -webkit-backdrop-filter: blur(20px) saturate(1.6);
             border-top: 1px solid rgba(30,50,32,0.07);
-            display: flex;
-            align-items: stretch;
+            display: flex; justify-content: space-around;
             padding-bottom: var(--safe-bottom);
             z-index: 50;
             width: 100%;
             box-shadow: 0 -4px 20px rgba(30,50,32,0.06);
+            /* Responsive: allow scroll on small screens */
             overflow-x: auto;
-            overflow-y: hidden;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
-            scroll-behavior: smooth;
         }
         .bottom-nav::-webkit-scrollbar { display: none; }
-        /* Scroll hint gradient na borda direita */
-        .bottom-nav::after {
-            content: '';
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            width: 28px;
-            height: var(--nav-height);
-            background: linear-gradient(to left, rgba(255,255,255,0.85) 0%, transparent 100%);
-            pointer-events: none;
-            z-index: 51;
+
+        /* Large screens: items fill full width */
+        @media (min-width: 600px) {
+            .bottom-nav { justify-content: space-around; overflow-x: visible; }
+            .nav-item { flex: 1; min-width: unset; }
+        }
+
+        /* Small screens: scrollable, fixed-width items */
+        @media (max-width: 599px) {
+            .bottom-nav { justify-content: flex-start; }
+            .nav-item { flex: 0 0 auto; min-width: 64px; }
         }
 
         .nav-item {
-            flex: 0 0 auto;
-            min-width: 58px;
-            display: flex; flex-direction: column;
+            flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             color: var(--text-secondary); text-decoration: none;
-            font-size: 0.65rem; font-weight: 600;
+            font-size: 0.68rem; font-weight: 600;
             gap: 3px; transition: 0.2s;
-            padding: 8px 6px;
+            padding: 6px 4px;
             white-space: nowrap;
         }
-        .nav-item i { font-size: 1.2rem; margin-bottom: 1px; }
+        .nav-item i { font-size: 1.2rem; margin-bottom: 2px; }
         .nav-item.active { color: var(--primary); }
         .nav-item.active i { 
             filter: drop-shadow(0 2px 4px rgba(30,50,32,0.30));
         }
-
-        /* ===== LOTE DOCUMENTATION CHECKLIST ===== */
-        .lote-docs-section {
-            display: none;
-            background: linear-gradient(135deg, rgba(46,74,49,0.06) 0%, rgba(196,114,74,0.06) 100%);
-            border: 1.5px solid rgba(46,74,49,0.15);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-        .lote-docs-section::before {
-            content: '🏡';
-            position: absolute;
-            top: -10px; right: -5px;
-            font-size: 3rem;
-            opacity: 0.08;
-            transform: rotate(10deg);
-        }
-        .lote-docs-section.visible { display: block; }
-        .lote-docs-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 14px;
-        }
-        .lote-docs-title {
-            font-size: 0.95rem; font-weight: 800;
-            color: var(--primary);
-            display: flex; align-items: center; gap: 8px;
-        }
-        .lote-docs-badge {
-            background: var(--primary); color: white;
-            border-radius: 99px; padding: 2px 8px;
-            font-size: 0.7rem; font-weight: 700;
-        }
-        .lote-doc-item {
-            display: flex; align-items: flex-start; gap: 12px;
-            padding: 11px 12px;
-            background: var(--surface);
-            border-radius: 10px;
-            margin-bottom: 8px;
-            border: 1px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .lote-doc-item:active { transform: scale(0.98); }
-        .lote-doc-item.received {
-            background: rgba(46,125,66,0.07);
-            border-color: rgba(46,125,66,0.25);
-        }
-        .lote-doc-checkbox {
-            width: 22px; height: 22px; min-width: 22px;
-            border-radius: 6px;
-            border: 2px solid var(--border);
-            background: var(--surface);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            cursor: pointer;
-        }
-        .lote-doc-item.received .lote-doc-checkbox {
-            background: var(--success);
-            border-color: var(--success);
-            color: white;
-        }
-        .lote-doc-info { flex: 1; }
-        .lote-doc-num {
-            font-size: 0.7rem; font-weight: 700;
-            color: var(--accent); margin-bottom: 2px;
-        }
-        .lote-doc-name {
-            font-size: 0.9rem; font-weight: 600;
-            color: var(--dark);
-        }
-        .lote-doc-sub {
-            font-size: 0.75rem; color: var(--text-secondary);
-            margin-top: 1px;
-        }
-        .lote-docs-obs {
-            background: rgba(196,114,74,0.08);
-            border: 1px solid rgba(196,114,74,0.20);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 0.8rem;
-            color: var(--dark);
-            margin-top: 4px;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .btn-lote-pdf {
-            width: 100%;
-            padding: 12px;
-            border: none; border-radius: 10px;
-            font-size: 0.9rem; font-weight: 700;
-            background: linear-gradient(135deg, #2E3E7E 0%, #1A2455 100%);
-            color: white;
-            margin-top: 12px;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            box-shadow: 0 4px 14px rgba(46,62,126,0.30);
-        }
-        .btn-lote-pdf:active { transform: scale(0.97); }
 
         .fab {
             position: fixed;
@@ -4482,24 +4381,47 @@
                     <input type="email" id="c-email" class="form-control">
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Tipo de Interesse</label>
+                    <select id="c-tipo-interesse" class="form-control" onchange="App.cliente.toggleLoteDocumentacao()">
+                        <option value="">Não especificado</option>
+                        <option value="lote">Lote</option>
+                        <option value="apartamento">Apartamento</option>
+                        <option value="casa">Casa</option>
+                        <option value="comercial">Comercial</option>
+                        <option value="rural">Rural</option>
+                    </select>
+                </div>
+
+                <!-- DOCUMENTAÇÃO PARA COMPRA DE LOTE -->
+                <div id="lote-doc-section" style="display:none; margin-bottom: 16px;">
+                    <div style="background: linear-gradient(135deg, #2E4A31, #3D6142); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                            <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">📋</div>
+                            <div>
+                                <div style="font-size:1rem;font-weight:800;color:white;letter-spacing:-0.3px;">Documentação para Compra de Lote</div>
+                                <div style="font-size:0.75rem;color:rgba(255,255,255,0.7);">Marque os documentos já recebidos</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="lote-docs-checklist" style="background:white;border-radius:12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);">
+                        <!-- Items inserted by JS -->
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                        <button type="button" onclick="App.cliente.gerarPDFLoteDocs()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;padding:11px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;">
+                            <i class="fas fa-file-pdf"></i> Baixar PDF para Cliente
+                        </button>
+                        <button type="button" onclick="App.cliente.whatsappLoteDocs()" style="flex:1;background:#25D366;color:white;border:none;border-radius:10px;padding:11px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;">
+                            <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
                     <label class="form-label">Imóvel de Interesse</label>
-                    <select id="c-imovel-interesse" class="form-control" onchange="App.cliente.onImovelInteresseChange()">
+                    <select id="c-imovel-interesse" class="form-control">
                         <option value="">Selecione um imóvel...</option>
                     </select>
                     <button type="button" class="btn-sm btn-primary-soft" style="margin-top: 8px;" onclick="App.cliente.addToWaitingList()" id="btn-add-waitinglist">Adicionar à lista de espera</button>
-                </div>
-                <!-- Toggle manual para lote (quando não vinculado a imóvel específico) -->
-                <div class="form-group">
-                    <label class="form-label" style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-                        <div style="position:relative;width:44px;height:24px;flex-shrink:0;">
-                            <input type="checkbox" id="c-interesse-lote" style="opacity:0;position:absolute;width:100%;height:100%;margin:0;cursor:pointer;z-index:2;"
-                                onchange="App.cliente.onLoteToggle()">
-                            <div id="lote-toggle-track" style="position:absolute;inset:0;background:var(--border);border-radius:12px;transition:background 0.2s;"></div>
-                            <div id="lote-toggle-thumb" style="position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;box-shadow:0 2px 4px rgba(0,0,0,0.15);transition:transform 0.2s;"></div>
-                        </div>
-                        <span style="font-size:0.9rem;font-weight:600;color:var(--dark);">Interesse em Compra de Lote</span>
-                        <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:400;">Exibe checklist de documentos</span>
-                    </label>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Data de Nascimento</label>
@@ -4561,75 +4483,6 @@
                     </div>
                     <input type="hidden" id="c-documentos-data" value="[]">
                 </div>
-
-                <!-- ===== SEÇÃO: LISTA DE DOCUMENTOS PARA COMPRA DE LOTE ===== -->
-                <div id="lote-docs-section" class="lote-docs-section">
-                    <div class="lote-docs-header">
-                        <div class="lote-docs-title">
-                            <i class="fas fa-file-alt"></i>
-                            Docs para Compra de Lote
-                        </div>
-                        <span class="lote-docs-badge" id="lote-docs-count">0/6</span>
-                    </div>
-                    <div id="lote-docs-list">
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(0)" id="lote-doc-0">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-0"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 1</div>
-                                <div class="lote-doc-name">RG (ou CNH) + CPF</div>
-                                <div class="lote-doc-sub">Documento de identidade com foto</div>
-                            </div>
-                        </div>
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(1)" id="lote-doc-1">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-1"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 2</div>
-                                <div class="lote-doc-name">Comprovante de Residência</div>
-                                <div class="lote-doc-sub">Conta de água, luz ou telefone (últimos 90 dias)</div>
-                            </div>
-                        </div>
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(2)" id="lote-doc-2">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-2"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 3</div>
-                                <div class="lote-doc-name">Certidão de Estado Civil</div>
-                                <div class="lote-doc-sub">Solteiro, casado, divorciado ou viúvo</div>
-                            </div>
-                        </div>
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(3)" id="lote-doc-3">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-3"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 4</div>
-                                <div class="lote-doc-name">E-mail</div>
-                                <div class="lote-doc-sub">Endereço de e-mail ativo</div>
-                            </div>
-                        </div>
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(4)" id="lote-doc-4">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-4"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 5</div>
-                                <div class="lote-doc-name">Telefone</div>
-                                <div class="lote-doc-sub">Número para contato (WhatsApp)</div>
-                            </div>
-                        </div>
-                        <div class="lote-doc-item" onclick="App.cliente.toggleLoteDoc(5)" id="lote-doc-5">
-                            <div class="lote-doc-checkbox" id="lote-doc-chk-5"></div>
-                            <div class="lote-doc-info">
-                                <div class="lote-doc-num">DOC 6</div>
-                                <div class="lote-doc-name">Profissão</div>
-                                <div class="lote-doc-sub">Ocupação / ramo de atividade</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="lote-docs-obs">
-                        <i class="fas fa-check-circle" style="color:var(--success);font-size:1rem;"></i>
-                        <span><strong>Sem consulta ao SPC e SERASA!</strong> Condições facilitadas para todos os perfis.</span>
-                    </div>
-                    <button type="button" class="btn-lote-pdf" onclick="App.cliente.downloadLoteDocPDF()">
-                        <i class="fas fa-file-pdf"></i> Baixar Lista em PDF (enviar ao cliente)
-                    </button>
-                </div>
-                <input type="hidden" id="c-lote-docs-data" value="[]">
 
                 <button type="submit" class="btn-block">Salvar Cliente</button>
                 <button type="button" class="btn-block" style="background: var(--light); color: var(--secondary); margin-top: 8px;" onclick="UI.closeModals()">Cancelar</button>
@@ -4716,7 +4569,6 @@
                             <option value="apartamento">Apartamento</option>
                             <option value="casa">Casa</option>
                             <option value="terreno">Terreno</option>
-                            <option value="lote">Lote</option>
                             <option value="comercial">Comercial</option>
                             <option value="kitnet">Kitnet</option>
                         </select>
@@ -9174,31 +9026,48 @@
                         ` : ''}
                         
                         ${docsHTML}
-
-                        ${(cliente.interesseLote || (cliente.loteDocs && cliente.loteDocs.length > 0)) ? `
-                        <div class="details-section" style="background: linear-gradient(135deg, rgba(46,74,49,0.06) 0%, rgba(196,114,74,0.06) 100%); border-left: 3px solid var(--primary);">
-                            <div class="details-section-title"><i class="fas fa-file-alt"></i> DOCUMENTOS PARA COMPRA DE LOTE
-                                <span style="margin-left:auto; font-size:0.75rem; font-weight:700; padding:2px 8px; border-radius:99px; background:var(--primary); color:white;">${(cliente.loteDocs||[]).length}/6</span>
-                            </div>
-                            ${LOTE_DOCS.map(d => {
-                                const rec = (cliente.loteDocs||[]).includes(d.id);
-                                return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-                                    <div style="width:22px;height:22px;border-radius:6px;background:${rec?'var(--success)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        ${rec?'<i class="fas fa-check" style="color:white;font-size:0.7rem;"></i>':''}
+                        
+                        ${cliente.tipoInteresse === 'lote' ? `
+                        <div class="details-section" style="border:none;padding:0;">
+                            <div style="background:linear-gradient(135deg,#2E4A31,#3D6142);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                                    <div style="display:flex;align-items:center;gap:10px;">
+                                        <span style="font-size:1.4rem;">📋</span>
+                                        <div>
+                                            <div style="font-size:0.95rem;font-weight:800;color:white;">Documentação para Compra de Lote</div>
+                                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);">
+                                                ${(() => {
+                                                    const checked = cliente.loteDocsChecked || {};
+                                                    const entregues = Object.values(checked).filter(Boolean).length;
+                                                    const total = 6;
+                                                    return `${entregues}/${total} documentos recebidos`;
+                                                })()}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div style="font-size:0.85rem;font-weight:600;color:${rec?'var(--success)':'var(--dark)'};">${d.name}</div>
-                                        <div style="font-size:0.75rem;color:var(--text-secondary);">${d.sub}</div>
-                                    </div>
-                                </div>`;
-                            }).join('')}
-                            <div class="lote-docs-obs" style="margin-top:10px;">
-                                <i class="fas fa-check-circle" style="color:var(--success);"></i>
-                                <span><strong>Sem consulta SPC/SERASA!</strong></span>
+                                    <button onclick="event.stopPropagation(); App.cliente.gerarPDFLoteDocsFromCliente('${cliente.id}')" style="background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                                        <i class="fas fa-file-pdf"></i> Baixar PDF
+                                    </button>
+                                </div>
                             </div>
-                            <button class="btn-lote-pdf" onclick="event.stopPropagation(); App.cliente.downloadLoteDocPDFById('${cliente.id}')">
-                                <i class="fas fa-file-pdf"></i> Baixar Lista em PDF
-                            </button>
+                            <div style="background:white;border-radius:10px;border:1px solid var(--border);overflow:hidden;">
+                                ${(App.cliente.LOTE_DOCS || []).map((d, i) => {
+                                    const checked = cliente.loteDocsChecked || {};
+                                    const done = checked[d.id];
+                                    return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:${i<5?'1px solid var(--border)':'none'};background:${done?'rgba(46,125,66,0.04)':''}">
+                                        <div style="width:20px;height:20px;border-radius:5px;background:${done?'var(--success)':'var(--light)'};border:2px solid ${done?'var(--success)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:0.65rem;">${done?'<i class="fas fa-check"></i>':''}</div>
+                                        <span style="font-size:0.88rem;font-weight:600;color:${done?'var(--text-secondary)':'var(--dark)'};${done?'text-decoration:line-through':''}">${d.icon} ${i+1}. ${d.label}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+                                <button onclick="event.stopPropagation(); App.cliente.gerarPDFLoteDocsFromCliente('${cliente.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+                                    <i class="fas fa-file-pdf"></i> Baixar PDF para Cliente
+                                </button>
+                                <button onclick="event.stopPropagation(); App.cliente.whatsappLoteDocsFromCliente('${cliente.id}')" style="flex:1;background:#25D366;color:white;border:none;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+                                    <i class="fab fa-whatsapp"></i> Enviar por WhatsApp
+                                </button>
+                            </div>
                         </div>
                         ` : ''}
                         
@@ -10686,13 +10555,13 @@
                 document.getElementById('c-documentos-data').value = '[]';
                 App.cliente.renderDocumentosList([]);
                 
-                // Reset lote docs
-                const loteDocsEl = document.getElementById('c-lote-docs-data');
-                if (loteDocsEl) loteDocsEl.value = '[]';
-                const loteToggle = document.getElementById('c-interesse-lote');
-                if (loteToggle) { loteToggle.checked = false; App.cliente.syncLoteToggle(); }
-                
                 document.getElementById('c-taxa-juros').value = UI.data.settings?.taxaJuros || 8.5;
+                
+                // Reset lote documentation section
+                const loteSection = document.getElementById('lote-doc-section');
+                if (loteSection) loteSection.style.display = 'none';
+                const tipoInteresseEl = document.getElementById('c-tipo-interesse');
+                if (tipoInteresseEl) tipoInteresseEl.value = '';
                 
                 UI.openModal('cliente');
             },
@@ -11360,16 +11229,6 @@
             select.innerHTML = Utils.documentTypes.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
         }
 
-        // ===== LOTE DOCS LOGIC =====
-        const LOTE_DOCS = [
-            { id: 0, num: 'DOC 1', name: 'RG (ou CNH) + CPF', sub: 'Documento de identidade com foto' },
-            { id: 1, num: 'DOC 2', name: 'Comprovante de Residência', sub: 'Conta de água, luz ou telefone (últimos 90 dias)' },
-            { id: 2, num: 'DOC 3', name: 'Certidão de Estado Civil', sub: 'Solteiro, casado, divorciado ou viúvo' },
-            { id: 3, num: 'DOC 4', name: 'E-mail', sub: 'Endereço de e-mail ativo' },
-            { id: 4, num: 'DOC 5', name: 'Telefone', sub: 'Número para contato (WhatsApp)' },
-            { id: 5, num: 'DOC 6', name: 'Profissão', sub: 'Ocupação / ramo de atividade' }
-        ];
-
         const App = {
             cliente: {
                 save: async (e) => {
@@ -11397,9 +11256,8 @@
                     const observacoes = document.getElementById('c-observacoes').value;
                     const origemLead = document.getElementById('c-origem-lead').value || '';
                     const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
-                    const interesseLote = document.getElementById('c-interesse-lote')?.checked || false;
-                    const loteDocsData = document.getElementById('c-lote-docs-data')?.value || '[]';
-                    const loteDocs = JSON.parse(loteDocsData);
+                    const tipoInteresse = document.getElementById('c-tipo-interesse')?.value || '';
+                    const loteDocsChecked = App.cliente.getLoteDocsChecked();
 
                     const clienteExistente = UI.data.clientes.find(c => c.id === id);
                     const contatos = clienteExistente?.contatos || 0;
@@ -11408,7 +11266,7 @@
                         id, nome, tipo, etapaFunil, telefone, cpf, email, 
                         imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
                         faixaPreco, observacoes, origemLead, documentos,
-                        interesseLote, loteDocs,
+                        tipoInteresse, loteDocsChecked,
                         dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0],
                         contatos
@@ -11457,6 +11315,8 @@
                     document.getElementById('c-faixa-preco').value = cliente.faixaPreco || '';
                     document.getElementById('c-observacoes').value = cliente.observacoes || '';
                     const origemEl = document.getElementById('c-origem-lead'); if(origemEl) origemEl.value = cliente.origemLead || '';
+                    const tipoInteresseEl = document.getElementById('c-tipo-interesse'); 
+                    if(tipoInteresseEl) { tipoInteresseEl.value = cliente.tipoInteresse || ''; App.cliente.toggleLoteDocumentacao(cliente.loteDocsChecked); }
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
                     
                     const imovelSelect = document.getElementById('c-imovel-interesse');
@@ -11481,21 +11341,6 @@
                     const documentos = cliente.documentos || [];
                     document.getElementById('c-documentos-data').value = JSON.stringify(documentos);
                     App.cliente.renderDocumentosList(documentos);
-                    
-                    // Restore lote docs state
-                    const interesseLoteEl = document.getElementById('c-interesse-lote');
-                    if (interesseLoteEl) {
-                        interesseLoteEl.checked = cliente.interesseLote || false;
-                        App.cliente.syncLoteToggle();
-                    }
-                    const loteDocsEl = document.getElementById('c-lote-docs-data');
-                    if (loteDocsEl) {
-                        const ld = cliente.loteDocs || [];
-                        loteDocsEl.value = JSON.stringify(ld);
-                        App.cliente.renderLoteDocs(ld);
-                    }
-                    // Auto-detect lote from linked property
-                    App.cliente.onImovelInteresseChange();
                     
                     UI.openModal('cliente');
                 },
@@ -11676,242 +11521,7 @@
                     
                     Utils.toast('Cliente adicionado à lista de espera!');
                 },
-
-                // ===== LOTE DOCS METHODS =====
-                onImovelInteresseChange: function() {
-                    const imovelId = document.getElementById('c-imovel-interesse').value;
-                    if (!imovelId) return;
-                    const imovel = UI.data.imoveis.find(i => i.id === imovelId);
-                    if (imovel && (imovel.tipo === 'terreno' || imovel.tipo === 'lote' || (imovel.titulo && imovel.titulo.toLowerCase().includes('lote')))) {
-                        const toggle = document.getElementById('c-interesse-lote');
-                        if (toggle && !toggle.checked) {
-                            toggle.checked = true;
-                            App.cliente.syncLoteToggle();
-                        }
-                    }
-                },
-
-                onLoteToggle: function() {
-                    App.cliente.syncLoteToggle();
-                },
-
-                syncLoteToggle: function() {
-                    const toggle = document.getElementById('c-interesse-lote');
-                    const track = document.getElementById('lote-toggle-track');
-                    const thumb = document.getElementById('lote-toggle-thumb');
-                    const section = document.getElementById('lote-docs-section');
-                    if (!toggle || !section) return;
-                    const checked = toggle.checked;
-                    if (track) track.style.background = checked ? 'var(--primary)' : 'var(--border)';
-                    if (thumb) thumb.style.transform = checked ? 'translateX(20px)' : 'translateX(0)';
-                    if (checked) {
-                        section.classList.add('visible');
-                        const stored = JSON.parse(document.getElementById('c-lote-docs-data').value || '[]');
-                        App.cliente.renderLoteDocs(stored);
-                    } else {
-                        section.classList.remove('visible');
-                    }
-                },
-
-                renderLoteDocs: function(receivedList) {
-                    LOTE_DOCS.forEach(doc => {
-                        const item = document.getElementById(`lote-doc-${doc.id}`);
-                        const chk = document.getElementById(`lote-doc-chk-${doc.id}`);
-                        if (!item || !chk) return;
-                        const received = receivedList.includes(doc.id);
-                        if (received) {
-                            item.classList.add('received');
-                            chk.innerHTML = '<i class="fas fa-check"></i>';
-                        } else {
-                            item.classList.remove('received');
-                            chk.innerHTML = '';
-                        }
-                    });
-                    const count = receivedList.length;
-                    const badge = document.getElementById('lote-docs-count');
-                    if (badge) badge.textContent = `${count}/6`;
-                    if (count === 6) badge.style.background = 'var(--success)';
-                    else badge.style.background = 'var(--primary)';
-                },
-
-                toggleLoteDoc: function(docId) {
-                    const storedEl = document.getElementById('c-lote-docs-data');
-                    let stored = JSON.parse(storedEl.value || '[]');
-                    const idx = stored.indexOf(docId);
-                    if (idx >= 0) stored.splice(idx, 1);
-                    else stored.push(docId);
-                    storedEl.value = JSON.stringify(stored);
-                    App.cliente.renderLoteDocs(stored);
-                },
-
-                downloadLoteDocPDF: function() {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                    const pw = doc.internal.pageSize.getWidth();
-                    const settings = UI.data.settings || {};
-                    const clienteNome = document.getElementById('c-nome').value || 'Cliente';
-
-                    // --- Header background ---
-                    doc.setFillColor(46, 74, 49);
-                    doc.rect(0, 0, pw, 52, 'F');
-
-                    // Accent stripe
-                    doc.setFillColor(196, 114, 74);
-                    doc.rect(0, 48, pw, 4, 'F');
-
-                    // Logo / brand text
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(22);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text(settings.imobiliaria || 'ImobiPro', pw / 2, 18, { align: 'center' });
-
-                    doc.setFontSize(11);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(settings.nome ? `Corretor(a): ${settings.nome}` : 'Consultora de Vendas', pw / 2, 27, { align: 'center' });
-                    if (settings.creci) {
-                        doc.text(`CRECI: ${settings.creci}`, pw / 2, 34, { align: 'center' });
-                    }
-                    if (settings.telefone) {
-                        doc.text(`WhatsApp: ${settings.telefone}`, pw / 2, 41, { align: 'center' });
-                    }
-
-                    // Main title block
-                    let y = 66;
-                    doc.setTextColor(46, 74, 49);
-                    doc.setFontSize(19);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('DOCUMENTAÇÃO NECESSÁRIA', pw / 2, y, { align: 'center' });
-                    y += 8;
-                    doc.setFontSize(13);
-                    doc.setFont('helvetica', 'normal');
-                    doc.setTextColor(100, 100, 100);
-                    doc.text('PARA COMPRAR SEU LOTE', pw / 2, y, { align: 'center' });
-
-                    // Divider
-                    y += 5;
-                    doc.setDrawColor(196, 114, 74);
-                    doc.setLineWidth(1.2);
-                    doc.line(20, y, pw - 20, y);
-
-                    // Cliente info
-                    y += 9;
-                    doc.setFontSize(10);
-                    doc.setTextColor(80, 80, 80);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`Preparado para: ${clienteNome}`, 20, y);
-                    const dataHoje = new Date().toLocaleDateString('pt-BR');
-                    doc.text(`Data: ${dataHoje}`, pw - 20, y, { align: 'right' });
-
-                    // Docs list
-                    y += 8;
-                    const storedEl = document.getElementById('c-lote-docs-data');
-                    const receivedList = JSON.parse(storedEl?.value || '[]');
-
-                    LOTE_DOCS.forEach((item, i) => {
-                        const received = receivedList.includes(item.id);
-                        // Card background
-                        doc.setFillColor(received ? 240 : 255, received ? 248 : 255, received ? 240 : 255);
-                        doc.roundedRect(15, y, pw - 30, 20, 3, 3, 'F');
-                        doc.setDrawColor(received ? 46 : 221, received ? 125 : 221, received ? 66 : 221);
-                        doc.setLineWidth(0.5);
-                        doc.roundedRect(15, y, pw - 30, 20, 3, 3, 'S');
-
-                        // Number badge
-                        doc.setFillColor(46, 74, 49);
-                        doc.circle(26, y + 10, 5, 'F');
-                        doc.setTextColor(255, 255, 255);
-                        doc.setFontSize(8);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(String(i + 1), 26, y + 12.5, { align: 'center' });
-
-                        // Doc name
-                        doc.setTextColor(30, 30, 30);
-                        doc.setFontSize(12);
-                        doc.setFont('helvetica', 'bold');
-                        doc.text(item.name, 35, y + 9);
-
-                        // Sub
-                        doc.setFontSize(8.5);
-                        doc.setFont('helvetica', 'normal');
-                        doc.setTextColor(120, 120, 120);
-                        doc.text(item.sub, 35, y + 15.5);
-
-                        // Status checkmark
-                        if (received) {
-                            doc.setTextColor(46, 125, 66);
-                            doc.setFontSize(14);
-                            doc.text('✓', pw - 22, y + 13);
-                        } else {
-                            doc.setDrawColor(200, 200, 200);
-                            doc.setLineWidth(0.8);
-                            doc.roundedRect(pw - 28, y + 5, 10, 10, 2, 2, 'S');
-                        }
-
-                        y += 23;
-                    });
-
-                    // OBS box
-                    y += 3;
-                    doc.setFillColor(255, 249, 240);
-                    doc.roundedRect(15, y, pw - 30, 16, 3, 3, 'F');
-                    doc.setDrawColor(196, 114, 74);
-                    doc.setLineWidth(0.7);
-                    doc.roundedRect(15, y, pw - 30, 16, 3, 3, 'S');
-                    doc.setTextColor(100, 60, 20);
-                    doc.setFontSize(10);
-                    doc.setFont('helvetica', 'bold');
-                    doc.text('✔  Sem consulta ao SPC e SERASA!', pw / 2, y + 7, { align: 'center' });
-                    doc.setFont('helvetica', 'normal');
-                    doc.setFontSize(9);
-                    doc.text('Condições especiais e facilitadas para todos os perfis.', pw / 2, y + 13, { align: 'center' });
-
-                    // Progress summary
-                    y += 24;
-                    const total = LOTE_DOCS.length;
-                    const done = receivedList.length;
-                    if (done > 0) {
-                        doc.setFontSize(9);
-                        doc.setTextColor(80, 80, 80);
-                        doc.setFont('helvetica', 'normal');
-                        doc.text(`Documentos recebidos: ${done}/${total}`, 20, y);
-                        // Progress bar
-                        y += 5;
-                        doc.setFillColor(221, 224, 216);
-                        doc.roundedRect(20, y, pw - 40, 5, 2, 2, 'F');
-                        doc.setFillColor(46, 125, 66);
-                        doc.roundedRect(20, y, (pw - 40) * (done / total), 5, 2, 2, 'F');
-                        y += 10;
-                    }
-
-                    // Footer
-                    const pageH = doc.internal.pageSize.getHeight();
-                    doc.setFillColor(46, 74, 49);
-                    doc.rect(0, pageH - 18, pw, 18, 'F');
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(9);
-                    doc.setFont('helvetica', 'normal');
-                    doc.text(`${settings.imobiliaria || 'ImobiPro'} · ${settings.nome || ''} · ${settings.telefone || ''}`, pw / 2, pageH - 8, { align: 'center' });
-
-                    doc.save(`docs_lote_${clienteNome.replace(/\s+/g, '_').toLowerCase()}_${dataHoje.replace(/\//g,'-')}.pdf`);
-                    Utils.toast('PDF gerado com sucesso!');
-                },
                 
-                downloadLoteDocPDFById: function(clienteId) {
-                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
-                    if (!cliente) return;
-                    // Temporarily populate form fields so downloadLoteDocPDF works
-                    const nomeEl = document.getElementById('c-nome');
-                    const prevNome = nomeEl ? nomeEl.value : '';
-                    if (nomeEl) nomeEl.value = cliente.nome;
-                    const storedEl = document.getElementById('c-lote-docs-data');
-                    const prevStored = storedEl ? storedEl.value : '[]';
-                    if (storedEl) storedEl.value = JSON.stringify(cliente.loteDocs || []);
-                    App.cliente.downloadLoteDocPDF();
-                    // Restore
-                    if (nomeEl) nomeEl.value = prevNome;
-                    if (storedEl) storedEl.value = prevStored;
-                },
-
                 agendarAtividade: (clienteId) => {
                     UI.openNewVisita();
                     setTimeout(() => {
@@ -12099,7 +11709,371 @@
                     const renda = Utils.parseCurrency(rendaStr);
                     const taxa = Utils.getInterestRateByIncome(renda);
                     document.getElementById('c-taxa-juros').value = taxa.toFixed(2);
-                }
+                },
+
+                // ===== DOCUMENTAÇÃO LOTE =====
+                LOTE_DOCS: [
+                    { id: 'rg_cpf',       label: 'RG (ou CNH) + CPF',           icon: '🪪', obs: 'Documento de identificação com foto' },
+                    { id: 'comp_res',     label: 'Comprovante de Residência',    icon: '🏠', obs: 'Água, luz, gás ou correspondência bancária (últimos 3 meses)' },
+                    { id: 'est_civil',    label: 'Certidão de Estado Civil',     icon: '💍', obs: 'Certidão de nascimento ou casamento atualizada' },
+                    { id: 'email',        label: 'E-mail',                       icon: '📧', obs: 'E-mail válido para envio de documentos' },
+                    { id: 'telefone',     label: 'Telefone (WhatsApp)',           icon: '📱', obs: 'Número com WhatsApp ativo' },
+                    { id: 'profissao',    label: 'Profissão',                    icon: '💼', obs: 'Informar cargo e empresa atual' },
+                ],
+
+                toggleLoteDocumentacao: function(preChecked) {
+                    const tipo = document.getElementById('c-tipo-interesse')?.value;
+                    const sec = document.getElementById('lote-doc-section');
+                    if (!sec) return;
+                    if (tipo === 'lote') {
+                        sec.style.display = 'block';
+                        App.cliente.renderLoteDocsChecklist(preChecked || {});
+                    } else {
+                        sec.style.display = 'none';
+                    }
+                },
+
+                renderLoteDocsChecklist: function(checked) {
+                    const container = document.getElementById('lote-docs-checklist');
+                    if (!container) return;
+                    container.innerHTML = App.cliente.LOTE_DOCS.map((doc, i) => {
+                        const done = checked && checked[doc.id];
+                        return `<div onclick="App.cliente.toggleLoteDoc('${doc.id}', this)" 
+                            data-docid="${doc.id}"
+                            style="display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border-bottom:${i < App.cliente.LOTE_DOCS.length-1 ? '1px solid var(--border)' : 'none'};cursor:pointer;transition:background 0.15s;${done ? 'background:rgba(46,125,66,0.05)' : ''}">
+                            <div style="width:24px;height:24px;border-radius:6px;border:2px solid ${done ? 'var(--success)' : 'var(--border)'};background:${done ? 'var(--success)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.2s;color:white;font-size:0.75rem;">
+                                ${done ? '<i class="fas fa-check"></i>' : ''}
+                            </div>
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                                    <span style="font-size:1rem;">${doc.icon}</span>
+                                    <span style="font-size:0.9rem;font-weight:700;color:var(--dark);${done ? 'text-decoration:line-through;color:var(--text-secondary)' : ''}">${i+1}. ${doc.label}</span>
+                                </div>
+                                <div style="font-size:0.75rem;color:var(--text-secondary);margin-left:28px;">${doc.obs}</div>
+                            </div>
+                        </div>`;
+                    }).join('');
+                },
+
+                toggleLoteDoc: function(docId, el) {
+                    const row = el.closest ? el.closest('[data-docid]') : el;
+                    const checked = App.cliente.getLoteDocsChecked();
+                    checked[docId] = !checked[docId];
+                    App.cliente.renderLoteDocsChecklist(checked);
+                },
+
+                getLoteDocsChecked: function() {
+                    const rows = document.querySelectorAll('#lote-docs-checklist [data-docid]');
+                    const result = {};
+                    rows.forEach(row => {
+                        const id = row.getAttribute('data-docid');
+                        result[id] = row.querySelector('.fa-check') !== null;
+                    });
+                    return result;
+                },
+
+                gerarPDFLoteDocs: function() {
+                    const nomeEl = document.getElementById('c-nome');
+                    const nome = nomeEl ? nomeEl.value || 'Cliente' : 'Cliente';
+                    const checked = {};
+                    document.querySelectorAll('#lote-docs-checklist [data-docid]').forEach(row => {
+                        const id = row.getAttribute('data-docid');
+                        checked[id] = row.querySelector('.fa-check') !== null;
+                    });
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+                    const W = 210, H = 297;
+                    const primaryR = 46, primaryG = 74, primaryB = 49;
+                    const accentR = 196, accentG = 114, accentB = 74;
+
+                    // Background gradient simulation
+                    doc.setFillColor(240, 243, 240);
+                    doc.rect(0, 0, W, H, 'F');
+
+                    // Header block
+                    doc.setFillColor(primaryR, primaryG, primaryB);
+                    doc.roundedRect(10, 10, W-20, 52, 6, 6, 'F');
+
+                    // Accent bar
+                    doc.setFillColor(accentR, accentG, accentB);
+                    doc.roundedRect(10, 56, W-20, 5, 2, 2, 'F');
+
+                    // Logo text
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(22);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('ImobiPro', 22, 28);
+
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(200, 220, 200);
+                    doc.text('Sistema de Gestão Imobiliária', 22, 36);
+
+                    // Title right
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('DOCUMENTAÇÃO NECESSÁRIA', W - 22, 27, { align: 'right' });
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    doc.setTextColor(196, 220, 196);
+                    doc.text('PARA COMPRA DE LOTE', W - 22, 35, { align: 'right' });
+
+                    // Client name
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 210, 180);
+                    doc.text(`Preparado para: ${nome}`, 22, 50);
+
+                    // Date right
+                    const today = new Date().toLocaleDateString('pt-BR');
+                    doc.text(`Data: ${today}`, W - 22, 50, { align: 'right' });
+
+                    // OBS Banner
+                    doc.setFillColor(255, 243, 220);
+                    doc.roundedRect(10, 67, W-20, 14, 4, 4, 'F');
+                    doc.setDrawColor(245, 158, 11);
+                    doc.setLineWidth(0.5);
+                    doc.roundedRect(10, 67, W-20, 14, 4, 4, 'S');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 100, 10);
+                    doc.text('⚠  OBS: Sem consulta ao SPC e SERASA!', W/2, 76, { align: 'center' });
+
+                    // Documents list
+                    let y = 92;
+                    App.cliente.LOTE_DOCS.forEach((d, i) => {
+                        const isDone = checked[d.id];
+                        const bgR = isDone ? 230 : 255;
+                        const bgG = isDone ? 245 : 255;
+                        const bgB = isDone ? 230 : 255;
+
+                        doc.setFillColor(bgR, bgG, bgB);
+                        doc.roundedRect(10, y, W-20, 22, 4, 4, 'F');
+
+                        if (isDone) {
+                            doc.setDrawColor(46, 125, 66);
+                            doc.setLineWidth(0.8);
+                        } else {
+                            doc.setDrawColor(primaryR, primaryG, primaryB);
+                            doc.setLineWidth(0.4);
+                        }
+                        doc.roundedRect(10, y, W-20, 22, 4, 4, 'S');
+
+                        // Number circle
+                        doc.setFillColor(primaryR, primaryG, primaryB);
+                        doc.circle(22, y+11, 5, 'F');
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(`${i+1}`, 22, y + 13.5, { align: 'center' });
+
+                        // Label
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(11);
+                        doc.setTextColor(isDone ? 46 : primaryR, isDone ? 125 : primaryG, isDone ? 66 : primaryB);
+                        doc.text(d.label, 32, y + 9);
+
+                        // Obs
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        doc.setTextColor(120, 140, 120);
+                        doc.text(d.obs, 32, y + 16);
+
+                        // Check mark right
+                        if (isDone) {
+                            doc.setFillColor(46, 125, 66);
+                            doc.circle(W - 18, y + 11, 5, 'F');
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(10);
+                            doc.setTextColor(255, 255, 255);
+                            doc.text('✓', W - 18, y + 13.5, { align: 'center' });
+                        } else {
+                            doc.setDrawColor(200, 210, 200);
+                            doc.setLineWidth(0.5);
+                            doc.circle(W - 18, y + 11, 5, 'S');
+                        }
+
+                        y += 26;
+                    });
+
+                    // Footer
+                    doc.setFillColor(primaryR, primaryG, primaryB);
+                    doc.rect(0, H - 22, W, 22, 'F');
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(180, 210, 180);
+                    doc.text('Documento gerado pelo ImobiPro · Sistema de Gestão Imobiliária', W/2, H - 10, { align: 'center' });
+
+                    const totalDocs = App.cliente.LOTE_DOCS.length;
+                    const entregues = Object.values(checked).filter(Boolean).length;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(196, 220, 196);
+                    doc.text(`${entregues}/${totalDocs} documentos recebidos`, W/2, H - 4, { align: 'center' });
+
+                    const safeName = nome.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+                    doc.save(`Documentacao_Lote_${safeName}.pdf`);
+                    Utils.toast('PDF gerado com sucesso!', 'success');
+                },
+
+                whatsappLoteDocs: function() {
+                    const telefoneEl = document.getElementById('c-telefone');
+                    const nomeEl = document.getElementById('c-nome');
+                    const nome = nomeEl ? nomeEl.value || 'Cliente' : 'Cliente';
+                    let telefone = telefoneEl ? telefoneEl.value.replace(/\D/g, '') : '';
+                    
+                    const checked = {};
+                    document.querySelectorAll('#lote-docs-checklist [data-docid]').forEach(row => {
+                        checked[row.getAttribute('data-docid')] = row.querySelector('.fa-check') !== null;
+                    });
+
+                    const pendentes = App.cliente.LOTE_DOCS.filter(d => !checked[d.id]);
+                    const entregues = App.cliente.LOTE_DOCS.filter(d => checked[d.id]);
+
+                    let msg = `📋 *DOCUMENTAÇÃO PARA COMPRA DE LOTE*\n\n`;
+                    msg += `Olá *${nome}*! Para prosseguirmos com a compra do seu lote, precisamos dos seguintes documentos:\n\n`;
+                    
+                    if (pendentes.length > 0) {
+                        msg += `📌 *Documentos Pendentes:*\n`;
+                        pendentes.forEach((d, i) => { msg += `${d.icon} ${i+1}. ${d.label}\n`; });
+                    }
+                    if (entregues.length > 0) {
+                        msg += `\n✅ *Documentos Recebidos:*\n`;
+                        entregues.forEach(d => { msg += `✓ ${d.label}\n`; });
+                    }
+
+                    msg += `\n⚠️ *OBS: Sem consulta ao SPC e SERASA!*\n`;
+                    msg += `\nAguardo o envio. Qualquer dúvida, estou à disposição! 😊`;
+
+                    if (!telefone) {
+                        navigator.clipboard?.writeText(msg).then(() => Utils.toast('Mensagem copiada!'));
+                        return;
+                    }
+                    if (telefone.length === 11) telefone = '55' + telefone;
+                    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(msg)}`, '_blank');
+                },
+
+                gerarPDFLoteDocsFromCliente: function(clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+                    const checked = cliente.loteDocsChecked || {};
+                    // Temporarily populate form fields for reuse
+                    const docs = App.cliente.LOTE_DOCS;
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const W = 210, H = 297;
+                    doc.setFillColor(240, 243, 240);
+                    doc.rect(0, 0, W, H, 'F');
+                    doc.setFillColor(46, 74, 49);
+                    doc.roundedRect(10, 10, W-20, 52, 6, 6, 'F');
+                    doc.setFillColor(196, 114, 74);
+                    doc.roundedRect(10, 56, W-20, 5, 2, 2, 'F');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(22);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('ImobiPro', 22, 28);
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(200, 220, 200);
+                    doc.text('Sistema de Gestão Imobiliária', 22, 36);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('DOCUMENTAÇÃO NECESSÁRIA', W - 22, 27, { align: 'right' });
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(10);
+                    doc.setTextColor(196, 220, 196);
+                    doc.text('PARA COMPRA DE LOTE', W - 22, 35, { align: 'right' });
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 210, 180);
+                    doc.text(`Preparado para: ${cliente.nome}`, 22, 50);
+                    const today = new Date().toLocaleDateString('pt-BR');
+                    doc.text(`Data: ${today}`, W - 22, 50, { align: 'right' });
+                    doc.setFillColor(255, 243, 220);
+                    doc.roundedRect(10, 67, W-20, 14, 4, 4, 'F');
+                    doc.setDrawColor(245, 158, 11);
+                    doc.setLineWidth(0.5);
+                    doc.roundedRect(10, 67, W-20, 14, 4, 4, 'S');
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 100, 10);
+                    doc.text('⚠  OBS: Sem consulta ao SPC e SERASA!', W/2, 76, { align: 'center' });
+                    let y = 92;
+                    docs.forEach((d, i) => {
+                        const isDone = checked[d.id];
+                        doc.setFillColor(isDone ? 230 : 255, isDone ? 245 : 255, isDone ? 230 : 255);
+                        doc.roundedRect(10, y, W-20, 22, 4, 4, 'F');
+                        isDone ? doc.setDrawColor(46, 125, 66) : doc.setDrawColor(46, 74, 49);
+                        doc.setLineWidth(isDone ? 0.8 : 0.4);
+                        doc.roundedRect(10, y, W-20, 22, 4, 4, 'S');
+                        doc.setFillColor(46, 74, 49);
+                        doc.circle(22, y+11, 5, 'F');
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(255, 255, 255);
+                        doc.text(`${i+1}`, 22, y + 13.5, { align: 'center' });
+                        doc.setFont('helvetica', 'bold');
+                        doc.setFontSize(11);
+                        doc.setTextColor(isDone ? 46 : 46, isDone ? 125 : 74, isDone ? 66 : 49);
+                        doc.text(d.label, 32, y + 9);
+                        doc.setFont('helvetica', 'normal');
+                        doc.setFontSize(8);
+                        doc.setTextColor(120, 140, 120);
+                        doc.text(d.obs, 32, y + 16);
+                        if (isDone) {
+                            doc.setFillColor(46, 125, 66);
+                            doc.circle(W - 18, y + 11, 5, 'F');
+                            doc.setFont('helvetica', 'bold');
+                            doc.setFontSize(10);
+                            doc.setTextColor(255, 255, 255);
+                            doc.text('✓', W - 18, y + 13.5, { align: 'center' });
+                        } else {
+                            doc.setDrawColor(200, 210, 200);
+                            doc.setLineWidth(0.5);
+                            doc.circle(W - 18, y + 11, 5, 'S');
+                        }
+                        y += 26;
+                    });
+                    doc.setFillColor(46, 74, 49);
+                    doc.rect(0, H - 22, W, 22, 'F');
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(8);
+                    doc.setTextColor(180, 210, 180);
+                    doc.text('Documento gerado pelo ImobiPro · Sistema de Gestão Imobiliária', W/2, H - 10, { align: 'center' });
+                    const entregues = Object.values(checked).filter(Boolean).length;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(196, 220, 196);
+                    doc.text(`${entregues}/6 documentos recebidos`, W/2, H - 4, { align: 'center' });
+                    const safeName = cliente.nome.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 20);
+                    doc.save(`Documentacao_Lote_${safeName}.pdf`);
+                    Utils.toast('PDF gerado com sucesso!', 'success');
+                },
+
+                whatsappLoteDocsFromCliente: function(clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+                    const checked = cliente.loteDocsChecked || {};
+                    let telefone = (cliente.telefone || '').replace(/\D/g, '');
+                    const pendentes = App.cliente.LOTE_DOCS.filter(d => !checked[d.id]);
+                    const entregues = App.cliente.LOTE_DOCS.filter(d => checked[d.id]);
+                    let msg = `📋 *DOCUMENTAÇÃO PARA COMPRA DE LOTE*\n\n`;
+                    msg += `Olá *${cliente.nome}*! Para prosseguirmos com a compra do seu lote, precisamos dos seguintes documentos:\n\n`;
+                    if (pendentes.length > 0) {
+                        msg += `📌 *Documentos Pendentes:*\n`;
+                        pendentes.forEach((d, i) => { msg += `${d.icon} ${i+1}. ${d.label}\n`; });
+                    }
+                    if (entregues.length > 0) {
+                        msg += `\n✅ *Documentos Recebidos:*\n`;
+                        entregues.forEach(d => { msg += `✓ ${d.label}\n`; });
+                    }
+                    msg += `\n⚠️ *OBS: Sem consulta ao SPC e SERASA!*\n\nAguardo o envio. Qualquer dúvida, estou à disposição! 😊`;
+                    if (!telefone) { navigator.clipboard?.writeText(msg).then(() => Utils.toast('Mensagem copiada!')); return; }
+                    if (telefone.length === 11) telefone = '55' + telefone;
+                    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(msg)}`, '_blank');
+                },
             },
             
             imovel: {
