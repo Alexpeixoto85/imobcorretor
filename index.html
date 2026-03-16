@@ -1,8 +1,3 @@
-
-
-
-
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -14,7 +9,7 @@
     <title>ImobiPro - Gestão Imobiliária</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -121,10 +116,53 @@
             left: 0;
         }
 
+        /* ===== BACKGROUND IMAGE COM TRANSPARÊNCIA ===== */
+        /* Camada de fundo separada — NÃO afeta cards, botões ou fontes */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background-image: var(--bg-image, none);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: var(--bg-opacity, 0.18);
+            pointer-events: none;
+        }
+
+        /* Gradiente overlay para garantir legibilidade sempre */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background: linear-gradient(
+                150deg,
+                rgba(239, 240, 236, 0.72) 0%,
+                rgba(232, 235, 228, 0.65) 40%,
+                rgba(221, 224, 216, 0.72) 100%
+            );
+            pointer-events: none;
+            opacity: var(--bg-overlay-opacity, 0);
+        }
+
+        /* Quando há imagem de fundo, ativa o overlay */
+        body.has-bg-image::after {
+            opacity: 1;
+        }
+
+        header, main, nav, .modal-overlay, .modal-sheet,
+        .fab, .toast, .fullscreen-viewer, .file-viewer-overlay,
+        #loading, #app {
+            position: relative;
+            z-index: 1;
+        }
+
         header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px) saturate(1.8);
-            -webkit-backdrop-filter: blur(20px) saturate(1.8);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(24px) saturate(2);
+            -webkit-backdrop-filter: blur(24px) saturate(2);
             padding: var(--safe-top) 16px 10px;
             height: var(--header-height);
             display: flex;
@@ -133,15 +171,15 @@
             position: fixed;
             top: 0; left: 0; right: 0;
             z-index: 50;
-            border-bottom: 1px solid rgba(30,50,32,0.08);
-            box-shadow: 0 2px 20px rgba(30,50,32,0.08);
+            border-bottom: 1.5px solid rgba(46,74,49,0.12);
+            box-shadow: 0 2px 20px rgba(30,50,32,0.10), 0 1px 0 rgba(255,255,255,0.8);
         }
 
         .brand {
-            font-size: 1.25rem;
-            font-weight: 800;
+            font-size: 1.3rem;
+            font-weight: 900;
             color: var(--dark);
-            letter-spacing: -0.5px;
+            letter-spacing: -0.8px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -190,22 +228,21 @@
         }
 
         .stat-card {
-            background: var(--surface-glass);
-            backdrop-filter: blur(16px) saturate(1.6);
-            -webkit-backdrop-filter: blur(16px) saturate(1.6);
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(20px) saturate(1.8);
+            -webkit-backdrop-filter: blur(20px) saturate(1.8);
             padding: 18px 14px;
             border-radius: var(--radius-md);
-            box-shadow: var(--shadow-3d);
+            box-shadow: 0 8px 24px rgba(30,50,32,0.12), 0 2px 6px rgba(30,50,32,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
             display: flex;
             flex-direction: column;
             gap: 8px;
             cursor: pointer;
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
-            border: 1px solid rgba(255,255,255,0.80);
+            border: 1px solid rgba(255,255,255,0.95);
             min-height: 90px;
             text-align: center;
             align-items: center;
-            /* 3D perspective base */
             transform-style: preserve-3d;
             perspective: 600px;
             position: relative;
@@ -237,8 +274,15 @@
             transition: transform 0.1s;
             box-shadow: 0 3px 8px rgba(30,50,32,0.15);
         }
-        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--dark); line-height: 1; }
-        .stat-label { font-size: 0.78rem; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.3px; }
+        .stat-value { 
+            font-size: 1.55rem; font-weight: 900; color: var(--dark); line-height: 1;
+            letter-spacing: -0.5px;
+            text-shadow: 0 1px 3px rgba(30,50,32,0.08);
+        }
+        .stat-label { 
+            font-size: 0.76rem; color: var(--text-secondary); font-weight: 700; 
+            letter-spacing: 0.4px; text-transform: uppercase;
+        }
 
         /* Classes de fundo com transparência baseada na nova paleta */
         .bg-blue { background: rgba(30,50,32,0.12); color: var(--primary); }
@@ -258,10 +302,13 @@
         .bg-pink { background: var(--bg-pink); color: var(--pink); }
 
         .section-title {
-            font-size: 1.1rem; font-weight: 700; margin-bottom: 12px;
+            font-size: 1.05rem; font-weight: 800; margin-bottom: 14px;
             display: flex; justify-content: space-between; align-items: center;
             width: 100%;
             color: var(--dark);
+            letter-spacing: -0.3px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(46,74,49,0.10);
         }
 
         .search-container {
@@ -284,18 +331,18 @@
         }
 
         .property-card {
-            background: var(--surface-glass);
-            backdrop-filter: blur(12px) saturate(1.4);
-            -webkit-backdrop-filter: blur(12px) saturate(1.4);
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(16px) saturate(1.8);
+            -webkit-backdrop-filter: blur(16px) saturate(1.8);
             border-radius: var(--radius-md);
             margin-bottom: 18px;
-            box-shadow: var(--shadow-3d);
+            box-shadow: 0 6px 24px rgba(30,50,32,0.12), 0 2px 6px rgba(30,50,32,0.06);
             position: relative;
             overflow: hidden;
             transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
             cursor: pointer;
             width: 100%;
-            border: 1px solid rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,1);
         }
         .property-card:active { 
             transform: scale(0.97) translateY(2px);
@@ -365,8 +412,9 @@
         .badge-verm { background: var(--verm); color: white; }
         .property-content { padding: 16px; }
         .property-title { 
-            font-weight: 700; font-size: 1rem; color: var(--dark);
+            font-weight: 800; font-size: 1rem; color: var(--dark);
             margin-bottom: 4px; line-height: 1.3;
+            letter-spacing: -0.2px;
         }
         .property-address { 
             font-size: 0.85rem; color: var(--text-secondary); 
@@ -384,8 +432,9 @@
         .feature i { font-size: 1rem; margin-bottom: 2px; color: var(--primary); }
         
         .property-price {
-            font-size: 1.3rem; font-weight: 800; color: var(--primary);
+            font-size: 1.35rem; font-weight: 900; color: var(--primary);
             margin-bottom: 8px;
+            letter-spacing: -0.5px;
         }
         .property-price .period { font-size: 0.9rem; color: var(--text-secondary); }
         .property-actions {
@@ -527,10 +576,11 @@
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; right: 0;
             height: var(--nav-height);
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(20px) saturate(1.6);
-            -webkit-backdrop-filter: blur(20px) saturate(1.6);
-            border-top: 1px solid rgba(30,50,32,0.07);
+            background: rgba(255,255,255,0.98);
+            backdrop-filter: blur(24px) saturate(2);
+            -webkit-backdrop-filter: blur(24px) saturate(2);
+            border-top: 1.5px solid rgba(46,74,49,0.12);
+            box-shadow: 0 -4px 24px rgba(30,50,32,0.10);
             display: flex; justify-content: space-around;
             padding-bottom: var(--safe-bottom);
             z-index: 50;
@@ -1770,36 +1820,87 @@
             font-size: 16px !important;
         }
 
+        /* ===== WAITING LIST CARDS — DARK PREMIUM ===== */
         .waiting-item {
-            background: rgba(255,193,7,0.1);
+            background: linear-gradient(135deg, #1A2B1C 0%, #2E4A31 60%, #1e3520 100%);
             border-left: 4px solid var(--warning);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 12px;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+            box-shadow: 0 6px 24px rgba(26,43,28,0.45), 0 2px 8px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: 4px solid var(--warning);
+        }
+        .waiting-item::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.04);
+            pointer-events: none;
         }
         .waiting-item:active {
-            transform: scale(0.98);
+            transform: scale(0.97) translateY(2px);
+            box-shadow: 0 12px 32px rgba(26,43,28,0.6), 0 4px 12px rgba(0,0,0,0.4);
         }
         .waiting-item h4 {
             font-size: 1rem;
-            color: var(--warning);
-            margin-bottom: 4px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+            letter-spacing: -0.3px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .waiting-item h4::before {
+            content: '🏠';
+            font-size: 0.85rem;
+        }
+        .waiting-badge-count {
+            background: var(--warning);
+            color: white;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            margin-left: auto;
         }
         .waiting-clients {
             font-size: 0.85rem;
-            color: var(--dark);
+            color: rgba(255,255,255,0.9);
             list-style: none;
             padding-left: 0;
         }
         .waiting-clients li {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-top: 4px;
-            padding: 4px 0;
-            border-bottom: 1px dashed var(--border);
+            gap: 10px;
+            padding: 9px 12px;
+            margin-top: 6px;
+            background: rgba(255,255,255,0.09);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: background 0.15s;
+            position: relative;
+            z-index: 1;
+        }
+        .waiting-clients li i.fa-user {
+            color: rgba(196,114,74,0.9);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .waiting-clients li span {
+            flex: 1;
+            font-weight: 600;
+            color: #FFFFFF;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         .waiting-clients li:last-child {
             border-bottom: none;
@@ -1868,7 +1969,7 @@
         body.dark-mode .icon-btn { color: #ccc; }
         body.dark-mode .property-image { background: #1E2E20; }
         body.dark-mode .funnel-stage { background: #1E2E20; border-color: #333; }
-        body.dark-mode .waiting-item { background: rgba(255,193,7,0.08); }
+        body.dark-mode .waiting-item { background: linear-gradient(135deg, #0f1a10 0%, #1A2B1C 70%, #0d1a0e 100%); border-color: rgba(255,255,255,0.06); }
         body.dark-mode .modal-overlay { background: rgba(0,0,0,0.75); }
         body.dark-mode .alert-lancamento { background: rgba(255,193,7,0.08); }
 
@@ -2054,29 +2155,29 @@
         }
         
         .mini-chart-container {
-            background: var(--surface-glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.90);
+            backdrop-filter: blur(16px) saturate(1.6);
+            -webkit-backdrop-filter: blur(16px) saturate(1.6);
             border-radius: var(--radius-md);
-            padding: 16px;
+            padding: 18px 16px;
             margin-bottom: 16px;
-            box-shadow: var(--shadow-md);
-            border: 1px solid rgba(255,255,255,0.75);
+            box-shadow: 0 4px 20px rgba(30,50,32,0.10), 0 1px 0 rgba(255,255,255,0.9);
+            border: 1px solid rgba(255,255,255,0.95);
         }
 
         /* ===== UPDATED CLIENT & SCHEDULE CARDS ===== */
         .client-card {
-            background: var(--surface-glass);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(16px) saturate(1.6);
+            -webkit-backdrop-filter: blur(16px) saturate(1.6);
             border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 12px;
-            box-shadow: var(--shadow-md);
+            box-shadow: 0 4px 18px rgba(30,50,32,0.10), 0 1px 0 rgba(255,255,255,0.9);
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
             position: relative;
-            border: 1px solid rgba(255,255,255,0.75);
+            border: 1px solid rgba(255,255,255,0.98);
             width: 100%;
         }
         .client-card:active { 
@@ -3396,6 +3497,74 @@
         }
         .leitura-stat-val { font-size:1.4rem; font-weight:900; color:var(--indigo); }
         .leitura-stat-lbl { font-size:0.68rem; color:var(--text-secondary); font-weight:600; margin-top:2px; }
+
+        /* ===== PROTEÇÃO DE QUALIDADE COM IMAGEM DE FUNDO ===== */
+        /* Quando há imagem de fundo, reforça opacidade dos cards para máxima legibilidade */
+        body.has-bg-image .stat-card,
+        body.has-bg-image .property-card,
+        body.has-bg-image .client-card,
+        body.has-bg-image .schedule-card,
+        body.has-bg-image .mini-chart-container,
+        body.has-bg-image .calendar-container,
+        body.has-bg-image .perf-meter,
+        body.has-bg-image .funnel-container,
+        body.has-bg-image .details-card,
+        body.has-bg-image .details-section,
+        body.has-bg-image .estrategia-card,
+        body.has-bg-image .leitura-card,
+        body.has-bg-image .rotina-block {
+            background: rgba(255, 255, 255, 0.96) !important;
+            box-shadow: 0 8px 28px rgba(30,50,32,0.18), 0 2px 8px rgba(0,0,0,0.12) !important;
+        }
+
+        body.has-bg-image .waiting-item {
+            background: linear-gradient(135deg, #12200F 0%, #1E3318 60%, #12200F 100%) !important;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 2px 8px rgba(0,0,0,0.4) !important;
+        }
+
+        body.has-bg-image header,
+        body.has-bg-image .bottom-nav {
+            background: rgba(255, 255, 255, 1) !important;
+            box-shadow: 0 2px 24px rgba(30,50,32,0.16) !important;
+        }
+
+        /* Textos e fontes: garante que sempre sejam totalmente opacos */
+        body.has-bg-image .stat-value,
+        body.has-bg-image .stat-label,
+        body.has-bg-image .section-title,
+        body.has-bg-image .property-title,
+        body.has-bg-image .property-price,
+        body.has-bg-image .client-name,
+        body.has-bg-image .brand {
+            text-shadow: none;
+        }
+
+        /* Botões primários: sempre sólidos */
+        body.has-bg-image .btn-block,
+        body.has-bg-image .btn-details-primary {
+            box-shadow: 0 4px 16px rgba(46,74,49,0.4) !important;
+        }
+
+        /* ===== TIPOGRAFIA APRIMORADA — GLOBAL ===== */
+        .client-name {
+            font-weight: 800 !important;
+        }
+        .mini-chart-title {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        .details-title {
+            font-weight: 900 !important;
+        }
+        .details-price {
+            font-weight: 900 !important;
+            letter-spacing: -0.5px;
+        }
+        .info-value {
+            font-weight: 700 !important;
+        }
+
     </style>
 </head>
 <body>
@@ -5024,7 +5193,15 @@
                     <input type="file" id="s-bg-input" accept="image/*" style="display: none;" onchange="App.settings.handleBackgroundUpload(this)">
                     <div id="s-bg-preview" style="margin-top: 10px; width: 100%; height: 120px; background-size: cover; background-position: center; border-radius: 8px; border: 1px solid var(--border);"></div>
                     <input type="hidden" id="s-background-image" value="">
-                    <small style="color: var(--secondary);">A imagem será redimensionada e aplicada como plano de fundo.</small>
+                    <div style="margin-top:10px;">
+                        <label style="font-size:0.82rem;font-weight:600;color:var(--dark);display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            Opacidade da imagem: <span id="s-bg-opacity-label" style="color:var(--primary);font-weight:700;">18%</span>
+                        </label>
+                        <input type="range" id="s-bg-opacity" min="5" max="60" value="18" step="1"
+                            style="width:100%;accent-color:var(--primary);height:6px;"
+                            oninput="document.getElementById('s-bg-opacity-label').textContent=this.value+'%'; document.body.style.setProperty('--bg-opacity', this.value/100);">
+                    </div>
+                    <small style="color: var(--secondary);">A imagem é aplicada como camada transparente — cards, botões e textos mantêm qualidade total.</small>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
@@ -7376,9 +7553,15 @@
             
             applyBackground: function() {
                 if (UI.data.settings && UI.data.settings.backgroundImage) {
-                    document.body.style.backgroundImage = `url('${UI.data.settings.backgroundImage}')`;
+                    const opacity = (UI.data.settings.bgOpacity || 18) / 100;
+                    document.body.style.setProperty('--bg-image', `url('${UI.data.settings.backgroundImage}')`);
+                    document.body.style.setProperty('--bg-opacity', opacity);
+                    document.body.style.backgroundImage = '';
+                    document.body.classList.add('has-bg-image');
                 } else {
-                    document.body.style.background = "linear-gradient(150deg, #EEF3F8 0%, #E4EDF5 40%, #DDE8F0 100%)";
+                    document.body.style.setProperty('--bg-image', 'none');
+                    document.body.style.backgroundImage = '';
+                    document.body.classList.remove('has-bg-image');
                 }
             },
             
@@ -7571,12 +7754,13 @@
                     
                     html += `
                         <div class="waiting-item" onclick="UI.showImovelDetails('${imovel.id}')">
-                            <h4>${imovel.titulo}</h4>
+                            <h4>${imovel.titulo}<span class="waiting-badge-count">${clientesEspera.length} na fila</span></h4>
                             <ul class="waiting-clients">
                                 ${clientesEspera.map(c => `
                                     <li>
-                                        <i class="fas fa-user"></i> ${c.nome} (${c.telefone})
-                                        <button class="icon-btn" style="color: #25D366; margin-left: auto;" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
+                                        <i class="fas fa-user"></i>
+                                        <span>${c.nome}${c.telefone ? ' · ' + c.telefone : ''}</span>
+                                        <button style="background:#25D366;color:white;border:none;border-radius:8px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:0.9rem;cursor:pointer;flex-shrink:0;box-shadow:0 2px 8px rgba(37,211,102,0.35);" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
                                             <i class="fab fa-whatsapp"></i>
                                         </button>
                                     </li>
@@ -10724,7 +10908,9 @@
                 
                 document.getElementById('s-background-image').value = s.backgroundImage || '';
                 if (s.backgroundImage) {
-                    document.getElementById('s-bg-preview').style.backgroundImage = `url('${s.backgroundImage}')`;
+                    document.getElementById('s-bg-preview').style.backgroundImage = `url('${s.backgroundImage}')`;  
+                    const opSlider = document.getElementById('s-bg-opacity');
+                    if (opSlider) { opSlider.value = s.bgOpacity || 18; document.getElementById('s-bg-opacity-label').textContent = (s.bgOpacity || 18) + '%'; }
                     document.getElementById('btn-remove-bg').style.display = 'inline-block';
                 } else {
                     document.getElementById('s-bg-preview').style.backgroundImage = '';
@@ -13205,7 +13391,8 @@
                         taxaJuros: parseFloat(document.getElementById('s-taxa-juros').value) || 8.5,
                         refCounter: UI.data.settings?.refCounter || 0,
                         msgPadrao: document.getElementById('s-msg-padrao').value,
-                        backgroundImage: document.getElementById('s-background-image').value
+                        backgroundImage: document.getElementById('s-background-image').value,
+                        bgOpacity: parseInt(document.getElementById('s-bg-opacity')?.value || '18')
                     };
                     
                     await DB.put('settings', settings);
@@ -13226,7 +13413,10 @@
                         const base64 = await Utils.readImage(file);
                         const compressed = await Utils.compressImage(base64, 0.8, 1920);
                         document.getElementById('s-background-image').value = compressed;
-                        document.getElementById('s-bg-preview').style.backgroundImage = `url('${compressed}')`;
+                        document.getElementById('s-bg-preview').style.backgroundImage = `url('${compressed}')`;  
+                    document.body.style.setProperty('--bg-image', `url('${compressed}')`);
+                    document.body.style.setProperty('--bg-opacity', (parseInt(document.getElementById('s-bg-opacity')?.value || '18')) / 100);
+                    document.body.classList.add('has-bg-image');
                         document.getElementById('btn-remove-bg').style.display = 'inline-block';
                     } catch (error) {
                         console.error(error);
@@ -13239,6 +13429,8 @@
                     document.getElementById('s-background-image').value = '';
                     document.getElementById('s-bg-preview').style.backgroundImage = '';
                     document.getElementById('btn-remove-bg').style.display = 'none';
+                    document.body.style.setProperty('--bg-image', 'none');
+                    document.body.classList.remove('has-bg-image');
                 }
             },
             
