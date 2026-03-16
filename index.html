@@ -4667,6 +4667,121 @@
                     <label class="form-label">Email</label>
                     <input type="email" id="c-email" class="form-control">
                 </div>
+
+                <!-- CAMPO DE PROFISSÃO -->
+                <div class="form-group">
+                    <label class="form-label">Profissão / Vínculo Empregatício</label>
+                    <select id="c-profissao" class="form-control" onchange="App.cliente.onProfissaoChange(this.value)">
+                        <option value="">Selecione a profissão...</option>
+                        <optgroup label="── Assalariado / CLT ──">
+                            <option value="clt_privado">Empregado CLT – Setor Privado</option>
+                            <option value="clt_publico">Empregado CLT – Setor Público</option>
+                        </optgroup>
+                        <optgroup label="── Servidor Público ──">
+                            <option value="servidor_federal">Servidor Público Federal</option>
+                            <option value="servidor_estadual">Servidor Público Estadual</option>
+                            <option value="servidor_municipal">Servidor Público Municipal</option>
+                            <option value="militar">Militar / Policial / Bombeiro</option>
+                        </optgroup>
+                        <optgroup label="── Autônomo / Profissional Liberal ──">
+                            <option value="autonomo">Autônomo (sem CNPJ)</option>
+                            <option value="profissional_liberal">Profissional Liberal (médico, advogado, eng.)</option>
+                            <option value="mei">Microempreendedor Individual (MEI)</option>
+                        </optgroup>
+                        <optgroup label="── Empresário / Sócio ──">
+                            <option value="empresario_simples">Empresário – Simples Nacional</option>
+                            <option value="empresario_lucro_presumido">Empresário – Lucro Presumido/Real</option>
+                        </optgroup>
+                        <optgroup label="── Aposentado / Pensionista ──">
+                            <option value="aposentado_inss">Aposentado / Pensionista INSS</option>
+                            <option value="aposentado_rpps">Aposentado / Pensionista RPPS (Servidor)</option>
+                        </optgroup>
+                        <optgroup label="── Outros ──">
+                            <option value="rural">Produtor Rural / Agricultor</option>
+                            <option value="informal">Trabalhador Informal / Sem Renda Formal</option>
+                            <option value="outro">Outro</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- DOCUMENTOS POR PROFISSÃO -->
+                <div id="prof-doc-section" style="display:none; margin-bottom: 16px;">
+                    <div style="background: linear-gradient(135deg, #C4724A, #B05A38); border-radius: 14px; padding: 16px; margin-bottom: 12px;">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                            <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;">📋</div>
+                            <div>
+                                <div style="font-size:1rem;font-weight:800;color:white;letter-spacing:-0.3px;" id="prof-doc-title">Documentos para Avaliação</div>
+                                <div style="font-size:0.75rem;color:rgba(255,255,255,0.75);">Marque os documentos já recebidos / entregues</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Documentos Pessoais (comuns a todos) -->
+                    <div style="margin-bottom:10px;">
+                        <div style="font-size:0.75rem;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px;background:rgba(46,74,49,0.06);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;">
+                            📁 DOCUMENTOS PESSOAIS (todos os perfis)
+                        </div>
+                        <div id="prof-docs-pessoais" style="background:white;border-radius:0 0 12px 12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);">
+                        </div>
+                    </div>
+
+                    <!-- Documentos de Renda (específicos por profissão) -->
+                    <div style="margin-bottom:10px;" id="prof-docs-renda-wrap">
+                        <div style="font-size:0.75rem;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px;background:rgba(196,114,74,0.06);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;">
+                            💰 COMPROVAÇÃO DE RENDA / VÍNCULO
+                        </div>
+                        <div id="prof-docs-renda" style="background:white;border-radius:0 0 12px 12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);">
+                        </div>
+                    </div>
+
+                    <!-- Documentos Conjugais (se casado) -->
+                    <div id="prof-docs-conjugal-wrap" style="margin-bottom:10px;display:none;">
+                        <div style="font-size:0.75rem;font-weight:800;color:var(--indigo);text-transform:uppercase;letter-spacing:0.5px;padding:8px 12px 4px;background:rgba(79,70,229,0.06);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;">
+                            💍 DOCUMENTOS DO CÔNJUGE / CONVIVENTE
+                        </div>
+                        <div id="prof-docs-conjugal" style="background:white;border-radius:0 0 12px 12px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);">
+                        </div>
+                    </div>
+
+                    <!-- Observação profissão -->
+                    <div id="prof-obs-box" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:0.82rem;color:#92660a;line-height:1.5;"></div>
+
+                    <!-- Progresso -->
+                    <div style="background:white;border-radius:10px;border:1px solid var(--border);padding:12px 14px;margin-bottom:10px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <span style="font-size:0.8rem;font-weight:700;color:var(--dark);">Progresso da Documentação</span>
+                            <span id="prof-progress-text" style="font-size:0.8rem;font-weight:700;color:var(--primary);">0 / 0</span>
+                        </div>
+                        <div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden;">
+                            <div id="prof-progress-bar" style="background:linear-gradient(90deg,var(--primary),var(--success));height:100%;width:0%;transition:width 0.4s ease;border-radius:4px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" onclick="App.cliente.gerarPDFProfDocs()" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;padding:11px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;">
+                            <i class="fas fa-file-pdf"></i> PDF para Cliente
+                        </button>
+                        <button type="button" onclick="App.cliente.whatsappProfDocs()" style="flex:1;background:#25D366;color:white;border:none;border-radius:10px;padding:11px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;min-height:42px;">
+                            <i class="fab fa-whatsapp"></i> Enviar WhatsApp
+                        </button>
+                    </div>
+                    <input type="hidden" id="c-profissao-docs-checked" value="{}">
+                </div>
+
+                <!-- ESTADO CIVIL (para mostrar/ocultar docs conjugais) -->
+                <div class="form-group">
+                    <label class="form-label">Estado Civil</label>
+                    <select id="c-estado-civil" class="form-control" onchange="App.cliente.onEstadoCivilChange(this.value)">
+                        <option value="">Não informado</option>
+                        <option value="solteiro">Solteiro(a)</option>
+                        <option value="casado">Casado(a)</option>
+                        <option value="uniao_estavel">União Estável</option>
+                        <option value="divorciado">Divorciado(a)</option>
+                        <option value="viuvo">Viúvo(a)</option>
+                    </select>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Tipo de Interesse</label>
                     <select id="c-tipo-interesse" class="form-control" onchange="App.cliente.toggleLoteDocumentacao()">
@@ -8249,6 +8364,7 @@
                                 <div class="client-row"><i class="fas fa-calendar"></i> ${dias} dias nesta etapa${dias > 30 ? ' <span class="stale-badge">⚠️ Parado</span>' : ''}</div>
                                 ${cliente.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${cliente.faixaPreco}</div>` : ''}
                                 ${cliente.origemLead ? `<div class="client-row"><i class="fas fa-map-signs"></i> <span class="origem-badge">${Utils.getOrigemLabel(cliente.origemLead)}</span></div>` : ''}
+                                ${cliente.profissao && App.cliente.PROF_LABELS ? `<div class="client-row"><i class="fas fa-briefcase"></i> <span class="origem-badge" style="background:rgba(196,114,74,0.12);color:var(--accent);">${App.cliente.PROF_LABELS[cliente.profissao] || cliente.profissao}</span></div>` : ''}
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${cliente.id}')">
@@ -8666,6 +8782,7 @@
                                 ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
                                 ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
                                 ${c.origemLead ? `<div class="client-row"><i class="fas fa-map-signs"></i> <span class="origem-badge">${Utils.getOrigemLabel(c.origemLead)}</span></div>` : ''}
+                                ${c.profissao && App.cliente.PROF_LABELS ? `<div class="client-row"><i class="fas fa-briefcase"></i> <span class="origem-badge" style="background:rgba(196,114,74,0.12);color:var(--accent);">${App.cliente.PROF_LABELS[c.profissao] || c.profissao}</span></div>` : ''}
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${diasNaEtapa} dias)${isParado ? ' <span class="stale-badge">⚠️ Parado</span>' : ''}</div>
                             </div>
                             <div class="client-actions">
@@ -9520,6 +9637,55 @@
                             </div>
                         </div>
                         ` : ''}
+
+                        ${cliente.profissao ? (() => {
+                            const profData = App.cliente.PROF_DOCS_RENDA[cliente.profissao];
+                            if (!profData) return '';
+                            const checked = cliente.profissaoDocsChecked || {};
+                            const needsConj = cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel';
+                            const allDocsList = [...App.cliente.PROF_DOCS_PESSOAIS, ...profData.docs, ...(needsConj ? App.cliente.PROF_DOCS_CONJUGAL : [])];
+                            const done = allDocsList.filter(d => checked[d.id]).length;
+                            const total = allDocsList.length;
+                            const pct = total > 0 ? Math.round((done/total)*100) : 0;
+                            const profLabel = App.cliente.PROF_LABELS[cliente.profissao] || cliente.profissao;
+                            return `
+                            <div class="details-section" style="border:none;padding:0;margin-top:8px;">
+                                <div style="background:linear-gradient(135deg,#C4724A,#B05A38);border-radius:12px;padding:14px 16px;margin-bottom:10px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                                        <div style="display:flex;align-items:center;gap:10px;">
+                                            <span style="font-size:1.4rem;">💼</span>
+                                            <div>
+                                                <div style="font-size:0.95rem;font-weight:800;color:white;">Documentação p/ Avaliação</div>
+                                                <div style="font-size:0.75rem;color:rgba(255,255,255,0.75);">${profLabel} — ${done}/${total} recebidos (${pct}%)</div>
+                                            </div>
+                                        </div>
+                                        <button onclick="event.stopPropagation(); App.cliente.gerarPDFProfDocsFromCliente('${cliente.id}')" style="background:rgba(255,255,255,0.2);color:white;border:none;border-radius:8px;padding:7px 14px;font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+                                            <i class="fas fa-file-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                    <div style="margin-top:10px;background:rgba(0,0,0,0.2);border-radius:4px;height:6px;overflow:hidden;">
+                                        <div style="background:rgba(255,255,255,0.85);height:100%;width:${pct}%;border-radius:4px;transition:width 0.3s;"></div>
+                                    </div>
+                                </div>
+                                <div style="background:white;border-radius:10px;border:1px solid var(--border);overflow:hidden;margin-bottom:10px;">
+                                    ${allDocsList.map((d, i) => {
+                                        const isDone = !!checked[d.id];
+                                        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:${i<allDocsList.length-1?'1px solid var(--border)':'none'};background:${isDone?'rgba(46,125,66,0.04)':''}">
+                                            <div style="width:20px;height:20px;border-radius:5px;background:${isDone?'var(--success)':'var(--light)'};border:2px solid ${isDone?'var(--success)':'var(--border)'};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;font-size:0.65rem;">${isDone?'<i class="fas fa-check"></i>':''}</div>
+                                            <span style="font-size:0.88rem;font-weight:600;color:${isDone?'var(--text-secondary)':'var(--dark)'};${isDone?'text-decoration:line-through':''}">${d.icon} ${d.label}</span>
+                                        </div>`;
+                                    }).join('')}
+                                </div>
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button onclick="event.stopPropagation(); App.cliente.gerarPDFProfDocsFromCliente('${cliente.id}')" style="flex:1;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;border:none;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+                                        <i class="fas fa-file-pdf"></i> Baixar PDF
+                                    </button>
+                                    <button onclick="event.stopPropagation(); App.cliente.whatsappProfDocsFromCliente('${cliente.id}')" style="flex:1;background:#25D366;color:white;border:none;border-radius:10px;padding:10px 12px;font-size:0.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;">
+                                        <i class="fab fa-whatsapp"></i> WhatsApp
+                                    </button>
+                                </div>
+                            </div>`;
+                        })() : ''}
                         
                         <div class="details-actions">
                             <button class="btn-details btn-details-primary" onclick="App.cliente.edit('${cliente.id}')">
@@ -11529,6 +11695,16 @@
                 if (loteSection) loteSection.style.display = 'none';
                 const tipoInteresseEl = document.getElementById('c-tipo-interesse');
                 if (tipoInteresseEl) tipoInteresseEl.value = '';
+
+                // Reset profissão e docs por profissão
+                const profEl = document.getElementById('c-profissao');
+                if (profEl) profEl.value = '';
+                const estadoCivilEl2 = document.getElementById('c-estado-civil');
+                if (estadoCivilEl2) estadoCivilEl2.value = '';
+                const profDocSec = document.getElementById('prof-doc-section');
+                if (profDocSec) profDocSec.style.display = 'none';
+                const profCheckedEl = document.getElementById('c-profissao-docs-checked');
+                if (profCheckedEl) profCheckedEl.value = '{}';
                 
                 UI.openModal('cliente');
             },
@@ -12227,6 +12403,9 @@
                     const documentos = JSON.parse(document.getElementById('c-documentos-data').value || '[]');
                     const tipoInteresse = document.getElementById('c-tipo-interesse')?.value || '';
                     const loteDocsChecked = App.cliente.getLoteDocsChecked();
+                    const profissao = document.getElementById('c-profissao')?.value || '';
+                    const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
+                    const profissaoDocsChecked = JSON.parse(document.getElementById('c-profissao-docs-checked')?.value || '{}');
 
                     const clienteExistente = UI.data.clientes.find(c => c.id === id);
                     const contatos = clienteExistente?.contatos || 0;
@@ -12236,6 +12415,7 @@
                         imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
                         faixaPreco, observacoes, origemLead, documentos,
                         tipoInteresse, loteDocsChecked,
+                        profissao, estadoCivil, profissaoDocsChecked,
                         dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0],
                         dataAtualizacao: new Date().toISOString(),
@@ -12293,6 +12473,19 @@
                     const origemEl = document.getElementById('c-origem-lead'); if(origemEl) origemEl.value = cliente.origemLead || '';
                     const tipoInteresseEl = document.getElementById('c-tipo-interesse'); 
                     if(tipoInteresseEl) { tipoInteresseEl.value = cliente.tipoInteresse || ''; App.cliente.toggleLoteDocumentacao(cliente.loteDocsChecked); }
+
+                    // Carregar profissão e estado civil
+                    const profissaoEl = document.getElementById('c-profissao');
+                    const estadoCivilEl = document.getElementById('c-estado-civil');
+                    if(profissaoEl) profissaoEl.value = cliente.profissao || '';
+                    if(estadoCivilEl) estadoCivilEl.value = cliente.estadoCivil || '';
+                    // Carregar docs por profissão
+                    const profChecked = cliente.profissaoDocsChecked || {};
+                    const profHidden = document.getElementById('c-profissao-docs-checked');
+                    if(profHidden) profHidden.value = JSON.stringify(profChecked);
+                    if(cliente.profissao) {
+                        App.cliente.renderProfissaoDocs(cliente.profissao, profChecked, cliente.estadoCivil || '');
+                    }
                     document.getElementById('title-cliente').innerText = 'Editar Cliente';
                     
                     const imovelSelect = document.getElementById('c-imovel-interesse');
@@ -13049,6 +13242,571 @@
                     if (!telefone) { navigator.clipboard?.writeText(msg).then(() => Utils.toast('Mensagem copiada!')); return; }
                     if (telefone.length === 11) telefone = '55' + telefone;
                     window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(msg)}`, '_blank');
+                },
+
+                // ===== DOCUMENTOS POR PROFISSÃO =====
+                PROF_DOCS_PESSOAIS: [
+                    { id: 'rg_cnh',       label: 'RG ou CNH (com foto)',              icon: '🪪', obs: 'Documento de identidade oficial com foto, dentro da validade' },
+                    { id: 'cpf',          label: 'CPF',                                icon: '📄', obs: 'Cadastro de Pessoa Física (pode ser o do próprio RG/CNH)' },
+                    { id: 'comp_res',     label: 'Comprovante de Residência',          icon: '🏠', obs: 'Conta de água, luz ou gás — últimos 90 dias' },
+                    { id: 'cert_civil',   label: 'Certidão de Estado Civil',           icon: '💍', obs: 'Certidão de nascimento (solteiro) ou casamento/divórcio atualizada' },
+                    { id: 'declaracao_ir',label: 'Declaração de IR (última)',          icon: '📊', obs: 'Última declaração de Imposto de Renda (se declarante)' },
+                ],
+
+                PROF_DOCS_RENDA: {
+                    clt_privado: {
+                        label: 'Empregado CLT – Setor Privado',
+                        obs: '⚠️ Mínimo 3 últimos holerites. Caso tenha FGTS disponível, trazer extrato.',
+                        docs: [
+                            { id: 'ctps',        label: 'Carteira de Trabalho (CTPS)',         icon: '📋', obs: 'Páginas de identificação e contratos de trabalho' },
+                            { id: 'holerite1',   label: 'Holerite – Mês 1 (mais recente)',      icon: '💵', obs: 'Contracheque do mês atual ou último mês completo' },
+                            { id: 'holerite2',   label: 'Holerite – Mês 2',                     icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'holerite3',   label: 'Holerite – Mês 3',                     icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'extrato_fgts',label: 'Extrato FGTS (últimos 2 anos)',         icon: '🏦', obs: 'Pode ser consultado pelo app FGTS ou agências Caixa' },
+                            { id: 'extrato_banco',label:'Extrato Bancário (3 meses)',            icon: '🏧', obs: 'Conta onde recebe o salário' },
+                        ]
+                    },
+                    clt_publico: {
+                        label: 'Empregado CLT – Setor Público',
+                        obs: '⚠️ Mesmo sendo CLT em empresa pública, apresentar vínculos como setor privado.',
+                        docs: [
+                            { id: 'ctps',        label: 'Carteira de Trabalho (CTPS)',          icon: '📋', obs: 'Páginas de identificação e contratos' },
+                            { id: 'holerite1',   label: 'Holerite – Mês 1',                     icon: '💵', obs: 'Contracheque do mês mais recente' },
+                            { id: 'holerite2',   label: 'Holerite – Mês 2',                     icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'holerite3',   label: 'Holerite – Mês 3',                     icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'extrato_fgts',label: 'Extrato FGTS (últimos 2 anos)',         icon: '🏦', obs: 'Solicitar no app FGTS ou Caixa Econômica' },
+                            { id: 'extrato_banco',label:'Extrato Bancário (3 meses)',            icon: '🏧', obs: 'Conta onde recebe o salário' },
+                        ]
+                    },
+                    servidor_federal: {
+                        label: 'Servidor Público Federal',
+                        obs: '⚠️ Servidor federal pode usar FGTS apenas se tiver saldo de vínculo anterior. Verificar.',
+                        docs: [
+                            { id: 'contracheque1', label: 'Contracheque – Mês 1',               icon: '💵', obs: 'Último contracheque emitido pelo SIAPE ou órgão' },
+                            { id: 'contracheque2', label: 'Contracheque – Mês 2',               icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'contracheque3', label: 'Contracheque – Mês 3',               icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'cargo_funcao',  label: 'Declaração de Cargo/Função',         icon: '📜', obs: 'Emitido pelo RH do órgão federal — confirma estabilidade' },
+                            { id: 'extrato_banco', label: 'Extrato Bancário (3 meses)',          icon: '🏧', obs: 'Conta onde recebe a remuneração' },
+                        ]
+                    },
+                    servidor_estadual: {
+                        label: 'Servidor Público Estadual',
+                        obs: '⚠️ Alguns estados aceitam consignado como renda complementar. Trazer extrato.',
+                        docs: [
+                            { id: 'contracheque1', label: 'Contracheque – Mês 1',               icon: '💵', obs: 'Contracheque mais recente' },
+                            { id: 'contracheque2', label: 'Contracheque – Mês 2',               icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'contracheque3', label: 'Contracheque – Mês 3',               icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'cargo_funcao',  label: 'Declaração de Cargo/Função',         icon: '📜', obs: 'Emitido pelo RH do órgão estadual' },
+                            { id: 'extrato_banco', label: 'Extrato Bancário (3 meses)',          icon: '🏧', obs: 'Conta onde recebe a remuneração' },
+                        ]
+                    },
+                    servidor_municipal: {
+                        label: 'Servidor Público Municipal',
+                        obs: '⚠️ Solicitar declaração de vínculo e estabilidade junto ao RH da prefeitura.',
+                        docs: [
+                            { id: 'contracheque1', label: 'Contracheque – Mês 1',               icon: '💵', obs: 'Contracheque mais recente' },
+                            { id: 'contracheque2', label: 'Contracheque – Mês 2',               icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'contracheque3', label: 'Contracheque – Mês 3',               icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'cargo_funcao',  label: 'Declaração de Cargo/Função',         icon: '📜', obs: 'Emitido pela prefeitura/RH municipal' },
+                            { id: 'extrato_banco', label: 'Extrato Bancário (3 meses)',          icon: '🏧', obs: 'Conta onde recebe a remuneração' },
+                        ]
+                    },
+                    militar: {
+                        label: 'Militar / Policial / Bombeiro',
+                        obs: '⚠️ Militares da ativa possuem regras específicas de FGTS. Confirmar disponibilidade no banco.',
+                        docs: [
+                            { id: 'contracheque1', label: 'Contracheque – Mês 1',               icon: '💵', obs: 'Contracheque mais recente' },
+                            { id: 'contracheque2', label: 'Contracheque – Mês 2',               icon: '💵', obs: 'Contracheque do mês anterior' },
+                            { id: 'contracheque3', label: 'Contracheque – Mês 3',               icon: '💵', obs: 'Contracheque do 3º mês' },
+                            { id: 'declaracao_vinculo', label: 'Declaração de Vínculo / Posto', icon: '📜', obs: 'Emitida pelo batalhão, corpo ou PM' },
+                            { id: 'extrato_banco', label: 'Extrato Bancário (3 meses)',          icon: '🏧', obs: 'Conta onde recebe a remuneração' },
+                        ]
+                    },
+                    autonomo: {
+                        label: 'Autônomo (sem CNPJ)',
+                        obs: '⚠️ Para autônomos, a comprovação de renda é feita via extrato bancário e declaração de renda bruta. Quanto mais consistente o extrato, melhor a análise.',
+                        docs: [
+                            { id: 'declaracao_renda', label: 'Declaração de Renda Bruta',       icon: '📝', obs: 'Declaração manuscrita ou datilografada assinada — pode ser em cartório' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',        icon: '🏧', obs: 'Extrato completo do mês mais recente' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',        icon: '🏧', obs: 'Extrato completo do mês anterior' },
+                            { id: 'extrato_banco3',   label: 'Extrato Bancário – Mês 3',        icon: '🏧', obs: 'Extrato completo do 3º mês' },
+                            { id: 'recibos',          label: 'Recibos de Prestação de Serviços',icon: '🧾', obs: 'Se emitir recibos para clientes, trazer os últimos 3' },
+                            { id: 'extrato_fgts',     label: 'Extrato FGTS (se houver saldo)',  icon: '🏦', obs: 'Saldo de vínculos anteriores que possa ser utilizado' },
+                        ]
+                    },
+                    profissional_liberal: {
+                        label: 'Profissional Liberal',
+                        obs: '⚠️ Médicos, advogados, engenheiros etc. Trazer a declaração do IR e extratos bancários robustos.',
+                        docs: [
+                            { id: 'declaracao_ir',    label: 'Declaração de IR Completa',       icon: '📊', obs: 'Com recibo de entrega, última declaração completa' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',        icon: '🏧', obs: 'Conta profissional ou pessoal, mês mais recente' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',        icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_banco3',   label: 'Extrato Bancário – Mês 3',        icon: '🏧', obs: '3º mês' },
+                            { id: 'registro_conselho',label: 'Registro no Conselho (CRM/OAB…)', icon: '🏅', obs: 'CRM, OAB, CREA, CRP etc. — comprova exercício da profissão' },
+                            { id: 'carnê_lei',        label: 'Carnê-Leão (se aplicável)',       icon: '🧾', obs: 'Comprovante de recolhimento do carnê-leão — renda autônoma' },
+                        ]
+                    },
+                    mei: {
+                        label: 'Microempreendedor Individual (MEI)',
+                        obs: '⚠️ MEI com menos de 2 anos de atividade pode ter dificuldade. Apresentar extrato bancário e DAS para fortalecer a análise.',
+                        docs: [
+                            { id: 'ccmei',            label: 'Certificado MEI (CCMEI)',          icon: '📜', obs: 'Certificado da Condição de Microempreendedor Individual' },
+                            { id: 'das1',             label: 'DAS – Mês 1 (mais recente)',       icon: '🧾', obs: 'Documento de Arrecadação do Simples — comprovante de pagamento' },
+                            { id: 'das2',             label: 'DAS – Mês 2',                      icon: '🧾', obs: 'DAS do mês anterior' },
+                            { id: 'das3',             label: 'DAS – Mês 3',                      icon: '🧾', obs: 'DAS do 3º mês' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Conta MEI ou conta pessoal — mês mais recente' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',         icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_banco3',   label: 'Extrato Bancário – Mês 3',         icon: '🏧', obs: '3º mês' },
+                            { id: 'declaracao_ir',    label: 'Declaração de IR (se declarante)', icon: '📊', obs: 'Última declaração com recibo de entrega' },
+                        ]
+                    },
+                    empresario_simples: {
+                        label: 'Empresário – Simples Nacional',
+                        obs: '⚠️ Para sócios de empresas: trazer contrato social, CNPJ ativo e extratos PJ + PF. Banco analisa saúde da empresa.',
+                        docs: [
+                            { id: 'contrato_social',  label: 'Contrato Social ou Requerimento',  icon: '📋', obs: 'Com última alteração registrada na junta comercial' },
+                            { id: 'cnpj',             label: 'Cartão CNPJ (situação ativa)',      icon: '🏢', obs: 'Comprovante de situação cadastral ativa na Receita Federal' },
+                            { id: 'balancete',        label: 'Balancete / DRE dos 3 últimos',    icon: '📑', obs: 'Balancete ou DRE dos últimos 3 meses assinado pelo contador' },
+                            { id: 'extrato_pj1',      label: 'Extrato Bancário PJ – Mês 1',      icon: '🏧', obs: 'Conta corrente PJ do mês mais recente' },
+                            { id: 'extrato_pj2',      label: 'Extrato Bancário PJ – Mês 2',      icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_pj3',      label: 'Extrato Bancário PJ – Mês 3',      icon: '🏧', obs: '3º mês' },
+                            { id: 'extrato_pf1',      label: 'Extrato Bancário PF – Mês 1',      icon: '🏧', obs: 'Conta pessoal do sócio — mês mais recente' },
+                            { id: 'declaracao_ir',    label: 'Declaração de IR (Pessoa Física)',  icon: '📊', obs: 'Última declaração com recibo de entrega' },
+                        ]
+                    },
+                    empresario_lucro_presumido: {
+                        label: 'Empresário – Lucro Presumido / Real',
+                        obs: '⚠️ Empresas de Lucro Presumido ou Real: análise mais criteriosa. Exigem balanço patrimonial assinado por contador credenciado.',
+                        docs: [
+                            { id: 'contrato_social',  label: 'Contrato Social (última alteração)',icon: '📋', obs: 'Registrado na junta comercial' },
+                            { id: 'cnpj',             label: 'Cartão CNPJ (situação ativa)',      icon: '🏢', obs: 'Situação cadastral ativa' },
+                            { id: 'balanco_anual',    label: 'Balanço Patrimonial Anual',         icon: '📑', obs: 'Dos últimos 2 exercícios, assinado por contador com CRC' },
+                            { id: 'dre',              label: 'DRE – Demonstrativo de Resultados', icon: '📊', obs: 'Demonstrativo de Resultados do Exercício' },
+                            { id: 'extrato_pj1',      label: 'Extrato Bancário PJ – Mês 1',      icon: '🏧', obs: 'Conta corrente PJ do mês mais recente' },
+                            { id: 'extrato_pj2',      label: 'Extrato Bancário PJ – Mês 2',      icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_pj3',      label: 'Extrato Bancário PJ – Mês 3',      icon: '🏧', obs: '3º mês' },
+                            { id: 'declaracao_ir',    label: 'Declaração de IR (Pessoa Física)',  icon: '📊', obs: 'Última declaração com recibo de entrega' },
+                        ]
+                    },
+                    aposentado_inss: {
+                        label: 'Aposentado / Pensionista INSS',
+                        obs: '⚠️ Aposentados INSS: extrato de benefício pelo app Meu INSS. Pode usar FGTS se tiver saldo de vínculo anterior.',
+                        docs: [
+                            { id: 'extrato_beneficio',label: 'Extrato de Benefício (INSS)',       icon: '💰', obs: 'Emitido pelo app Meu INSS ou agências — últimos 3 meses' },
+                            { id: 'carteira_beneficio',label:'Carta de Concessão do Benefício',  icon: '📜', obs: 'Documento original de concessão da aposentadoria/pensão' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Conta onde recebe o benefício — mês mais recente' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',         icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_fgts',     label: 'Extrato FGTS (se houver saldo)',   icon: '🏦', obs: 'Saldo de vínculos anteriores à aposentadoria' },
+                        ]
+                    },
+                    aposentado_rpps: {
+                        label: 'Aposentado / Pensionista RPPS (Servidor)',
+                        obs: '⚠️ Aposentados RPPS (servidores): trazer contracheque do orgão pagador e declaração de renda.',
+                        docs: [
+                            { id: 'contracheque1',    label: 'Contracheque – Mês 1',             icon: '💵', obs: 'Do orgão pagador (prefeitura, estado, governo federal)' },
+                            { id: 'contracheque2',    label: 'Contracheque – Mês 2',             icon: '💵', obs: 'Mês anterior' },
+                            { id: 'contracheque3',    label: 'Contracheque – Mês 3',             icon: '💵', obs: '3º mês' },
+                            { id: 'carta_concessao',  label: 'Carta/Portaria de Aposentadoria',  icon: '📜', obs: 'Documento de concessão da aposentadoria pelo RPPS' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Mês mais recente' },
+                        ]
+                    },
+                    rural: {
+                        label: 'Produtor Rural / Agricultor',
+                        obs: '⚠️ Produtor rural: DAP/CAR e notas fiscais de venda são essenciais. Banco analisa receita bruta anual.',
+                        docs: [
+                            { id: 'dap_caf',          label: 'DAP / CAF (Agricultor Familiar)',  icon: '🌱', obs: 'Declaração de Aptidão ao PRONAF ou Cadastro Nacional da AF' },
+                            { id: 'notas_venda1',     label: 'Nota Fiscal Venda – Mês 1',        icon: '🧾', obs: 'Nota de venda da produção do mês mais recente' },
+                            { id: 'notas_venda2',     label: 'Nota Fiscal Venda – Mês 2',        icon: '🧾', obs: 'Mês anterior' },
+                            { id: 'notas_venda3',     label: 'Nota Fiscal Venda – Mês 3',        icon: '🧾', obs: '3º mês' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Conta onde recebe das vendas' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',         icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'declaracao_ir',    label: 'Declaração de IR (se declarante)', icon: '📊', obs: 'Última declaração com recibo' },
+                        ]
+                    },
+                    informal: {
+                        label: 'Trabalhador Informal / Sem Renda Formal',
+                        obs: '⚠️ Trabalhadores informais: o banco exige extrato bancário consistente por pelo menos 6 meses e declaração de renda. Orientar o cliente a movimentar conta com regularidade.',
+                        docs: [
+                            { id: 'declaracao_renda', label: 'Declaração de Renda (cartório)',   icon: '📝', obs: 'Declaração de renda bruta mensal — preferencialmente reconhecida em cartório' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Mês mais recente — demonstrar movimentação regular' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',         icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_banco3',   label: 'Extrato Bancário – Mês 3',         icon: '🏧', obs: '3º mês' },
+                            { id: 'extrato_banco4',   label: 'Extrato Bancário – Mês 4',         icon: '🏧', obs: '4º mês' },
+                            { id: 'extrato_banco5',   label: 'Extrato Bancário – Mês 5',         icon: '🏧', obs: '5º mês' },
+                            { id: 'extrato_banco6',   label: 'Extrato Bancário – Mês 6',         icon: '🏧', obs: '6º mês' },
+                            { id: 'extrato_fgts',     label: 'Extrato FGTS (se houver saldo)',   icon: '🏦', obs: 'Saldo de vínculos anteriores' },
+                        ]
+                    },
+                    outro: {
+                        label: 'Outra Profissão / Situação',
+                        obs: '⚠️ Consulte o banco diretamente para verificar os documentos exigidos para esta situação específica.',
+                        docs: [
+                            { id: 'comp_renda',       label: 'Comprovante de Renda (qualquer)',  icon: '💵', obs: 'Holerite, extrato, declaração ou qualquer documento de renda' },
+                            { id: 'extrato_banco1',   label: 'Extrato Bancário – Mês 1',         icon: '🏧', obs: 'Mês mais recente' },
+                            { id: 'extrato_banco2',   label: 'Extrato Bancário – Mês 2',         icon: '🏧', obs: 'Mês anterior' },
+                            { id: 'extrato_banco3',   label: 'Extrato Bancário – Mês 3',         icon: '🏧', obs: '3º mês' },
+                        ]
+                    },
+                },
+
+                PROF_DOCS_CONJUGAL: [
+                    { id: 'conj_rg_cnh',    label: 'RG ou CNH do Cônjuge',                  icon: '🪪', obs: 'Documento com foto e dentro da validade' },
+                    { id: 'conj_cpf',       label: 'CPF do Cônjuge',                         icon: '📄', obs: 'CPF pode ser o mesmo do RG' },
+                    { id: 'conj_comp_renda',label: 'Comprovante de Renda do Cônjuge',        icon: '💵', obs: 'Holerite, extrato ou declaração — compor renda juntos' },
+                    { id: 'conj_extrato',   label: 'Extrato Bancário Cônjuge (3 meses)',     icon: '🏧', obs: 'Para composição de renda ou análise complementar' },
+                ],
+
+                PROF_LABELS: {
+                    clt_privado: 'CLT – Setor Privado', clt_publico: 'CLT – Setor Público',
+                    servidor_federal: 'Servidor Federal', servidor_estadual: 'Servidor Estadual',
+                    servidor_municipal: 'Servidor Municipal', militar: 'Militar/Policial/Bombeiro',
+                    autonomo: 'Autônomo', profissional_liberal: 'Profissional Liberal',
+                    mei: 'MEI', empresario_simples: 'Empresário – Simples',
+                    empresario_lucro_presumido: 'Empresário – Lucro Presumido/Real',
+                    aposentado_inss: 'Aposentado INSS', aposentado_rpps: 'Aposentado RPPS',
+                    rural: 'Produtor Rural', informal: 'Trabalhador Informal', outro: 'Outro',
+                },
+
+                onProfissaoChange: function(profissao) {
+                    const checked = {};
+                    const el = document.getElementById('c-profissao-docs-checked');
+                    if (el) el.value = JSON.stringify(checked);
+                    const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
+                    if (profissao) {
+                        App.cliente.renderProfissaoDocs(profissao, checked, estadoCivil);
+                    } else {
+                        const sec = document.getElementById('prof-doc-section');
+                        if (sec) sec.style.display = 'none';
+                    }
+                },
+
+                onEstadoCivilChange: function(estadoCivil) {
+                    const profissao = document.getElementById('c-profissao')?.value || '';
+                    if (!profissao) return;
+                    const checked = JSON.parse(document.getElementById('c-profissao-docs-checked')?.value || '{}');
+                    App.cliente.renderProfissaoDocs(profissao, checked, estadoCivil);
+                },
+
+                renderProfissaoDocs: function(profissao, checked, estadoCivil) {
+                    const sec = document.getElementById('prof-doc-section');
+                    if (!sec) return;
+                    sec.style.display = 'block';
+
+                    const profData = App.cliente.PROF_DOCS_RENDA[profissao];
+                    if (!profData) return;
+
+                    // Título
+                    const titleEl = document.getElementById('prof-doc-title');
+                    if (titleEl) titleEl.textContent = `Documentação – ${profData.label}`;
+
+                    // OBS
+                    const obsBox = document.getElementById('prof-obs-box');
+                    if (obsBox) {
+                        obsBox.style.display = profData.obs ? 'block' : 'none';
+                        obsBox.textContent = profData.obs || '';
+                    }
+
+                    // Pessoais
+                    const contPes = document.getElementById('prof-docs-pessoais');
+                    if (contPes) {
+                        contPes.innerHTML = App.cliente.PROF_DOCS_PESSOAIS.map((doc, i) => {
+                            const done = !!checked[doc.id];
+                            return App.cliente._profDocRow(doc, i, App.cliente.PROF_DOCS_PESSOAIS.length, done, 'pessoal');
+                        }).join('');
+                    }
+
+                    // Renda
+                    const contRen = document.getElementById('prof-docs-renda');
+                    if (contRen) {
+                        contRen.innerHTML = profData.docs.map((doc, i) => {
+                            const done = !!checked[doc.id];
+                            return App.cliente._profDocRow(doc, i, profData.docs.length, done, 'renda');
+                        }).join('');
+                    }
+
+                    // Conjugal
+                    const needsConj = estadoCivil === 'casado' || estadoCivil === 'uniao_estavel';
+                    const conjWrap = document.getElementById('prof-docs-conjugal-wrap');
+                    const contConj = document.getElementById('prof-docs-conjugal');
+                    if (conjWrap) conjWrap.style.display = needsConj ? 'block' : 'none';
+                    if (needsConj && contConj) {
+                        contConj.innerHTML = App.cliente.PROF_DOCS_CONJUGAL.map((doc, i) => {
+                            const done = !!checked[doc.id];
+                            return App.cliente._profDocRow(doc, i, App.cliente.PROF_DOCS_CONJUGAL.length, done, 'conjugal');
+                        }).join('');
+                    }
+
+                    App.cliente._updateProfProgress(profissao, checked, estadoCivil);
+                },
+
+                _profDocRow: function(doc, i, total, done, group) {
+                    return `<div onclick="App.cliente.toggleProfDoc('${doc.id}', '${group}')"
+                        data-docid="${doc.id}" data-group="${group}"
+                        style="display:flex;align-items:flex-start;gap:12px;padding:13px 14px;border-bottom:${i < total-1 ? '1px solid var(--border)' : 'none'};cursor:pointer;transition:background 0.15s;${done ? 'background:rgba(46,125,66,0.05)' : ''}">
+                        <div style="width:24px;height:24px;border-radius:6px;border:2px solid ${done ? 'var(--success)' : 'var(--border)'};background:${done ? 'var(--success)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;transition:all 0.2s;color:white;font-size:0.75rem;">
+                            ${done ? '<i class="fas fa-check"></i>' : ''}
+                        </div>
+                        <div style="flex:1;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                                <span style="font-size:1rem;">${doc.icon}</span>
+                                <span style="font-size:0.9rem;font-weight:700;color:var(--dark);${done ? 'text-decoration:line-through;color:var(--text-secondary)' : ''}">${i+1}. ${doc.label}</span>
+                            </div>
+                            <div style="font-size:0.75rem;color:var(--text-secondary);margin-left:28px;">${doc.obs}</div>
+                        </div>
+                    </div>`;
+                },
+
+                toggleProfDoc: function(docId, group) {
+                    const el = document.getElementById('c-profissao-docs-checked');
+                    const checked = JSON.parse(el?.value || '{}');
+                    checked[docId] = !checked[docId];
+                    if (el) el.value = JSON.stringify(checked);
+                    const profissao = document.getElementById('c-profissao')?.value || '';
+                    const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
+                    App.cliente.renderProfissaoDocs(profissao, checked, estadoCivil);
+                },
+
+                _updateProfProgress: function(profissao, checked, estadoCivil) {
+                    const profData = App.cliente.PROF_DOCS_RENDA[profissao];
+                    if (!profData) return;
+                    let allDocs = [...App.cliente.PROF_DOCS_PESSOAIS, ...profData.docs];
+                    const needsConj = estadoCivil === 'casado' || estadoCivil === 'uniao_estavel';
+                    if (needsConj) allDocs = [...allDocs, ...App.cliente.PROF_DOCS_CONJUGAL];
+                    const total = allDocs.length;
+                    const done = allDocs.filter(d => checked[d.id]).length;
+                    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+                    const txt = document.getElementById('prof-progress-text');
+                    const bar = document.getElementById('prof-progress-bar');
+                    if (txt) txt.textContent = `${done} / ${total}`;
+                    if (bar) bar.style.width = `${pct}%`;
+                },
+
+                getProfDocsChecked: function() {
+                    const el = document.getElementById('c-profissao-docs-checked');
+                    return JSON.parse(el?.value || '{}');
+                },
+
+                gerarPDFProfDocs: function() {
+                    const nome = document.getElementById('c-nome')?.value || 'Cliente';
+                    const profissao = document.getElementById('c-profissao')?.value || '';
+                    const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
+                    const checked = App.cliente.getProfDocsChecked();
+                    const profData = App.cliente.PROF_DOCS_RENDA[profissao];
+                    if (!profData) { Utils.toast('Selecione uma profissão primeiro.', 'error'); return; }
+
+                    const needsConj = estadoCivil === 'casado' || estadoCivil === 'uniao_estavel';
+                    const sections = [
+                        { titulo: 'DOCUMENTOS PESSOAIS', cor: [46,74,49], docs: App.cliente.PROF_DOCS_PESSOAIS },
+                        { titulo: 'COMPROVAÇÃO DE RENDA', cor: [196,114,74], docs: profData.docs },
+                    ];
+                    if (needsConj) sections.push({ titulo: 'DOCUMENTOS DO CÔNJUGE', cor: [79,70,229], docs: App.cliente.PROF_DOCS_CONJUGAL });
+
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const W = 210, H = 297;
+                    const primaryR = 46, primaryG = 74, primaryB = 49;
+                    const accentR = 196, accentG = 114, accentB = 74;
+
+                    doc.setFillColor(240, 243, 240);
+                    doc.rect(0, 0, W, H, 'F');
+
+                    doc.setFillColor(primaryR, primaryG, primaryB);
+                    doc.roundedRect(10, 10, W-20, 52, 6, 6, 'F');
+                    doc.setFillColor(accentR, accentG, accentB);
+                    doc.roundedRect(10, 56, W-20, 5, 2, 2, 'F');
+
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(22);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('ImobiPro', 22, 28);
+                    doc.setFontSize(11);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(200, 220, 200);
+                    doc.text('Sistema de Gestão Imobiliária', 22, 36);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(13);
+                    doc.setTextColor(255, 255, 255);
+                    doc.text('DOCUMENTAÇÃO NECESSÁRIA', W - 22, 27, { align: 'right' });
+                    doc.setFont('helvetica', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(196, 220, 196);
+                    doc.text('PARA AVALIAÇÃO E APROVAÇÃO', W - 22, 35, { align: 'right' });
+                    doc.text(`Perfil: ${profData.label}`, W - 22, 43, { align: 'right' });
+
+                    doc.setFont('helvetica', 'italic');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 210, 180);
+                    doc.text(`Preparado para: ${nome}`, 22, 50);
+                    const today = new Date().toLocaleDateString('pt-BR');
+                    doc.text(`Data: ${today}`, W - 22, 50, { align: 'right' });
+
+                    // OBS banner
+                    if (profData.obs) {
+                        doc.setFillColor(255, 243, 220);
+                        const obsLines = doc.splitTextToSize(profData.obs.replace('⚠️ ',''), W-24);
+                        const obsH = 8 + obsLines.length * 5;
+                        doc.roundedRect(10, 67, W-20, obsH, 4, 4, 'F');
+                        doc.setDrawColor(245,158,11); doc.setLineWidth(0.5);
+                        doc.roundedRect(10, 67, W-20, obsH, 4, 4, 'S');
+                        doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(180,100,10);
+                        doc.text('⚠  ' + obsLines[0], W/2, 74, { align: 'center' });
+                        if (obsLines.length > 1) {
+                            doc.setFont('helvetica', 'normal');
+                            obsLines.slice(1).forEach((l, idx) => doc.text(l, W/2, 79 + idx*5, { align: 'center' }));
+                        }
+                        doc.yObs = 67 + obsH + 6;
+                    } else { doc.yObs = 73; }
+
+                    let y = doc.yObs;
+                    const rowH = 22;
+                    const pageMargin = 22;
+
+                    sections.forEach(sec => {
+                        // Section header
+                        if (y + 10 > H - pageMargin) { doc.addPage(); y = 15; }
+                        doc.setFillColor(...sec.cor);
+                        doc.roundedRect(10, y, W-20, 10, 3, 3, 'F');
+                        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+                        doc.text(sec.titulo, W/2, y+7, { align: 'center' });
+                        y += 14;
+
+                        sec.docs.forEach((d, i) => {
+                            if (y + rowH > H - pageMargin) { doc.addPage(); y = 15; }
+                            const isDone = !!checked[d.id];
+                            doc.setFillColor(isDone ? 230 : 255, isDone ? 245 : 255, isDone ? 230 : 255);
+                            doc.roundedRect(10, y, W-20, rowH, 4, 4, 'F');
+                            doc.setDrawColor(isDone ? 46 : sec.cor[0], isDone ? 125 : sec.cor[1], isDone ? 66 : sec.cor[2]);
+                            doc.setLineWidth(isDone ? 0.8 : 0.4);
+                            doc.roundedRect(10, y, W-20, rowH, 4, 4, 'S');
+                            doc.setFillColor(...sec.cor);
+                            doc.circle(22, y+11, 5, 'F');
+                            doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(255,255,255);
+                            doc.text(`${i+1}`, 22, y+13.5, { align: 'center' });
+                            doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5);
+                            doc.setTextColor(isDone ? 46 : sec.cor[0], isDone ? 125 : sec.cor[1], isDone ? 66 : sec.cor[2]);
+                            doc.text(d.label, 32, y+9);
+                            doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120,140,120);
+                            doc.text(d.obs, 32, y+16);
+                            if (isDone) {
+                                doc.setFillColor(46,125,66);
+                                doc.circle(W-18, y+11, 5, 'F');
+                                doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(255,255,255);
+                                doc.text('✓', W-18, y+13.5, { align: 'center' });
+                            } else {
+                                doc.setDrawColor(200,210,200); doc.setLineWidth(0.5);
+                                doc.circle(W-18, y+11, 5, 'S');
+                            }
+                            y += rowH + 4;
+                        });
+                        y += 4;
+                    });
+
+                    // Footer
+                    const totalPages = doc.getNumberOfPages();
+                    for (let p = 1; p <= totalPages; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(primaryR, primaryG, primaryB);
+                        doc.rect(0, H-22, W, 22, 'F');
+                        doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(180,210,180);
+                        doc.text('Documento gerado pelo ImobiPro · Sistema de Gestão Imobiliária', W/2, H-10, { align: 'center' });
+                        const allDocs2 = [...App.cliente.PROF_DOCS_PESSOAIS, ...profData.docs, ...(needsConj ? App.cliente.PROF_DOCS_CONJUGAL : [])];
+                        const doneCnt = allDocs2.filter(d => checked[d.id]).length;
+                        doc.setFont('helvetica', 'bold'); doc.setTextColor(196,220,196);
+                        doc.text(`${doneCnt}/${allDocs2.length} documentos recebidos`, W/2, H-4, { align: 'center' });
+                    }
+
+                    const safeName = nome.replace(/[^a-zA-Z0-9]/g,'_').substring(0,20);
+                    doc.save(`Documentacao_${safeName}.pdf`);
+                    Utils.toast('PDF gerado com sucesso!', 'success');
+                },
+
+                whatsappProfDocs: function() {
+                    const nome = document.getElementById('c-nome')?.value || 'Cliente';
+                    const profissao = document.getElementById('c-profissao')?.value || '';
+                    const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
+                    let telefone = (document.getElementById('c-telefone')?.value || '').replace(/\D/g,'');
+                    const checked = App.cliente.getProfDocsChecked();
+                    const profData = App.cliente.PROF_DOCS_RENDA[profissao];
+                    if (!profData) { Utils.toast('Selecione uma profissão primeiro.', 'error'); return; }
+
+                    const needsConj = estadoCivil === 'casado' || estadoCivil === 'uniao_estavel';
+                    const allDocs = [
+                        { titulo: '📁 *DOCUMENTOS PESSOAIS*', docs: App.cliente.PROF_DOCS_PESSOAIS },
+                        { titulo: '💰 *COMPROVAÇÃO DE RENDA*', docs: profData.docs },
+                        ...(needsConj ? [{ titulo: '💍 *DOCUMENTOS DO CÔNJUGE*', docs: App.cliente.PROF_DOCS_CONJUGAL }] : []),
+                    ];
+
+                    let msg = `📋 *DOCUMENTAÇÃO PARA AVALIAÇÃO E APROVAÇÃO*\n`;
+                    msg += `_Perfil: ${profData.label}_\n\n`;
+                    msg += `Olá *${nome}*! Para darmos andamento ao processo de compra do seu imóvel, preciso dos documentos abaixo:\n\n`;
+
+                    allDocs.forEach(sec => {
+                        const pend = sec.docs.filter(d => !checked[d.id]);
+                        const feito = sec.docs.filter(d => checked[d.id]);
+                        if (sec.docs.length === 0) return;
+                        msg += `${sec.titulo}\n`;
+                        if (pend.length > 0) {
+                            msg += `📌 _Pendentes:_\n`;
+                            pend.forEach((d, i) => { msg += `  ${d.icon} ${i+1}. ${d.label}\n`; });
+                        }
+                        if (feito.length > 0) {
+                            msg += `✅ _Recebidos:_\n`;
+                            feito.forEach(d => { msg += `  ✓ ${d.label}\n`; });
+                        }
+                        msg += '\n';
+                    });
+
+                    if (profData.obs) msg += `⚠️ ${profData.obs.replace('⚠️ ','')}\n\n`;
+                    msg += `Qualquer dúvida, estou à disposição! 😊`;
+
+                    if (!telefone) {
+                        navigator.clipboard?.writeText(msg).then(() => Utils.toast('Mensagem copiada!', 'success'));
+                        return;
+                    }
+                    if (telefone.length === 11) telefone = '55' + telefone;
+                    window.open(`https://wa.me/${telefone}?text=${encodeURIComponent(msg)}`, '_blank');
+                },
+
+                gerarPDFProfDocsFromCliente: function(clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente || !cliente.profissao) { Utils.toast('Cliente sem profissão cadastrada.', 'error'); return; }
+                    // Temporarily set form values for reuse of gerarPDFProfDocs
+                    const nomeEl = document.getElementById('c-nome');
+                    const profEl = document.getElementById('c-profissao');
+                    const estadoEl = document.getElementById('c-estado-civil');
+                    const checkedEl = document.getElementById('c-profissao-docs-checked');
+                    const oldNome = nomeEl?.value, oldProf = profEl?.value, oldEstado = estadoEl?.value, oldChecked = checkedEl?.value;
+                    if (nomeEl) nomeEl.value = cliente.nome || '';
+                    if (profEl) profEl.value = cliente.profissao || '';
+                    if (estadoEl) estadoEl.value = cliente.estadoCivil || '';
+                    if (checkedEl) checkedEl.value = JSON.stringify(cliente.profissaoDocsChecked || {});
+                    App.cliente.gerarPDFProfDocs();
+                    if (nomeEl) nomeEl.value = oldNome || '';
+                    if (profEl) profEl.value = oldProf || '';
+                    if (estadoEl) estadoEl.value = oldEstado || '';
+                    if (checkedEl) checkedEl.value = oldChecked || '{}';
+                },
+
+                whatsappProfDocsFromCliente: function(clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente || !cliente.profissao) { Utils.toast('Cliente sem profissão cadastrada.', 'error'); return; }
+                    const nomeEl = document.getElementById('c-nome');
+                    const profEl = document.getElementById('c-profissao');
+                    const estadoEl = document.getElementById('c-estado-civil');
+                    const telEl = document.getElementById('c-telefone');
+                    const checkedEl = document.getElementById('c-profissao-docs-checked');
+                    const olds = { nome: nomeEl?.value, prof: profEl?.value, estado: estadoEl?.value, tel: telEl?.value, checked: checkedEl?.value };
+                    if (nomeEl) nomeEl.value = cliente.nome || '';
+                    if (profEl) profEl.value = cliente.profissao || '';
+                    if (estadoEl) estadoEl.value = cliente.estadoCivil || '';
+                    if (telEl) telEl.value = cliente.telefone || '';
+                    if (checkedEl) checkedEl.value = JSON.stringify(cliente.profissaoDocsChecked || {});
+                    App.cliente.whatsappProfDocs();
+                    if (nomeEl) nomeEl.value = olds.nome || '';
+                    if (profEl) profEl.value = olds.prof || '';
+                    if (estadoEl) estadoEl.value = olds.estado || '';
+                    if (telEl) telEl.value = olds.tel || '';
+                    if (checkedEl) checkedEl.value = olds.checked || '{}';
                 },
             },
             
