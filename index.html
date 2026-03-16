@@ -532,6 +532,24 @@
             transform: scale(0.95);
         }
 
+        .client-card-inativo {
+            opacity: 0.65;
+            filter: grayscale(0.3);
+            border-left: 3px solid var(--success) !important;
+        }
+        .client-card-inativo::after {
+            content: '✓ Venda concluída';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: var(--success);
+            background: rgba(46,125,66,0.10);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
         /* schedule-card defined below in calendar section */
         
         .schedule-card.visita { border-left-color: var(--type-visita); }
@@ -2184,6 +2202,14 @@
             transform: scale(0.98) translateY(1px);
             box-shadow: 0 15px 35px rgba(196,114,74,0.25), 0 4px 10px rgba(30,50,32,0.12);
         }
+
+        /* Prioridade alta — borda esquerda colorida */
+        .client-card:not(.client-card-inativo) {
+            border-left: 3px solid transparent;
+        }
+        .client-priority-alta { border-left-color: var(--accent) !important; }
+        .client-priority-media { border-left-color: var(--warning) !important; }
+        .client-priority-normal { border-left-color: var(--border) !important; }
 
         .schedule-card {
             background: var(--surface-glass);
@@ -6356,222 +6382,315 @@
                 try {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF('p', 'mm', 'a4');
-                    const pageWidth = doc.internal.pageSize.getWidth();
-                    const pageHeight = doc.internal.pageSize.getHeight();
-                    const margin = 15;
-                    let yPos = 20;
-
-                    doc.setFillColor(74, 87, 74); // Nova cor primária
-                    doc.rect(0, 0, pageWidth, 30, 'F');
-                    doc.setTextColor(255, 255, 255);
-                    doc.setFontSize(22);
-                    doc.setFont("helvetica", "bold");
-                    doc.text("FICHA DO IMÓVEL", pageWidth / 2, 18, { align: "center" });
-
+                    const PW = doc.internal.pageSize.getWidth();
+                    const PH = doc.internal.pageSize.getHeight();
+                    const M = 14;
+                    const CW = PW - M * 2;
                     const settings = await DB.get('settings', 'main') || {};
-                    doc.setFontSize(10);
-                    doc.setFont("helvetica", "normal");
-                    const headerInfo = `${settings.imobiliaria || "ImobiPro"} | ${settings.telefone || ""} | ${settings.nome || ""}`;
-                    doc.text(headerInfo, pageWidth / 2, 25, { align: "center" });
 
-                    yPos = 45;
+                    // PALETA
+                    const C = {
+                        verde:    [46, 74, 49],
+                        verdeEsc: [26, 43, 28],
+                        terra:    [196, 114, 74],
+                        cinza:    [102, 102, 102],
+                        cinzaClr: [224, 224, 216],
+                        cinzaFundo:[247, 248, 245],
+                        branco:   [255, 255, 255],
+                        dark:     [30, 40, 30],
+                        success:  [46, 125, 66],
+                    };
 
-                    doc.setTextColor(51, 51, 51);
-                    doc.setFontSize(16);
-                    doc.setFont("helvetica", "bold");
-                    const tituloSplit = doc.splitTextToSize(imovel.titulo.toUpperCase(), pageWidth - (margin * 2));
-                    doc.text(tituloSplit, margin, yPos);
-                    yPos += (tituloSplit.length * 7) + 5;
+                    const drawDivider = (y) => {
+                        doc.setDrawColor(...C.cinzaClr);
+                        doc.setLineWidth(0.4);
+                        doc.line(M, y, PW - M, y);
+                    };
 
-                    doc.setFontSize(18);
-                    doc.setTextColor(74, 87, 74);
+                    const sectionTitle = (texto, y, cor) => {
+                        cor = cor || C.verde;
+                        doc.setFillColor(...cor);
+                        doc.roundedRect(M, y - 4, CW, 8, 1.5, 1.5, 'F');
+                        doc.setTextColor(...C.branco);
+                        doc.setFontSize(8);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(texto.toUpperCase(), M + 4, y + 1);
+                        return y + 11;
+                    };
+
+                    const drawBadge = (texto, x, y, cor) => {
+                        cor = cor || C.verde;
+                        const tw = doc.getTextWidth(texto) + 6;
+                        doc.setFillColor(...cor);
+                        doc.roundedRect(x, y - 3.5, tw, 5.5, 1.2, 1.2, 'F');
+                        doc.setTextColor(...C.branco);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'bold');
+                        doc.text(texto, x + 3, y + 0.5);
+                        return x + tw + 3;
+                    };
+
+                    const addFooter = (pageNum, totalPages) => {
+                        doc.setFillColor(...C.verdeEsc);
+                        doc.rect(0, PH - 10, PW, 10, 'F');
+                        doc.setFillColor(...C.terra);
+                        doc.rect(0, PH - 10, 2, 10, 'F');
+                        doc.setTextColor(...C.branco);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica', 'normal');
+                        const imob = settings.imobiliaria || 'ImobiPro';
+                        const nomeAg = settings.nome || '';
+                        const creci = settings.creci ? ' | CRECI: ' + settings.creci : '';
+                        const tel = settings.telefone ? ' | ' + settings.telefone : '';
+                        doc.text(imob + ' | ' + nomeAg + creci + tel, M, PH - 4.2);
+                        doc.text('Pag. ' + pageNum + '/' + totalPages + '  |  ' + new Date().toLocaleDateString('pt-BR'), PW - M, PH - 4.2, { align: 'right' });
+                    };
+
+                    // CABECALHO
+                    doc.setFillColor(...C.verdeEsc);
+                    doc.rect(0, 0, PW, 36, 'F');
+                    doc.setFillColor(...C.terra);
+                    doc.rect(0, 0, 3, 36, 'F');
+
+                    doc.setTextColor(...C.branco);
+                    doc.setFontSize(15);
+                    doc.setFont('helvetica', 'bold');
+                    const imobNome = (settings.imobiliaria || 'ImobiPro').toUpperCase();
+                    doc.text(imobNome, M + 4, 12);
+                    doc.setFontSize(7.5);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(196, 220, 200);
+                    doc.text('FICHA DO IMOVEL', M + 4, 18);
+
+                    const refDisplay = Utils.formatRefNumber(imovel.refNumber || imovel.id);
+                    const statusTxt = Utils.getStatusText ? Utils.getStatusText(imovel.status) : (imovel.status || 'Disponivel');
+                    doc.setFontSize(8);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(...C.branco);
+                    doc.text(refDisplay, PW - M, 11, { align: 'right' });
+                    doc.setFontSize(7);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(...C.terra);
+                    doc.text(statusTxt.toUpperCase(), PW - M, 17, { align: 'right' });
+
+                    doc.setTextColor(180, 210, 185);
+                    doc.setFontSize(7.5);
+                    const contatoTxt = [settings.nome, settings.telefone, settings.email].filter(Boolean).join('  |  ');
+                    if (contatoTxt) doc.text(contatoTxt, M + 4, 29);
+
+                    // TITULO
+                    let y = 44;
+                    doc.setFont('helvetica', 'bold');
+                    doc.setFontSize(17);
+                    doc.setTextColor(...C.dark);
+                    const tituloLines = doc.splitTextToSize((imovel.titulo || '').toUpperCase(), CW - 50);
+                    doc.text(tituloLines, M, y);
+                    y += tituloLines.length * 7 + 2;
+
+                    doc.setFontSize(8.5);
+                    doc.setFont('helvetica', 'normal');
+                    doc.setTextColor(...C.cinza);
+                    if (imovel.endereco) doc.text(imovel.endereco.substring(0, 90), M, y);
+                    y += 6;
+
+                    // BADGES
+                    let bx = M;
+                    const tipoTxt = Utils.getTipoText ? Utils.getTipoText(imovel.tipo) : (imovel.tipo || 'Imovel');
+                    bx = drawBadge(tipoTxt, bx, y, C.verde);
+                    if (imovel.transacao === 'venda' || imovel.precoVenda) bx = drawBadge('VENDA', bx, y, C.terra);
+                    if (imovel.transacao === 'aluguel' || (imovel.precoAluguel && imovel.transacao !== 'venda')) bx = drawBadge('ALUGUEL', bx, y, C.terra);
+                    if (imovel.modalidade === 'lancamento') bx = drawBadge('LANCAMENTO', bx, y, C.success);
+                    y += 8;
+
+                    // PRECO
                     let precoTexto = '';
                     if (imovel.precoVenda && imovel.transacao !== 'aluguel') {
-                        precoTexto += `A partir de ${Utils.formatCurrency(imovel.precoVenda)} (venda)`;
+                        precoTexto = 'A partir de ' + Utils.formatCurrency(imovel.precoVenda);
                     }
                     if (imovel.precoAluguel && imovel.transacao !== 'venda') {
-                        if (precoTexto) precoTexto += ' | ';
-                        precoTexto += `A partir de ${Utils.formatCurrency(imovel.precoAluguel)}/mês (aluguel)`;
+                        if (precoTexto) precoTexto += '   |   ';
+                        precoTexto += Utils.formatCurrency(imovel.precoAluguel) + '/mes';
                     }
                     if (!precoTexto) precoTexto = 'Consulte valores';
-                    
-                    doc.text(precoTexto, margin, yPos);
-                    
-                    doc.setFontSize(9);
-                    doc.setTextColor(102, 102, 102);
-                    const refDisplay = Utils.formatRefNumber(imovel.refNumber || imovel.id);
-                    doc.text(refDisplay, pageWidth - margin, yPos, { align: "right" });
-                    
-                    yPos += 8;
-                    doc.setDrawColor(224, 224, 224);
-                    doc.line(margin, yPos, pageWidth - margin, yPos);
-                    yPos += 10;
 
-                    const body = [];
+                    doc.setFillColor(...C.cinzaFundo);
+                    doc.roundedRect(M, y, CW, 12, 2, 2, 'F');
+                    doc.setFontSize(15);
+                    doc.setFont('helvetica', 'bold');
+                    doc.setTextColor(...C.verde);
+                    doc.text(precoTexto, M + 4, y + 8.5);
+                    y += 16;
+
+                    drawDivider(y);
+                    y += 6;
+
+                    // CARACTERISTICAS
+                    y = sectionTitle('Caracteristicas do Imovel', y);
+                    y += 2;
+
+                    const colW = (CW - 6) / 2;
+                    const col1x = M;
+                    const col2x = M + colW + 6;
+
+                    const campos = [];
+                    if (imovel.area) campos.push(['Area Total', imovel.area + ' m2']);
                     if (imovel.tipo !== 'terreno') {
-                        body.push(
-                            ['Endereço', imovel.endereco],
-                            ['Tipo', Utils.getTipoText(imovel.tipo)],
-                            ['Área', imovel.area ? imovel.area + ' m²' : '-'],
-                            ['Quartos', imovel.quartos ? imovel.quartos.toString() : '-'],
-                            ['Banheiros', imovel.banheiros ? imovel.banheiros.toString() : '-'],
-                            ['Vagas', imovel.vagas ? imovel.vagas.toString() : '-'],
-                            ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
-                            ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
-                            ['Construtora', imovel.construtora || '-'],
-                            ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
-                            ['Forma de Pagamento', imovel.formaPagamento || '-'],
-                            ['Status', Utils.getStatusText(imovel.status)]
-                        );
-                    } else {
-                        body.push(
-                            ['Endereço', imovel.endereco],
-                            ['Tipo', Utils.getTipoText(imovel.tipo)],
-                            ['Área', imovel.area ? imovel.area + ' m²' : '-'],
-                            ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
-                            ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
-                            ['Construtora', imovel.construtora || '-'],
-                            ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
-                            ['Forma de Pagamento', imovel.formaPagamento || '-'],
-                            ['Status', Utils.getStatusText(imovel.status)]
-                        );
+                        if (imovel.quartos) campos.push(['Quartos', imovel.quartos.toString()]);
+                        if (imovel.banheiros) campos.push(['Banheiros', imovel.banheiros.toString()]);
+                        if (imovel.vagas) campos.push(['Vagas de Garagem', imovel.vagas.toString()]);
+                        if (imovel.condominio) campos.push(['Condominio', Utils.formatCurrency(imovel.condominio) + '/mes']);
+                        if (imovel.gasEncanado !== undefined) campos.push(['Gas Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Nao']);
                     }
+                    if (imovel.construtora) campos.push(['Construtora', imovel.construtora]);
+                    if (imovel.dataEntrega) campos.push(['Previsao de Entrega', Utils.formatDate ? Utils.formatDate(imovel.dataEntrega) : imovel.dataEntrega]);
+                    if (imovel.formaPagamento) campos.push(['Forma de Pagamento', imovel.formaPagamento]);
+                    if (imovel.estagioLancamento) campos.push(['Estagio da Obra', imovel.estagioLancamento]);
+                    if (imovel.numLotes) campos.push(['Total de Lotes/Unidades', imovel.numLotes.toString()]);
+                    if (imovel.areaMinLote) campos.push(['Area Minima dos Lotes', imovel.areaMinLote + ' m2']);
+                    if (imovel.areaPreservacao) campos.push(['Area de Preservacao', imovel.areaPreservacao]);
+                    if (imovel.seguranca) campos.push(['Seguranca', imovel.seguranca]);
+                    if (imovel.parcelamento) campos.push(['Parcelamento', imovel.parcelamento]);
+                    campos.push(['Status', statusTxt]);
 
-                    const gap = 5;
-                    const colWidth = (pageWidth - margin * 2 - gap) / 2;
-                    const startY = yPos;
+                    const metade = Math.ceil(campos.length / 2);
+                    const col1Data = campos.slice(0, metade);
+                    const col2Data = campos.slice(metade);
 
-                    const meio = Math.ceil(body.length / 2);
-                    const primeiraParte = body.slice(0, meio);
-                    const segundaParte = body.slice(meio);
-
-                    doc.autoTable({
-                        startY: startY,
-                        head: [['Característica', 'Detalhe']],
-                        body: primeiraParte,
-                        theme: 'striped',
-                        headStyles: { fillColor: [74, 87, 74], textColor: 255, fontSize: 10 },
-                        styles: { fontSize: 9, cellPadding: 3 },
-                        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: colWidth - 40 } },
-                        margin: { left: margin, right: pageWidth - (margin + colWidth) },
-                        tableWidth: colWidth
-                    });
-                    const finalY1 = doc.lastAutoTable.finalY;
-
-                    doc.autoTable({
-                        startY: startY,
-                        head: [['Característica', 'Detalhe']],
-                        body: segundaParte,
-                        theme: 'striped',
-                        headStyles: { fillColor: [74, 87, 74], textColor: 255, fontSize: 10 },
-                        styles: { fontSize: 9, cellPadding: 3 },
-                        columnStyles: { 0: { cellWidth: 40 }, 1: { cellWidth: colWidth - 40 } },
-                        margin: { left: margin + colWidth + gap, right: margin },
-                        tableWidth: colWidth
-                    });
-                    const finalY2 = doc.lastAutoTable.finalY;
-
-                    yPos = Math.max(finalY1, finalY2) + 10;
-
-                    if (imovel.descricao) {
-                        if (yPos > pageHeight - 40) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(74, 87, 74);
-                        doc.setFontSize(12);
-                        doc.text("DESCRIÇÃO", margin, yPos);
-                        yPos += 6;
-                        
-                        doc.setFont("helvetica", "normal");
-                        doc.setTextColor(51, 51, 51);
-                        doc.setFontSize(9);
-                        const descSplit = doc.splitTextToSize(imovel.descricao, pageWidth - (margin * 2));
-                        doc.text(descSplit, margin, yPos);
-                        yPos += (descSplit.length * 5) + 10;
-                    }
-
-                    if (imovel.videos && imovel.videos.length > 0) {
-                        if (yPos > pageHeight - 40) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(74, 87, 74);
-                        doc.setFontSize(12);
-                        doc.text("VÍDEOS", margin, yPos);
-                        yPos += 6;
-                        
-                        doc.setFont("helvetica", "normal");
-                        doc.setTextColor(51, 51, 51);
-                        imovel.videos.forEach((video, idx) => {
-                            doc.setFontSize(9);
-                            doc.text(`${idx+1}. ${video.url}`, margin, yPos);
-                            yPos += 5;
+                    const renderCamposCol = (lista, xBase) => {
+                        let yc = y;
+                        lista.forEach((item, idx) => {
+                            const fundo = idx % 2 === 0 ? C.cinzaFundo : C.branco;
+                            doc.setFillColor(...fundo);
+                            doc.rect(xBase, yc - 1, colW, 13, 'F');
+                            doc.setFontSize(7);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(...C.cinza);
+                            doc.text(item[0].toUpperCase(), xBase + 2, yc + 3);
+                            doc.setFontSize(8.5);
+                            doc.setFont('helvetica', 'bold');
+                            doc.setTextColor(...C.dark);
+                            const valLines = doc.splitTextToSize(item[1] || '-', colW - 4);
+                            doc.text(valLines[0], xBase + 2, yc + 9);
+                            yc += 14;
                         });
-                        yPos += 5;
+                        return yc;
+                    };
+
+                    const yAfterCol1 = renderCamposCol(col1Data, col1x);
+                    const yAfterCol2 = renderCamposCol(col2Data, col2x);
+                    y = Math.max(yAfterCol1, yAfterCol2) + 4;
+
+                    drawDivider(y);
+                    y += 6;
+
+                    // DESCRICAO
+                    if (imovel.descricao) {
+                        if (y > PH - 60) { doc.addPage(); y = 20; }
+                        y = sectionTitle('Descricao', y);
+                        y += 2;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...C.dark);
+                        doc.setFontSize(8.5);
+                        const descLines = doc.splitTextToSize(imovel.descricao, CW);
+                        doc.text(descLines, M, y);
+                        y += descLines.length * 4.5 + 8;
+                        drawDivider(y);
+                        y += 6;
                     }
 
-                    if (imovel.imagens && imovel.imagens.length > 0) {
-                        if (yPos > pageHeight - 100) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
-                        doc.setFont("helvetica", "bold");
-                        doc.setTextColor(74, 87, 74);
-                        doc.setFontSize(12);
-                        doc.text("GALERIA DE FOTOS", margin, yPos);
-                        yPos += 10;
-
-                        const imgWidth = (pageWidth - margin * 3) / 2;
-                        const imgHeight = 60;
-                        const gapImg = 10;
-                        let xPos = margin;
-                        let yImg = yPos;
-
-                        for (let i = 0; i < imovel.imagens.length; i++) {
-                            if (i > 0 && i % 2 === 0) {
-                                yImg += imgHeight + gapImg;
-                                xPos = margin;
-                            } else if (i > 0) {
-                                xPos += imgWidth + gapImg;
-                            }
-
-                            if (yImg + imgHeight > pageHeight - margin) {
-                                doc.addPage();
-                                yImg = 20;
-                                xPos = margin;
-                            }
-
-                            try {
-                                doc.addImage(imovel.imagens[i], 'JPEG', xPos, yImg, imgWidth, imgHeight);
-                                doc.setDrawColor(224, 224, 224);
-                                doc.rect(xPos, yImg, imgWidth, imgHeight);
-                            } catch (e) {
-                                doc.setFillColor(244, 242, 238);
-                                doc.rect(xPos, yImg, imgWidth, imgHeight, 'F');
-                                doc.setTextColor(102, 102, 102);
-                                doc.setFontSize(8);
-                                doc.text("Sem imagem", xPos + imgWidth/2, yImg + imgHeight/2, { align: "center" });
-                            }
-                        }
+                    // AMENIDADES
+                    const amenidades = [];
+                    if (imovel.piscina) amenidades.push('Piscina');
+                    if (imovel.quadra || imovel.quadraPoliesportiva) amenidades.push('Quadra Poliesportiva');
+                    if (imovel.areaGourmet) amenidades.push('Area Gourmet');
+                    if (imovel.playground) amenidades.push('Playground');
+                    if (imovel.academia) amenidades.push('Academia');
+                    if (imovel.guarita) amenidades.push('Guarita 24h');
+                    if (imovel.portaria) amenidades.push('Portaria');
+                    if (imovel.salaoFestas) amenidades.push('Salao de Festas');
+                    if (amenidades.length > 0) {
+                        if (y > PH - 50) { doc.addPage(); y = 20; }
+                        y = sectionTitle('Infraestrutura & Amenidades', y);
+                        y += 2;
+                        let ax = M;
+                        amenidades.forEach((a) => {
+                            if (ax + 40 > PW - M) { ax = M; y += 9; }
+                            ax = drawBadge(a, ax, y + 3, C.verde);
+                        });
+                        y += 12;
+                        drawDivider(y);
+                        y += 6;
                     }
 
-                    const pageCount = doc.getNumberOfPages();
-                    for (let i = 1; i <= pageCount; i++) {
-                        doc.setPage(i);
+                    // VIDEOS
+                    if (imovel.videos && imovel.videos.length > 0) {
+                        if (y > PH - 50) { doc.addPage(); y = 20; }
+                        y = sectionTitle('Videos', y);
+                        y += 2;
+                        doc.setFont('helvetica', 'normal');
+                        doc.setTextColor(...C.verde);
                         doc.setFontSize(8);
-                        doc.setTextColor(102, 102, 102);
-                        doc.text(`Página ${i} de ${pageCount} - Gerado por ImobiPro em ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, pageHeight - 10, { align: "center" });
+                        imovel.videos.forEach((v, idx) => {
+                            doc.text((idx+1) + '. ' + v.url, M, y);
+                            y += 5;
+                        });
+                        y += 5;
                     }
 
-                    doc.save(`Ficha_${imovel.titulo.substring(0, 15).replace(/[^a-z0-9]/gi, '_')}.pdf`);
-                    Utils.toast("PDF gerado com sucesso!");
+                    // GALERIA
+                    if (imovel.imagens && imovel.imagens.length > 0) {
+                        if (y > PH - 120) { doc.addPage(); y = 20; }
+                        y = sectionTitle('Galeria de Fotos', y);
+                        y += 2;
+                        const cols = 2;
+                        const gapX = 4, gapY = 4;
+                        const imgW = (CW - (cols - 1) * gapX) / cols;
+                        const imgH = imgW * 0.62;
+                        let col = 0;
+                        for (let i = 0; i < imovel.imagens.length; i++) {
+                            if (col === cols) { col = 0; y += imgH + gapY; }
+                            const xImg = M + col * (imgW + gapX);
+                            if (y + imgH > PH - 15) { doc.addPage(); y = 20; col = 0; }
+                            try {
+                                doc.addImage(imovel.imagens[i], 'JPEG', xImg, y, imgW, imgH, undefined, 'FAST');
+                                doc.setDrawColor(...C.cinzaClr);
+                                doc.setLineWidth(0.3);
+                                doc.rect(xImg, y, imgW, imgH);
+                            } catch(e) {
+                                doc.setFillColor(...C.cinzaFundo);
+                                doc.rect(xImg, y, imgW, imgH, 'F');
+                                doc.setTextColor(...C.cinza);
+                                doc.setFontSize(7);
+                                doc.text('Foto indisponivel', xImg + imgW/2, y + imgH/2, { align: 'center' });
+                            }
+                            col++;
+                        }
+                        y += imgH + 6;
+                    }
+
+                    // NOTA LEGAL
+                    if (y > PH - 30) { doc.addPage(); y = 20; }
+                    doc.setFillColor(...C.cinzaFundo);
+                    doc.roundedRect(M, y, CW, 10, 1.5, 1.5, 'F');
+                    doc.setFontSize(6.5);
+                    doc.setFont('helvetica', 'italic');
+                    doc.setTextColor(...C.cinza);
+                    doc.text('Os valores informados podem sofrer alteracao sem aviso previo. Consulte disponibilidade e condicoes atualizadas com o corretor responsavel.', M + 3, y + 6.5, { maxWidth: CW - 6 });
+
+                    // RODAPES
+                    const totalPag = doc.getNumberOfPages();
+                    for (let p = 1; p <= totalPag; p++) {
+                        doc.setPage(p);
+                        addFooter(p, totalPag);
+                    }
+
+                    const nomeArquivo = 'Ficha_' + (imovel.titulo || 'imovel').substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_') + '_' + new Date().toISOString().split('T')[0] + '.pdf';
+                    doc.save(nomeArquivo);
+                    Utils.toast('PDF gerado com sucesso!');
 
                 } catch (err) {
                     console.error(err);
-                    Utils.toast("Erro ao gerar PDF.", "error");
+                    Utils.toast('Erro ao gerar PDF.', 'error');
                 }
             },
 
@@ -6792,166 +6911,166 @@
                         return;
                     }
                     
-                    let pageNum = 1;
-                    
+                    const C2 = {
+                        verde: [46,74,49], verdeEsc:[26,43,28], terra:[196,114,74],
+                        cinza:[102,102,102], cinzaFundo:[247,248,245], branco:[255,255,255], dark:[30,40,30]
+                    };
+
+                    const addPortFooter = (pn, tot, im) => {
+                        doc.setFillColor(...C2.verdeEsc);
+                        doc.rect(0, pageHeight - 10, pageWidth, 10, 'F');
+                        doc.setFillColor(...C2.terra);
+                        doc.rect(0, pageHeight - 10, 2, 10, 'F');
+                        doc.setTextColor(...C2.branco);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica','normal');
+                        const imob = settings.imobiliaria || 'ImobiPro';
+                        const tel = settings.telefone ? ' | ' + settings.telefone : '';
+                        doc.text(imob + tel, margin, pageHeight - 4.2);
+                        doc.text('Pag. ' + pn + '/' + tot + '  |  ' + new Date().toLocaleDateString('pt-BR'), pageWidth - margin, pageHeight - 4.2, {align:'right'});
+                    };
+
                     for (let idx = 0; idx < imoveis.length; idx++) {
                         const imovel = imoveis[idx];
-                        
-                        if (idx > 0) {
-                            doc.addPage();
-                            pageNum++;
-                        }
-                        
-                        doc.setFillColor(74, 87, 74);
-                        doc.rect(0, 0, pageWidth, 25, 'F');
-                        doc.setTextColor(255, 255, 255);
-                        doc.setFontSize(18);
-                        doc.setFont("helvetica", "bold");
-                        doc.text("PORTFÓLIO DE IMÓVEIS", pageWidth / 2, 12, { align: "center" });
-                        doc.setFontSize(9);
-                        doc.text(`${settings.imobiliaria || "ImobiPro"} - Página ${pageNum}`, pageWidth / 2, 20, { align: "center" });
-                        
-                        let yPos = 35;
-                        
-                        doc.setTextColor(51, 51, 51);
-                        doc.setFontSize(14);
-                        doc.setFont("helvetica", "bold");
-                        const tituloSplit = doc.splitTextToSize(imovel.titulo, pageWidth - margin * 2);
-                        doc.text(tituloSplit, margin, yPos);
-                        yPos += (tituloSplit.length * 6) + 5;
-                        
-                        doc.setFontSize(16);
-                        doc.setTextColor(74, 87, 74);
-                        let preco = '';
-                        if (imovel.precoVenda) preco += `A partir de ${Utils.formatCurrency(imovel.precoVenda)} (venda) `;
-                        if (imovel.precoAluguel) preco += `A partir de ${Utils.formatCurrency(imovel.precoAluguel)}/mês (aluguel)`;
-                        doc.text(preco, margin, yPos);
-                        yPos += 8;
-                        
-                        doc.setFontSize(10);
-                        doc.setTextColor(102, 116, 139);
-                        doc.text(`📍 ${imovel.endereco}`, margin, yPos);
-                        yPos += 10;
-                        
-                        let bodyPortfolio = [];
+                        if (idx > 0) doc.addPage();
+
+                        // Cabecalho
+                        doc.setFillColor(...C2.verdeEsc);
+                        doc.rect(0, 0, pageWidth, 30, 'F');
+                        doc.setFillColor(...C2.terra);
+                        doc.rect(0, 0, 3, 30, 'F');
+                        doc.setTextColor(...C2.branco);
+                        doc.setFontSize(13);
+                        doc.setFont('helvetica','bold');
+                        doc.text((settings.imobiliaria || 'ImobiPro').toUpperCase(), margin+4, 11);
+                        doc.setFontSize(7);
+                        doc.setFont('helvetica','normal');
+                        doc.setTextColor(196,220,200);
+                        doc.text('PORTFOLIO DE IMOVEIS', margin+4, 17);
+                        const refDisp = Utils.formatRefNumber(imovel.refNumber || imovel.id);
+                        doc.setTextColor(...C2.branco);
+                        doc.setFontSize(8);
+                        doc.text(refDisp, pageWidth - margin, 11, {align:'right'});
+                        const stTxt = Utils.getStatusText ? Utils.getStatusText(imovel.status) : (imovel.status||'Disponivel');
+                        doc.setFontSize(7);
+                        doc.setTextColor(...C2.terra);
+                        doc.text(stTxt.toUpperCase(), pageWidth - margin, 17, {align:'right'});
+                        const contato = [settings.nome, settings.telefone].filter(Boolean).join(' | ');
+                        doc.setTextColor(180,210,185);
+                        doc.setFontSize(7);
+                        if (contato) doc.text(contato, margin+4, 25);
+
+                        let y = 38;
+
+                        // Titulo
+                        doc.setFontSize(15);
+                        doc.setFont('helvetica','bold');
+                        doc.setTextColor(...C2.dark);
+                        const tls = doc.splitTextToSize((imovel.titulo||'').toUpperCase(), pageWidth - margin*2 - 40);
+                        doc.text(tls, margin, y);
+                        y += tls.length * 6 + 2;
+                        doc.setFontSize(8);
+                        doc.setFont('helvetica','normal');
+                        doc.setTextColor(...C2.cinza);
+                        if (imovel.endereco) doc.text(imovel.endereco.substring(0,90), margin, y);
+                        y += 6;
+
+                        // Preco
+                        let prc = '';
+                        if (imovel.precoVenda && imovel.transacao !== 'aluguel') prc = 'A partir de ' + Utils.formatCurrency(imovel.precoVenda);
+                        if (imovel.precoAluguel && imovel.transacao !== 'venda') prc += (prc?' | ':'') + Utils.formatCurrency(imovel.precoAluguel) + '/mes';
+                        if (!prc) prc = 'Consulte valores';
+                        doc.setFillColor(...C2.cinzaFundo);
+                        doc.roundedRect(margin, y, pageWidth-margin*2, 10, 2, 2, 'F');
+                        doc.setFontSize(13);
+                        doc.setFont('helvetica','bold');
+                        doc.setTextColor(...C2.verde);
+                        doc.text(prc, margin+3, y+7);
+                        y += 14;
+
+                        // Caracteristicas grid 2 colunas
+                        const cW = (pageWidth - margin*2 - 6) / 2;
+                        const campos2 = [];
+                        if (imovel.area) campos2.push(['Area', imovel.area + ' m2']);
                         if (imovel.tipo !== 'terreno') {
-                            bodyPortfolio = [
-                                ['Endereço', imovel.endereco],
-                                ['Tipo', Utils.getTipoText(imovel.tipo)],
-                                ['Área', imovel.area ? imovel.area + ' m²' : '-'],
-                                ['Quartos', imovel.quartos ? imovel.quartos.toString() : '-'],
-                                ['Banheiros', imovel.banheiros ? imovel.banheiros.toString() : '-'],
-                                ['Vagas', imovel.vagas ? imovel.vagas.toString() : '-'],
-                                ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
-                                ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
-                                ['Construtora', imovel.construtora || '-'],
-                                ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
-                                ['Forma de Pagamento', imovel.formaPagamento || '-'],
-                                ['Status', Utils.getStatusText(imovel.status)]
-                            ];
-                        } else {
-                            bodyPortfolio = [
-                                ['Endereço', imovel.endereco],
-                                ['Tipo', Utils.getTipoText(imovel.tipo)],
-                                ['Área', imovel.area ? imovel.area + ' m²' : '-'],
-                                ['Condomínio', imovel.condominio ? Utils.formatCurrency(imovel.condominio) + '/mês' : '-'],
-                                ['Gás Encanado', imovel.gasEncanado === 'sim' ? 'Sim' : 'Não'],
-                                ['Construtora', imovel.construtora || '-'],
-                                ['Data de Entrega', imovel.dataEntrega ? Utils.formatDate(imovel.dataEntrega) : '-'],
-                                ['Forma de Pagamento', imovel.formaPagamento || '-'],
-                                ['Status', Utils.getStatusText(imovel.status)]
-                            ];
+                            if (imovel.quartos) campos2.push(['Quartos', imovel.quartos.toString()]);
+                            if (imovel.banheiros) campos2.push(['Banheiros', imovel.banheiros.toString()]);
+                            if (imovel.vagas) campos2.push(['Vagas', imovel.vagas.toString()]);
+                            if (imovel.condominio) campos2.push(['Condominio', Utils.formatCurrency(imovel.condominio) + '/mes']);
+                        }
+                        if (imovel.construtora) campos2.push(['Construtora', imovel.construtora]);
+                        if (imovel.dataEntrega) campos2.push(['Entrega', Utils.formatDate ? Utils.formatDate(imovel.dataEntrega) : imovel.dataEntrega]);
+                        if (imovel.formaPagamento) campos2.push(['Pagamento', imovel.formaPagamento]);
+                        campos2.push(['Status', stTxt]);
+
+                        const m2 = Math.ceil(campos2.length / 2);
+                        const c1 = campos2.slice(0, m2);
+                        const c2 = campos2.slice(m2);
+                        const drawCol = (lista, xb) => {
+                            let yy = y;
+                            lista.forEach((it, i) => {
+                                doc.setFillColor(...(i%2===0 ? C2.cinzaFundo : C2.branco));
+                                doc.rect(xb, yy-1, cW, 11, 'F');
+                                doc.setFontSize(6.5); doc.setFont('helvetica','bold'); doc.setTextColor(...C2.cinza);
+                                doc.text(it[0].toUpperCase(), xb+2, yy+3);
+                                doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(...C2.dark);
+                                doc.text((it[1]||'-').substring(0,28), xb+2, yy+8);
+                                yy += 12;
+                            });
+                            return yy;
+                        };
+                        const y1 = drawCol(c1, margin);
+                        const y2 = drawCol(c2, margin + cW + 6);
+                        y = Math.max(y1, y2) + 4;
+
+                        // Descricao
+                        if (imovel.descricao) {
+                            if (y > pageHeight - 70) { doc.addPage(); y = 20; }
+                            doc.setFillColor(...C2.verde);
+                            doc.roundedRect(margin, y-4, pageWidth-margin*2, 8, 1.5, 1.5, 'F');
+                            doc.setTextColor(...C2.branco);
+                            doc.setFontSize(8); doc.setFont('helvetica','bold');
+                            doc.text('DESCRICAO', margin+4, y+1);
+                            y += 10;
+                            doc.setFont('helvetica','normal');
+                            doc.setTextColor(...C2.dark);
+                            doc.setFontSize(8);
+                            const ds = doc.splitTextToSize(imovel.descricao.substring(0, 250) + (imovel.descricao.length > 250 ? '...' : ''), pageWidth-margin*2);
+                            doc.text(ds, margin, y);
+                            y += ds.length * 4 + 6;
                         }
 
-                        const gap = 5;
-                        const colWidth = (pageWidth - margin * 2 - gap) / 2;
-                        const startY = yPos;
-
-                        const meio = Math.ceil(bodyPortfolio.length / 2);
-                        const primeiraParte = bodyPortfolio.slice(0, meio);
-                        const segundaParte = bodyPortfolio.slice(meio);
-
-                        doc.autoTable({
-                            startY: startY,
-                            head: [['Característica', 'Detalhe']],
-                            body: primeiraParte,
-                            theme: 'striped',
-                            headStyles: { fillColor: [74, 87, 74], textColor: 255, fontSize: 9 },
-                            styles: { fontSize: 8, cellPadding: 2 },
-                            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: colWidth - 35 } },
-                            margin: { left: margin, right: pageWidth - (margin + colWidth) },
-                            tableWidth: colWidth
-                        });
-                        const finalY1 = doc.lastAutoTable.finalY;
-
-                        doc.autoTable({
-                            startY: startY,
-                            head: [['Característica', 'Detalhe']],
-                            body: segundaParte,
-                            theme: 'striped',
-                            headStyles: { fillColor: [74, 87, 74], textColor: 255, fontSize: 9 },
-                            styles: { fontSize: 8, cellPadding: 2 },
-                            columnStyles: { 0: { cellWidth: 35 }, 1: { cellWidth: colWidth - 35 } },
-                            margin: { left: margin + colWidth + gap, right: margin },
-                            tableWidth: colWidth
-                        });
-                        const finalY2 = doc.lastAutoTable.finalY;
-
-                        yPos = Math.max(finalY1, finalY2) + 10;
-                        
+                        // Fotos
                         if (imovel.imagens && imovel.imagens.length > 0) {
                             const fotos = imovel.imagens.slice(0, 4);
-                            const imgWidth = (pageWidth - margin * 3) / 2;
-                            const imgHeight = 70;
-                            
-                            let xPos = margin;
-                            let yPosImg = yPos;
-                            
-                            for (let i = 0; i < fotos.length; i++) {
+                            const iW = (pageWidth - margin*2 - 4) / 2;
+                            const iH = iW * 0.6;
+                            if (y + iH > pageHeight - 15) { doc.addPage(); y = 20; }
+                            let col = 0;
+                            for (let fi = 0; fi < fotos.length; fi++) {
+                                if (col === 2) { col = 0; y += iH + 4; }
+                                const xf = margin + col*(iW+4);
+                                if (y + iH > pageHeight - 15) { doc.addPage(); y = 20; col = 0; }
                                 try {
-                                    doc.addImage(fotos[i], 'JPEG', xPos, yPosImg, imgWidth, imgHeight);
-                                    doc.setDrawColor(224, 224, 224);
-                                    doc.rect(xPos, yPosImg, imgWidth, imgHeight);
-                                } catch (e) {
-                                    doc.setFillColor(244, 242, 238);
-                                    doc.rect(xPos, yPosImg, imgWidth, imgHeight, 'F');
-                                    doc.setFontSize(12);
-                                    doc.setTextColor(102, 116, 139);
-                                    doc.text("Sem imagem", xPos + imgWidth/2, yPosImg + imgHeight/2, { align: "center" });
+                                    doc.addImage(fotos[fi], 'JPEG', xf, y, iW, iH, undefined, 'FAST');
+                                    doc.setDrawColor(224,224,216); doc.setLineWidth(0.3);
+                                    doc.rect(xf, y, iW, iH);
+                                } catch(e) {
+                                    doc.setFillColor(...C2.cinzaFundo);
+                                    doc.rect(xf, y, iW, iH, 'F');
+                                    doc.setTextColor(...C2.cinza); doc.setFontSize(7);
+                                    doc.text('Foto indisponivel', xf+iW/2, y+iH/2, {align:'center'});
                                 }
-                                
-                                if (i === 1) {
-                                    xPos = margin;
-                                    yPosImg += imgHeight + 5;
-                                } else {
-                                    xPos += imgWidth + margin;
-                                }
+                                col++;
                             }
-                            
-                            yPos = yPosImg + imgHeight + 10;
                         }
-                        
-                        if (imovel.descricao) {
-                            if (yPos > pageHeight - 60) {
-                                doc.addPage();
-                                yPos = 20;
-                            }
-                            doc.setFontSize(10);
-                            doc.setTextColor(51, 51, 51);
-                            doc.setFont("helvetica", "bold");
-                            doc.text("Descrição:", margin, yPos);
-                            yPos += 5;
-                            doc.setFont("helvetica", "normal");
-                            doc.setFontSize(9);
-                            const descSplit = doc.splitTextToSize(imovel.descricao.substring(0, 200) + (imovel.descricao.length > 200 ? '...' : ''), pageWidth - margin * 2);
-                            doc.text(descSplit, margin, yPos);
-                        }
-                        
-                        doc.setFontSize(8);
-                        doc.setTextColor(102, 102, 102);
-                        const refDisplay = Utils.formatRefNumber(imovel.refNumber || imovel.id);
-                        doc.text(`Referência: ${refDisplay}`, margin, pageHeight - 10);
-                        doc.text(`Valor sujeito a alteração`, pageWidth - margin, pageHeight - 10, { align: "right" });
+                    }
+
+                    // Rodapes
+                    const totalPag2 = doc.getNumberOfPages();
+                    for (let p = 1; p <= totalPag2; p++) {
+                        doc.setPage(p);
+                        addPortFooter(p, totalPag2);
                     }
                     
                     doc.save(`Portfolio_ImobiPro_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -8481,7 +8600,30 @@
                     return;
                 }
 
-                list.innerHTML = filtered.map(c => {
+                // ── PRIORIDADE DOS CLIENTES ──────────────────────────────────────
+                // Peso das etapas do funil (quanto mais avançado, maior a prioridade)
+                const etapaPeso = { 'contrato': 100, 'aprovado': 90, 'documentacao': 80, 'sem-restricao': 70, 'cpf': 60, 'contato': 40, 'lead': 20, 'venda': -999 };
+                const agora = new Date();
+
+                const calcPrioridade = (c) => {
+                    const isInativo = c.etapaFunil === 'venda';
+                    if (isInativo) return -9999;
+                    const pesoEtapa = etapaPeso[c.etapaFunil] || 20;
+                    const diasNaEtapa = c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : 0;
+                    // Penaliza clientes parados há mais de 30 dias
+                    const penalidade = diasNaEtapa > 30 ? -20 : 0;
+                    // Bônus por contatos recentes (engajamento)
+                    const bonusContatos = Math.min((c.contatos || 0) * 2, 20);
+                    return pesoEtapa + bonusContatos + penalidade;
+                };
+
+                filtered = [...filtered].sort((a, b) => calcPrioridade(b) - calcPrioridade(a));
+
+                // Separar ativos e inativos para inserir separador visual
+                const ativos = filtered.filter(c => c.etapaFunil !== 'venda');
+                const inativos = filtered.filter(c => c.etapaFunil === 'venda');
+
+                const renderCard = (c, rank) => {
                     const hoje = new Date();
                     const nascimento = c.dataNascimento ? c.dataNascimento.split('-').map(Number) : null;
                     const isAniversario = nascimento && 
@@ -8493,12 +8635,27 @@
                         UI.data.imoveis.find(i => i.id === c.imovelInteresseId) : null;
                     
                     const etapa = UI.data.funilEtapas.find(e => e.id === c.etapaFunil) || UI.data.funilEtapas[0];
-                    
+                    const isInativo = c.etapaFunil === 'venda';
+                    const diasNaEtapa = c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : 0;
+                    const isParado = !isInativo && diasNaEtapa > 30;
+
+                    // Ícone de prioridade para clientes ativos
+                    let prioIcon = '';
+                    if (!isInativo && rank !== null) {
+                        const prioridade = calcPrioridade(c);
+                        if (prioridade >= 90) prioIcon = `<span title="Alta prioridade" style="color:#C4724A;font-size:0.85rem;margin-left:4px;">🔥</span>`;
+                        else if (prioridade >= 60) prioIcon = `<span title="Média prioridade" style="color:#B87020;font-size:0.85rem;margin-left:4px;">⚡</span>`;
+                        else if (isParado) prioIcon = `<span title="Cliente parado" style="color:#B83030;font-size:0.85rem;margin-left:4px;">⚠️</span>`;
+                    }
+
+                    const prioridade = calcPrioridade(c);
+                    const prioClass = isInativo ? ' client-card-inativo' : (prioridade >= 90 ? ' client-priority-alta' : prioridade >= 60 ? ' client-priority-media' : ' client-priority-normal');
                     return `
-                        <div class="client-card" onclick="App.cliente.showDetails('${c.id}')">
+                        <div class="client-card${prioClass}" onclick="App.cliente.showDetails('${c.id}')">
                             ${isAniversario ? `<div class="property-badge badge-pink" style="top: 12px; right: 12px; left: auto;">🎂</div>` : ''}
-                            <div class="client-header">
-                                <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''} <span class="badge badge-primary contact-count">${c.contatos || 0}</span></div>
+                            ${rank !== null ? `<div style="position:absolute;top:10px;left:12px;font-size:0.7rem;font-weight:800;color:var(--text-secondary);opacity:0.6;">#${rank+1}</div>` : ''}
+                            <div class="client-header" style="${rank !== null ? 'padding-left:28px;' : ''}">
+                                <div class="client-name">${c.nome} ${idade ? `(${idade} anos)` : ''} <span class="badge badge-primary contact-count">${c.contatos || 0}</span>${prioIcon}</div>
                                 <span class="client-type" style="background: ${etapa.cor}; color: white;">${etapa.nome}</span>
                             </div>
                             <div class="client-info">
@@ -8509,7 +8666,7 @@
                                 ${imovelInteresse ? `<div class="client-row"><i class="fas fa-home"></i> Interesse: ${imovelInteresse.titulo.substring(0, 30)}...</div>` : ''}
                                 ${c.faixaPreco ? `<div class="client-row"><i class="fas fa-search-dollar"></i> ${c.faixaPreco}</div>` : ''}
                                 ${c.origemLead ? `<div class="client-row"><i class="fas fa-map-signs"></i> <span class="origem-badge">${Utils.getOrigemLabel(c.origemLead)}</span></div>` : ''}
-                                <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${c.dataEntradaFunil ? Utils.calculateDaysInStage(c.dataEntradaFunil) : '0'} dias)${c.dataEntradaFunil && Utils.calculateDaysInStage(c.dataEntradaFunil) > 30 ? ' <span class="stale-badge">⚠️ Parado</span>' : ''}</div>
+                                <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${diasNaEtapa} dias)${isParado ? ' <span class="stale-badge">⚠️ Parado</span>' : ''}</div>
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
@@ -8527,7 +8684,22 @@
                             </div>
                         </div>
                     `;
-                }).join('');
+                };
+
+                let html = ativos.map((c, i) => renderCard(c, i)).join('');
+
+                if (inativos.length > 0) {
+                    html += `<div style="margin:20px 0 10px;display:flex;align-items:center;gap:10px;">
+                        <div style="flex:1;height:1px;background:var(--border);"></div>
+                        <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);white-space:nowrap;padding:4px 12px;background:var(--light);border-radius:20px;border:1px solid var(--border);">
+                            <i class="fas fa-check-circle" style="color:var(--success);margin-right:4px;"></i> VENDAS CONCLUÍDAS (${inativos.length})
+                        </div>
+                        <div style="flex:1;height:1px;background:var(--border);"></div>
+                    </div>`;
+                    html += inativos.map(c => renderCard(c, null)).join('');
+                }
+
+                list.innerHTML = html;
             },
 
             renderImoveis: (filter = '', tipoFilter = '', statusFilter = '', modalidadeFilter = '', transacaoFilter = '') => {
