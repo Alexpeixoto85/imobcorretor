@@ -1,3 +1,9 @@
+
+
+
+
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3565,6 +3571,95 @@
             font-weight: 700 !important;
         }
 
+
+        /* ===== LISTA DIÁRIA & TRAVADOS ===== */
+        .lista-diaria-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .lista-diaria-header h3 { font-size: 1rem; font-weight: 800; margin: 0; }
+        .lista-diaria-header p { font-size: 0.78rem; opacity: 0.85; margin: 0; }
+        .lista-diaria-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-lista-pdf {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-lista-pdf:active { opacity: 0.8; }
+        .lista-item-card {
+            background: rgba(255,255,255,0.94);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow-sm);
+            border-left: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .lista-item-card.ligacao { border-left-color: #0EA5E9; }
+        .lista-item-card.mensagem { border-left-color: #25D366; }
+        .lista-item-card.travado { border-left-color: var(--danger); }
+        .lista-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .lista-item-nome { font-size: 0.95rem; font-weight: 800; color: var(--dark); }
+        .lista-item-etapa { font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 20px; color: white; white-space: nowrap; }
+        .lista-item-meta { font-size: 0.78rem; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .lista-item-motivo { font-size: 0.8rem; color: var(--secondary); font-style: italic; margin-top: 2px; }
+        .lista-item-acoes { display: flex; gap: 8px; margin-top: 4px; }
+        .btn-acao-mini {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .btn-acao-tel { background: #0EA5E9; color: white; }
+        .btn-acao-wpp { background: #25D366; color: white; }
+        .lista-stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .lista-stat-mini {
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            padding: 12px 10px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+        .lista-stat-mini-val { font-size: 1.3rem; font-weight: 900; color: var(--primary); }
+        .lista-stat-mini-lbl { font-size: 0.68rem; color: var(--text-secondary); font-weight: 600; margin-top: 2px; }
+        .travado-dias-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
     </style>
 </head>
 <body>
@@ -3924,6 +4019,9 @@
                         <option value="vendas-funil">Relatório de Vendas pelo Funil</option>
                         <option value="performance">Performance</option>
                         <option value="plantao">Relatório de Plantão (Diário)</option>
+                        <option value="funil-travado">⚠️ Clientes Travados no Funil (+30 dias)</option>
+                        <option value="lista-ligacoes">📞 Lista Diária de Ligações</option>
+                        <option value="lista-mensagens">💬 Lista Diária de Mensagens</option>
                     </select>
                 </div>
                 
@@ -7983,6 +8081,8 @@
                         const etapaAnterior = cliente.etapaFunil;
                         cliente.etapaFunil = etapaId;
                         cliente.dataEntradaFunil = new Date().toISOString().split('T')[0];
+                        cliente.dataEntradaEtapa = new Date().toISOString(); // para rastrear tempo travado
+                        cliente.dataAtualizacao = new Date().toISOString();
                         await DB.put('clientes', cliente);
                         
                         if (etapaId === 'venda') {
@@ -9598,18 +9698,24 @@
                 const endDate = document.getElementById('report-date-end').value;
                 const reportType = document.getElementById('report-type').value;
                 
-                if (!startDate || !endDate) {
-                    Utils.toast('Selecione um período válido', 'error');
-                    return;
+                // Relatórios que não dependem de período de datas
+                const semData = ['funil-travado','lista-ligacoes','lista-mensagens'];
+                
+                if (!semData.includes(reportType)) {
+                    if (!startDate || !endDate) {
+                        Utils.toast('Selecione um período válido', 'error');
+                        return;
+                    }
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    if (start > end) {
+                        Utils.toast('Data inicial não pode ser maior que data final', 'error');
+                        return;
+                    }
                 }
                 
-                const start = new Date(startDate);
-                const end = new Date(endDate);
-                
-                if (start > end) {
-                    Utils.toast('Data inicial não pode ser maior que data final', 'error');
-                    return;
-                }
+                const start = startDate ? new Date(startDate) : new Date();
+                const end = endDate ? new Date(endDate) : new Date();
                 
                 let reportData = null;
                 
@@ -9631,6 +9737,15 @@
                         break;
                     case 'plantao':
                         reportData = UI.generatePlantaoReport(start);
+                        break;
+                    case 'funil-travado':
+                        reportData = UI.generateFunilTravadoReport();
+                        break;
+                    case 'lista-ligacoes':
+                        reportData = UI.generateListaLigacoesReport();
+                        break;
+                    case 'lista-mensagens':
+                        reportData = UI.generateListaMensagensReport();
                         break;
                 }
                 
@@ -10696,8 +10811,510 @@
                     Utils.toast('Gere um relatório primeiro', 'error');
                     return;
                 }
-                
+                const t = UI.currentReport.type;
+                if (t === 'lista-ligacoes') { UI.exportListaPDF('ligacoes', UI.currentReport.data); return; }
+                if (t === 'lista-mensagens') { UI.exportListaPDF('mensagens', UI.currentReport.data); return; }
+                if (t === 'funil-travado') { UI.exportFunilTravadoPDF(UI.currentReport.data); return; }
                 Utils.generateReportPDF(UI.currentReport.data, UI.currentReport.type);
+            },
+
+            // =========================================================
+            // RELATÓRIO: CLIENTES TRAVADOS NO FUNIL (+30 dias)
+            // =========================================================
+            generateFunilTravadoReport: () => {
+                const clientes = UI.data.clientes;
+                const etapas = UI.data.funilEtapas;
+                const agora = new Date();
+                const LIMITE_DIAS = 30;
+
+                // Identifica clientes parados: usa dataEntradaEtapa (se existir) ou dataAtualizacao ou dataCriacao
+                const travados = clientes
+                    .filter(c => c.etapaFunil !== 'venda') // excluir vendas concluídas
+                    .map(c => {
+                        const ref = c.dataEntradaEtapa || c.dataAtualizacao || c.dataCriacao;
+                        if (!ref) return null;
+                        const dias = Math.floor((agora - new Date(ref)) / 86400000);
+                        return { ...c, diasParado: dias };
+                    })
+                    .filter(c => c && c.diasParado >= LIMITE_DIAS)
+                    .sort((a, b) => b.diasParado - a.diasParado);
+
+                const getEtapa = (id) => etapas.find(e => e.id === id) || { nome: id, cor: '#888' };
+
+                const porEtapa = {};
+                travados.forEach(c => {
+                    const etapaId = c.etapaFunil || 'lead';
+                    if (!porEtapa[etapaId]) porEtapa[etapaId] = [];
+                    porEtapa[etapaId].push(c);
+                });
+
+                let html = `
+                    <div class="lista-diaria-header" style="background:linear-gradient(135deg,#B83030,#8B1414);">
+                        <div>
+                            <h3><i class="fas fa-exclamation-triangle"></i> Clientes Travados no Funil</h3>
+                            <p>${travados.length} cliente(s) com mais de ${LIMITE_DIAS} dias sem mudança de etapa</p>
+                        </div>
+                        <div class="lista-diaria-actions">
+                            <button class="btn-lista-pdf" onclick="UI.exportFunilTravadoPDF(UI.currentReport.data)">
+                                <i class="fas fa-file-pdf"></i> Baixar PDF
+                            </button>
+                        </div>
+                    </div>`;
+
+                if (travados.length === 0) {
+                    html += `<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>Nenhum cliente travado há mais de ${LIMITE_DIAS} dias. Funil saudável! ✅</p></div>`;
+                } else {
+                    const maxDias = travados[0].diasParado;
+                    html += `
+                        <div class="lista-stats-row">
+                            <div class="lista-stat-mini">
+                                <div class="lista-stat-mini-val" style="color:var(--danger)">${travados.length}</div>
+                                <div class="lista-stat-mini-lbl">Travados</div>
+                            </div>
+                            <div class="lista-stat-mini">
+                                <div class="lista-stat-mini-val" style="color:var(--warning)">${maxDias}d</div>
+                                <div class="lista-stat-mini-lbl">Mais tempo parado</div>
+                            </div>
+                            <div class="lista-stat-mini">
+                                <div class="lista-stat-mini-val" style="color:var(--primary)">${Object.keys(porEtapa).length}</div>
+                                <div class="lista-stat-mini-lbl">Etapas afetadas</div>
+                            </div>
+                        </div>`;
+
+                    Object.keys(porEtapa).forEach(etapaId => {
+                        const etapa = getEtapa(etapaId);
+                        const lista = porEtapa[etapaId];
+                        html += `<div class="section-title" style="margin-top:16px;"><span style="background:${etapa.cor};color:white;padding:3px 10px;border-radius:20px;font-size:0.78rem;">${etapa.nome}</span> <span style="font-size:0.82rem;color:var(--text-secondary);font-weight:500;">${lista.length} cliente(s)</span></div>`;
+                        lista.forEach(c => {
+                            const urgencia = c.diasParado >= 90 ? 'var(--danger)' : c.diasParado >= 60 ? 'var(--warning)' : 'var(--accent)';
+                            html += `
+                            <div class="lista-item-card travado">
+                                <div class="lista-item-top">
+                                    <span class="lista-item-nome">${c.nome}</span>
+                                    <span class="travado-dias-badge" style="background:${urgencia}">${c.diasParado}d parado</span>
+                                </div>
+                                <div class="lista-item-meta">
+                                    <i class="fas fa-phone" style="color:#0EA5E9"></i> ${c.telefone || 'Sem telefone'}
+                                    ${c.email ? `&nbsp;·&nbsp;<i class="fas fa-envelope" style="color:var(--accent)"></i> ${c.email}` : ''}
+                                </div>
+                                <div class="lista-item-motivo">
+                                    ${c.observacoes ? '📝 ' + c.observacoes.substring(0, 80) + (c.observacoes.length > 80 ? '...' : '') : 'Sem observações registradas'}
+                                </div>
+                                <div class="lista-item-acoes">
+                                    ${c.telefone ? `<button class="btn-acao-mini btn-acao-tel" onclick="window.open('tel:${c.telefone.replace(/\D/g,'')}')"><i class="fas fa-phone"></i> Ligar</button>` : ''}
+                                    ${c.telefone ? `<button class="btn-acao-mini btn-acao-wpp" onclick="window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>` : ''}
+                                </div>
+                            </div>`;
+                        });
+                    });
+                }
+
+                return { type: 'funil-travado', data: travados, html };
+            },
+
+            // =========================================================
+            // RELATÓRIO: LISTA DIÁRIA DE LIGAÇÕES
+            // =========================================================
+            generateListaLigacoesReport: () => {
+                const clientes = UI.data.clientes;
+                const visitas = UI.data.visitas;
+                const agora = new Date();
+                let metas = {};
+                try { metas = JSON.parse(localStorage.getItem('coach_metas') || '{}'); } catch(e) {}
+                const metaLigacoes = metas.ligacoes || metas.leads || 20;
+
+                // Score de prioridade para ligação
+                const scoreLigacao = (c) => {
+                    let score = 0;
+                    // 1. Dias sem contato (visita/ligação/whatsapp)
+                    const ultimosContatos = visitas
+                        .filter(v => v.clienteId === c.id && (v.tipo === 'ligacao' || v.tipo === 'visita' || v.tipo === 'whatsapp'))
+                        .sort((a, b) => new Date(b.data + 'T' + (b.horario || '00:00')) - new Date(a.data + 'T' + (a.horario || '00:00')));
+                    const diasSemContato = ultimosContatos.length > 0
+                        ? Math.floor((agora - new Date(ultimosContatos[0].data + 'T12:00:00')) / 86400000)
+                        : Math.floor((agora - new Date(c.dataCriacao || agora)) / 86400000);
+                    score += Math.min(diasSemContato * 2, 60);
+                    // 2. Etapa do funil (mais próximas da venda = mais urgente)
+                    const ordemEtapa = { lead:1, contato:3, cpf:5, 'sem-restricao':7, documentacao:8, aprovado:10, contrato:9, venda:0 };
+                    score += (ordemEtapa[c.etapaFunil] || 2) * 3;
+                    // 3. Sem telefone = remove
+                    if (!c.telefone) return -1;
+                    // 4. Venda concluída = remove
+                    if (c.etapaFunil === 'venda') return -1;
+                    return { score, diasSemContato, ultimoContato: ultimosContatos[0] };
+                };
+
+                const lista = clientes
+                    .map(c => { const s = scoreLigacao(c); return s === -1 ? null : { ...c, _score: s.score, _dias: s.diasSemContato, _ultimo: s.ultimoContato }; })
+                    .filter(Boolean)
+                    .sort((a, b) => b._score - a._score)
+                    .slice(0, Math.max(metaLigacoes, 10));
+
+                const etapas = UI.data.funilEtapas;
+                const getEtapa = (id) => etapas.find(e => e.id === id) || { nome: id, cor: '#888' };
+                const hoje = agora.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+
+                let html = `
+                    <div class="lista-diaria-header" style="background:linear-gradient(135deg,#0369A1,#0EA5E9);">
+                        <div>
+                            <h3><i class="fas fa-phone"></i> Lista de Ligações — ${hoje}</h3>
+                            <p>Meta: ${metaLigacoes} ligações · ${lista.length} clientes priorizados por IA</p>
+                        </div>
+                        <div class="lista-diaria-actions">
+                            <button class="btn-lista-pdf" onclick="UI.exportListaPDF('ligacoes', UI.currentReport.data)">
+                                <i class="fas fa-file-pdf"></i> Baixar PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lista-stats-row">
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:#0EA5E9">${lista.length}</div>
+                            <div class="lista-stat-mini-lbl">Para ligar hoje</div>
+                        </div>
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:var(--danger)">${lista.filter(c=>c._dias>=15).length}</div>
+                            <div class="lista-stat-mini-lbl">Urgentes (+15d)</div>
+                        </div>
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:var(--warning)">${metaLigacoes}</div>
+                            <div class="lista-stat-mini-lbl">Meta do dia</div>
+                        </div>
+                    </div>`;
+
+                lista.forEach((c, idx) => {
+                    const etapa = getEtapa(c.etapaFunil);
+                    const urgencia = c._dias >= 30 ? '#B83030' : c._dias >= 15 ? '#B87020' : '#0369A1';
+                    const motivo = c._dias >= 30 ? `🔴 Sem contato há ${c._dias} dias — URGENTE!`
+                        : c._dias >= 15 ? `🟡 Sem contato há ${c._dias} dias`
+                        : c._dias >= 7 ? `🟢 Último contato há ${c._dias} dias`
+                        : `🔵 Contato recente (${c._dias}d) — manter engajamento`;
+
+                    html += `
+                    <div class="lista-item-card ligacao">
+                        <div class="lista-item-top">
+                            <span style="font-size:0.75rem;font-weight:800;color:#0369A1;min-width:24px;">#${idx+1}</span>
+                            <span class="lista-item-nome">${c.nome}</span>
+                            <span class="lista-item-etapa" style="background:${etapa.cor}">${etapa.nome}</span>
+                        </div>
+                        <div class="lista-item-meta">
+                            <i class="fas fa-phone" style="color:#0EA5E9"></i> ${c.telefone}
+                            ${c._ultimo ? `&nbsp;·&nbsp;Último: ${Utils.formatDate(c._ultimo.data)}` : '&nbsp;·&nbsp;Nunca contatado'}
+                        </div>
+                        <div class="lista-item-motivo" style="color:${urgencia}">${motivo}</div>
+                        ${c.observacoes ? `<div class="lista-item-motivo">📝 ${c.observacoes.substring(0,70)}${c.observacoes.length>70?'...':''}</div>` : ''}
+                        <div class="lista-item-acoes">
+                            <button class="btn-acao-mini btn-acao-tel" onclick="window.open('tel:${c.telefone.replace(/\D/g,'')}')"><i class="fas fa-phone"></i> Ligar agora</button>
+                            <button class="btn-acao-mini btn-acao-wpp" onclick="window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}')"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                        </div>
+                    </div>`;
+                });
+
+                if (lista.length === 0) {
+                    html += `<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>Nenhum cliente com telefone cadastrado para ligar. Cadastre clientes primeiro!</p></div>`;
+                }
+
+                return { type: 'lista-ligacoes', data: lista, html };
+            },
+
+            // =========================================================
+            // RELATÓRIO: LISTA DIÁRIA DE MENSAGENS (WhatsApp)
+            // =========================================================
+            generateListaMensagensReport: () => {
+                const clientes = UI.data.clientes;
+                const visitas = UI.data.visitas;
+                const agora = new Date();
+                let metas = {};
+                try { metas = JSON.parse(localStorage.getItem('coach_metas') || '{}'); } catch(e) {}
+                const metaMensagens = metas.mensagens || metas.leads || 15;
+
+                const SCRIPTS = {
+                    lead: 'Olá {nome}! Vi que você tem interesse em imóveis. Posso te ajudar a encontrar a opção ideal? 🏡',
+                    contato: 'Olá {nome}, dando continuidade ao nosso contato anterior — já encontrei algumas opções que combinam com seu perfil! Quer ver? 😊',
+                    cpf: 'Oi {nome}! A análise de crédito está em andamento. Qualquer novidade te aviso de imediato. 👍',
+                    'sem-restricao': 'Oi {nome}! Ótima notícia — seu CPF está sem restrições. Podemos avançar com os documentos? 🎉',
+                    documentacao: 'Olá {nome}, preciso de alguns documentos para finalizarmos seu processo. Consigo te listar tudo agora! 📋',
+                    aprovado: '{nome}, seu financiamento foi aprovado! Vamos marcar a assinatura do contrato? 🏆',
+                    contrato: 'Olá {nome}! Tudo pronto para a assinatura. Quando você pode? 📝',
+                };
+
+                const scoreMensagem = (c) => {
+                    if (!c.telefone || c.etapaFunil === 'venda') return null;
+                    const ultimosWpp = visitas
+                        .filter(v => v.clienteId === c.id && v.tipo === 'whatsapp')
+                        .sort((a, b) => new Date(b.data) - new Date(a.data));
+                    const diasSemWpp = ultimosWpp.length > 0
+                        ? Math.floor((agora - new Date(ultimosWpp[0].data + 'T12:00:00')) / 86400000)
+                        : Math.floor((agora - new Date(c.dataCriacao || agora)) / 86400000);
+                    let score = Math.min(diasSemWpp * 1.5, 50);
+                    const ordemEtapa = { lead:2, contato:4, cpf:6, 'sem-restricao':8, documentacao:9, aprovado:10, contrato:9 };
+                    score += (ordemEtapa[c.etapaFunil] || 2) * 2;
+                    const script = SCRIPTS[c.etapaFunil] || SCRIPTS.lead;
+                    return { score, diasSemWpp, ultimoWpp: ultimosWpp[0], script: script.replace(/{nome}/g, c.nome.split(' ')[0]) };
+                };
+
+                const lista = clientes
+                    .map(c => { const s = scoreMensagem(c); return s ? { ...c, _score: s.score, _dias: s.diasSemWpp, _ultimo: s.ultimoWpp, _script: s.script } : null; })
+                    .filter(Boolean)
+                    .sort((a, b) => b._score - a._score)
+                    .slice(0, Math.max(metaMensagens, 10));
+
+                const etapas = UI.data.funilEtapas;
+                const getEtapa = (id) => etapas.find(e => e.id === id) || { nome: id, cor: '#888' };
+                const hoje = agora.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+
+                let html = `
+                    <div class="lista-diaria-header" style="background:linear-gradient(135deg,#128C7E,#25D366);">
+                        <div>
+                            <h3><i class="fab fa-whatsapp"></i> Lista de Mensagens — ${hoje}</h3>
+                            <p>Meta: ${metaMensagens} mensagens · ${lista.length} clientes priorizados por IA</p>
+                        </div>
+                        <div class="lista-diaria-actions">
+                            <button class="btn-lista-pdf" onclick="UI.exportListaPDF('mensagens', UI.currentReport.data)">
+                                <i class="fas fa-file-pdf"></i> Baixar PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lista-stats-row">
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:#25D366">${lista.length}</div>
+                            <div class="lista-stat-mini-lbl">Para enviar hoje</div>
+                        </div>
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:var(--danger)">${lista.filter(c=>c._dias>=15).length}</div>
+                            <div class="lista-stat-mini-lbl">Sem contato +15d</div>
+                        </div>
+                        <div class="lista-stat-mini">
+                            <div class="lista-stat-mini-val" style="color:var(--warning)">${metaMensagens}</div>
+                            <div class="lista-stat-mini-lbl">Meta do dia</div>
+                        </div>
+                    </div>`;
+
+                lista.forEach((c, idx) => {
+                    const etapa = getEtapa(c.etapaFunil);
+                    const tel = c.telefone.replace(/\D/g, '');
+                    const wppLink = `https://wa.me/55${tel}?text=${encodeURIComponent(c._script)}`;
+
+                    html += `
+                    <div class="lista-item-card mensagem">
+                        <div class="lista-item-top">
+                            <span style="font-size:0.75rem;font-weight:800;color:#128C7E;min-width:24px;">#${idx+1}</span>
+                            <span class="lista-item-nome">${c.nome}</span>
+                            <span class="lista-item-etapa" style="background:${etapa.cor}">${etapa.nome}</span>
+                        </div>
+                        <div class="lista-item-meta">
+                            <i class="fab fa-whatsapp" style="color:#25D366"></i> ${c.telefone}
+                            ${c._ultimo ? `&nbsp;·&nbsp;Último WPP: ${Utils.formatDate(c._ultimo.data)}` : '&nbsp;·&nbsp;Nunca enviou WPP'}
+                        </div>
+                        <div class="lista-item-motivo" style="background:rgba(37,211,102,0.08);border-radius:8px;padding:8px 10px;margin-top:4px;color:#065f46;font-style:normal;font-size:0.78rem;line-height:1.5;">
+                            💬 <em>${c._script}</em>
+                        </div>
+                        <div class="lista-item-acoes">
+                            <button class="btn-acao-mini btn-acao-wpp" onclick="window.open('${wppLink}','_blank')"><i class="fab fa-whatsapp"></i> Enviar mensagem</button>
+                            <button class="btn-acao-mini btn-acao-tel" onclick="navigator.clipboard&&navigator.clipboard.writeText(${JSON.stringify(c._script)}).then(()=>Utils.toast('Mensagem copiada!'))"><i class="fas fa-copy"></i> Copiar</button>
+                        </div>
+                    </div>`;
+                });
+
+                if (lista.length === 0) {
+                    html += `<div class="empty-state"><i class="fas fa-check-circle" style="color:var(--success)"></i><p>Nenhum cliente com telefone cadastrado. Cadastre clientes primeiro!</p></div>`;
+                }
+
+                return { type: 'lista-mensagens', data: lista, html };
+            },
+
+            // =========================================================
+            // EXPORT PDF: LISTA DE LIGAÇÕES / MENSAGENS
+            // =========================================================
+            exportListaPDF: (tipo, lista) => {
+                if (!lista || lista.length === 0) { Utils.toast('Nenhum dado para exportar', 'error'); return; }
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const PW = doc.internal.pageSize.getWidth();
+                    const PH = doc.internal.pageSize.getHeight();
+                    const M = 14;
+                    const isLig = tipo === 'ligacoes';
+                    const cor = isLig ? [3, 105, 161] : [18, 140, 126];
+                    const hoje = new Date().toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+                    const titulo = isLig ? 'Lista de Ligações do Dia' : 'Lista de Mensagens do Dia';
+                    const etapas = UI.data.funilEtapas;
+                    const getEtapaNome = (id) => (etapas.find(e => e.id === id) || { nome: id }).nome;
+
+                    // Header
+                    doc.setFillColor(...cor);
+                    doc.rect(0, 0, PW, 36, 'F');
+                    doc.setTextColor(255,255,255);
+                    doc.setFont('helvetica','bold');
+                    doc.setFontSize(16);
+                    doc.text(titulo, M, 16);
+                    doc.setFont('helvetica','normal');
+                    doc.setFontSize(9);
+                    doc.text(hoje, M, 24);
+                    doc.text(`Total: ${lista.length} cliente(s)`, PW - M, 24, { align:'right' });
+                    doc.text('ImobiPro · Sistema de Gestão Imobiliária', PW / 2, 32, { align:'center' });
+
+                    let y = 46;
+                    lista.forEach((c, idx) => {
+                        if (y > PH - 30) { doc.addPage(); y = 16; }
+                        const etapaNome = getEtapaNome(c.etapaFunil);
+                        // Fundo alternado
+                        doc.setFillColor(idx % 2 === 0 ? 248 : 255, idx % 2 === 0 ? 250 : 255, idx % 2 === 0 ? 252 : 255);
+                        doc.roundedRect(M, y, PW - M * 2, 22, 3, 3, 'F');
+                        doc.setDrawColor(...cor, 40);
+                        doc.roundedRect(M, y, PW - M * 2, 22, 3, 3, 'S');
+                        // Número
+                        doc.setFillColor(...cor);
+                        doc.circle(M + 6, y + 11, 5, 'F');
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(255,255,255);
+                        doc.text(String(idx+1), M + 6, y + 13, { align:'center' });
+                        // Nome
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(10);
+                        doc.setTextColor(30,50,32);
+                        doc.text(c.nome.substring(0,35), M + 14, y + 9);
+                        // Etapa badge
+                        doc.setFont('helvetica','normal');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(100,100,100);
+                        doc.text(`Etapa: ${etapaNome}`, M + 14, y + 16);
+                        // Telefone
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(9);
+                        doc.setTextColor(...cor);
+                        doc.text(c.telefone || '—', PW - M - 4, y + 9, { align:'right' });
+                        // Dias sem contato
+                        doc.setFont('helvetica','normal');
+                        doc.setFontSize(7.5);
+                        doc.setTextColor(150,100,30);
+                        doc.text(c._dias > 0 ? `${c._dias}d sem contato` : 'Contato recente', PW - M - 4, y + 16, { align:'right' });
+                        // Script de mensagem (só para mensagens)
+                        if (!isLig && c._script) {
+                            if (y + 22 + 10 > PH - 20) { doc.addPage(); y = 16; }
+                            doc.setFillColor(240, 255, 245);
+                            doc.roundedRect(M, y + 22, PW - M * 2, 10, 2, 2, 'F');
+                            doc.setFont('helvetica','italic');
+                            doc.setFontSize(7);
+                            doc.setTextColor(6, 95, 70);
+                            const scriptCut = doc.splitTextToSize('💬 ' + c._script, PW - M * 2 - 6);
+                            doc.text(scriptCut[0], M + 3, y + 29);
+                            y += 12;
+                        }
+                        y += 26;
+                    });
+
+                    // Footer
+                    const pgs = doc.internal.getNumberOfPages();
+                    for (let p = 1; p <= pgs; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(...cor);
+                        doc.rect(0, PH - 10, PW, 10, 'F');
+                        doc.setFont('helvetica','normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(255,255,255);
+                        doc.text(`ImobiPro · ${titulo} · ${new Date().toLocaleDateString('pt-BR')}`, M, PH - 4);
+                        doc.text(`Pág ${p}/${pgs}`, PW - M, PH - 4, { align:'right' });
+                    }
+
+                    const data = new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
+                    doc.save(`ImobiPro_${isLig ? 'Ligacoes' : 'Mensagens'}_${data}.pdf`);
+                    Utils.toast(`✅ PDF da lista de ${isLig ? 'ligações' : 'mensagens'} gerado!`);
+                } catch(e) {
+                    console.error('Erro ao gerar PDF:', e);
+                    Utils.toast('Erro ao gerar PDF', 'error');
+                }
+            },
+
+            // =========================================================
+            // EXPORT PDF: CLIENTES TRAVADOS NO FUNIL
+            // =========================================================
+            exportFunilTravadoPDF: (lista) => {
+                if (!lista || lista.length === 0) { Utils.toast('Nenhum dado para exportar', 'error'); return; }
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                    const PW = doc.internal.pageSize.getWidth();
+                    const PH = doc.internal.pageSize.getHeight();
+                    const M = 14;
+                    const etapas = UI.data.funilEtapas;
+                    const getEtapaNome = (id) => (etapas.find(e => e.id === id) || { nome: id }).nome;
+                    const hoje = new Date().toLocaleDateString('pt-BR', { day:'numeric', month:'long', year:'numeric' });
+
+                    // Header vermelho
+                    doc.setFillColor(184, 48, 48);
+                    doc.rect(0, 0, PW, 38, 'F');
+                    doc.setTextColor(255,255,255);
+                    doc.setFont('helvetica','bold');
+                    doc.setFontSize(16);
+                    doc.text('⚠  Clientes Travados no Funil (+30 dias)', M, 16);
+                    doc.setFont('helvetica','normal');
+                    doc.setFontSize(9);
+                    doc.text(`Gerado em: ${hoje}`, M, 25);
+                    doc.text(`Total: ${lista.length} cliente(s) identificado(s)`, M, 32);
+                    doc.text('ImobiPro · Gestão Imobiliária', PW - M, 32, { align:'right' });
+
+                    let y = 48;
+                    lista.forEach((c, idx) => {
+                        if (y > PH - 35) { doc.addPage(); y = 16; }
+                        const dias = c.diasParado;
+                        const corUrgencia = dias >= 90 ? [184,48,48] : dias >= 60 ? [184,112,32] : [196,114,74];
+                        doc.setFillColor(255, 248, 248);
+                        doc.roundedRect(M, y, PW - M*2, 26, 3, 3, 'F');
+                        doc.setDrawColor(184,48,48);
+                        doc.setLineWidth(0.5);
+                        doc.roundedRect(M, y, PW - M*2, 26, 3, 3, 'S');
+                        // Urgência badge
+                        doc.setFillColor(...corUrgencia);
+                        doc.roundedRect(PW - M - 28, y + 4, 26, 9, 3, 3, 'F');
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(255,255,255);
+                        doc.text(`${dias}d parado`, PW - M - 15, y + 10, { align:'center' });
+                        // Nome
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(10);
+                        doc.setTextColor(30,50,32);
+                        doc.text(`${idx+1}. ${c.nome.substring(0,32)}`, M + 4, y + 9);
+                        // Etapa
+                        doc.setFont('helvetica','normal');
+                        doc.setFontSize(8);
+                        doc.setTextColor(80,80,80);
+                        doc.text(`Etapa: ${getEtapaNome(c.etapaFunil)}`, M + 4, y + 16);
+                        // Telefone
+                        doc.setFont('helvetica','bold');
+                        doc.setFontSize(8);
+                        doc.setTextColor(3,105,161);
+                        doc.text(c.telefone || 'Sem telefone', M + 4, y + 23);
+                        // Obs
+                        if (c.observacoes) {
+                            doc.setFont('helvetica','italic');
+                            doc.setFontSize(7);
+                            doc.setTextColor(120,100,60);
+                            const obsCut = doc.splitTextToSize(c.observacoes, PW - M*2 - 35);
+                            doc.text(obsCut[0] || '', M + 60, y + 23);
+                        }
+                        y += 30;
+                    });
+
+                    const pgs = doc.internal.getNumberOfPages();
+                    for (let p = 1; p <= pgs; p++) {
+                        doc.setPage(p);
+                        doc.setFillColor(184, 48, 48);
+                        doc.rect(0, PH - 10, PW, 10, 'F');
+                        doc.setFont('helvetica','normal');
+                        doc.setFontSize(7);
+                        doc.setTextColor(255,255,255);
+                        doc.text(`ImobiPro · Clientes Travados · ${new Date().toLocaleDateString('pt-BR')}`, M, PH - 4);
+                        doc.text(`Pág ${p}/${pgs}`, PW - M, PH - 4, { align:'right' });
+                    }
+
+                    doc.save(`ImobiPro_Clientes_Travados_${new Date().toLocaleDateString('pt-BR').replace(/\//g,'-')}.pdf`);
+                    Utils.toast('✅ PDF de clientes travados gerado!');
+                } catch(e) {
+                    console.error('Erro ao gerar PDF travados:', e);
+                    Utils.toast('Erro ao gerar PDF', 'error');
+                }
             },
 
             openModal: (type) => {
@@ -11455,6 +12072,7 @@
                         tipoInteresse, loteDocsChecked,
                         dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0],
+                        dataAtualizacao: new Date().toISOString(),
                         contatos
                     };
                     
@@ -11462,10 +12080,16 @@
                     if(existingIdx >= 0) {
                         if(UI.data.clientes[existingIdx].dataEntradaFunil && UI.data.clientes[existingIdx].etapaFunil === etapaFunil) {
                             newClient.dataEntradaFunil = UI.data.clientes[existingIdx].dataEntradaFunil;
+                            // Preserva a data de entrada na etapa se a etapa não mudou
+                            newClient.dataEntradaEtapa = UI.data.clientes[existingIdx].dataEntradaEtapa || UI.data.clientes[existingIdx].dataCriacao;
+                        } else {
+                            // Etapa mudou — registra nova data de entrada
+                            newClient.dataEntradaEtapa = new Date().toISOString();
                         }
                         UI.data.clientes[existingIdx] = newClient;
                         await DB.put('clientes', newClient);
                     } else {
+                        newClient.dataEntradaEtapa = new Date().toISOString();
                         UI.data.clientes.push(newClient);
                         await DB.put('clientes', newClient);
                     }
@@ -16626,6 +17250,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                                         <div class="leitura-attach-list-name">${a.nome}</div>
                                         <div class="leitura-attach-list-meta">${typeLabel}${a.tamanho ? ' · ' + a.tamanho : ''}</div>
                                     </div>
+                                    ${isPdf ? `<button onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:4px;"><i class='fas fa-eye'></i> Ver PDF</button>` : ''}
                                     <i class="fas fa-chevron-right leitura-attach-list-arrow"></i>
                                 </div>`;
                             }).join('');
