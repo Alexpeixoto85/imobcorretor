@@ -18393,15 +18393,19 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 }
             },
 
+            // _activeBlob: mantém o Blob ativo para download e visualização
+            _activeBlob: null,
+
             async openFile(itemId, anexoIdx) {
                 const item = this.items.find(x => x.id === itemId);
-                if (!item) return;
+                if (!item) { Utils.toast('Item não encontrado', 'error'); return; }
                 const anexos = item.anexos || [];
                 const meta = anexos[anexoIdx];
                 if (!meta) { Utils.toast('Anexo não disponível', 'error'); return; }
 
-                // Mostra overlay imediatamente com loading
+                // Mostra overlay imediatamente
                 const overlay = document.getElementById('file-viewer-overlay');
+                if (!overlay) return;
                 if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
                 overlay.classList.add('active');
                 this._initViewerSwipe();
@@ -18411,64 +18415,138 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this._viewerAnexoIdx = anexoIdx;
                 this._viewerAnexos = anexos;
 
-                // Mostra spinner enquanto carrega o blob
+                // Spinner de carregamento
                 const body = document.getElementById('file-viewer-body');
                 const titleEl = document.getElementById('file-viewer-title');
                 if (titleEl) titleEl.textContent = meta.nome || 'Arquivo';
                 if (body) {
                     const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
-                    body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;width:100%;">
+                    body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;width:100%;height:100%;">
                         <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
-                        <div style="font-size:0.9rem;opacity:0.8;">Carregando arquivo...</div>
+                        <div style="font-size:0.9rem;opacity:0.8;">Carregando...</div>
                     </div>`;
                     arrows.forEach(a => body.appendChild(a));
                 }
 
                 try {
-                    // Busca o blob — primeiro nos pendingBlobs (ainda não salvo), depois no DB
-                    let blobRecord = this._pendingBlobs.find(pb => pb.id === meta.id);
-                    if (!blobRecord) {
-                        blobRecord = await DB.get('leitura_blobs', meta.id);
+                    // Obtém o Blob — de pending ou do IndexedDB
+                    let blob = null;
+                    const pb = this._pendingBlobs.find(p => p.id === meta.id);
+                    if (pb) {
+                        blob = pb.blob;
+                    } else if (meta.id) {
+                        const rec = await DB.get('leitura_blobs', meta.id);
+                        if (rec && rec.blob) blob = rec.blob;
                     }
 
-                    if (!blobRecord || !blobRecord.blob) {
-                        // Compatibilidade: item antigo com data base64 embutida
-                        if (meta.data) {
-                            this._viewerAnexos = anexos;
-                            this._loadViewerFile(meta, anexoIdx, anexos);
-                            this._renderViewerStrip(anexos, anexoIdx);
-                            return;
+                    // Guarda blob para download posterior
+                    this._activeBlob = blob;
+                    this._viewerFile = meta;
+
+                    if (blob) {
+                        // NOVO: renderiza direto do Blob — sem criar URL ainda (evita revogação prematura)
+                        const isPdf = meta.tipo === 'application/pdf' || (meta.nome||'').toLowerCase().endsWith('.pdf');
+                        const toolbar = document.getElementById('file-viewer-toolbar');
+                        if (isPdf) {
+                            await this._renderPdfFromBlob(blob, body, toolbar, meta);
+                        } else {
+                            this._renderImageFromBlob(blob, body, toolbar, meta);
                         }
-                        throw new Error('Blob não encontrado');
+                    } else if (meta.data) {
+                        // Compatibilidade: base64 embutido (itens antigos)
+                        this._loadViewerFile(meta, anexoIdx, anexos);
+                    } else {
+                        throw new Error('Arquivo não encontrado no armazenamento.');
                     }
-
-                    // Cria objectURL a partir do blob
-                    if (this._currentBlobURL) URL.revokeObjectURL(this._currentBlobURL);
-                    const url = URL.createObjectURL(blobRecord.blob);
-                    this._currentBlobURL = url;
-
-                    // Monta um objeto compatível com _loadViewerFile usando o blobURL
-                    const anexoParaViewer = {
-                        ...meta,
-                        data: url,          // blobURL usado diretamente
-                        _isBlobURL: true,
-                    };
-                    this._viewerAnexos = anexos;
-                    this._loadViewerFile(anexoParaViewer, anexoIdx, anexos);
                     this._renderViewerStrip(anexos, anexoIdx);
                 } catch(err) {
-                    console.error('Erro ao abrir anexo:', err);
-                    Utils.toast('Erro ao abrir arquivo', 'error');
-                    overlay.classList.remove('active');
+                    console.error('Erro ao abrir arquivo:', err);
+                    if (body) {
+                        const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                        body.innerHTML = `<div style="text-align:center;color:white;padding:40px 20px;"><div style="font-size:3rem;margin-bottom:12px;">⚠️</div><div style="font-size:0.9rem;opacity:0.8;">${err.message || 'Erro ao carregar arquivo'}</div></div>`;
+                        arrows.forEach(a => body.appendChild(a));
+                    }
+                }
+            },
+
+            async _renderPdfFromBlob(blob, body, toolbar, meta) {
+                // Monta spinner
+                const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                body.innerHTML = `<div id="pdf-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;width:100%;height:100%;"><div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div></div>`;
+                arrows.forEach(a => body.appendChild(a));
+                try {
+                    const pdfjs = await this._loadPdfJs();
+                    // Lê o Blob como ArrayBuffer — não precisa de URL nem CDN
+                    const arrayBuffer = await blob.arrayBuffer();
+                    const uint8 = new Uint8Array(arrayBuffer);
+                    const loadEl = document.getElementById('pdf-loading');
+                    if (loadEl) loadEl.remove();
+                    const pdfDoc = await pdfjs.getDocument({ data: uint8 }).promise;
+                    this._pdfDoc = pdfDoc;
+                    this._pdfPage = 1;
+                    this._pdfTotalPages = pdfDoc.numPages;
+                    const arrs2 = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                    body.innerHTML = `<div id="pdf-viewer-wrap" style="display:flex;flex-direction:column;align-items:center;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 4px;"><canvas id="pdf-canvas" style="max-width:100%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);display:block;"></canvas></div>`;
+                    arrs2.forEach(a => body.appendChild(a));
+                    toolbar.innerHTML = `
+                        <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">1 / ${pdfDoc.numPages}</span>
+                        <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn"><i class="fas fa-chevron-right"></i></button>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
+                        <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:52px;">100%</button>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" title="Baixar"><i class="fas fa-download"></i></button>`;
+                    toolbar.style.display = 'flex';
+                    await this._renderPdfPage(1);
+                } catch(e) {
+                    console.error('PDF render falhou:', e);
+                    const loadEl = document.getElementById('pdf-loading');
+                    if (loadEl) loadEl.remove();
+                    this._pdfjsReady = null;
+                    // Fallback: oferece download direto
+                    const arrows2 = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                    body.innerHTML = '';
+                    arrows2.forEach(a => body.appendChild(a));
+                    const div = document.createElement('div');
+                    div.style.cssText = 'text-align:center;color:white;padding:40px 20px;max-width:300px;margin:auto;';
+                    div.innerHTML = `<div style="font-size:4rem;margin-bottom:16px;">📑</div><div style="font-weight:700;margin-bottom:8px;">${(meta.nome||'PDF').replace(/[<>]/g,'')}</div><div style="font-size:0.8rem;opacity:0.6;margin-bottom:24px;">Erro ao renderizar. Use o botão abaixo.</div><button onclick="Leitura.downloadCurrentFile()" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;"><i class="fas fa-download"></i> Baixar PDF</button>`;
+                    body.appendChild(div);
+                    if (toolbar) toolbar.style.display = 'none';
+                }
+            },
+
+            _renderImageFromBlob(blob, body, toolbar, meta) {
+                const url = URL.createObjectURL(blob);
+                // Guarda para revogar ao fechar
+                if (this._currentBlobURL) URL.revokeObjectURL(this._currentBlobURL);
+                this._currentBlobURL = url;
+                const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                body.innerHTML = '';
+                arrows.forEach(a => body.appendChild(a));
+                const img = document.createElement('img');
+                img.id = 'viewer-img';
+                img.alt = meta.nome || 'Imagem';
+                img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;cursor:zoom-in;';
+                img.ondblclick = () => { this._viewerZoom = this._viewerZoom === 1 ? 2 : 1; this._applyZoom(); };
+                img.onerror = () => {
+                    body.querySelectorAll(':not(.fv-nav-arrow)').forEach(el => el.remove());
+                    body.innerHTML += '<div style="text-align:center;color:white;padding:32px;"><div style="font-size:4rem;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;margin-top:8px;">Não foi possível exibir a imagem</div></div>';
+                    if (toolbar) toolbar.style.display = 'none';
+                };
+                img.src = url;
+                body.appendChild(img);
+                if (toolbar) {
+                    toolbar.style.display = 'flex';
+                    const lbl = document.getElementById('zoom-pct-label');
+                    if (lbl) lbl.textContent = '100%';
                 }
             },
 
             _loadViewerFile(anexo, idx, allAnexos) {
-                // Revoga blob URL anterior se houver
-                if (this._currentBlobURL) {
-                    URL.revokeObjectURL(this._currentBlobURL);
-                    this._currentBlobURL = null;
-                }
+                // NÃO revogar aqui — o blobURL ainda pode estar em uso
+                // A revogação acontece em closeViewer() ou ao abrir outro arquivo
 
                 this._viewerFile = anexo;
                 this._viewerZoom = 1;
@@ -18608,11 +18686,15 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         s.onerror = onFail;
                         document.head.appendChild(s);
                     };
+                    // Tenta cdnjs primeiro (mais estável), depois unpkg, depois jsdelivr
                     tryLoad(
-                        'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.min.js',
+                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',
                         () => tryLoad(
-                            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',
-                            () => reject(new Error('Falha ao carregar PDF.js de todas as CDNs'))
+                            'https://cdn.jsdelivr.net/npm/pdfjs-dist@2.16.105/build/pdf.min.js',
+                            () => tryLoad(
+                                'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.min.js',
+                                () => reject(new Error('PDF.js indisponível. Verifique sua conexão.'))
+                            )
                         )
                     );
                 });
@@ -18620,9 +18702,10 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
             _setupPdfjsWorker() {
                 if (!window.pdfjsLib || !window.pdfjsLib.GlobalWorkerOptions) return;
-                // Tenta worker da mesma CDN; fallback para '' (processa na main thread — sempre funciona)
-                window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-                    'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+                // workerSrc = '' força processamento na main thread
+                // Elimina qualquer dependência de CDN externa para o worker
+                // Funciona 100% offline e sem problemas de CORS/CSP
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = '';
             },
 
             async _openPdfWithPdfJs(anexo, body, toolbar) {
@@ -18634,11 +18717,20 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     if (loadingEl) loadingEl.remove();
 
                     let pdfDoc;
-                    if (anexo._isBlobURL) {
-                        // Blob URL — carrega direto (mais eficiente, sem base64)
-                        pdfDoc = await pdfjs.getDocument({ url: anexo.data }).promise;
+                    // Se temos o blob original, usa ele diretamente (mais confiável)
+                    if (this._activeBlob) {
+                        const ab = await this._activeBlob.arrayBuffer();
+                        pdfDoc = await pdfjs.getDocument({ data: new Uint8Array(ab) }).promise;
+                    } else if (anexo._isBlobURL) {
+                        // blobURL — tenta carregar por URL
+                        try {
+                            pdfDoc = await pdfjs.getDocument({ url: anexo.data }).promise;
+                        } catch(urlErr) {
+                            // URL pode ter sido revogada — sem saída
+                            throw urlErr;
+                        }
                     } else {
-                        // base64 data URL — extrai e converte
+                        // base64 data URL (compatibilidade com itens antigos)
                         const dataStr = anexo.data || '';
                         const commaIdx = dataStr.indexOf(',');
                         const base64 = commaIdx >= 0 ? dataStr.slice(commaIdx + 1) : dataStr;
@@ -18806,6 +18898,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 }
                 if (this._renderTask) { try { this._renderTask.cancel(); } catch(_) {} this._renderTask = null; }
                 this._viewerFile = null;
+                this._activeBlob = null;
                 this._viewerZoom = 1;
                 this._pdfDoc = null;
                 this._pdfPage = 1;
@@ -18844,15 +18937,30 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
             downloadCurrentFile() {
                 const f = this._viewerFile;
-                if (!f) return;
-                const url = this._currentBlobURL || f.data;
-                if (!url) return;
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = f.nome || 'arquivo';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                if (!f) { Utils.toast('Nenhum arquivo aberto', 'error'); return; }
+                const nome = f.nome || 'arquivo';
+                // Usa o Blob original armazenado — sem depender de URL que pode ter sido revogada
+                if (this._activeBlob) {
+                    const url = URL.createObjectURL(this._activeBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = nome;
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 1000);
+                    return;
+                }
+                // Fallback: usa data URL base64 (itens legados)
+                if (f.data) {
+                    const a = document.createElement('a');
+                    a.href = f.data;
+                    a.download = nome;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    return;
+                }
+                Utils.toast('Arquivo não disponível para download', 'error');
             },
         };
 
