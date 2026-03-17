@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -12385,7 +12386,10 @@
                     const telefone = document.getElementById('c-telefone').value;
                     
                     const telefoneLimpo = Utils.cleanPhoneNumber(telefone);
-                    const duplicate = UI.data.clientes.find(c => c.id !== id && Utils.cleanPhoneNumber(c.telefone) === telefoneLimpo);
+                    const isEditing = !!document.getElementById('c-id').value;
+                    const duplicate = telefoneLimpo
+                        ? UI.data.clientes.find(c => c.id !== id && Utils.cleanPhoneNumber(c.telefone) === telefoneLimpo)
+                        : null;
                     if (duplicate) {
                         Utils.toast('Já existe um cliente com este telefone!', 'error');
                         return;
