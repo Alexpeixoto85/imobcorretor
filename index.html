@@ -5826,7 +5826,7 @@
         // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: contador de contatos e alerta de cliente parado)
         const DB = {
             name: 'ImobiProDB',
-            version: 18, // v18: painel leitura
+            version: 19, // v19: blobs leitura em store dedicado
             db: null,
             
             init: function() {
@@ -5906,6 +5906,10 @@
                     leituraStore.createIndex('status', 'status', { unique: false });
                     leituraStore.createIndex('dataCriacao', 'dataCriacao', { unique: false });
                 }
+                // Store dedicado para blobs de anexos — sem limite de tamanho
+                if (!db.objectStoreNames.contains('leitura_blobs')) {
+                    db.createObjectStore('leitura_blobs', { keyPath: 'id' });
+                }
             },
             
             migrateDatabase: async function(db, oldVersion) {
@@ -5984,14 +5988,27 @@
                         reject(new Error('Banco de dados não inicializado'));
                         return;
                     }
-                    
                     try {
                         const transaction = this.db.transaction([storeName], 'readwrite');
                         const store = transaction.objectStore(storeName);
                         const request = store.put(data);
-                        
                         request.onsuccess = () => resolve(data);
-                        request.onerror = (event) => reject(event);
+                        request.onerror = (event) => {
+                            const err = event.target.error;
+                            if (err && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+                                reject(new Error('QUOTA_EXCEEDED'));
+                            } else {
+                                reject(err || event);
+                            }
+                        };
+                        transaction.onerror = (event) => {
+                            const err = event.target.error;
+                            if (err && (err.name === 'QuotaExceededError' || err.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+                                reject(new Error('QUOTA_EXCEEDED'));
+                            } else {
+                                reject(err || event);
+                            }
+                        };
                     } catch (error) {
                         reject(error);
                     }
@@ -16140,30 +16157,54 @@ Para cada objeção: a causa-raiz + o script exato em português + a técnica ps
             checklistState: {},
 
             getData() {
-                return (window.UI && UI.data) ? UI.data : { clientes: [], visitas: [], imoveis: [] };
+                if (window.UI && UI.data && (UI.data.clientes || UI.data.visitas || UI.data.imoveis)) {
+                    return {
+                        clientes: UI.data.clientes || [],
+                        visitas:  UI.data.visitas  || [],
+                        imoveis:  UI.data.imoveis  || [],
+                        funilEtapas: UI.data.funilEtapas || [],
+                    };
+                }
+                return { clientes: [], visitas: [], imoveis: [], funilEtapas: [] };
             },
 
-            init() {
+            async init() {
                 this.metas = JSON.parse(localStorage.getItem('vc_metas') || JSON.stringify(this.metas));
                 this.checklistState = JSON.parse(localStorage.getItem('vc_checklist') || '{}');
+                // Sempre busca dados frescos do IndexedDB
+                try {
+                    if (window.DB && DB.db) {
+                        UI.data.clientes = await DB.getAll('clientes');
+                        UI.data.visitas  = await DB.getAll('visitas');
+                        UI.data.imoveis  = await DB.getAll('imoveis');
+                    }
+                } catch(e) { console.warn('VendaCerta.init: erro ao buscar dados', e); }
                 this.renderAll();
+                this._updateCRMSnapshot();
             },
 
-            switchTab(tab, btn) {
+            async switchTab(tab, btn) {
                 document.querySelectorAll('#vc-tabs .coach-tab-btn').forEach(b => b.classList.remove('active'));
                 document.querySelectorAll('#vc-tab-pipeline, #vc-tab-prospecao, #vc-tab-kpis, #vc-tab-metas, #vc-tab-posvenda, #vc-tab-ia').forEach(p => p.classList.remove('active'));
                 if (btn) btn.classList.add('active');
                 const panel = document.getElementById('vc-tab-' + tab);
                 if (panel) panel.classList.add('active');
-                // Re-render specific tab
+                // Busca dados frescos do DB antes de renderizar
+                try {
+                    if (window.DB && DB.db) {
+                        UI.data.clientes = await DB.getAll('clientes');
+                        UI.data.visitas  = await DB.getAll('visitas');
+                        UI.data.imoveis  = await DB.getAll('imoveis');
+                    }
+                } catch(e) {}
                 const data = this.getData();
                 switch(tab) {
-                    case 'pipeline': this.renderPipeline(data); break;
+                    case 'pipeline':  this.renderPipeline(data); break;
                     case 'prospecao': this.renderProspeccao(data); break;
-                    case 'kpis': this.renderKPIs(data); break;
-                    case 'metas': this.renderMetas(data); break;
-                    case 'posvenda': this.renderPosVenda(data); break;
-                    case 'ia': this._renderIAResumo(); break;
+                    case 'kpis':      this.renderKPIs(data); break;
+                    case 'metas':     this.renderMetas(data); break;
+                    case 'posvenda':  this.renderPosVenda(data); break;
+                    case 'ia':        this._renderIAResumo(); this._updateCRMSnapshot(); break;
                 }
             },
 
@@ -17948,24 +17989,34 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             renderClientesPosVenda(clientes) {
                 const el = document.getElementById('vc-clientes-posvenda');
                 if (!el) return;
+                const imoveis = this.getData().imoveis || [];
                 const vendidos = clientes.filter(c => c.etapaFunil === 'venda');
                 if (vendidos.length === 0) {
                     el.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:0.85rem;"><i class="fas fa-star" style="font-size:2rem;margin-bottom:8px;display:block;opacity:0.3;"></i>Nenhum cliente em pós-venda ainda.<br>Feche sua primeira venda e veja seus clientes aqui!</div>`;
                     return;
                 }
-                el.innerHTML = vendidos.slice(0, 10).map(c => {
+                const now = new Date();
+                el.innerHTML = vendidos.slice(0, 15).map(c => {
                     const initials = (c.nome || 'C').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-                    return `<div class="vc-posv-cliente">
-                        <div class="vc-posv-avatar">${initials}</div>
-                        <div>
-                            <div class="vc-posv-name">${c.nome || 'Cliente'}</div>
-                            <div class="vc-posv-info">⭐ Venda concluída · Solicitar indicação</div>
+                    const imovel = c.imovelInteresseId ? imoveis.find(i => i.id === c.imovelInteresseId) : null;
+                    const dataVenda = c.dataEntradaFunil ? new Date(c.dataEntradaFunil) : (c.dataCriacao ? new Date(c.dataCriacao) : null);
+                    const diasDesdeVenda = dataVenda ? Math.floor((now - dataVenda) / 86400000) : null;
+                    const waMsgTexto = `Olá ${(c.nome||'').split(' ')[0]}! Tudo bem? Passando para saber como está sendo a experiência no seu novo imóvel 😊 Qualquer dúvida estou à disposição!`;
+                    return `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:rgba(255,255,255,0.7);border-radius:12px;margin-bottom:8px;border:1px solid rgba(255,255,255,0.9);box-shadow:0 2px 8px rgba(30,50,32,0.04);">
+                        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#2E4A31,#3D6142);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">${initials}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-weight:700;font-size:0.9rem;color:var(--dark);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.nome || 'Cliente'}</div>
+                            <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:2px;">
+                                ${imovel ? `🏠 ${(imovel.titulo||'').substring(0,28)}` : '⭐ Venda concluída'}
+                                ${diasDesdeVenda !== null ? ` · ${diasDesdeVenda}d atrás` : ''}
+                            </div>
                         </div>
-                        ${c.telefone ? `<button class="vc-posv-btn" onclick="window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}?text=Olá ${encodeURIComponent(c.nome||'')}! Tudo bem? Estou passando para saber como está sendo a experiência no seu novo imóvel. 😊')">
-                            <i class="fab fa-whatsapp"></i> Contatar
-                        </button>` : ''}
+                        ${c.telefone ? `<button onclick="window.open('https://wa.me/55${c.telefone.replace(/\D/g,'')}?text=${encodeURIComponent(waMsgTexto)}')" style="background:#25D366;color:white;border:none;border-radius:8px;padding:8px 10px;font-size:0.8rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:5px;font-weight:600;"><i class="fab fa-whatsapp"></i> WA</button>` : ''}
                     </div>`;
                 }).join('');
+                if (vendidos.length > 15) {
+                    el.innerHTML += `<div style="text-align:center;font-size:0.75rem;color:var(--text-secondary);padding:8px;">+ ${vendidos.length - 15} clientes em pós-venda</div>`;
+                }
             },
         };
 
@@ -18007,6 +18058,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 document.getElementById('lr-anexos-data').value = '[]';
                 document.getElementById('lr-anexos-list').innerHTML = '';
                 document.getElementById('title-leitura').textContent = 'Novo Cadastro de Leitura';
+                this._pendingBlobs = []; // reset
                 UI.openModal('leitura');
             },
 
@@ -18028,6 +18080,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 document.getElementById('lr-anexos-data').value = JSON.stringify(anexos);
                 this.renderAnexosList(anexos);
                 document.getElementById('title-leitura').textContent = 'Editar Cadastro';
+                this._pendingBlobs = []; // reset de blobs pendentes ao abrir edição
                 UI.openModal('leitura');
             },
 
@@ -18036,6 +18089,11 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const id = document.getElementById('lr-id').value || Utils.id();
                 const titulo = document.getElementById('lr-titulo').value.trim();
                 if (!titulo) { Utils.toast('Informe o título', 'error'); return; }
+
+                // Metadados dos anexos (sem dados binários — esses ficam no store leitura_blobs)
+                let anexosMeta = [];
+                try { anexosMeta = JSON.parse(document.getElementById('lr-anexos-data').value || '[]'); } catch(_) {}
+
                 const item = {
                     id,
                     titulo,
@@ -18045,24 +18103,42 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     progresso: parseInt(document.getElementById('lr-progresso').value) || 0,
                     descricao: document.getElementById('lr-descricao').value.trim(),
                     capa: document.getElementById('lr-capa-data').value || '',
-                    anexos: JSON.parse(document.getElementById('lr-anexos-data').value || '[]'),
+                    anexos: anexosMeta, // apenas {id, nome, tipo, tamanho}
                     dataCriacao: this.items.find(x => x.id === id)?.dataCriacao || new Date().toISOString(),
                     dataAtualizacao: new Date().toISOString(),
                 };
                 try {
+                    // Salva blobs pendentes (novos arquivos adicionados nesta edição)
+                    for (const pb of this._pendingBlobs) {
+                        await DB.put('leitura_blobs', { id: pb.id, blob: pb.blob, nome: pb.nome, tipo: pb.tipo, tamanho: pb.tamanho });
+                    }
+                    this._pendingBlobs = [];
+                    // Salva item principal (leve — só metadados)
                     await DB.put('leitura', item);
                     await this.load();
                     this.render();
                     UI.closeModals();
                     Utils.toast('✅ Salvo com sucesso!');
                 } catch(err) {
-                    console.error(err);
-                    Utils.toast('Erro ao salvar', 'error');
+                    console.error('Erro ao salvar leitura:', err);
+                    const msg = (err && err.message) || '';
+                    if (msg === 'QUOTA_EXCEEDED' || (err && err.name === 'QuotaExceededError')) {
+                        Utils.toast('❌ Armazenamento do dispositivo cheio. Libere espaço e tente novamente.', 'error');
+                    } else {
+                        Utils.toast('❌ Erro ao salvar: ' + (err && (err.message || err.name) || 'desconhecido'), 'error');
+                    }
                 }
             },
 
             async delete(id) {
                 if (!confirm('Excluir este cadastro?')) return;
+                // Remove blobs associados primeiro
+                const item = this.items.find(x => x.id === id);
+                if (item && item.anexos) {
+                    for (const a of item.anexos) {
+                        try { await DB.delete('leitura_blobs', a.id); } catch(_) {}
+                    }
+                }
                 await DB.delete('leitura', id);
                 await this.load();
                 this.render();
@@ -18153,8 +18229,8 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         if (hasOnlyImages && anexos.length <= 6) {
                             // Grade visual de imagens
                             const gridItems = anexos.map((a, ai) => `
-                                <div class="leitura-attach-thumb" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
-                                    <img src="${a.data}" alt="${a.nome}" loading="lazy">
+                                <div class="leitura-attach-thumb" onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})">
+                                    <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(79,70,229,0.08);">🖼️</div>
                                     <div class="leitura-attach-thumb-overlay"><i class="fas fa-expand-alt"></i></div>
                                     ${anexos.length > 1 ? `<div class="leitura-attach-thumb-idx">${ai+1}/${anexos.length}</div>` : ''}
                                 </div>`).join('');
@@ -18169,16 +18245,16 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                                 const isPdf = a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf');
                                 const thumbHTML = isPdf
                                     ? `<div class="leitura-attach-list-thumb"><i class="fas fa-file-pdf leitura-attach-list-pdf-icon"></i></div>`
-                                    : `<div class="leitura-attach-list-thumb"><img src="${a.data}" alt="${a.nome}" loading="lazy"></div>`;
+                                    : `<div class="leitura-attach-list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>`;
                                 const typeLabel = isPdf ? 'PDF' : 'Imagem';
                                 return `
-                                <div class="leitura-attach-list-item" onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})">
+                                <div class="leitura-attach-list-item" onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})">
                                     ${thumbHTML}
                                     <div class="leitura-attach-list-info">
                                         <div class="leitura-attach-list-name">${a.nome}</div>
                                         <div class="leitura-attach-list-meta">${typeLabel}${a.tamanho ? ' · ' + a.tamanho : ''}</div>
                                     </div>
-                                    ${isPdf ? `<button onclick="event.stopPropagation();Leitura.openFile(${JSON.stringify(item.id)},${ai})" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:4px;"><i class='fas fa-eye'></i> Ver PDF</button>` : ''}
+                                    ${isPdf ? `<button onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:4px;"><i class='fas fa-eye'></i> Ver PDF</button>` : ''}
                                     <i class="fas fa-chevron-right leitura-attach-list-arrow"></i>
                                 </div>`;
                             }).join('');
@@ -18233,35 +18309,41 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 input.value = '';
             },
 
+            // _pendingBlobs: [{id, blob, nome, tipo, tamanho}] — arquivos novos ainda não salvos no DB
+            _pendingBlobs: [],
+
             async handleAnexos(input) {
                 const files = Array.from(input.files || []);
                 if (!files.length) return;
                 const existing = JSON.parse(document.getElementById('lr-anexos-data').value || '[]');
-                const MAX = 10;
-                if (existing.length >= MAX) { Utils.toast('Máximo de 10 anexos por cadastro', 'error'); return; }
+                const MAX = 20;
+                if (existing.length >= MAX) { Utils.toast('Máximo de 20 anexos por cadastro', 'error'); return; }
 
                 Utils.toast('Processando anexos...');
-                const newAnexos = [];
+                let adicionados = 0;
                 for (const file of files) {
-                    if (existing.length + newAnexos.length >= MAX) break;
-                    if (file.size > 20 * 1024 * 1024) { Utils.toast(`${file.name} muito grande (máx 20MB)`, 'error'); continue; }
+                    if (existing.length + adicionados >= MAX) break;
                     try {
-                        const data = await new Promise((res, rej) => {
-                            const r = new FileReader();
-                            r.onload = () => res(r.result);
-                            r.onerror = rej;
-                            r.readAsDataURL(file);
-                        });
-                        const sizeStr = file.size < 1024*1024 ? (file.size/1024).toFixed(0)+'KB' : (file.size/1024/1024).toFixed(1)+'MB';
-                        newAnexos.push({ nome: file.name, tipo: file.type, data, tamanho: sizeStr });
+                        // Lê como ArrayBuffer (sem converter para base64 — sem overhead)
+                        const buffer = await file.arrayBuffer();
+                        const blob = new Blob([buffer], { type: file.type });
+                        const blobId = 'blob_' + Utils.id();
+                        const sizeStr = file.size < 1024*1024
+                            ? (file.size/1024).toFixed(0)+'KB'
+                            : (file.size/1024/1024).toFixed(1)+'MB';
+                        const meta = { id: blobId, nome: file.name, tipo: file.type, tamanho: sizeStr };
+                        // Guarda blob em memória (será salvo no DB ao confirmar)
+                        this._pendingBlobs.push({ id: blobId, blob, nome: file.name, tipo: file.type, tamanho: sizeStr });
+                        existing.push(meta);
+                        adicionados++;
                     } catch(err) {
+                        console.error('Erro ao processar arquivo:', err);
                         Utils.toast(`Erro em ${file.name}`, 'error');
                     }
                 }
-                const all = [...existing, ...newAnexos];
-                document.getElementById('lr-anexos-data').value = JSON.stringify(all);
-                this.renderAnexosList(all);
-                Utils.toast(`✅ ${newAnexos.length} anexo(s) adicionado(s)`);
+                document.getElementById('lr-anexos-data').value = JSON.stringify(existing);
+                this.renderAnexosList(existing);
+                if (adicionados > 0) Utils.toast(`✅ ${adicionados} anexo(s) adicionado(s)`);
                 input.value = '';
             },
 
@@ -18284,7 +18366,13 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
             removeAnexo(idx) {
                 const anexos = JSON.parse(document.getElementById('lr-anexos-data').value || '[]');
-                anexos.splice(idx, 1);
+                const removed = anexos.splice(idx, 1)[0];
+                // Remove dos pendingBlobs se ainda não foi salvo
+                if (removed && removed.id) {
+                    const pbIdx = this._pendingBlobs.findIndex(pb => pb.id === removed.id);
+                    if (pbIdx >= 0) this._pendingBlobs.splice(pbIdx, 1);
+                    else DB.delete('leitura_blobs', removed.id).catch(() => {}); // já salvo — remove do DB
+                }
                 document.getElementById('lr-anexos-data').value = JSON.stringify(anexos);
                 this.renderAnexosList(anexos);
             },
@@ -18305,32 +18393,74 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 }
             },
 
-            openFile(itemId, anexoIdx) {
+            async openFile(itemId, anexoIdx) {
                 const item = this.items.find(x => x.id === itemId);
                 if (!item) return;
                 const anexos = item.anexos || [];
-                const anexo = anexos[anexoIdx];
-                if (!anexo || !anexo.data) { Utils.toast('Anexo não disponível', 'error'); return; }
+                const meta = anexos[anexoIdx];
+                if (!meta) { Utils.toast('Anexo não disponível', 'error'); return; }
 
-                // Salva contexto do item para navegação entre anexos
+                // Mostra overlay imediatamente com loading
+                const overlay = document.getElementById('file-viewer-overlay');
+                if (overlay.parentElement !== document.body) document.body.appendChild(overlay);
+                overlay.classList.add('active');
+                this._initViewerSwipe();
+
+                // Salva contexto para navegação
                 this._viewerItemId = itemId;
                 this._viewerAnexoIdx = anexoIdx;
                 this._viewerAnexos = anexos;
 
-                this._loadViewerFile(anexo, anexoIdx, anexos);
-
-                // Garante que o overlay está no topo do DOM
-                const overlay = document.getElementById('file-viewer-overlay');
-                if (overlay.parentElement !== document.body) {
-                    document.body.appendChild(overlay);
+                // Mostra spinner enquanto carrega o blob
+                const body = document.getElementById('file-viewer-body');
+                const titleEl = document.getElementById('file-viewer-title');
+                if (titleEl) titleEl.textContent = meta.nome || 'Arquivo';
+                if (body) {
+                    const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                    body.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;width:100%;">
+                        <div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+                        <div style="font-size:0.9rem;opacity:0.8;">Carregando arquivo...</div>
+                    </div>`;
+                    arrows.forEach(a => body.appendChild(a));
                 }
-                overlay.classList.add('active');
 
-                // Atualiza strip de thumbnails
-                this._renderViewerStrip(anexos, anexoIdx);
+                try {
+                    // Busca o blob — primeiro nos pendingBlobs (ainda não salvo), depois no DB
+                    let blobRecord = this._pendingBlobs.find(pb => pb.id === meta.id);
+                    if (!blobRecord) {
+                        blobRecord = await DB.get('leitura_blobs', meta.id);
+                    }
 
-                // Gestos de swipe no body do viewer
-                this._initViewerSwipe();
+                    if (!blobRecord || !blobRecord.blob) {
+                        // Compatibilidade: item antigo com data base64 embutida
+                        if (meta.data) {
+                            this._viewerAnexos = anexos;
+                            this._loadViewerFile(meta, anexoIdx, anexos);
+                            this._renderViewerStrip(anexos, anexoIdx);
+                            return;
+                        }
+                        throw new Error('Blob não encontrado');
+                    }
+
+                    // Cria objectURL a partir do blob
+                    if (this._currentBlobURL) URL.revokeObjectURL(this._currentBlobURL);
+                    const url = URL.createObjectURL(blobRecord.blob);
+                    this._currentBlobURL = url;
+
+                    // Monta um objeto compatível com _loadViewerFile usando o blobURL
+                    const anexoParaViewer = {
+                        ...meta,
+                        data: url,          // blobURL usado diretamente
+                        _isBlobURL: true,
+                    };
+                    this._viewerAnexos = anexos;
+                    this._loadViewerFile(anexoParaViewer, anexoIdx, anexos);
+                    this._renderViewerStrip(anexos, anexoIdx);
+                } catch(err) {
+                    console.error('Erro ao abrir anexo:', err);
+                    Utils.toast('Erro ao abrir arquivo', 'error');
+                    overlay.classList.remove('active');
+                }
             },
 
             _loadViewerFile(anexo, idx, allAnexos) {
@@ -18373,42 +18503,36 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const isPdf = anexo.tipo === 'application/pdf' || (anexo.nome || '').toLowerCase().endsWith('.pdf');
 
                 if (isPdf) {
-                    const loadingDiv = document.createElement('div');
-                    loadingDiv.id = 'pdf-loading';
-                    loadingDiv.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;';
-                    loadingDiv.innerHTML = `<div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div>`;
-                    body.appendChild(loadingDiv);
+                    // Limpa body mantendo setas
+                    const arrowsPdf = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                    body.innerHTML = `<div id="pdf-loading" style="display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;gap:16px;padding:32px;width:100%;"><div style="width:48px;height:48px;border:4px solid rgba(255,255,255,0.15);border-top-color:#4F46E5;border-radius:50%;animation:spin 0.8s linear infinite;"></div><div style="font-size:0.9rem;opacity:0.8;">Carregando PDF...</div></div>`;
+                    arrowsPdf.forEach(a => body.appendChild(a));
                     this._openPdfWithPdfJs(anexo, body, toolbar);
                 } else {
-                    const blobURL = this._dataURLtoBlobURL(anexo.data, anexo.tipo || 'image/jpeg');
-                    if (blobURL) {
-                        this._currentBlobURL = blobURL;
-                        const img = document.createElement('img');
-                        img.id = 'viewer-img';
-                        img.alt = anexo.nome || 'Imagem';
-                        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;cursor:zoom-in;';
-                        img.ondblclick = () => { this._viewerZoom = this._viewerZoom === 1 ? 2 : 1; this._applyZoom(); };
-                        img.onerror = () => {
-                            body.querySelectorAll(':not(.fv-nav-arrow)').forEach(el => el.remove());
-                            const errDiv = document.createElement('div');
-                            errDiv.style.cssText = 'text-align:center;color:white;padding:32px;';
-                            errDiv.innerHTML = '<div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div>';
-                            body.appendChild(errDiv);
-                            toolbar.style.display = 'none';
-                        };
-                        img.src = blobURL;
-                        body.appendChild(img);
-                        toolbar.style.display = 'flex';
-                        const lbl = document.getElementById('zoom-pct-label');
-                        if (lbl) lbl.textContent = '100%';
-                    } else {
-                        const img = document.createElement('img');
-                        img.id = 'viewer-img';
-                        img.src = anexo.data;
-                        img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;';
-                        body.appendChild(img);
-                        toolbar.style.display = 'flex';
-                    }
+                    // Para imagens: se já é blobURL usa direto, senão converte
+                    const imgURL = anexo._isBlobURL ? anexo.data : this._dataURLtoBlobURL(anexo.data, anexo.tipo || 'image/jpeg');
+                    const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
+                    body.innerHTML = '';
+                    arrows.forEach(a => body.appendChild(a));
+                    const img = document.createElement('img');
+                    img.id = 'viewer-img';
+                    img.alt = anexo.nome || 'Imagem';
+                    img.style.cssText = 'max-width:100%;max-height:100%;object-fit:contain;border-radius:4px;transform-origin:center center;transition:transform 0.2s ease;cursor:zoom-in;';
+                    img.ondblclick = () => { this._viewerZoom = this._viewerZoom === 1 ? 2 : 1; this._applyZoom(); };
+                    img.onerror = () => {
+                        body.querySelectorAll(':not(.fv-nav-arrow)').forEach(el => el.remove());
+                        const errDiv = document.createElement('div');
+                        errDiv.style.cssText = 'text-align:center;color:white;padding:32px;';
+                        errDiv.innerHTML = '<div style="font-size:4rem;margin-bottom:16px;">🖼️</div><div style="font-size:0.85rem;opacity:0.7;">Não foi possível exibir a imagem</div>';
+                        body.appendChild(errDiv);
+                        toolbar.style.display = 'none';
+                    };
+                    img.src = imgURL || anexo.data || '';
+                    if (!anexo._isBlobURL && imgURL) this._currentBlobURL = imgURL;
+                    body.appendChild(img);
+                    toolbar.style.display = 'flex';
+                    const lbl = document.getElementById('zoom-pct-label');
+                    if (lbl) lbl.textContent = '100%';
                 }
             },
 
@@ -18419,10 +18543,14 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 strip.style.display = 'flex';
                 strip.innerHTML = anexos.map((a, i) => {
                     const isPdf = a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf');
+                    const isImg = a.tipo && a.tipo.startsWith('image/');
+                    // Só mostra thumb de imagem se tiver data URL (compatibilidade legado)
                     const thumbContent = isPdf
                         ? `<span class="fv-strip-thumb-pdf">📑</span>`
-                        : `<img src="${a.data}" alt="${a.nome}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`;
-                    return `<div class="fv-strip-thumb ${i === activeIdx ? 'active' : ''}" onclick="Leitura._viewerGoTo(${i})" title="${a.nome}">${thumbContent}</div>`;
+                        : (isImg && a.data && !a._isBlobURL)
+                            ? `<img src="${a.data}" alt="${a.nome}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">`
+                            : `<span style="font-size:1.4rem;">${isPdf ? '📑' : '🖼️'}</span>`;
+                    return `<div class="fv-strip-thumb ${i === activeIdx ? 'active' : ''}" onclick="Leitura._viewerGoTo(${i})" title="${a.nome||''}">${thumbContent}</div>`;
                 }).join('');
                 // Scroll para thumb ativo
                 const activThumb = strip.children[activeIdx];
@@ -18430,11 +18558,9 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
 
             _viewerGoTo(idx) {
-                const anexos = this._viewerAnexos;
-                if (!anexos || idx < 0 || idx >= anexos.length) return;
-                this._viewerAnexoIdx = idx;
-                this._loadViewerFile(anexos[idx], idx, anexos);
-                this._renderViewerStrip(anexos, idx);
+                const itemId = this._viewerItemId;
+                if (!itemId) return;
+                this.openFile(itemId, idx);
             },
 
             viewerPrevFile() { this._viewerGoTo(this._viewerAnexoIdx - 1); },
@@ -18461,78 +18587,97 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 }, { passive: true });
             },
 
-            async _openPdfWithPdfJs(anexo, body, toolbar) {
-                // URLs versionadas estáveis do PDF.js 3.4.120
-                const PDFJS_VERSION = '3.4.120';
-                const PDFJS_CDN  = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.js`;
-                const PDFJS_WORKER = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
-
-                try {
-                    // Carrega PDF.js dinamicamente se não estiver disponível
-                    if (!window.pdfjsLib) {
-                        await new Promise((resolve, reject) => {
-                            const s = document.createElement('script');
-                            s.src = PDFJS_CDN;
-                            s.onload = () => {
-                                // Configura o worker IMEDIATAMENTE após o script carregar
-                                if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
-                                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-                                }
-                                resolve();
-                            };
-                            s.onerror = () => reject(new Error('Falha ao carregar PDF.js'));
-                            document.head.appendChild(s);
-                        });
-                    } else {
-                        // Garante que o worker está sempre configurado corretamente
-                        if (window.pdfjsLib.GlobalWorkerOptions) {
-                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-                        }
+            // Carrega PDF.js uma única vez (singleton) — evita recarregar
+            _pdfjsReady: null,
+            async _loadPdfJs() {
+                if (this._pdfjsReady) return this._pdfjsReady;
+                this._pdfjsReady = new Promise((resolve, reject) => {
+                    if (window.pdfjsLib && window.pdfjsLib.getDocument) {
+                        this._setupPdfjsWorker();
+                        return resolve(window.pdfjsLib);
                     }
+                    const tryLoad = (src, onFail) => {
+                        const s = document.createElement('script');
+                        s.crossOrigin = 'anonymous';
+                        s.src = src;
+                        s.onload = () => {
+                            if (!window.pdfjsLib) { onFail(); return; }
+                            this._setupPdfjsWorker();
+                            resolve(window.pdfjsLib);
+                        };
+                        s.onerror = onFail;
+                        document.head.appendChild(s);
+                    };
+                    tryLoad(
+                        'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.min.js',
+                        () => tryLoad(
+                            'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js',
+                            () => reject(new Error('Falha ao carregar PDF.js de todas as CDNs'))
+                        )
+                    );
+                });
+                return this._pdfjsReady;
+            },
+            _setupPdfjsWorker() {
+                if (!window.pdfjsLib || !window.pdfjsLib.GlobalWorkerOptions) return;
+                // Tenta worker da mesma CDN; fallback para '' (processa na main thread — sempre funciona)
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                    'https://unpkg.com/pdfjs-dist@2.16.105/build/pdf.worker.min.js';
+            },
 
-                    if (!window.pdfjsLib) throw new Error('pdfjsLib não disponível após carregamento');
+            async _openPdfWithPdfJs(anexo, body, toolbar) {
+                try {
+                    const pdfjs = await this._loadPdfJs();
 
-                    // Converte base64 para Uint8Array para o PDF.js
-                    const dataStr = anexo.data || '';
-                    const commaIdx = dataStr.indexOf(',');
-                    const base64 = commaIdx >= 0 ? dataStr.slice(commaIdx + 1) : dataStr;
-                    if (!base64) throw new Error('Dados do PDF inválidos ou vazios');
-                    const binary = atob(base64);
-                    const bytes = new Uint8Array(binary.length);
-                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-                    // Remove spinner de carregamento
+                    // Remove spinner
                     const loadingEl = document.getElementById('pdf-loading');
                     if (loadingEl) loadingEl.remove();
 
-                    const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
-                    const pdfDoc = await loadingTask.promise;
+                    let pdfDoc;
+                    if (anexo._isBlobURL) {
+                        // Blob URL — carrega direto (mais eficiente, sem base64)
+                        pdfDoc = await pdfjs.getDocument({ url: anexo.data }).promise;
+                    } else {
+                        // base64 data URL — extrai e converte
+                        const dataStr = anexo.data || '';
+                        const commaIdx = dataStr.indexOf(',');
+                        const base64 = commaIdx >= 0 ? dataStr.slice(commaIdx + 1) : dataStr;
+                        if (!base64) throw new Error('Dados do PDF inválidos ou vazios');
+                        const binaryStr = atob(base64);
+                        const bytes = new Uint8Array(binaryStr.length);
+                        for (let i = 0; i < binaryStr.length; i++) bytes[i] = binaryStr.charCodeAt(i);
+                        pdfDoc = await pdfjs.getDocument({ data: bytes }).promise;
+                    }
                     this._pdfDoc = pdfDoc;
                     this._pdfPage = 1;
                     this._pdfTotalPages = pdfDoc.numPages;
 
-                    // Monta estrutura do viewer de PDF
+                    // Monta viewer — preserva setas de navegação
+                    const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
                     body.innerHTML = `
                         <div id="pdf-viewer-wrap" style="display:flex;flex-direction:column;align-items:center;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 4px;">
                             <canvas id="pdf-canvas" style="max-width:100%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);display:block;"></canvas>
                         </div>`;
+                    arrows.forEach(a => body.appendChild(a));
 
-                    // Toolbar de PDF com navegação de páginas
                     toolbar.innerHTML = `
-                        <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn" title="Página anterior"><i class="fas fa-chevron-left"></i></button>
-                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;line-height:44px;">1 / ${pdfDoc.numPages}</span>
-                        <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn" title="Próxima página"><i class="fas fa-chevron-right"></i></button>
-                        <button class="file-viewer-btn" onclick="Leitura.zoomOut()" title="Diminuir"><i class="fas fa-search-minus"></i></button>
-                        <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:56px;">100%</button>
-                        <button class="file-viewer-btn" onclick="Leitura.zoomIn()" title="Aumentar"><i class="fas fa-search-plus"></i></button>`;
+                        <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn"><i class="fas fa-chevron-left"></i></button>
+                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">1 / ${pdfDoc.numPages}</span>
+                        <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn"><i class="fas fa-chevron-right"></i></button>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
+                        <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:52px;">100%</button>
+                        <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
+                        <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()"><i class="fas fa-download"></i></button>`;
                     toolbar.style.display = 'flex';
 
                     await this._renderPdfPage(1);
                 } catch(e) {
-                    console.error('PDF.js falhou, tentando Blob URL no iframe:', e);
-                    // Remove spinner antes do fallback
+                    console.error('PDF.js falhou:', e);
                     const loadingEl = document.getElementById('pdf-loading');
                     if (loadingEl) loadingEl.remove();
+                    this._pdfjsReady = null; // reseta para retentativa
                     this._openPdfFallback(anexo, body, toolbar);
                 }
             },
@@ -18542,17 +18687,30 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const canvas = document.getElementById('pdf-canvas');
                 if (!canvas) return;
 
+                // Cancela render anterior se ainda em andamento
+                if (this._renderTask) {
+                    try { this._renderTask.cancel(); } catch(_) {}
+                }
+
                 const page = await this._pdfDoc.getPage(pageNum);
                 const wrap = document.getElementById('pdf-viewer-wrap');
-                const maxW = (wrap ? wrap.clientWidth : window.innerWidth) - 16;
+                const maxW = Math.max((wrap ? wrap.clientWidth : window.innerWidth) - 24, 100);
                 const viewport = page.getViewport({ scale: 1 });
-                const scale = Math.min((maxW / viewport.width) * this._viewerZoom, 3);
+                // Usa devicePixelRatio para telas retina/HiDPI
+                const dpr = window.devicePixelRatio || 1;
+                const scale = (maxW / viewport.width) * this._viewerZoom;
                 const scaledViewport = page.getViewport({ scale });
 
-                canvas.width = scaledViewport.width;
-                canvas.height = scaledViewport.height;
+                canvas.width = Math.floor(scaledViewport.width * dpr);
+                canvas.height = Math.floor(scaledViewport.height * dpr);
+                canvas.style.width = scaledViewport.width + 'px';
+                canvas.style.height = scaledViewport.height + 'px';
                 const ctx = canvas.getContext('2d');
-                await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
+                ctx.scale(dpr, dpr);
+
+                this._renderTask = page.render({ canvasContext: ctx, viewport: scaledViewport });
+                await this._renderTask.promise;
+                this._renderTask = null;
 
                 const info = document.getElementById('pdf-page-info');
                 if (info) info.textContent = `${pageNum} / ${this._pdfTotalPages}`;
@@ -18565,59 +18723,49 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
 
             _openPdfFallback(anexo, body, toolbar) {
-                // Tenta Blob URL no iframe como fallback
                 const blobURL = this._dataURLtoBlobURL(anexo.data, 'application/pdf');
-
-                // Detecta mobile/iOS onde iframe com PDF geralmente não funciona
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
                 if (blobURL && !isMobile) {
+                    // Desktop: usa iframe
                     this._currentBlobURL = blobURL;
-                    const iframe = document.createElement('iframe');
-                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;border-radius:4px;background:#fff;';
-                    iframe.src = blobURL;
-                    // Limpa body mantendo setas de navegação
-                    const arrows = body.querySelectorAll('.fv-nav-arrow');
+                    const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
                     body.innerHTML = '';
                     arrows.forEach(a => body.appendChild(a));
+                    const iframe = document.createElement('iframe');
+                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;background:#fff;';
+                    iframe.src = blobURL;
                     body.appendChild(iframe);
                     toolbar.style.display = 'none';
-
-                    // Timeout: se iframe não carregar, mostra botão de download
                     let loaded = false;
-                    const fallbackTimeout = setTimeout(() => {
-                        if (!loaded) this._showPdfDownloadFallback(body, anexo);
-                    }, 5000);
-                    iframe.onload = () => { loaded = true; clearTimeout(fallbackTimeout); };
-                    iframe.onerror = () => { clearTimeout(fallbackTimeout); this._showPdfDownloadFallback(body, anexo); };
+                    const t = setTimeout(() => { if (!loaded) this._showPdfDownloadFallback(body, anexo, blobURL); }, 5000);
+                    iframe.onload = () => { loaded = true; clearTimeout(t); };
+                    iframe.onerror = () => { clearTimeout(t); this._showPdfDownloadFallback(body, anexo, blobURL); };
                 } else {
-                    // Em mobile ou se não gerou blobURL, vai direto para download
+                    // Mobile / sem blobURL: mostra opções de abertura/download
                     this._showPdfDownloadFallback(body, anexo, blobURL);
                 }
             },
 
             _showPdfDownloadFallback(body, anexo, blobURL) {
-                // Limpa body mantendo setas de navegação
-                const arrows = body.querySelectorAll('.fv-nav-arrow');
+                const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
                 body.innerHTML = '';
                 arrows.forEach(a => body.appendChild(a));
-
-                const nome = (anexo.nome||'PDF').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-                const openBtn = blobURL
-                    ? `<button onclick="window.open('${blobURL}','_blank')" style="background:linear-gradient(135deg,#2E7D42,#3D6142);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(46,125,66,0.4);margin-bottom:12px;">
-                        <i class="fas fa-external-link-alt"></i> Abrir PDF
-                    </button><br>`
-                    : '';
+                const nome = (anexo.nome || 'PDF').replace(/[<>]/g, '');
                 const div = document.createElement('div');
-                div.style.cssText = 'text-align:center;color:white;padding:40px 24px;max-width:320px;margin:auto;';
+                div.style.cssText = 'text-align:center;color:white;padding:40px 20px;max-width:320px;margin:auto;';
                 div.innerHTML = `
-                    <div style="font-size:4rem;margin-bottom:20px;">📑</div>
-                    <div style="font-size:1rem;font-weight:700;margin-bottom:8px;">${nome}</div>
-                    <div style="font-size:0.82rem;opacity:0.65;margin-bottom:28px;line-height:1.5;">Visualização inline não disponível neste navegador. Abra ou baixe o arquivo para ler no leitor de PDF do seu dispositivo.</div>
-                    ${openBtn}
-                    <button onclick="Leitura.downloadCurrentFile()" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(79,70,229,0.4);">
-                        <i class="fas fa-download"></i> Baixar PDF
-                    </button>`;
+                    <div style="font-size:4rem;margin-bottom:16px;">📑</div>
+                    <div style="font-size:1rem;font-weight:700;margin-bottom:6px;">${nome}</div>
+                    <div style="font-size:0.8rem;opacity:0.6;margin-bottom:28px;line-height:1.5;">Visualização inline não disponível. Use as opções abaixo para abrir o arquivo.</div>
+                    <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+                        ${blobURL ? `<button onclick="window.open('${blobURL}','_blank')" style="background:linear-gradient(135deg,#2E7D42,#3D6142);color:white;border:none;padding:14px 32px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;width:100%;max-width:240px;justify-content:center;box-shadow:0 4px 16px rgba(46,125,66,0.4);">
+                            <i class="fas fa-external-link-alt"></i> Abrir PDF
+                        </button>` : ''}
+                        <button onclick="Leitura.downloadCurrentFile()" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;padding:14px 32px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;width:100%;max-width:240px;justify-content:center;box-shadow:0 4px 16px rgba(79,70,229,0.4);">
+                            <i class="fas fa-download"></i> Baixar PDF
+                        </button>
+                    </div>`;
                 body.appendChild(div);
             },
 
@@ -18656,6 +18804,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     URL.revokeObjectURL(this._currentBlobURL);
                     this._currentBlobURL = null;
                 }
+                if (this._renderTask) { try { this._renderTask.cancel(); } catch(_) {} this._renderTask = null; }
                 this._viewerFile = null;
                 this._viewerZoom = 1;
                 this._pdfDoc = null;
@@ -18696,8 +18845,10 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             downloadCurrentFile() {
                 const f = this._viewerFile;
                 if (!f) return;
+                const url = this._currentBlobURL || f.data;
+                if (!url) return;
                 const a = document.createElement('a');
-                a.href = f.data;
+                a.href = url;
                 a.download = f.nome || 'arquivo';
                 document.body.appendChild(a);
                 a.click();
