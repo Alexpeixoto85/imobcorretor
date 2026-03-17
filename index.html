@@ -18462,26 +18462,51 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
 
             async _openPdfWithPdfJs(anexo, body, toolbar) {
+                // URLs versionadas estáveis do PDF.js 3.4.120
+                const PDFJS_VERSION = '3.4.120';
+                const PDFJS_CDN  = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.js`;
+                const PDFJS_WORKER = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`;
+
                 try {
                     // Carrega PDF.js dinamicamente se não estiver disponível
                     if (!window.pdfjsLib) {
                         await new Promise((resolve, reject) => {
                             const s = document.createElement('script');
-                            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-                            s.onload = resolve;
-                            s.onerror = reject;
+                            s.src = PDFJS_CDN;
+                            s.onload = () => {
+                                // Configura o worker IMEDIATAMENTE após o script carregar
+                                if (window.pdfjsLib && window.pdfjsLib.GlobalWorkerOptions) {
+                                    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+                                }
+                                resolve();
+                            };
+                            s.onerror = () => reject(new Error('Falha ao carregar PDF.js'));
                             document.head.appendChild(s);
                         });
-                        window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+                    } else {
+                        // Garante que o worker está sempre configurado corretamente
+                        if (window.pdfjsLib.GlobalWorkerOptions) {
+                            window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+                        }
                     }
 
+                    if (!window.pdfjsLib) throw new Error('pdfjsLib não disponível após carregamento');
+
                     // Converte base64 para Uint8Array para o PDF.js
-                    const base64 = anexo.data.split(',')[1];
+                    const dataStr = anexo.data || '';
+                    const commaIdx = dataStr.indexOf(',');
+                    const base64 = commaIdx >= 0 ? dataStr.slice(commaIdx + 1) : dataStr;
+                    if (!base64) throw new Error('Dados do PDF inválidos ou vazios');
                     const binary = atob(base64);
                     const bytes = new Uint8Array(binary.length);
                     for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
 
-                    const pdfDoc = await window.pdfjsLib.getDocument({ data: bytes }).promise;
+                    // Remove spinner de carregamento
+                    const loadingEl = document.getElementById('pdf-loading');
+                    if (loadingEl) loadingEl.remove();
+
+                    const loadingTask = window.pdfjsLib.getDocument({ data: bytes });
+                    const pdfDoc = await loadingTask.promise;
                     this._pdfDoc = pdfDoc;
                     this._pdfPage = 1;
                     this._pdfTotalPages = pdfDoc.numPages;
@@ -18505,6 +18530,9 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     await this._renderPdfPage(1);
                 } catch(e) {
                     console.error('PDF.js falhou, tentando Blob URL no iframe:', e);
+                    // Remove spinner antes do fallback
+                    const loadingEl = document.getElementById('pdf-loading');
+                    if (loadingEl) loadingEl.remove();
                     this._openPdfFallback(anexo, body, toolbar);
                 }
             },
@@ -18539,34 +18567,58 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             _openPdfFallback(anexo, body, toolbar) {
                 // Tenta Blob URL no iframe como fallback
                 const blobURL = this._dataURLtoBlobURL(anexo.data, 'application/pdf');
-                if (blobURL) {
+
+                // Detecta mobile/iOS onde iframe com PDF geralmente não funciona
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                if (blobURL && !isMobile) {
                     this._currentBlobURL = blobURL;
                     const iframe = document.createElement('iframe');
-                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;border-radius:4px;';
+                    iframe.style.cssText = 'width:100%;height:100%;border:none;display:block;border-radius:4px;background:#fff;';
                     iframe.src = blobURL;
+                    // Limpa body mantendo setas de navegação
+                    const arrows = body.querySelectorAll('.fv-nav-arrow');
                     body.innerHTML = '';
+                    arrows.forEach(a => body.appendChild(a));
                     body.appendChild(iframe);
                     toolbar.style.display = 'none';
 
                     // Timeout: se iframe não carregar, mostra botão de download
+                    let loaded = false;
                     const fallbackTimeout = setTimeout(() => {
-                        this._showPdfDownloadFallback(body, anexo);
-                    }, 4000);
-                    iframe.onload = () => clearTimeout(fallbackTimeout);
+                        if (!loaded) this._showPdfDownloadFallback(body, anexo);
+                    }, 5000);
+                    iframe.onload = () => { loaded = true; clearTimeout(fallbackTimeout); };
+                    iframe.onerror = () => { clearTimeout(fallbackTimeout); this._showPdfDownloadFallback(body, anexo); };
                 } else {
-                    this._showPdfDownloadFallback(body, anexo);
+                    // Em mobile ou se não gerou blobURL, vai direto para download
+                    this._showPdfDownloadFallback(body, anexo, blobURL);
                 }
             },
 
-            _showPdfDownloadFallback(body, anexo) {
-                body.innerHTML = `<div style="text-align:center;color:white;padding:40px 24px;max-width:320px;margin:auto;">
+            _showPdfDownloadFallback(body, anexo, blobURL) {
+                // Limpa body mantendo setas de navegação
+                const arrows = body.querySelectorAll('.fv-nav-arrow');
+                body.innerHTML = '';
+                arrows.forEach(a => body.appendChild(a));
+
+                const nome = (anexo.nome||'PDF').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                const openBtn = blobURL
+                    ? `<button onclick="window.open('${blobURL}','_blank')" style="background:linear-gradient(135deg,#2E7D42,#3D6142);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(46,125,66,0.4);margin-bottom:12px;">
+                        <i class="fas fa-external-link-alt"></i> Abrir PDF
+                    </button><br>`
+                    : '';
+                const div = document.createElement('div');
+                div.style.cssText = 'text-align:center;color:white;padding:40px 24px;max-width:320px;margin:auto;';
+                div.innerHTML = `
                     <div style="font-size:4rem;margin-bottom:20px;">📑</div>
-                    <div style="font-size:1rem;font-weight:700;margin-bottom:8px;">${(anexo.nome||'PDF').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-                    <div style="font-size:0.82rem;opacity:0.65;margin-bottom:28px;line-height:1.5;">Visualização inline não disponível neste navegador. Baixe o arquivo para abrir no leitor de PDF do seu dispositivo.</div>
+                    <div style="font-size:1rem;font-weight:700;margin-bottom:8px;">${nome}</div>
+                    <div style="font-size:0.82rem;opacity:0.65;margin-bottom:28px;line-height:1.5;">Visualização inline não disponível neste navegador. Abra ou baixe o arquivo para ler no leitor de PDF do seu dispositivo.</div>
+                    ${openBtn}
                     <button onclick="Leitura.downloadCurrentFile()" style="background:linear-gradient(135deg,#4F46E5,#7C3AED);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(79,70,229,0.4);">
                         <i class="fas fa-download"></i> Baixar PDF
-                    </button>
-                </div>`;
+                    </button>`;
+                body.appendChild(div);
             },
 
             async pdfNextPage() {
