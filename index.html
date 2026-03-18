@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -3397,6 +3398,84 @@
         .leitura-attach-list-meta { font-size: 0.68rem; color: var(--text-secondary); margin-top: 2px; }
         .leitura-attach-list-arrow { color: var(--indigo); font-size: 0.75rem; flex-shrink: 0; }
 
+        /* ===== BLOCO DE NOTAS ===== */
+        .nota-card {
+            background: rgba(255,255,255,0.94);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: var(--radius-md);
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s;
+            border: 1px solid rgba(255,255,255,0.9);
+            position: relative;
+        }
+        .nota-card:active { transform: scale(0.98); }
+        .nota-card-accent {
+            height: 5px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+        .nota-card-body { padding: 14px 16px; }
+        .nota-card-header {
+            display: flex; align-items: flex-start; gap: 10px;
+            margin-bottom: 8px;
+        }
+        .nota-card-title {
+            font-size: 0.95rem; font-weight: 800; color: var(--dark);
+            flex: 1; line-height: 1.3;
+        }
+        .nota-pin-icon {
+            font-size: 0.85rem; color: var(--accent); flex-shrink: 0;
+            transform: rotate(45deg);
+        }
+        .nota-card-content {
+            font-size: 0.82rem; color: var(--secondary); line-height: 1.55;
+            display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+            overflow: hidden; margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+        .nota-card-footer {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 16px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+            background: rgba(0,0,0,0.02);
+        }
+        .nota-cat-badge {
+            font-size: 0.68rem; font-weight: 700; padding: 3px 8px;
+            border-radius: 20px; background: rgba(245,158,11,0.12);
+            color: var(--amber); letter-spacing: 0.3px;
+        }
+        .nota-date {
+            font-size: 0.68rem; color: var(--text-secondary); font-weight: 500;
+        }
+        .nota-actions {
+            display: flex; gap: 6px;
+        }
+        .nota-action-btn {
+            background: none; border: none; cursor: pointer; padding: 6px;
+            border-radius: 8px; color: var(--text-secondary); font-size: 0.9rem;
+            transition: background 0.15s, color 0.15s;
+        }
+        .nota-action-btn:active { background: var(--light); }
+        .nota-action-btn.danger:active { color: var(--danger); }
+
+        /* Modal notas */
+        .nota-cor-grid {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;
+        }
+        .nota-cor-btn {
+            width: 32px; height: 32px; border-radius: 50%; border: 3px solid transparent;
+            cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+        }
+        .nota-cor-btn.active { border-color: var(--dark); transform: scale(1.15); }
+        .nota-cor-btn:active { transform: scale(0.9); }
+
+        /* Notas empty */
+        #notas-list .empty-state { padding: 48px 24px; }
+
         /* Viewer de arquivo */
         .file-viewer-overlay {
             position:fixed; top:0; left:0; width:100vw; height:100vh;
@@ -4581,6 +4660,52 @@
             </div>
             <!-- END LEITURA VIEW -->
 
+            <!-- NOTAS VIEW -->
+            <div id="notas-view" class="view">
+                <div class="section-title">
+                    📝 Bloco de Notas
+                    <button class="icon-btn" style="background:var(--amber);color:white;border-radius:8px;padding:8px;" onclick="Notas.openNew()">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <!-- Stats notas -->
+                <div class="leitura-stats-row" style="grid-template-columns:repeat(3,1fr);">
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="notas-stat-total" style="color:var(--amber);">0</div>
+                        <div class="leitura-stat-lbl">Total</div>
+                    </div>
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="notas-stat-fixadas" style="color:var(--accent);">0</div>
+                        <div class="leitura-stat-lbl">Fixadas</div>
+                    </div>
+                    <div class="leitura-stat">
+                        <div class="leitura-stat-val" id="notas-stat-hoje" style="color:var(--success);">0</div>
+                        <div class="leitura-stat-lbl">Hoje</div>
+                    </div>
+                </div>
+
+                <!-- Busca -->
+                <div class="search-container">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" placeholder="Buscar notas..." oninput="Notas.search(this.value)">
+                </div>
+
+                <!-- Filtros categoria -->
+                <div class="leitura-cats" id="notas-cats">
+                    <button class="leitura-cat-btn active" onclick="Notas.setFilter(this,'')" style="border-color:var(--amber);">Todas</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'geral')">📋 Geral</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'imovel')">🏠 Imóvel</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'cliente')">👤 Cliente</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'reuniao')">🤝 Reunião</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'ideia')">💡 Ideia</button>
+                    <button class="leitura-cat-btn" onclick="Notas.setFilter(this,'lembrete')">⏰ Lembrete</button>
+                </div>
+
+                <div id="notas-list"></div>
+            </div>
+            <!-- END NOTAS VIEW -->
+
         <button class="fab" onclick="UI.openNewImovel()" id="main-fab">
             <i class="fas fa-plus"></i>
         </button>
@@ -4615,6 +4740,9 @@
             </a>
             <a href="#" class="nav-item" data-target="leitura-view" onclick="UI.switchTab(this); Leitura.init(); return false;">
                 <i class="fas fa-book-open"></i> <span>Leitura</span>
+            </a>
+            <a href="#" class="nav-item" data-target="notas-view" onclick="UI.switchTab(this); Notas.init(); return false;">
+                <i class="fas fa-sticky-note"></i> <span>Notas</span>
             </a>
         </nav>
 
@@ -5747,6 +5875,61 @@
             </div>
         </div>
 
+
+        <!-- NOTAS MODAL -->
+        <div class="modal-overlay" id="overlay-nota"></div>
+        <div class="modal-sheet" id="sheet-nota">
+            <div class="sheet-handle"></div>
+            <h3 class="section-title" id="title-nota">Nova Nota</h3>
+            <form id="form-nota" onsubmit="Notas.save(event)">
+                <input type="hidden" id="nota-id">
+                <div class="form-group">
+                    <label class="form-label">Título</label>
+                    <input type="text" id="nota-titulo" class="form-control" placeholder="Título da nota (opcional)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Conteúdo *</label>
+                    <textarea id="nota-conteudo" class="form-control" placeholder="Escreva sua nota aqui..." rows="6" required style="min-height:140px;"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Categoria</label>
+                        <select id="nota-categoria" class="form-control">
+                            <option value="geral">📋 Geral</option>
+                            <option value="imovel">🏠 Imóvel</option>
+                            <option value="cliente">👤 Cliente</option>
+                            <option value="reuniao">🤝 Reunião</option>
+                            <option value="ideia">💡 Ideia</option>
+                            <option value="lembrete">⏰ Lembrete</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex:0 0 auto;">
+                        <label class="form-label">Fixar</label>
+                        <div style="display:flex;align-items:center;height:48px;gap:8px;">
+                            <input type="checkbox" id="nota-fixada" style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;">
+                            <label for="nota-fixada" style="font-size:0.85rem;color:var(--secondary);cursor:pointer;">Fixar</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cor</label>
+                    <div class="nota-cor-grid" id="nota-cor-grid">
+                        <button type="button" class="nota-cor-btn active" data-cor="#F59E0B" style="background:#F59E0B;" onclick="Notas.setCor(this,'#F59E0B')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#10B981" style="background:#10B981;" onclick="Notas.setCor(this,'#10B981')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#4F46E5" style="background:#4F46E5;" onclick="Notas.setCor(this,'#4F46E5')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#F43F5E" style="background:#F43F5E;" onclick="Notas.setCor(this,'#F43F5E')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#0EA5E9" style="background:#0EA5E9;" onclick="Notas.setCor(this,'#0EA5E9')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#EC4899" style="background:#EC4899;" onclick="Notas.setCor(this,'#EC4899')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#2E4A31" style="background:#2E4A31;" onclick="Notas.setCor(this,'#2E4A31')"></button>
+                        <button type="button" class="nota-cor-btn" data-cor="#C4724A" style="background:#C4724A;" onclick="Notas.setCor(this,'#C4724A')"></button>
+                    </div>
+                    <input type="hidden" id="nota-cor" value="#F59E0B">
+                </div>
+                <button type="submit" class="btn-block" style="background:var(--amber);">💾 Salvar Nota</button>
+                <button type="button" class="btn-block" style="background:var(--light);color:var(--secondary);margin-top:8px;" onclick="UI.closeModals()">Cancelar</button>
+            </form>
+        </div>
+
         <!-- LEITURA MODAL -->
         <div class="modal-overlay" id="overlay-leitura"></div>
         <div class="modal-sheet" id="sheet-leitura">
@@ -5826,7 +6009,7 @@
         // CÓDIGO JAVASCRIPT COMPLETO (com as melhorias: contador de contatos e alerta de cliente parado)
         const DB = {
             name: 'ImobiProDB',
-            version: 19, // v19: blobs leitura em store dedicado
+            version: 20, // v20: store notas + pdf_progress
             db: null,
             
             init: function() {
@@ -5909,6 +6092,16 @@
                 // Store dedicado para blobs de anexos — sem limite de tamanho
                 if (!db.objectStoreNames.contains('leitura_blobs')) {
                     db.createObjectStore('leitura_blobs', { keyPath: 'id' });
+                }
+                // Bloco de Notas
+                if (!db.objectStoreNames.contains('notas')) {
+                    const notasStore = db.createObjectStore('notas', { keyPath: 'id' });
+                    notasStore.createIndex('categoria', 'categoria', { unique: false });
+                    notasStore.createIndex('dataAtualizacao', 'dataAtualizacao', { unique: false });
+                }
+                // Progresso de leitura de PDFs
+                if (!db.objectStoreNames.contains('pdf_progress')) {
+                    db.createObjectStore('pdf_progress', { keyPath: 'id' });
                 }
             },
             
@@ -18157,7 +18350,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this.render();
             },
 
-            render() {
+            async render() {
                 const list = document.getElementById('leitura-list');
                 if (!list) return;
 
@@ -18195,6 +18388,23 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     return;
                 }
 
+                // Carrega progresso de todos os PDFs em paralelo
+                const allPdfIds = [];
+                items.forEach(item => {
+                    (item.anexos || []).forEach(a => {
+                        if (a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf')) {
+                            allPdfIds.push(a.id);
+                        }
+                    });
+                });
+                const pdfProgressMap = {};
+                await Promise.all(allPdfIds.map(async (pid) => {
+                    try {
+                        const rec = await DB.get('pdf_progress', pid);
+                        if (rec && rec.page > 1) pdfProgressMap[pid] = rec;
+                    } catch(_) {}
+                }));
+
                 const TIPO_ICONS = { livro:'📘', artigo:'📄', pdf:'📑', material:'🗂' };
                 const TIPO_BADGE_CLASS = { livro:'leitura-badge-livro', artigo:'leitura-badge-artigo', pdf:'leitura-badge-pdf', material:'leitura-badge-material' };
                 const TIPO_LABELS = { livro:'Livro', artigo:'Artigo', pdf:'PDF', material:'Material' };
@@ -18222,12 +18432,9 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                     let anexosHTML = '';
                     if (anexos.length > 0) {
-                        // Se há só imagens (≤6) → grade de thumbnails
-                        // Se há PDFs ou mix → lista com thumb
                         const hasOnlyImages = allPdfs.length === 0 && allImages.length === anexos.length;
 
                         if (hasOnlyImages && anexos.length <= 6) {
-                            // Grade visual de imagens
                             const gridItems = anexos.map((a, ai) => `
                                 <div class="leitura-attach-thumb" onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})">
                                     <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(79,70,229,0.08);">🖼️</div>
@@ -18240,13 +18447,17 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                                     <div class="leitura-attach-gallery">${gridItems}</div>
                                 </div>`;
                         } else {
-                            // Lista com miniatura
                             const listItems = anexos.map((a, ai) => {
                                 const isPdf = a.tipo === 'application/pdf' || (a.nome||'').toLowerCase().endsWith('.pdf');
                                 const thumbHTML = isPdf
                                     ? `<div class="leitura-attach-list-thumb"><i class="fas fa-file-pdf leitura-attach-list-pdf-icon"></i></div>`
                                     : `<div class="leitura-attach-list-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem;">🖼️</div>`;
                                 const typeLabel = isPdf ? 'PDF' : 'Imagem';
+                                // Badge de progresso de leitura para PDFs
+                                const progRec = isPdf && pdfProgressMap[a.id];
+                                const progressBadge = progRec
+                                    ? `<span style="background:rgba(79,70,229,0.12);color:var(--indigo);border-radius:20px;padding:2px 8px;font-size:0.68rem;font-weight:700;white-space:nowrap;flex-shrink:0;">🔖 p.${progRec.page}${progRec.totalPages ? '/'+progRec.totalPages : ''}</span>`
+                                    : '';
                                 return `
                                 <div class="leitura-attach-list-item" onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})">
                                     ${thumbHTML}
@@ -18254,6 +18465,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                                         <div class="leitura-attach-list-name">${a.nome}</div>
                                         <div class="leitura-attach-list-meta">${typeLabel}${a.tamanho ? ' · ' + a.tamanho : ''}</div>
                                     </div>
+                                    ${progressBadge}
                                     ${isPdf ? `<button onclick="event.stopPropagation();Leitura.openFile('${item.id}',${ai})" style="background:linear-gradient(135deg,#dc2626,#b91c1c);color:white;border:none;border-radius:8px;padding:6px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;flex-shrink:0;display:flex;align-items:center;gap:4px;"><i class='fas fa-eye'></i> Ver PDF</button>` : ''}
                                     <i class="fas fa-chevron-right leitura-attach-list-arrow"></i>
                                 </div>`;
@@ -18476,36 +18688,43 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 arrows.forEach(a => body.appendChild(a));
                 try {
                     const pdfjs = await this._loadPdfJs();
-                    // Lê o Blob como ArrayBuffer — não precisa de URL nem CDN
                     const arrayBuffer = await blob.arrayBuffer();
                     const uint8 = new Uint8Array(arrayBuffer);
                     const loadEl = document.getElementById('pdf-loading');
                     if (loadEl) loadEl.remove();
                     const pdfDoc = await pdfjs.getDocument({ data: uint8 }).promise;
                     this._pdfDoc = pdfDoc;
-                    this._pdfPage = 1;
                     this._pdfTotalPages = pdfDoc.numPages;
+
+                    // Restaura última página lida
+                    const savedPage = meta && meta.id ? await this._loadPdfProgress(meta.id) : 1;
+                    const startPage = Math.min(Math.max(savedPage, 1), pdfDoc.numPages);
+                    this._pdfPage = startPage;
+
                     const arrs2 = Array.from(body.querySelectorAll('.fv-nav-arrow'));
                     body.innerHTML = `<div id="pdf-viewer-wrap" style="display:flex;flex-direction:column;align-items:center;width:100%;height:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:8px 4px;"><canvas id="pdf-canvas" style="max-width:100%;border-radius:8px;box-shadow:0 4px 24px rgba(0,0,0,0.5);display:block;"></canvas></div>`;
                     arrs2.forEach(a => body.appendChild(a));
                     toolbar.innerHTML = `
                         <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn"><i class="fas fa-chevron-left"></i></button>
-                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">1 / ${pdfDoc.numPages}</span>
+                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">${startPage} / ${pdfDoc.numPages}</span>
                         <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn"><i class="fas fa-chevron-right"></i></button>
                         <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
                         <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
                         <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:52px;">100%</button>
                         <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
                         <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.pdfGoToPage(1)" title="Recomeçar do início" style="font-size:0.7rem;padding:6px 10px;"><i class="fas fa-redo-alt"></i></button>
                         <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()" title="Baixar"><i class="fas fa-download"></i></button>`;
                     toolbar.style.display = 'flex';
-                    await this._renderPdfPage(1);
+                    await this._renderPdfPage(startPage);
+                    if (startPage > 1) {
+                        Utils.toast(`📖 Retomando da página ${startPage}`);
+                    }
                 } catch(e) {
                     console.error('PDF render falhou:', e);
                     const loadEl = document.getElementById('pdf-loading');
                     if (loadEl) loadEl.remove();
                     this._pdfjsReady = null;
-                    // Fallback: oferece download direto
                     const arrows2 = Array.from(body.querySelectorAll('.fv-nav-arrow'));
                     body.innerHTML = '';
                     arrows2.forEach(a => body.appendChild(a));
@@ -18741,8 +18960,12 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         pdfDoc = await pdfjs.getDocument({ data: bytes }).promise;
                     }
                     this._pdfDoc = pdfDoc;
-                    this._pdfPage = 1;
                     this._pdfTotalPages = pdfDoc.numPages;
+
+                    // Restaura última página lida
+                    const savedPage2 = anexo && anexo.id ? await this._loadPdfProgress(anexo.id) : 1;
+                    const startPage2 = Math.min(Math.max(savedPage2, 1), pdfDoc.numPages);
+                    this._pdfPage = startPage2;
 
                     // Monta viewer — preserva setas de navegação
                     const arrows = Array.from(body.querySelectorAll('.fv-nav-arrow'));
@@ -18754,17 +18977,21 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                     toolbar.innerHTML = `
                         <button class="file-viewer-btn" onclick="Leitura.pdfPrevPage()" id="pdf-prev-btn"><i class="fas fa-chevron-left"></i></button>
-                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">1 / ${pdfDoc.numPages}</span>
+                        <span id="pdf-page-info" style="color:white;font-size:0.8rem;font-weight:700;min-width:80px;text-align:center;display:flex;align-items:center;justify-content:center;">${startPage2} / ${pdfDoc.numPages}</span>
                         <button class="file-viewer-btn" onclick="Leitura.pdfNextPage()" id="pdf-next-btn"><i class="fas fa-chevron-right"></i></button>
                         <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
                         <button class="file-viewer-btn" onclick="Leitura.zoomOut()"><i class="fas fa-search-minus"></i></button>
                         <button class="file-viewer-btn" id="zoom-pct-label" onclick="Leitura.zoomReset()" style="min-width:52px;">100%</button>
                         <button class="file-viewer-btn" onclick="Leitura.zoomIn()"><i class="fas fa-search-plus"></i></button>
                         <div style="width:1px;height:28px;background:rgba(255,255,255,0.15);margin:0 2px;"></div>
+                        <button class="file-viewer-btn" onclick="Leitura.pdfGoToPage(1)" title="Recomeçar do início" style="font-size:0.7rem;padding:6px 10px;"><i class="fas fa-redo-alt"></i></button>
                         <button class="file-viewer-btn" onclick="Leitura.downloadCurrentFile()"><i class="fas fa-download"></i></button>`;
                     toolbar.style.display = 'flex';
 
-                    await this._renderPdfPage(1);
+                    await this._renderPdfPage(startPage2);
+                    if (startPage2 > 1) {
+                        Utils.toast(`📖 Retomando da página ${startPage2}`);
+                    }
                 } catch(e) {
                     console.error('PDF.js falhou:', e);
                     const loadingEl = document.getElementById('pdf-loading');
@@ -18867,6 +19094,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 await this._renderPdfPage(this._pdfPage);
                 const wrap = document.getElementById('pdf-viewer-wrap');
                 if (wrap) wrap.scrollTop = 0;
+                this._savePdfProgress();
             },
 
             async pdfPrevPage() {
@@ -18875,6 +19103,40 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 await this._renderPdfPage(this._pdfPage);
                 const wrap = document.getElementById('pdf-viewer-wrap');
                 if (wrap) wrap.scrollTop = 0;
+                this._savePdfProgress();
+            },
+
+            // Salva o progresso da página atual do PDF no IndexedDB
+            _savePdfProgress() {
+                if (!this._viewerFile || !this._viewerFile.id) return;
+                const key = this._viewerFile.id;
+                const record = {
+                    id: key,
+                    page: this._pdfPage,
+                    totalPages: this._pdfTotalPages,
+                    updatedAt: new Date().toISOString(),
+                };
+                DB.put('pdf_progress', record).catch(() => {});
+            },
+
+            // Recupera o progresso salvo de um PDF
+            async _loadPdfProgress(blobId) {
+                try {
+                    const rec = await DB.get('pdf_progress', blobId);
+                    return rec ? rec.page : 1;
+                } catch(_) { return 1; }
+            },
+
+            // Vai para uma página específica
+            async pdfGoToPage(pageNum) {
+                if (!this._pdfDoc) return;
+                const page = Math.min(Math.max(pageNum, 1), this._pdfTotalPages);
+                this._pdfPage = page;
+                await this._renderPdfPage(page);
+                const wrap = document.getElementById('pdf-viewer-wrap');
+                if (wrap) wrap.scrollTop = 0;
+                this._savePdfProgress();
+                if (pageNum === 1) Utils.toast('🔄 Reiniciado do início');
             },
 
             closeViewer() {
@@ -18964,6 +19226,199 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             },
         };
 
+        // ===== BLOCO DE NOTAS =====
+        const Notas = {
+            items: [],
+            filterCat: '',
+            searchQuery: '',
+            _corSelecionada: '#F59E0B',
+
+            async init() {
+                await this.load();
+                this.render();
+            },
+
+            async load() {
+                try {
+                    this.items = await DB.getAll('notas');
+                    this.items.sort((a, b) => {
+                        // Fixadas primeiro, depois por data de atualização
+                        if (a.fixada && !b.fixada) return -1;
+                        if (!a.fixada && b.fixada) return 1;
+                        return new Date(b.dataAtualizacao) - new Date(a.dataAtualizacao);
+                    });
+                } catch(e) {
+                    this.items = [];
+                }
+            },
+
+            openNew() {
+                document.getElementById('nota-id').value = '';
+                document.getElementById('nota-titulo').value = '';
+                document.getElementById('nota-conteudo').value = '';
+                document.getElementById('nota-categoria').value = 'geral';
+                document.getElementById('nota-fixada').checked = false;
+                document.getElementById('nota-cor').value = '#F59E0B';
+                document.querySelectorAll('.nota-cor-btn').forEach(b => b.classList.remove('active'));
+                const firstBtn = document.querySelector('.nota-cor-btn[data-cor="#F59E0B"]');
+                if (firstBtn) firstBtn.classList.add('active');
+                this._corSelecionada = '#F59E0B';
+                document.getElementById('title-nota').textContent = 'Nova Nota';
+                UI.openModal('nota');
+                setTimeout(() => document.getElementById('nota-conteudo').focus(), 350);
+            },
+
+            edit(id) {
+                const n = this.items.find(x => x.id === id);
+                if (!n) return;
+                document.getElementById('nota-id').value = n.id;
+                document.getElementById('nota-titulo').value = n.titulo || '';
+                document.getElementById('nota-conteudo').value = n.conteudo || '';
+                document.getElementById('nota-categoria').value = n.categoria || 'geral';
+                document.getElementById('nota-fixada').checked = !!n.fixada;
+                const cor = n.cor || '#F59E0B';
+                document.getElementById('nota-cor').value = cor;
+                this._corSelecionada = cor;
+                document.querySelectorAll('.nota-cor-btn').forEach(b => {
+                    b.classList.toggle('active', b.getAttribute('data-cor') === cor);
+                });
+                document.getElementById('title-nota').textContent = 'Editar Nota';
+                UI.openModal('nota');
+            },
+
+            setCor(btn, cor) {
+                document.querySelectorAll('.nota-cor-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this._corSelecionada = cor;
+                document.getElementById('nota-cor').value = cor;
+            },
+
+            async save(e) {
+                e.preventDefault();
+                const conteudo = document.getElementById('nota-conteudo').value.trim();
+                if (!conteudo) { Utils.toast('Escreva o conteúdo da nota', 'error'); return; }
+                const id = document.getElementById('nota-id').value || Utils.id();
+                const existing = this.items.find(x => x.id === id);
+                const nota = {
+                    id,
+                    titulo: document.getElementById('nota-titulo').value.trim(),
+                    conteudo,
+                    categoria: document.getElementById('nota-categoria').value,
+                    fixada: document.getElementById('nota-fixada').checked,
+                    cor: document.getElementById('nota-cor').value || '#F59E0B',
+                    dataCriacao: existing?.dataCriacao || new Date().toISOString(),
+                    dataAtualizacao: new Date().toISOString(),
+                };
+                try {
+                    await DB.put('notas', nota);
+                    await this.load();
+                    this.render();
+                    UI.closeModals();
+                    Utils.toast('✅ Nota salva!');
+                } catch(err) {
+                    Utils.toast('Erro ao salvar nota', 'error');
+                }
+            },
+
+            async delete(id) {
+                if (!confirm('Excluir esta nota?')) return;
+                await DB.delete('notas', id);
+                await this.load();
+                this.render();
+                Utils.toast('Nota removida');
+            },
+
+            async togglePin(id) {
+                const n = this.items.find(x => x.id === id);
+                if (!n) return;
+                n.fixada = !n.fixada;
+                n.dataAtualizacao = new Date().toISOString();
+                await DB.put('notas', n);
+                await this.load();
+                this.render();
+                Utils.toast(n.fixada ? '📌 Nota fixada!' : 'Nota desafixada');
+            },
+
+            setFilter(btn, cat) {
+                document.querySelectorAll('#notas-cats .leitura-cat-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                this.filterCat = cat;
+                this.render();
+            },
+
+            search(q) {
+                this.searchQuery = q.toLowerCase().trim();
+                this.render();
+            },
+
+            render() {
+                const list = document.getElementById('notas-list');
+                if (!list) return;
+
+                // Stats
+                const hoje = new Date().toDateString();
+                const total = this.items.length;
+                const fixadas = this.items.filter(x => x.fixada).length;
+                const criadas_hoje = this.items.filter(x => new Date(x.dataAtualizacao).toDateString() === hoje).length;
+                const setEl = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+                setEl('notas-stat-total', total);
+                setEl('notas-stat-fixadas', fixadas);
+                setEl('notas-stat-hoje', criadas_hoje);
+
+                let items = [...this.items];
+                if (this.filterCat) {
+                    items = items.filter(x => x.categoria === this.filterCat);
+                }
+                if (this.searchQuery) {
+                    items = items.filter(x =>
+                        (x.titulo || '').toLowerCase().includes(this.searchQuery) ||
+                        (x.conteudo || '').toLowerCase().includes(this.searchQuery)
+                    );
+                }
+
+                if (items.length === 0) {
+                    list.innerHTML = `<div class="empty-state"><i class="fas fa-sticky-note"></i><p>Nenhuma nota encontrada.<br>Toque em <strong>+</strong> para criar sua primeira nota!</p></div>`;
+                    return;
+                }
+
+                const CAT_LABELS = { geral:'📋 Geral', imovel:'🏠 Imóvel', cliente:'👤 Cliente', reuniao:'🤝 Reunião', ideia:'💡 Ideia', lembrete:'⏰ Lembrete' };
+
+                list.innerHTML = items.map(n => {
+                    const cor = n.cor || '#F59E0B';
+                    const titulo = n.titulo || 'Sem título';
+                    const catLabel = CAT_LABELS[n.categoria] || '📋 Geral';
+                    const dt = new Date(n.dataAtualizacao);
+                    const dtStr = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'2-digit' }) +
+                        ' ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+                    const conteudoEscapado = (n.conteudo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    return `
+                    <div class="nota-card" style="border-top:4px solid ${cor};">
+                        <div class="nota-card-body">
+                            <div class="nota-card-header">
+                                <div class="nota-card-title">${titulo}</div>
+                                ${n.fixada ? '<i class="fas fa-thumbtack nota-pin-icon"></i>' : ''}
+                            </div>
+                            <div class="nota-card-content">${conteudoEscapado}</div>
+                        </div>
+                        <div class="nota-card-footer">
+                            <span class="nota-cat-badge" style="background:${cor}22;color:${cor};">${catLabel}</span>
+                            <span class="nota-date">${dtStr}</span>
+                            <div class="nota-actions">
+                                <button class="nota-action-btn" onclick="Notas.togglePin('${n.id}')" title="${n.fixada ? 'Desafixar' : 'Fixar'}">
+                                    <i class="fas fa-thumbtack" style="color:${n.fixada ? cor : 'var(--text-secondary)'}; ${n.fixada ? '' : 'opacity:0.5;'}"></i>
+                                </button>
+                                <button class="nota-action-btn" onclick="Notas.edit('${n.id}')" title="Editar">
+                                    <i class="fas fa-edit" style="color:var(--indigo);"></i>
+                                </button>
+                                <button class="nota-action-btn danger" onclick="Notas.delete('${n.id}')" title="Excluir">
+                                    <i class="fas fa-trash" style="color:var(--danger);"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            },
+        };
 
         document.addEventListener('DOMContentLoaded', () => {
             UI.init();
