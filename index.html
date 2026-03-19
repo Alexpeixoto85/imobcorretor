@@ -3854,10 +3854,10 @@
                         <div class="stat-value" id="dash-destaques">0</div>
                         <div class="stat-label">Destaques</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" title="Soma das comissões de imóveis vinculados a clientes em negociação ativa">
                         <div class="stat-icon bg-gold"><i class="fas fa-coins"></i></div>
                         <div class="stat-value" id="dash-comissao">R$ 0</div>
-                        <div class="stat-label">Comissão Prevista</div>
+                        <div class="stat-label">Comissão em Neg.</div>
                     </div>
                 </div>
 
@@ -3895,7 +3895,7 @@
                 </div>
                 
                 <div class="section-title">
-                    Negociações Recentes
+                    🤝 Clientes em Negociação
                     <span class="badge badge-warning" id="negociacoes-badge" style="display:none">!</span>
                 </div>
                 <div id="negociacoes-list">
@@ -5925,9 +5925,25 @@
                     </div>
                     <input type="hidden" id="nota-cor" value="#F59E0B">
                 </div>
+                <!-- IMAGENS DA NOTA -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-images" style="color:var(--indigo);margin-right:6px;"></i> Imagens anexadas</label>
+                    <input type="hidden" id="nota-imagens-data" value="[]">
+                    <input type="file" id="nota-imagem-file" accept="image/*" multiple style="display:none;" onchange="Notas.addImagens(this)">
+                    <div id="nota-imagens-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px;min-height:0;"></div>
+                    <button type="button" onclick="document.getElementById('nota-imagem-file').click()" style="width:100%;padding:12px;border:2px dashed var(--border);border-radius:10px;background:rgba(79,70,229,0.04);color:var(--text-secondary);font-size:0.88rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+                        <i class="fas fa-camera" style="color:var(--indigo);"></i> Adicionar imagem
+                    </button>
+                </div>
                 <button type="submit" class="btn-block" style="background:var(--amber);">💾 Salvar Nota</button>
                 <button type="button" class="btn-block" style="background:var(--light);color:var(--secondary);margin-top:8px;" onclick="UI.closeModals()">Cancelar</button>
             </form>
+        </div>
+
+        <!-- VISUALIZADOR DE IMAGEM DE NOTA -->
+        <div id="nota-img-viewer" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:300;align-items:center;justify-content:center;flex-direction:column;">
+            <button onclick="document.getElementById('nota-img-viewer').style.display='none';" style="position:absolute;top:max(16px,env(safe-area-inset-top,0px));right:16px;background:rgba(255,255,255,0.15);border:none;color:white;width:44px;height:44px;border-radius:50%;font-size:1.3rem;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2;"><i class="fas fa-times"></i></button>
+            <img id="nota-img-viewer-src" style="max-width:95vw;max-height:85vh;object-fit:contain;border-radius:10px;box-shadow:0 8px 40px rgba(0,0,0,0.5);">
         </div>
 
         <!-- LEITURA MODAL -->
@@ -7738,7 +7754,31 @@
                 document.body.removeChild(a);
             },
 
-            simulateFinancing: (cliente, imovel, taxaJurosAnual) => {
+            // =========================================================
+            // TABELA DE TAXAS CAIXA POR FAIXA DE RENDA (2024/2025)
+            // =========================================================
+            getTaxaCaixa: (rendaMensal) => {
+                // Taxas nominais anuais Caixa Econômica Federal
+                // Faixas baseadas nas regras vigentes do SBPE/FGTS
+                if (rendaMensal <= 2000)  return { taxa: 4.25,  faixa: 'Até R$ 2.000 (Prog. Casa Verde Amarela)' };
+                if (rendaMensal <= 4000)  return { taxa: 6.50,  faixa: 'R$ 2.001 a R$ 4.000' };
+                if (rendaMensal <= 7000)  return { taxa: 8.16,  faixa: 'R$ 4.001 a R$ 7.000' };
+                if (rendaMensal <= 10000) return { taxa: 9.00,  faixa: 'R$ 7.001 a R$ 10.000' };
+                if (rendaMensal <= 20000) return { taxa: 10.50, faixa: 'R$ 10.001 a R$ 20.000' };
+                return                         { taxa: 11.00, faixa: 'Acima de R$ 20.000' };
+            },
+
+            // Calcula prazo máximo pela regra: IDADE + PRAZO ≤ 80 anos (Caixa)
+            getPrazoMaximoCaixa: (idadeAtual) => {
+                const MAX_SOMA = 80; // Caixa: idade + prazo (em anos) não pode ultrapassar 80
+                const MAX_MESES = 420; // Caixa: máximo de 420 meses
+                const anosRestantes = MAX_SOMA - idadeAtual;
+                if (anosRestantes <= 0) return 0;
+                return Math.min(MAX_MESES, Math.floor(anosRestantes * 12));
+            },
+
+            // Simula financiamento com todas as regras da Caixa Econômica
+            simulateFinancing: (cliente, imovel, taxaJurosAnualCustom) => {
                 if (!cliente.rendaMensal || cliente.rendaMensal <= 0) {
                     return { error: "Renda mensal não informada." };
                 }
@@ -7750,21 +7790,22 @@
                 }
 
                 const valorImovel = imovel.precoVenda || imovel.precoAluguel || 0;
-                const maxFinanciamento = valorImovel * 0.8;
+                const maxFinanciamento = valorImovel * 0.8; // Caixa financia até 80%
 
                 const idadeAtual = Utils.calculateAge(cliente.dataNascimento);
                 if (idadeAtual === null) return { error: "Idade não calculada." };
-                const idadeMax = 70.6;
-                const maxMesesIdade = Math.max(0, (idadeMax - idadeAtual) * 12);
-                const maxMeses = Math.min(420, Math.floor(maxMesesIdade));
 
+                const maxMeses = Utils.getPrazoMaximoCaixa(idadeAtual);
                 if (maxMeses <= 0) {
-                    return { error: "Cliente excede a idade máxima para financiamento." };
+                    return { error: `Cliente com ${idadeAtual} anos excede o limite de idade. A Caixa exige que Idade + Prazo ≤ 80 anos.` };
                 }
 
                 const rendaMensal = cliente.rendaMensal;
-                const maxPrestacao = rendaMensal * 0.3;
+                const maxPrestacao = rendaMensal * 0.3; // Comprometimento máximo: 30%
 
+                // Taxa por faixa de renda (ou customizada)
+                const taxaInfo = Utils.getTaxaCaixa(rendaMensal);
+                const taxaJurosAnual = taxaJurosAnualCustom || taxaInfo.taxa;
                 const i = taxaJurosAnual / 100 / 12;
 
                 let maxPelaRenda = 0;
@@ -7776,9 +7817,11 @@
 
                 const valorFinanciavel = Math.min(maxFinanciamento, maxPelaRenda);
                 const entradaNecessaria = valorImovel - valorFinanciavel;
-                const prestacaoMensal = (i > 0) 
+                const prestacaoMensal = (i > 0)
                     ? valorFinanciavel * i / (1 - Math.pow(1 + i, -maxMeses))
                     : valorFinanciavel / maxMeses;
+
+                const idadeFimContrato = idadeAtual + maxMeses / 12;
 
                 return {
                     valorImovel,
@@ -7789,10 +7832,73 @@
                     prestacaoMensal,
                     prazoMeses: maxMeses,
                     taxaAnual: taxaJurosAnual,
+                    taxaFaixa: taxaInfo.faixa,
                     idadeAtual,
+                    idadeFimContrato,
                     rendaMensal,
                     maxPrestacao
                 };
+            },
+
+            // Calcula o VALOR MÁXIMO DE IMÓVEL que um cliente pode comprar
+            calcMaxImovelCliente: (cliente) => {
+                if (!cliente.rendaMensal || cliente.rendaMensal <= 0 || !cliente.dataNascimento) return null;
+                const idadeAtual = Utils.calculateAge(cliente.dataNascimento);
+                if (!idadeAtual) return null;
+                const maxMeses = Utils.getPrazoMaximoCaixa(idadeAtual);
+                if (maxMeses <= 0) return null;
+
+                const rendaMensal = cliente.rendaMensal;
+                const maxPrestacao = rendaMensal * 0.3;
+                const taxaInfo = Utils.getTaxaCaixa(rendaMensal);
+                const i = taxaInfo.taxa / 100 / 12;
+
+                let maxFinanciadoRenda = 0;
+                if (i > 0) {
+                    maxFinanciadoRenda = maxPrestacao * (1 - Math.pow(1 + i, -maxMeses)) / i;
+                } else {
+                    maxFinanciadoRenda = maxPrestacao * maxMeses;
+                }
+                // Como a Caixa financia no máx 80%, o valor total do imóvel = financiado / 0.8
+                const maxImovelPelaRenda = maxFinanciadoRenda / 0.8;
+                return {
+                    maxImovelPelaRenda,
+                    maxFinanciadoRenda,
+                    maxMeses,
+                    taxaInfo,
+                    maxPrestacao,
+                    idadeAtual,
+                    idadeFimContrato: idadeAtual + maxMeses / 12
+                };
+            },
+
+            // Calcula a RENDA IDEAL para financiar um imóvel específico
+            calcRendaIdealImovel: (valorImovel) => {
+                if (!valorImovel || valorImovel <= 0) return null;
+                const financiado = valorImovel * 0.8;
+                const prazoMeses = 420; // prazo máximo para maximizar poder de compra
+                // Calcular para cada faixa de renda
+                const faixas = [
+                    { nome: 'Até R$ 2.000',        taxa: 4.25,  rendaRef: 1500  },
+                    { nome: 'R$ 2.001–R$ 4.000',   taxa: 6.50,  rendaRef: 3000  },
+                    { nome: 'R$ 4.001–R$ 7.000',   taxa: 8.16,  rendaRef: 5500  },
+                    { nome: 'R$ 7.001–R$ 10.000',  taxa: 9.00,  rendaRef: 8500  },
+                    { nome: 'R$ 10.001–R$ 20.000', taxa: 10.50, rendaRef: 15000 },
+                    { nome: 'Acima de R$ 20.000',  taxa: 11.00, rendaRef: 25000 },
+                ];
+                const resultados = faixas.map(f => {
+                    const i = f.taxa / 100 / 12;
+                    const prestacao = i > 0
+                        ? financiado * i / (1 - Math.pow(1 + i, -prazoMeses))
+                        : financiado / prazoMeses;
+                    const rendaNecessaria = prestacao / 0.3;
+                    return { ...f, prestacao, rendaNecessaria };
+                });
+                // Retorna a menor renda capaz de bancar (taxa mais baixa não implica elegibilidade se renda for baixa demais)
+                // Vamos retornar a faixa onde a renda de referência ≥ rendaNecessaria
+                const viavel = resultados.find(r => r.rendaRef >= r.rendaNecessaria && r.rendaNecessaria > 0);
+                const melhor = viavel || resultados[resultados.length - 1];
+                return { melhor, todas: resultados, financiado, valorImovel };
             },
 
             generateClientePDF: async (clienteId) => {
@@ -8226,10 +8332,20 @@
                 
                 document.getElementById('dash-vendas').innerText = Utils.formatCurrency(totalVendas);
                 
-                // Comissão prevista: soma das comissões de imóveis disponíveis
+                // Comissão prevista: soma das comissões dos imóveis vinculados a clientes em etapa de Negociação
+                // Etapas de negociação: todas exceto 'lead' e 'venda'
+                const etapasNegociacao = ['contato', 'cpf', 'sem-restricao', 'documentacao', 'aprovado', 'contrato'];
+                const clientesEmNegociacao = clientes.filter(c => etapasNegociacao.includes(c.etapaFunil) && c.imovelInteresseId);
                 let totalComissaoPrevista = 0;
-                imoveis.filter(i => i.status === 'disponivel' && i.precoVenda && i.comissao).forEach(i => {
-                    totalComissaoPrevista += (i.precoVenda * (parseFloat(i.comissao) / 100));
+                const settings = UI.data.settings || {};
+                const taxaComissaoGlobal = parseFloat(settings.comissao) || 5;
+                clientesEmNegociacao.forEach(cliente => {
+                    const imovel = imoveis.find(i => i.id === cliente.imovelInteresseId);
+                    if (imovel) {
+                        const valor = imovel.precoVenda || imovel.precoAluguel || 0;
+                        const taxa = parseFloat(imovel.comissao) || taxaComissaoGlobal;
+                        totalComissaoPrevista += valor * (taxa / 100);
+                    }
                 });
                 const comissaoEl = document.getElementById('dash-comissao');
                 if (comissaoEl) comissaoEl.innerText = Utils.formatCurrency(totalComissaoPrevista);
@@ -8257,16 +8373,23 @@
                 UI.renderWaitingList();
                 
                 const negociacoesList = document.getElementById('negociacoes-list');
-                const imoveisReservados = imoveis.filter(i => i.status === 'reservado').slice(0, 3);
-                
-                if(imoveisReservados.length === 0) {
+                const etapasNeg = ['contato', 'cpf', 'sem-restricao', 'documentacao', 'aprovado', 'contrato'];
+                const clientesNegociacao = clientes
+                    .filter(c => etapasNeg.includes(c.etapaFunil))
+                    .sort((a, b) => {
+                        const peso = { 'contrato': 6, 'aprovado': 5, 'documentacao': 4, 'sem-restricao': 3, 'cpf': 2, 'contato': 1 };
+                        return (peso[b.etapaFunil] || 0) - (peso[a.etapaFunil] || 0);
+                    })
+                    .slice(0, 5);
+
+                if(clientesNegociacao.length === 0) {
                     negociacoesList.innerHTML = `<div class="empty-state"><i class="fas fa-handshake"></i><p>Nenhuma negociação ativa!</p></div>`;
                 } else {
-                    negociacoesList.innerHTML = imoveisReservados.map(i => UI.createNegociacaoCard(i)).join('');
+                    negociacoesList.innerHTML = clientesNegociacao.map(c => UI.createNegociacaoClienteCard(c)).join('');
                 }
                 
                 document.getElementById('visitas-badge').style.display = visitasHoje.length > 0 ? 'inline-block' : 'none';
-                document.getElementById('negociacoes-badge').style.display = imoveisReservados.length > 0 ? 'inline-block' : 'none';
+                document.getElementById('negociacoes-badge').style.display = clientesNegociacao.length > 0 ? 'inline-block' : 'none';
             },
 
             renderWaitingList: function() {
@@ -8901,6 +9024,60 @@
                 `;
             },
 
+            createNegociacaoClienteCard: (cliente) => {
+                const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil);
+                const etapaCor = etapa?.cor || '#445447';
+                const etapaNome = etapa?.nome || cliente.etapaFunil;
+                const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
+                const dias = cliente.dataEntradaFunil ? Utils.calculateDaysInStage(cliente.dataEntradaFunil) : 0;
+                const alertaDias = dias > 14;
+
+                const ETAPA_ICONS = {
+                    'contato': 'phone-alt', 'cpf': 'search', 'sem-restricao': 'check-circle',
+                    'documentacao': 'file-contract', 'aprovado': 'thumbs-up', 'contrato': 'pen-fancy'
+                };
+                const icon = ETAPA_ICONS[cliente.etapaFunil] || 'handshake';
+
+                const imovelInfo = imovel ? `
+                    <div style="display:flex;align-items:center;gap:6px;margin-top:6px;padding:6px 8px;background:rgba(46,74,49,0.06);border-radius:8px;">
+                        <i class="fas fa-home" style="color:var(--primary);font-size:0.8rem;flex-shrink:0;"></i>
+                        <span style="font-size:0.8rem;color:var(--secondary);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${imovel.titulo.length > 35 ? imovel.titulo.substring(0,33)+'...' : imovel.titulo}</span>
+                        ${imovel.precoVenda ? `<span style="font-size:0.75rem;color:var(--success);font-weight:700;margin-left:auto;flex-shrink:0;">${Utils.formatCurrency(imovel.precoVenda)}</span>` : ''}
+                    </div>` : '';
+
+                return `
+                    <div class="client-card" onclick="App.cliente.showDetails('${cliente.id}')" style="margin-bottom:12px;cursor:pointer;">
+                        <div class="client-header">
+                            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">
+                                <div style="width:36px;height:36px;border-radius:10px;background:${etapaCor};display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px ${etapaCor}44;">
+                                    <i class="fas fa-${icon}" style="color:white;font-size:0.85rem;"></i>
+                                </div>
+                                <div style="flex:1;min-width:0;">
+                                    <div class="client-name" style="font-size:0.95rem;">${cliente.nome}</div>
+                                    <div style="font-size:0.75rem;color:var(--text-secondary);">
+                                        <i class="fas fa-phone" style="font-size:0.65rem;"></i> ${Utils.formatPhone(cliente.telefone)}
+                                    </div>
+                                </div>
+                            </div>
+                            <span style="background:${etapaCor};color:white;padding:3px 8px;border-radius:20px;font-size:0.7rem;font-weight:700;flex-shrink:0;white-space:nowrap;">${etapaNome}</span>
+                        </div>
+                        ${imovelInfo}
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                            <span style="font-size:0.75rem;color:${alertaDias ? 'var(--danger)' : 'var(--text-secondary)'};font-weight:${alertaDias ? '700' : '500'};">
+                                <i class="fas fa-${alertaDias ? 'exclamation-triangle' : 'clock'}" style="margin-right:3px;"></i>${dias}d nesta etapa${alertaDias ? ' — seguir up!' : ''}
+                            </span>
+                            <div style="display:flex;gap:6px;">
+                                <button style="background:#25D366;color:white;border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:0.85rem;cursor:pointer;box-shadow:0 2px 8px rgba(37,211,102,0.35);" onclick="event.stopPropagation();App.whatsapp.confirmOpenCliente('${cliente.id}')" title="WhatsApp">
+                                    <i class="fab fa-whatsapp"></i>
+                                </button>
+                                <button style="background:var(--light);color:var(--secondary);border:none;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:0.8rem;cursor:pointer;" onclick="event.stopPropagation();App.cliente.edit('${cliente.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            },
+
             renderClientes: (filter = '') => {
                 const list = document.getElementById('clientes-list');
                 if (!list) return;
@@ -8995,6 +9172,14 @@
                                 ${c.origemLead ? `<div class="client-row"><i class="fas fa-map-signs"></i> <span class="origem-badge">${Utils.getOrigemLabel(c.origemLead)}</span></div>` : ''}
                                 ${c.profissao && App.cliente.PROF_LABELS ? `<div class="client-row"><i class="fas fa-briefcase"></i> <span class="origem-badge" style="background:rgba(196,114,74,0.12);color:var(--accent);">${App.cliente.PROF_LABELS[c.profissao] || c.profissao}</span></div>` : ''}
                                 <div class="client-row"><i class="fas fa-filter"></i> Funil: ${etapa.nome} (${diasNaEtapa} dias)${isParado ? ' <span class="stale-badge">⚠️ Parado</span>' : ''}</div>
+                                ${(() => {
+                                    const pc = Utils.calcMaxImovelCliente(c);
+                                    if (!pc) return '';
+                                    return `<div class="client-row" style="margin-top:4px;padding:6px 8px;background:linear-gradient(135deg,rgba(46,74,49,0.07),rgba(46,74,49,0.02));border-radius:8px;border-left:2px solid var(--primary);">
+                                        <i class="fas fa-home" style="color:var(--primary);"></i>
+                                        <span style="font-size:0.8rem;"> Pode comprar até <strong style="color:var(--primary);">${Utils.formatCurrency(pc.maxImovelPelaRenda)}</strong> · <span style="color:var(--text-secondary);">${pc.maxMeses}m · ${pc.taxaInfo.taxa}% a.a.</span></span>
+                                    </div>`;
+                                })()}
                             </div>
                             <div class="client-actions">
                                 <button class="btn-whatsapp-client" onclick="event.stopPropagation(); App.whatsapp.confirmOpenCliente('${c.id}')">
@@ -9597,6 +9782,38 @@
                         <div class="warning-note">
                             <i class="fas fa-exclamation-triangle"></i> Os valores informados podem sofrer alteração sem aviso prévio.
                         </div>
+
+                        ${(() => {
+                            // Usa valor de avaliação se disponível, senão precoVenda
+                            const baseCalc = i.valorAvaliacao || i.precoVenda;
+                            if (!baseCalc || i.transacao === 'aluguel') return '';
+                            const ri = Utils.calcRendaIdealImovel(baseCalc);
+                            if (!ri) return '';
+                            const m = ri.melhor;
+                            const usandoAvaliacao = !!i.valorAvaliacao;
+                            return `
+                        <div class="details-section" style="background: linear-gradient(135deg, rgba(46,74,49,0.09), rgba(46,74,49,0.02)); border: 1.5px solid rgba(46,74,49,0.20); margin-top:4px;">
+                            <div class="details-section-title" style="color:var(--primary);"><i class="fas fa-user-check"></i> RENDA IDEAL — CAIXA ECONÔMICA</div>
+                            ${usandoAvaliacao ? `<div style="font-size:0.75rem;color:var(--accent);background:rgba(196,114,74,0.10);border-radius:7px;padding:6px 10px;margin-bottom:10px;">📋 Baseado no <strong>Valor de Avaliação</strong>: ${Utils.formatCurrency(baseCalc)}</div>` : `<div style="font-size:0.75rem;color:var(--text-secondary);background:rgba(0,0,0,0.04);border-radius:7px;padding:6px 10px;margin-bottom:10px;">📋 Baseado no <strong>Preço de Venda</strong>: ${Utils.formatCurrency(baseCalc)} · Informe o Valor de Avaliação para maior precisão.</div>`}
+                            <div style="background:white;border-radius:10px;padding:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(30,50,32,0.08);">
+                                <div style="font-size:0.72rem;color:var(--text-secondary);font-weight:700;letter-spacing:0.5px;margin-bottom:6px;">RENDA MÍNIMA NECESSÁRIA</div>
+                                <div style="font-size:1.6rem;font-weight:900;color:var(--primary);">${Utils.formatCurrency(m.rendaNecessaria)}<span style="font-size:0.85rem;font-weight:500;color:var(--text-secondary)">/mês</span></div>
+                                <div style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">Prestação estimada: <strong>${Utils.formatCurrency(m.prestacao)}/mês</strong> · Taxa: ${m.taxa}% a.a.</div>
+                                <div style="font-size:0.75rem;color:var(--text-secondary);">Prazo: 420 meses · Entrada mín.: ${Utils.formatCurrency(baseCalc * 0.2)} (20%)</div>
+                            </div>
+                            <div style="font-size:0.78rem;font-weight:700;color:var(--dark);margin-bottom:6px;">Tabela por faixa de renda (420 meses):</div>
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                ${ri.todas.map(f => {
+                                    const ok = f.rendaNecessaria <= f.rendaRef;
+                                    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:8px;background:${ok ? 'rgba(46,125,66,0.08)' : 'rgba(184,48,48,0.05)'};border:1px solid ${ok ? 'rgba(46,125,66,0.20)' : 'rgba(184,48,48,0.12)'};">
+                                        <span style="font-size:0.75rem;color:var(--dark);">${f.nome}</span>
+                                        <span style="font-size:0.8rem;font-weight:700;color:${ok ? 'var(--success)' : 'var(--danger)'};">${Utils.formatCurrency(f.rendaNecessaria)}/mês ${ok ? '✅' : '⛔'}</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
+                            <div style="margin-top:8px;font-size:0.72rem;color:var(--text-secondary);">✅ = faixa elegível · ⛔ = renda insuficiente nessa faixa de taxa</div>
+                        </div>`;
+                        })()}
                         
                         <div class="details-actions">
                             <button class="btn-details btn-details-primary" onclick="App.imovel.edit('${i.id}')">
@@ -9637,8 +9854,8 @@
 
                 const settings = UI.data.settings || {};
                 const imovel = cliente.imovelInteresseId ? UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                const taxaJuros = cliente.taxaJuros || settings.taxaJuros || 8.5;
-                const simulacao = Utils.simulateFinancing(cliente, imovel, taxaJuros);
+                const simulacao = Utils.simulateFinancing(cliente, imovel, null);
+                const taxaJuros = simulacao.taxaAnual || 8.5;
 
                 const etapa = UI.data.funilEtapas.find(e => e.id === cliente.etapaFunil) || { nome: 'Lead', cor: '#707070' };
                 const idade = cliente.dataNascimento ? Utils.calculateAge(cliente.dataNascimento) : '-';
@@ -9646,12 +9863,52 @@
                 const contatos = cliente.contatos || 0;
 
                 let simulacaoHTML = '';
-                if (simulacao.error) {
-                    simulacaoHTML = `<div class="warning-note">${simulacao.error}</div>`;
-                } else {
-                    simulacaoHTML = `
+                // Painel: Poder de Compra (independente de imóvel)
+                const poderCompra = Utils.calcMaxImovelCliente(cliente);
+                if (poderCompra) {
+                    simulacaoHTML += `
+                        <div class="details-section" style="background: linear-gradient(135deg, rgba(46,74,49,0.08), rgba(46,74,49,0.03)); border: 1.5px solid rgba(46,74,49,0.18); border-radius: 14px; margin-bottom:14px;">
+                            <div class="details-section-title" style="color:var(--primary);"><i class="fas fa-home"></i> PODER DE COMPRA — CAIXA ECONÔMICA</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                                <div style="background:white;border-radius:10px;padding:12px;border-left:3px solid var(--primary);box-shadow:0 2px 8px rgba(30,50,32,0.08);">
+                                    <div style="font-size:0.72rem;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">VALOR MÁX. DO IMÓVEL</div>
+                                    <div style="font-size:1.15rem;font-weight:900;color:var(--primary);">${Utils.formatCurrency(poderCompra.maxImovelPelaRenda)}</div>
+                                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">com 20% de entrada</div>
+                                </div>
+                                <div style="background:white;border-radius:10px;padding:12px;border-left:3px solid var(--accent);box-shadow:0 2px 8px rgba(30,50,32,0.08);">
+                                    <div style="font-size:0.72rem;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">MÁX. FINANCIÁVEL (80%)</div>
+                                    <div style="font-size:1.15rem;font-weight:900;color:var(--accent);">${Utils.formatCurrency(poderCompra.maxFinanciadoRenda)}</div>
+                                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">pela renda e pelo prazo</div>
+                                </div>
+                                <div style="background:white;border-radius:10px;padding:12px;border-left:3px solid var(--warning);box-shadow:0 2px 8px rgba(30,50,32,0.08);">
+                                    <div style="font-size:0.72rem;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">PRAZO MÁXIMO</div>
+                                    <div style="font-size:1.15rem;font-weight:900;color:var(--warning);">${poderCompra.maxMeses} meses</div>
+                                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">${Math.floor(poderCompra.maxMeses/12)} anos — termina com ${poderCompra.idadeFimContrato.toFixed(0)} anos</div>
+                                </div>
+                                <div style="background:white;border-radius:10px;padding:12px;border-left:3px solid var(--success);box-shadow:0 2px 8px rgba(30,50,32,0.08);">
+                                    <div style="font-size:0.72rem;color:var(--text-secondary);font-weight:600;margin-bottom:4px;">PRESTAÇÃO MÁXIMA (30%)</div>
+                                    <div style="font-size:1.15rem;font-weight:900;color:var(--success);">${Utils.formatCurrency(poderCompra.maxPrestacao)}</div>
+                                    <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:2px;">de ${Utils.formatCurrency(cliente.rendaMensal)} de renda</div>
+                                </div>
+                            </div>
+                            <div style="background:rgba(196,114,74,0.08);border-radius:8px;padding:10px;font-size:0.8rem;color:var(--dark);">
+                                🏦 <strong>Taxa aplicada:</strong> ${poderCompra.taxaInfo.taxa.toFixed(2)}% a.a. — <em>${poderCompra.taxaInfo.faixa}</em>
+                                <br>📋 <strong>Regra:</strong> Idade (${poderCompra.idadeAtual} anos) + Prazo ≤ 80 anos • Max 30% da renda comprometida • Caixa financia até 80% do imóvel
+                            </div>
+                        </div>`;
+                } else if (cliente.dataNascimento && cliente.rendaMensal) {
+                    const idadeAtual = Utils.calculateAge(cliente.dataNascimento);
+                    if (idadeAtual >= 80) {
+                        simulacaoHTML += `<div class="warning-note" style="background:#fee2e2;color:#991b1b;">❌ Cliente com ${idadeAtual} anos não pode financiar pela Caixa. Limite: Idade + Prazo ≤ 80 anos.</div>`;
+                    }
+                }
+
+                if (simulacao.error && !poderCompra) {
+                    simulacaoHTML += `<div class="warning-note">${simulacao.error}</div>`;
+                } else if (!simulacao.error) {
+                    simulacaoHTML += `
                         <div class="details-section" style="background: rgba(196,114,74,0.10); border-left-color: var(--accent);">
-                            <div class="details-section-title"><i class="fas fa-calculator"></i> SIMULAÇÃO DE FINANCIAMENTO</div>
+                            <div class="details-section-title"><i class="fas fa-calculator"></i> SIMULAÇÃO — IMÓVEL SELECIONADO</div>
                             <div class="details-info-grid">
                                 <div class="info-item">
                                     <div class="info-label">Valor do Imóvel</div>
@@ -9670,8 +9927,8 @@
                                     <div class="info-value">${Utils.formatCurrency(simulacao.maxPrestacao)}</div>
                                 </div>
                                 <div class="info-item">
-                                    <div class="info-label">Prazo Máx. (meses)</div>
-                                    <div class="info-value">${simulacao.prazoMeses}</div>
+                                    <div class="info-label">Prazo (Idade ${simulacao.idadeAtual}a → ${simulacao.idadeFimContrato ? simulacao.idadeFimContrato.toFixed(0) : '?'}a)</div>
+                                    <div class="info-value">${simulacao.prazoMeses} meses</div>
                                 </div>
                                 <div class="info-item">
                                     <div class="info-label">Financiável pela Renda</div>
@@ -9690,13 +9947,16 @@
                                     <div class="info-value">${Utils.formatCurrency(simulacao.prestacaoMensal)}</div>
                                 </div>
                                 <div class="info-item">
-                                    <div class="info-label">Taxa de Juros Anual</div>
-                                    <div class="info-value">${simulacao.taxaAnual.toFixed(2)}%</div>
+                                    <div class="info-label">Taxa Caixa (faixa renda)</div>
+                                    <div class="info-value">${simulacao.taxaAnual.toFixed(2)}% a.a.</div>
                                 </div>
+                            </div>
+                            <div style="background:rgba(0,0,0,0.04);border-radius:8px;padding:8px;font-size:0.75rem;color:var(--text-secondary);margin-top:4px;">
+                                🏦 Faixa: ${simulacao.taxaFaixa || '—'}
                             </div>
                             ${simulacao.valorFinanciavel < simulacao.maxFinanciamento ? 
                                 '<div class="warning-note" style="margin-top:8px;">⚠️ O valor financiado está limitado pela renda do cliente.</div>' : 
-                                '<div class="warning-note" style="background: #d1fae5; color: #065f46;">✅ O cliente pode financiar até 80% do valor do imóvel.</div>'}
+                                '<div class="warning-note" style="background: #d1fae5; color: #065f46; margin-top:8px;">✅ O cliente pode financiar até 80% do valor do imóvel.</div>'}
                         </div>
                     `;
                 }
@@ -19256,6 +19516,8 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 document.getElementById('nota-id').value = '';
                 document.getElementById('nota-titulo').value = '';
                 document.getElementById('nota-conteudo').value = '';
+                document.getElementById('nota-imagens-data').value = '[]';
+                Notas._renderImagensGrid([]);
                 document.getElementById('nota-categoria').value = 'geral';
                 document.getElementById('nota-fixada').checked = false;
                 document.getElementById('nota-cor').value = '#F59E0B';
@@ -19282,6 +19544,10 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 document.querySelectorAll('.nota-cor-btn').forEach(b => {
                     b.classList.toggle('active', b.getAttribute('data-cor') === cor);
                 });
+                // Carrega imagens existentes
+                const imgs = n.imagens || [];
+                document.getElementById('nota-imagens-data').value = JSON.stringify(imgs);
+                this._renderImagensGrid(imgs);
                 document.getElementById('title-nota').textContent = 'Editar Nota';
                 UI.openModal('nota');
             },
@@ -19299,6 +19565,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 if (!conteudo) { Utils.toast('Escreva o conteúdo da nota', 'error'); return; }
                 const id = document.getElementById('nota-id').value || Utils.id();
                 const existing = this.items.find(x => x.id === id);
+                const imagens = JSON.parse(document.getElementById('nota-imagens-data').value || '[]');
                 const nota = {
                     id,
                     titulo: document.getElementById('nota-titulo').value.trim(),
@@ -19306,6 +19573,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     categoria: document.getElementById('nota-categoria').value,
                     fixada: document.getElementById('nota-fixada').checked,
                     cor: document.getElementById('nota-cor').value || '#F59E0B',
+                    imagens,
                     dataCriacao: existing?.dataCriacao || new Date().toISOString(),
                     dataAtualizacao: new Date().toISOString(),
                 };
@@ -19351,6 +19619,62 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 this.render();
             },
 
+            async addImagens(input) {
+                const files = Array.from(input.files || []);
+                if (!files.length) return;
+                const existing = JSON.parse(document.getElementById('nota-imagens-data').value || '[]');
+                const MAX = 10;
+                if (existing.length >= MAX) { Utils.toast('Máximo de 10 imagens por nota', 'error'); return; }
+                Utils.toast('Processando imagens...');
+                let adicionadas = 0;
+                for (const file of files) {
+                    if (existing.length + adicionadas >= MAX) break;
+                    if (!file.type.startsWith('image/')) { Utils.toast(`${file.name}: apenas imagens são permitidas`, 'error'); continue; }
+                    try {
+                        const base64 = await Utils.readImage(file);
+                        const compressed = await Utils.compressImage(base64, 0.82, 1200);
+                        existing.push(compressed);
+                        adicionadas++;
+                    } catch(e) {
+                        Utils.toast(`Erro ao processar ${file.name}`, 'error');
+                    }
+                }
+                document.getElementById('nota-imagens-data').value = JSON.stringify(existing);
+                this._renderImagensGrid(existing);
+                if (adicionadas > 0) Utils.toast(`✅ ${adicionadas} imagem(ns) adicionada(s)`);
+                input.value = '';
+            },
+
+            _renderImagensGrid(imgs) {
+                const grid = document.getElementById('nota-imagens-grid');
+                if (!grid) return;
+                if (!imgs || !imgs.length) { grid.innerHTML = ''; return; }
+                grid.innerHTML = imgs.map((src, i) => `
+                    <div style="position:relative;border-radius:10px;overflow:hidden;height:90px;background:var(--light);">
+                        <img src="${src}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                        <button type="button" onclick="Notas._removeImagem(${i})" style="position:absolute;top:4px;right:4px;background:rgba(184,48,48,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>`).join('');
+            },
+
+            _removeImagem(idx) {
+                const imgs = JSON.parse(document.getElementById('nota-imagens-data').value || '[]');
+                imgs.splice(idx, 1);
+                document.getElementById('nota-imagens-data').value = JSON.stringify(imgs);
+                this._renderImagensGrid(imgs);
+            },
+
+            viewImg(notaId, imgIdx) {
+                const nota = this.items.find(x => x.id === notaId);
+                if (!nota || !nota.imagens || !nota.imagens[imgIdx]) return;
+                const viewer = document.getElementById('nota-img-viewer');
+                const img = document.getElementById('nota-img-viewer-src');
+                if (!viewer || !img) return;
+                img.src = nota.imagens[imgIdx];
+                viewer.style.display = 'flex';
+            },
+
             render() {
                 const list = document.getElementById('notas-list');
                 if (!list) return;
@@ -19391,6 +19715,16 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     const dtStr = dt.toLocaleDateString('pt-BR', { day:'2-digit', month:'short', year:'2-digit' }) +
                         ' ' + dt.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
                     const conteudoEscapado = (n.conteudo || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+                    const imgs = n.imagens || [];
+                    const imgStrip = imgs.length > 0 ? `
+                        <div style="display:grid;grid-template-columns:repeat(${Math.min(imgs.length,3)},1fr);gap:4px;margin:8px 0 4px;">
+                            ${imgs.slice(0,6).map((src, ii) => `
+                                <div style="position:relative;border-radius:8px;overflow:hidden;height:72px;cursor:pointer;" onclick="event.stopPropagation();Notas.viewImg('${n.id}',${ii})">
+                                    <img src="${src}" style="width:100%;height:100%;object-fit:cover;" loading="lazy">
+                                    ${imgs.length > 6 && ii === 5 ? `<div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:1.1rem;">+${imgs.length-5}</div>` : ''}
+                                </div>`).join('')}
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:4px;"><i class="fas fa-images"></i> ${imgs.length} imagem${imgs.length>1?'s':''}</div>` : '';
                     return `
                     <div class="nota-card" style="border-top:4px solid ${cor};">
                         <div class="nota-card-body">
@@ -19399,6 +19733,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                                 ${n.fixada ? '<i class="fas fa-thumbtack nota-pin-icon"></i>' : ''}
                             </div>
                             <div class="nota-card-content">${conteudoEscapado}</div>
+                            ${imgStrip}
                         </div>
                         <div class="nota-card-footer">
                             <span class="nota-cat-badge" style="background:${cor}22;color:${cor};">${catLabel}</span>
