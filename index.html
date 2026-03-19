@@ -8332,10 +8332,12 @@
                 
                 document.getElementById('dash-vendas').innerText = Utils.formatCurrency(totalVendas);
                 
-                // Comissão prevista: soma das comissões dos imóveis vinculados a clientes em etapa de Negociação
-                // Etapas de negociação: todas exceto 'lead' e 'venda'
-                const etapasNegociacao = ['contato', 'cpf', 'sem-restricao', 'documentacao', 'aprovado', 'contrato'];
-                const clientesEmNegociacao = clientes.filter(c => etapasNegociacao.includes(c.etapaFunil) && c.imovelInteresseId);
+                // Comissão prevista e contagem: somente clientes na etapa de funil "Negociações"
+                // Identifica dinamicamente o(s) stage(s) cujo nome contenha "negoci" (case-insensitive)
+                const etapasNegociacaoIds = (UI.data.funilEtapas || [])
+                    .filter(e => /negoci/i.test(e.nome))
+                    .map(e => e.id);
+                const clientesEmNegociacao = clientes.filter(c => etapasNegociacaoIds.includes(c.etapaFunil) && c.imovelInteresseId);
                 let totalComissaoPrevista = 0;
                 const settings = UI.data.settings || {};
                 const taxaComissaoGlobal = parseFloat(settings.comissao) || 5;
@@ -8350,9 +8352,7 @@
                 const comissaoEl = document.getElementById('dash-comissao');
                 if (comissaoEl) comissaoEl.innerText = Utils.formatCurrency(totalComissaoPrevista);
                 
-                const negociacoes = clientes.filter(c => 
-                    c.etapaFunil && c.etapaFunil !== 'lead' && c.etapaFunil !== 'venda'
-                ).length;
+                const negociacoes = clientes.filter(c => etapasNegociacaoIds.includes(c.etapaFunil)).length;
                 document.getElementById('dash-negociacoes').innerText = negociacoes;
                 
                 const destaques = imoveis.filter(i => i.destaque).length;
@@ -8373,12 +8373,17 @@
                 UI.renderWaitingList();
                 
                 const negociacoesList = document.getElementById('negociacoes-list');
-                const etapasNeg = ['contato', 'cpf', 'sem-restricao', 'documentacao', 'aprovado', 'contrato'];
+                // Somente clientes na etapa de funil "Negociações" (identificada dinamicamente pelo nome)
+                const etapasNegIds = (UI.data.funilEtapas || [])
+                    .filter(e => /negoci/i.test(e.nome))
+                    .map(e => e.id);
                 const clientesNegociacao = clientes
-                    .filter(c => etapasNeg.includes(c.etapaFunil))
+                    .filter(c => etapasNegIds.includes(c.etapaFunil))
                     .sort((a, b) => {
-                        const peso = { 'contrato': 6, 'aprovado': 5, 'documentacao': 4, 'sem-restricao': 3, 'cpf': 2, 'contato': 1 };
-                        return (peso[b.etapaFunil] || 0) - (peso[a.etapaFunil] || 0);
+                        // Ordena pela ordem da etapa no funil (maior ordem = mais avançado = primeiro)
+                        const ordemA = (UI.data.funilEtapas.find(e => e.id === a.etapaFunil)?.ordem) || 0;
+                        const ordemB = (UI.data.funilEtapas.find(e => e.id === b.etapaFunil)?.ordem) || 0;
+                        return ordemB - ordemA;
                     })
                     .slice(0, 5);
 
