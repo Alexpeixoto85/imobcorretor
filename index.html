@@ -4912,6 +4912,35 @@
                     </select>
                 </div>
 
+                <!-- DADOS DO CÔNJUGE — aparece automaticamente quando casado ou união estável -->
+                <div id="conjuge-wrap" style="display:none;margin-bottom:16px;">
+                    <div style="background:linear-gradient(135deg,rgba(79,70,229,0.1),rgba(79,70,229,0.04));border:1px solid rgba(79,70,229,0.2);border-radius:14px;padding:14px 14px 10px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                            <span style="font-size:1.1rem;">💍</span>
+                            <span style="font-size:0.85rem;font-weight:800;color:var(--indigo);">Dados do Cônjuge / Convivente</span>
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label class="form-label">Nome Completo do Cônjuge</label>
+                            <input type="text" id="c-conjuge-nome" class="form-control" placeholder="Nome completo">
+                        </div>
+                        <div class="form-group" style="margin-bottom:10px;">
+                            <label class="form-label">CPF do Cônjuge</label>
+                            <input type="text" id="c-conjuge-cpf" class="form-control" placeholder="000.000.000-00" maxlength="14" oninput="Utils.maskCPF(this)">
+                        </div>
+                        <div class="form-group" style="margin-bottom:4px;">
+                            <label class="form-label">Cônjuge possui renda formal?</label>
+                            <select id="c-conjuge-renda-formal" class="form-control" onchange="App.cliente.onConjugeRendaFormalChange(this.value)">
+                                <option value="">Não informado</option>
+                                <option value="sim">Sim — possui emprego/renda declarada</option>
+                                <option value="nao">Não — sem renda formal</option>
+                            </select>
+                        </div>
+                        <div id="conjuge-renda-obs" style="display:none;margin-top:8px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:8px;padding:9px 12px;font-size:0.78rem;color:#92660a;line-height:1.5;">
+                            ⚠️ <strong>Minha Casa Minha Vida:</strong> cônjuge com renda formal deve obrigatoriamente compor renda. Serão exigidos documentos de renda além de RG e CPF.
+                        </div>
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label class="form-label">Tipo de Interesse</label>
                     <select id="c-tipo-interesse" class="form-control" onchange="App.cliente.toggleLoteDocumentacao()">
@@ -5083,6 +5112,16 @@
             <div class="form-group">
                 <label class="form-label">Valor de Avaliação (R$)</label>
                 <input type="text" id="envio-valor-avaliacao" class="form-control" placeholder="0,00" inputmode="numeric" onkeydown="Utils.keydownMoneyReais(event, this)" readonly onfocus="this.removeAttribute('readonly')">
+            </div>
+
+            <!-- Regime de Financiamento -->
+            <div class="form-group">
+                <label class="form-label">Regime de Financiamento</label>
+                <select id="envio-regime-financiamento" class="form-control" onchange="App.cliente._atualizarPreviewEmail(); App.cliente._atualizarListaDocs();">
+                    <option value="sbpe">SBPE — Sistema Brasileiro de Poupança e Empréstimo</option>
+                    <option value="mcmv">Minha Casa Minha Vida (FGTS)</option>
+                </select>
+                <div id="envio-regime-obs" style="margin-top:6px;font-size:0.75rem;color:var(--text-secondary);line-height:1.5;padding:8px 10px;background:var(--light);border-radius:8px;border-left:3px solid var(--indigo);display:none;"></div>
             </div>
 
             <!-- Preview do corpo do email -->
@@ -13063,6 +13102,9 @@
                     const profissao = document.getElementById('c-profissao')?.value || '';
                     const estadoCivil = document.getElementById('c-estado-civil')?.value || '';
                     const profissaoDocsChecked = JSON.parse(document.getElementById('c-profissao-docs-checked')?.value || '{}');
+                    const conjugeNome = document.getElementById('c-conjuge-nome')?.value?.trim() || '';
+                    const conjugeCpf = document.getElementById('c-conjuge-cpf')?.value?.trim() || '';
+                    const conjugeRendaFormal = document.getElementById('c-conjuge-renda-formal')?.value || '';
 
                     const clienteExistente = UI.data.clientes.find(c => c.id === id);
                     const contatos = clienteExistente?.contatos || 0;
@@ -13073,6 +13115,7 @@
                         faixaPreco, observacoes, origemLead, documentos,
                         tipoInteresse, loteDocsChecked,
                         profissao, estadoCivil, profissaoDocsChecked,
+                        conjugeNome, conjugeCpf, conjugeRendaFormal,
                         dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0],
                         dataAtualizacao: new Date().toISOString(),
@@ -13136,6 +13179,18 @@
                     const estadoCivilEl = document.getElementById('c-estado-civil');
                     if(profissaoEl) profissaoEl.value = cliente.profissao || '';
                     if(estadoCivilEl) estadoCivilEl.value = cliente.estadoCivil || '';
+                    // Carregar dados do cônjuge
+                    const conjugeNomeEl = document.getElementById('c-conjuge-nome');
+                    const conjugeCpfEl = document.getElementById('c-conjuge-cpf');
+                    const conjugeRendaEl = document.getElementById('c-conjuge-renda-formal');
+                    if(conjugeNomeEl) conjugeNomeEl.value = cliente.conjugeNome || '';
+                    if(conjugeCpfEl) conjugeCpfEl.value = cliente.conjugeCpf || '';
+                    if(conjugeRendaEl) conjugeRendaEl.value = cliente.conjugeRendaFormal || '';
+                    App.cliente._toggleConjugeWrap(cliente.estadoCivil || '');
+                    if(cliente.conjugeRendaFormal === 'sim') {
+                        const obs = document.getElementById('conjuge-renda-obs');
+                        if(obs) obs.style.display = 'block';
+                    }
                     // Carregar docs por profissão
                     const profChecked = cliente.profissaoDocsChecked || {};
                     const profHidden = document.getElementById('c-profissao-docs-checked');
@@ -14140,10 +14195,27 @@
                 },
 
                 onEstadoCivilChange: function(estadoCivil) {
+                    App.cliente._toggleConjugeWrap(estadoCivil);
                     const profissao = document.getElementById('c-profissao')?.value || '';
                     if (!profissao) return;
                     const checked = JSON.parse(document.getElementById('c-profissao-docs-checked')?.value || '{}');
                     App.cliente.renderProfissaoDocs(profissao, checked, estadoCivil);
+                },
+
+                _toggleConjugeWrap: function(estadoCivil) {
+                    const wrap = document.getElementById('conjuge-wrap');
+                    if (!wrap) return;
+                    const needsConj = estadoCivil === 'casado' || estadoCivil === 'uniao_estavel';
+                    wrap.style.display = needsConj ? 'block' : 'none';
+                    if (!needsConj) {
+                        const obs = document.getElementById('conjuge-renda-obs');
+                        if(obs) obs.style.display = 'none';
+                    }
+                },
+
+                onConjugeRendaFormalChange: function(val) {
+                    const obs = document.getElementById('conjuge-renda-obs');
+                    if (obs) obs.style.display = val === 'sim' ? 'block' : 'none';
                 },
 
                 renderProfissaoDocs: function(profissao, checked, estadoCivil) {
@@ -14516,23 +14588,64 @@
                     const listaWrap = document.getElementById('envio-docs-lista-wrap');
                     const listaEl = document.getElementById('envio-docs-lista');
                     const btnZip = document.getElementById('envio-btn-baixar-zip');
-                    if (App.cliente._envioDocsData.length > 0) {
+                    const needsConj = cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel';
+                    const relacaoLabel = cliente.estadoCivil === 'uniao_estavel' ? 'Companheiro(a)' : 'Cônjuge';
+                    const conjDocs = needsConj ? App.cliente.PROF_DOCS_CONJUGAL : [];
+                    const conjChecked = cliente.profissaoDocsChecked || {};
+
+                    if (App.cliente._envioDocsData.length > 0 || needsConj) {
                         if (listaWrap) listaWrap.style.display = 'block';
-                        if (btnZip) btnZip.style.display = 'flex';
-                        if (listaEl) listaEl.innerHTML = App.cliente._envioDocsData.map((d, i) => `
-                            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < App.cliente._envioDocsData.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
-                                <i class="fas fa-file-${d.nome && d.nome.match(/\.pdf$/i) ? 'pdf' : 'image'}" style="color:${d.nome && d.nome.match(/\.pdf$/i) ? 'var(--danger)' : 'var(--sky)'};font-size:0.9rem;flex-shrink:0;"></i>
-                                <div style="flex:1;min-width:0;">
-                                    <div style="font-size:0.82rem;font-weight:600;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.tipoLabel || d.nome}</div>
-                                    <div style="font-size:0.7rem;color:var(--text-secondary);">${d.nome}</div>
-                                </div>
-                                <i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;"></i>
-                            </div>`).join('');
+                        if (btnZip && App.cliente._envioDocsData.length > 0) btnZip.style.display = 'flex';
+
+                        let html = '';
+
+                        // — Seção: Documentos do Titular —
+                        if (App.cliente._envioDocsData.length > 0) {
+                            html += `<div style="font-size:0.72rem;font-weight:800;color:var(--primary);letter-spacing:0.04em;text-transform:uppercase;padding:4px 0 6px;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-user" style="font-size:0.7rem;"></i> Documentos do Titular
+                            </div>`;
+                            html += App.cliente._envioDocsData.map((d, i) => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < App.cliente._envioDocsData.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+                                    <i class="fas fa-file-${d.nome && d.nome.match(/\.pdf$/i) ? 'pdf' : 'image'}" style="color:${d.nome && d.nome.match(/\.pdf$/i) ? 'var(--danger)' : 'var(--sky)'};font-size:0.9rem;flex-shrink:0;"></i>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.tipoLabel || d.nome}</div>
+                                        <div style="font-size:0.7rem;color:var(--text-secondary);">${d.nome}</div>
+                                    </div>
+                                    <i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;"></i>
+                                </div>`).join('');
+                        }
+
+                        // — Seção: Documentos do Cônjuge —
+                        if (needsConj && conjDocs.length > 0) {
+                            html += `<div style="font-size:0.72rem;font-weight:800;color:var(--indigo);letter-spacing:0.04em;text-transform:uppercase;padding:10px 0 6px;display:flex;align-items:center;gap:6px;${App.cliente._envioDocsData.length > 0 ? 'border-top:1px solid var(--border);margin-top:4px;' : ''}">
+                                <i class="fas fa-heart" style="font-size:0.7rem;"></i> Documentos do ${relacaoLabel}
+                            </div>`;
+                            html += conjDocs.map((d, i) => {
+                                const done = !!conjChecked[d.id];
+                                return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < conjDocs.length-1 ? 'border-bottom:1px solid var(--border);' : ''}${done ? 'opacity:0.6;' : ''}">
+                                    <span style="font-size:1rem;flex-shrink:0;">${d.icon}</span>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${done ? 'text-decoration:line-through;' : ''}">${d.label}</div>
+                                        <div style="font-size:0.7rem;color:var(--text-secondary);">${d.obs}</div>
+                                    </div>
+                                    ${done
+                                        ? '<i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;"></i>'
+                                        : '<i class="fas fa-clock" style="color:var(--warning);font-size:0.85rem;flex-shrink:0;"></i>'}
+                                </div>`;
+                            }).join('');
+                        }
+
+                        if (listaEl) listaEl.innerHTML = html;
                     } else {
                         if (listaWrap) listaWrap.style.display = 'none';
                         if (btnZip) btnZip.style.display = 'none';
                     }
 
+                    // Resetar regime e mostrar obs do cônjuge se aplicável
+                    const regimeEl = document.getElementById('envio-regime-financiamento');
+                    if (regimeEl) regimeEl.value = 'sbpe';
+                    App.cliente._atualizarObsRegime();
+                    App.cliente._atualizarListaDocs();
                     App.cliente._atualizarPreviewEmail();
                     ['envio-empreendimento','envio-corretor','envio-gerente','envio-valor-avaliacao'].forEach(id => {
                         const el = document.getElementById(id);
@@ -14542,11 +14655,147 @@
                     UI.openModal('envio-docs');
                 },
 
+                _getRegimeFinanciamento: function() {
+                    return document.getElementById('envio-regime-financiamento')?.value || 'sbpe';
+                },
+
+                _atualizarObsRegime: function() {
+                    const obsEl = document.getElementById('envio-regime-obs');
+                    if (!obsEl) return;
+                    const regime = App.cliente._getRegimeFinanciamento();
+                    const clienteId = App.cliente._envioClienteId;
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    const needsConj = cliente && (cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel');
+                    if (!needsConj) { obsEl.style.display = 'none'; return; }
+                    if (regime === 'sbpe') {
+                        obsEl.style.display = 'block';
+                        obsEl.innerHTML = '🏦 <strong>SBPE:</strong> obrigatório RG e CPF do cônjuge. Composição de renda é opcional.';
+                    } else {
+                        const temRenda = cliente.conjugeRendaFormal === 'sim';
+                        obsEl.style.display = 'block';
+                        obsEl.innerHTML = temRenda
+                            ? '🏠 <strong>MCMV:</strong> cônjuge com renda formal — obrigatório compor renda. Exigidos RG, CPF e documentos de renda.'
+                            : '🏠 <strong>MCMV:</strong> cônjuge sem renda formal — exigidos apenas RG e CPF.';
+                    }
+                },
+
+                _getDocsConjuge: function(cliente, regime) {
+                    // Sempre obrigatório para casados/união estável: RG e CPF
+                    // MCMV + cônjuge com renda formal: também exige documentos de renda
+                    const needsConj = cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel';
+                    if (!needsConj) return [];
+
+                    const docsBase = [
+                        { id: 'conj_rg_cnh',    label: 'RG ou CNH do Cônjuge',                icon: '🪪', obs: 'Documento com foto e dentro da validade — obrigatório em qualquer regime' },
+                        { id: 'conj_cpf',       label: 'CPF do Cônjuge',                       icon: '📄', obs: 'Obrigatório em qualquer regime de financiamento' },
+                    ];
+
+                    const docsRenda = [
+                        { id: 'conj_comp_renda',  label: 'Comprovante de Renda do Cônjuge',      icon: '💵', obs: 'Holerite, extrato ou declaração — obrigatório no MCMV quando há renda formal' },
+                        { id: 'conj_extrato',     label: 'Extrato Bancário Cônjuge (3 meses)',    icon: '🏧', obs: 'Últimos 3 meses da conta onde recebe — obrigatório no MCMV' },
+                        { id: 'conj_ctps',        label: 'Carteira de Trabalho do Cônjuge',       icon: '📋', obs: 'Páginas de identificação e contratos — MCMV (se CLT)' },
+                        { id: 'conj_ir',          label: 'Declaração de IR do Cônjuge',           icon: '🧾', obs: 'Última declaração de Imposto de Renda (se declarante)' },
+                    ];
+
+                    const isMcmv = regime === 'mcmv';
+                    const conjugeTemRenda = cliente.conjugeRendaFormal === 'sim';
+
+                    if (isMcmv && conjugeTemRenda) {
+                        return [...docsBase, ...docsRenda];
+                    }
+                    return docsBase;
+                },
+
+                _atualizarListaDocs: function() {
+                    const clienteId = App.cliente._envioClienteId;
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+                    const regime = App.cliente._getRegimeFinanciamento();
+                    App.cliente._atualizarObsRegime();
+
+                    const listaWrap = document.getElementById('envio-docs-lista-wrap');
+                    const listaEl = document.getElementById('envio-docs-lista');
+                    const btnZip = document.getElementById('envio-btn-baixar-zip');
+
+                    const needsConj = cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel';
+                    const relacaoLabel = cliente.estadoCivil === 'uniao_estavel' ? 'Companheiro(a)' : 'Cônjuge';
+                    const conjDocs = App.cliente._getDocsConjuge(cliente, regime);
+                    const conjChecked = cliente.profissaoDocsChecked || {};
+                    const temDocsAnexados = App.cliente._envioDocsData.length > 0;
+
+                    if (temDocsAnexados || needsConj) {
+                        if (listaWrap) listaWrap.style.display = 'block';
+                        if (btnZip && temDocsAnexados) btnZip.style.display = 'flex';
+
+                        let html = '';
+
+                        // — Documentos do Titular —
+                        if (temDocsAnexados) {
+                            html += `<div style="font-size:0.72rem;font-weight:800;color:var(--primary);letter-spacing:0.04em;text-transform:uppercase;padding:4px 0 6px;display:flex;align-items:center;gap:6px;">
+                                <i class="fas fa-user" style="font-size:0.7rem;"></i> Documentos do Titular
+                            </div>`;
+                            html += App.cliente._envioDocsData.map((d, i) => `
+                                <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < App.cliente._envioDocsData.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}">
+                                    <i class="fas fa-file-${d.nome && d.nome.match(/\.pdf$/i) ? 'pdf' : 'image'}" style="color:${d.nome && d.nome.match(/\.pdf$/i) ? 'var(--danger)' : 'var(--sky)'};font-size:0.9rem;flex-shrink:0;"></i>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:0.82rem;font-weight:600;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.tipoLabel || d.nome}</div>
+                                        <div style="font-size:0.7rem;color:var(--text-secondary);">${d.nome}</div>
+                                    </div>
+                                    <i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;"></i>
+                                </div>`).join('');
+                        }
+
+                        // — Documentos do Cônjuge —
+                        if (needsConj && conjDocs.length > 0) {
+                            const isMcmv = regime === 'mcmv';
+                            const conjugeTemRenda = cliente.conjugeRendaFormal === 'sim';
+                            const regimeBadge = isMcmv
+                                ? `<span style="background:rgba(16,185,129,0.15);color:#065f46;font-size:0.62rem;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:6px;">MCMV${conjugeTemRenda ? ' + RENDA' : ''}</span>`
+                                : `<span style="background:rgba(79,70,229,0.12);color:var(--indigo);font-size:0.62rem;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:6px;">SBPE</span>`;
+
+                            const conjugeInfo = (cliente.conjugeNome || cliente.conjugeCpf)
+                                ? `<div style="font-size:0.72rem;color:var(--text-secondary);margin-bottom:8px;padding:6px 8px;background:white;border-radius:7px;border:1px solid var(--border);">
+                                    ${cliente.conjugeNome ? `<span>👤 <strong>${cliente.conjugeNome}</strong></span>` : ''}
+                                    ${cliente.conjugeCpf ? `<span style="margin-left:8px;">📄 ${cliente.conjugeCpf}</span>` : ''}
+                                   </div>`
+                                : '';
+
+                            html += `<div style="font-size:0.72rem;font-weight:800;color:var(--indigo);letter-spacing:0.04em;text-transform:uppercase;padding:10px 0 6px;display:flex;align-items:center;gap:4px;${temDocsAnexados ? 'border-top:1px solid var(--border);margin-top:4px;' : ''}">
+                                <i class="fas fa-heart" style="font-size:0.7rem;"></i> Docs do ${relacaoLabel} ${regimeBadge}
+                            </div>
+                            ${conjugeInfo}`;
+
+                            html += conjDocs.map((d, i) => {
+                                const done = !!conjChecked[d.id];
+                                const isObrig = d.id === 'conj_rg_cnh' || d.id === 'conj_cpf';
+                                return `<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;${i < conjDocs.length - 1 ? 'border-bottom:1px solid var(--border);' : ''}${done ? 'opacity:0.55;' : ''}">
+                                    <span style="font-size:1rem;flex-shrink:0;margin-top:1px;">${d.icon}</span>
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;">
+                                            <span style="font-size:0.82rem;font-weight:600;color:var(--dark);${done ? 'text-decoration:line-through;' : ''}">${d.label}</span>
+                                            ${isObrig ? '<span style="font-size:0.6rem;font-weight:700;background:rgba(184,48,48,0.12);color:var(--danger);padding:1px 5px;border-radius:10px;">OBRIGATÓRIO</span>' : '<span style="font-size:0.6rem;font-weight:700;background:rgba(16,185,129,0.12);color:#065f46;padding:1px 5px;border-radius:10px;">MCMV</span>'}
+                                        </div>
+                                        <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:1px;">${d.obs}</div>
+                                    </div>
+                                    ${done
+                                        ? '<i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;margin-top:2px;"></i>'
+                                        : '<i class="fas fa-clock" style="color:var(--warning);font-size:0.85rem;flex-shrink:0;margin-top:2px;"></i>'}
+                                </div>`;
+                            }).join('');
+                        }
+
+                        if (listaEl) listaEl.innerHTML = html;
+                    } else {
+                        if (listaWrap) listaWrap.style.display = 'none';
+                        if (btnZip) btnZip.style.display = 'none';
+                    }
+                },
+
                 _atualizarPreviewEmail: function() {
                     const clienteId = App.cliente._envioClienteId;
                     const cliente = UI.data.clientes.find(c => c.id === clienteId);
                     if (!cliente) return;
-
+                    const regime = App.cliente._getRegimeFinanciamento();
                     const getVal = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
                     const corpo = App.cliente._gerarCorpoEmail(
                         cliente,
@@ -14554,16 +14803,65 @@
                         getVal('envio-corretor') || '[Corretor]',
                         getVal('envio-gerente') || '[Gerente]',
                         getVal('envio-valor-avaliacao') || '[Valor]',
-                        App.cliente._envioDocsData.length
+                        App.cliente._envioDocsData.length,
+                        regime
                     );
                     const previewEl = document.getElementById('envio-preview-email');
                     if (previewEl) previewEl.textContent = corpo;
                 },
 
-                _gerarCorpoEmail: function(cliente, empreendimento, corretor, gerente, valorAvaliacao, nDocs) {
+                _gerarCorpoEmail: function(cliente, empreendimento, corretor, gerente, valorAvaliacao, nDocs, regime) {
+                    regime = regime || 'sbpe';
+                    const _docIcon = (label) => {
+                        const l = (label || '').toLowerCase();
+                        if (l.includes('rg') || l.includes('identidade') || l.includes('documento de identidade')) return '🪪';
+                        if (l.includes('cpf')) return '🔢';
+                        if (l.includes('cnh') || l.includes('habilitação')) return '🚗';
+                        if (l.includes('passaporte')) return '🛂';
+                        if (l.includes('nascimento') || l.includes('certidão de nascimento')) return '👶';
+                        if (l.includes('casamento') || l.includes('certidão de casamento')) return '💍';
+                        if (l.includes('divórcio') || l.includes('divorcio') || l.includes('separação')) return '⚖️';
+                        if (l.includes('óbito') || l.includes('obito')) return '🕊️';
+                        if (l.includes('comprovante de renda') || l.includes('holerite') || l.includes('contracheque') || l.includes('salário')) return '💵';
+                        if (l.includes('imposto de renda') || l.includes('irpf') || l.includes('declaração ir')) return '🧾';
+                        if (l.includes('extrato') || l.includes('bancário') || l.includes('bancaria')) return '🏦';
+                        if (l.includes('contrato social') || l.includes('cnpj') || l.includes('empresa')) return '🏢';
+                        if (l.includes('comprovante de residência') || l.includes('residencia') || l.includes('endereço')) return '🏠';
+                        if (l.includes('escritura') || l.includes('matrícula') || l.includes('matricula') || l.includes('imóvel') || l.includes('imovel')) return '🏗️';
+                        if (l.includes('procuração') || l.includes('procuracao')) return '📜';
+                        if (l.includes('foto') || l.includes('selfie') || l.includes('imagem')) return '🖼️';
+                        if (l.includes('pdf') || l.includes('.pdf')) return '📄';
+                        return '📎';
+                    };
+
+                    // Documentos do titular (arquivos enviados)
                     const listaDoc = nDocs > 0
-                        ? (App.cliente._envioDocsData || []).map((d, i) => `  ${String(i+1).padStart(2,'0')}. ${d.tipoLabel || d.nome}`).join('\n')
+                        ? (App.cliente._envioDocsData || []).map((d, i) => `  ${String(i+1).padStart(2,'0')}. ${_docIcon(d.tipoLabel || d.nome)}  ${d.tipoLabel || d.nome}`).join('\n')
                         : '  (Nenhum documento cadastrado no sistema)';
+
+                    // Documentos do cônjuge — exibidos quando casado ou união estável
+                    const needsConj = cliente.estadoCivil === 'casado' || cliente.estadoCivil === 'uniao_estavel';
+                    const relacaoLabel = cliente.estadoCivil === 'uniao_estavel' ? 'Companheiro(a)' : 'Cônjuge';
+                    const conjDocs = App.cliente._getDocsConjuge(cliente, regime);
+                    const isMcmv = regime === 'mcmv';
+                    const regimeLabel = isMcmv ? 'Minha Casa Minha Vida' : 'SBPE';
+                    const conjugeTemRenda = cliente.conjugeRendaFormal === 'sim';
+                    const conjugeInfo = (cliente.conjugeNome || cliente.conjugeCpf)
+                        ? `  👤 Nome...: ${cliente.conjugeNome || 'Não informado'}\n  📄 CPF....: ${cliente.conjugeCpf || 'Não informado'}\n\n`
+                        : '';
+                    const conjDocsTexto = needsConj && conjDocs.length > 0
+                        ? `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                          `💍 DOCUMENTOS DO ${relacaoLabel.toUpperCase()} (${regimeLabel}${isMcmv && conjugeTemRenda ? ' — Compõe Renda' : ''})\n` +
+                          `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+                          conjugeInfo +
+                          conjDocs.map((d, i) => {
+                              const checked = cliente.profissaoDocsChecked || {};
+                              const status = checked[d.id] ? '✅' : '📌';
+                              const obrig = (d.id === 'conj_rg_cnh' || d.id === 'conj_cpf') ? ' [OBRIGATÓRIO]' : ' [MCMV]';
+                              return `  ${String(i+1).padStart(2,'0')}. ${status} ${d.icon}  ${d.label}${obrig}`;
+                          }).join('\n') + '\n'
+                        : '';
+
                     const dataHoje = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
                     return `Prezado(a) Correspondente,\n\nEncaminho os dados e a documentação do cliente abaixo para análise e prosseguimento do processo de financiamento.\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
@@ -14571,18 +14869,21 @@
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
 `🪪  Cliente.........: ${cliente.nome}\n` +
 `📱  Telefone........: ${cliente.telefone || 'Não informado'}\n` +
-`📧  E-mail..........: ${cliente.email || 'Não informado'}\n\n` +
+`📧  E-mail..........: ${cliente.email || 'Não informado'}\n` +
+`💍  Estado Civil....: ${cliente.estadoCivil === 'casado' ? 'Casado(a)' : cliente.estadoCivil === 'uniao_estavel' ? 'União Estável' : cliente.estadoCivil === 'solteiro' ? 'Solteiro(a)' : cliente.estadoCivil === 'divorciado' ? 'Divorciado(a)' : cliente.estadoCivil === 'viuvo' ? 'Viúvo(a)' : 'Não informado'}\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
 `🏢 DADOS DO EMPREENDIMENTO\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
 `🏗️  Empreendimento..: ${empreendimento || 'Não informado'}\n` +
 `🤝  Corretor........: ${corretor || 'Não informado'}\n` +
 `👔  Gerente.........: ${gerente || 'Não informado'}\n` +
-`💰  Valor de Aval...: R$ ${valorAvaliacao || '0,00'}\n\n` +
+`💰  Valor de Aval...: R$ ${valorAvaliacao || '0,00'}\n` +
+`🏦  Regime..........: ${isMcmv ? 'Minha Casa Minha Vida (FGTS)' : 'SBPE'}\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
 `📎 DOCUMENTOS ANEXADOS (${nDocs} arquivo${nDocs !== 1 ? 's' : ''})\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-`${listaDoc}\n\n` +
+`${listaDoc}\n` +
+`${conjDocsTexto}\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
 `📅 Data: ${dataHoje}\n\n` +
 `Qualquer dúvida, fico à disposição.\n\n` +
