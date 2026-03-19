@@ -6836,23 +6836,25 @@
             },
 
             documentTypes: [
-                { value: 'comprovante_renda_formal', label: 'Comprovante de Renda (formal)' },
-                { value: 'contracheque', label: 'Contracheque (3 últimos)' },
-                { value: 'declaracao_ir', label: 'Declaração de Imposto de Renda' },
-                { value: 'carteira_trabalho', label: 'Carteira de Trabalho (páginas de identificação e contrato)' },
-                { value: 'extrato_bancario', label: 'Extrato Bancário (últimos 3 meses)' },
-                { value: 'comprovante_residencia', label: 'Comprovante de Residência' },
-                { value: 'rg', label: 'Documento de Identidade (RG/CNH)' },
-                { value: 'cpf', label: 'CPF' },
-                { value: 'certidao_casamento', label: 'Certidão de Casamento (se aplicável)' },
-                { value: 'renda_informal', label: 'Comprovante de Renda (informal) - declaração própria' },
-                { value: 'declaracao_autonomo', label: 'Declaração de Autônomo' },
-                { value: 'recibos', label: 'Recibos/Comprovantes de Recebimento' },
-                { value: 'escritura', label: 'Escritura do Imóvel' },
-                { value: 'matricula', label: 'Matrícula do Imóvel' },
-                { value: 'iptu', label: 'IPTU' },
-                { value: 'contrato', label: 'Contrato de Compra e Venda' },
-                { value: 'outros', label: 'Outros' }
+                { value: 'simulador_caixa',         label: '🏦 Simulador Caixa Econômica Federal' },
+                { value: 'proposta_compra_venda',   label: '📝 Proposta de Compra e Venda' },
+                { value: 'comprovante_renda_formal', label: '💰 Comprovante de Renda (formal)' },
+                { value: 'contracheque',             label: '🧾 Contracheque (3 últimos)' },
+                { value: 'declaracao_ir',            label: '📊 Declaração de Imposto de Renda' },
+                { value: 'carteira_trabalho',        label: '📗 Carteira de Trabalho (páginas de identificação e contrato)' },
+                { value: 'extrato_bancario',         label: '🏧 Extrato Bancário (últimos 3 meses)' },
+                { value: 'comprovante_residencia',   label: '🏠 Comprovante de Residência' },
+                { value: 'rg',                       label: '🪪 Documento de Identidade (RG/CNH)' },
+                { value: 'cpf',                      label: '🔢 CPF' },
+                { value: 'certidao_casamento',       label: '💍 Certidão de Casamento (se aplicável)' },
+                { value: 'renda_informal',           label: '📄 Comprovante de Renda (informal) - declaração própria' },
+                { value: 'declaracao_autonomo',      label: '🖊️ Declaração de Autônomo' },
+                { value: 'recibos',                  label: '🗂️ Recibos/Comprovantes de Recebimento' },
+                { value: 'escritura',                label: '📜 Escritura do Imóvel' },
+                { value: 'matricula',                label: '🏛️ Matrícula do Imóvel' },
+                { value: 'iptu',                     label: '🏷️ IPTU' },
+                { value: 'contrato',                 label: '✍️ Contrato de Compra e Venda' },
+                { value: 'outros',                   label: '📁 Outros' }
             ],
 
             getInterestRateByIncome: function(renda) {
@@ -13537,12 +13539,14 @@
 
                 // ===== DOCUMENTAÇÃO LOTE =====
                 LOTE_DOCS: [
-                    { id: 'rg_cpf',       label: 'RG (ou CNH) + CPF',           icon: '🪪', obs: 'Documento de identificação com foto' },
-                    { id: 'comp_res',     label: 'Comprovante de Residência',    icon: '🏠', obs: 'Água, luz, gás ou correspondência bancária (últimos 3 meses)' },
-                    { id: 'est_civil',    label: 'Certidão de Estado Civil',     icon: '💍', obs: 'Certidão de nascimento ou casamento atualizada' },
-                    { id: 'email',        label: 'E-mail',                       icon: '📧', obs: 'E-mail válido para envio de documentos' },
-                    { id: 'telefone',     label: 'Telefone (WhatsApp)',           icon: '📱', obs: 'Número com WhatsApp ativo' },
-                    { id: 'profissao',    label: 'Profissão',                    icon: '💼', obs: 'Informar cargo e empresa atual' },
+                    { id: 'rg_cpf',          label: 'RG (ou CNH) + CPF',                icon: '🪪', obs: 'Documento de identificação com foto' },
+                    { id: 'comp_res',        label: 'Comprovante de Residência',         icon: '🏠', obs: 'Água, luz, gás ou correspondência bancária (últimos 3 meses)' },
+                    { id: 'est_civil',       label: 'Certidão de Estado Civil',          icon: '💍', obs: 'Certidão de nascimento ou casamento atualizada' },
+                    { id: 'simulador_caixa', label: 'Simulador Caixa Econômica Federal', icon: '🏦', obs: 'Simulação de financiamento gerada no site da Caixa Econômica Federal' },
+                    { id: 'proposta_cv',     label: 'Proposta de Compra e Venda',        icon: '📝', obs: 'Proposta assinada pelo cliente e pelo corretor' },
+                    { id: 'email',           label: 'E-mail',                            icon: '📧', obs: 'E-mail válido para envio de documentos' },
+                    { id: 'telefone',        label: 'Telefone (WhatsApp)',                icon: '📱', obs: 'Número com WhatsApp ativo' },
+                    { id: 'profissao',       label: 'Profissão',                         icon: '💼', obs: 'Informar cargo e empresa atual' },
                 ],
 
                 toggleLoteDocumentacao: function(preChecked) {
@@ -14558,29 +14562,31 @@
 
                 _gerarCorpoEmail: function(cliente, empreendimento, corretor, gerente, valorAvaliacao, nDocs) {
                     const listaDoc = nDocs > 0
-                        ? (App.cliente._envioDocsData || []).map((d, i) => `${i+1}. ${d.tipoLabel || d.nome}`).join('\n')
-                        : '(Nenhum documento cadastrado no sistema)';
-                    return `Prezado(a) Correspondente,\n\nEncaminho abaixo os dados e a documentação do cliente para análise e prosseguimento do processo de financiamento.\n\n` +
+                        ? (App.cliente._envioDocsData || []).map((d, i) => `  ${String(i+1).padStart(2,'0')}. ${d.tipoLabel || d.nome}`).join('\n')
+                        : '  (Nenhum documento cadastrado no sistema)';
+                    const dataHoje = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+                    return `Prezado(a) Correspondente,\n\nEncaminho os dados e a documentação do cliente abaixo para análise e prosseguimento do processo de financiamento.\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
-`📋 DADOS DO CLIENTE\n` +
+`👤 DADOS DO CLIENTE\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-`Cliente: ${cliente.nome}\n` +
-`Telefone de contato: ${cliente.telefone || 'Não informado'}\n` +
-`E-mail: ${cliente.email || 'Não informado'}\n\n` +
+`🪪  Cliente.........: ${cliente.nome}\n` +
+`📱  Telefone........: ${cliente.telefone || 'Não informado'}\n` +
+`📧  E-mail..........: ${cliente.email || 'Não informado'}\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
 `🏢 DADOS DO EMPREENDIMENTO\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-`Nome do Empreendimento: ${empreendimento}\n` +
-`Corretor: ${corretor}\n` +
-`Gerente: ${gerente}\n` +
-`Valor de Avaliação: R$ ${valorAvaliacao}\n\n` +
+`🏗️  Empreendimento..: ${empreendimento || 'Não informado'}\n` +
+`🤝  Corretor........: ${corretor || 'Não informado'}\n` +
+`👔  Gerente.........: ${gerente || 'Não informado'}\n` +
+`💰  Valor de Aval...: R$ ${valorAvaliacao || '0,00'}\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
 `📎 DOCUMENTOS ANEXADOS (${nDocs} arquivo${nDocs !== 1 ? 's' : ''})\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
 `${listaDoc}\n\n` +
 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+`📅 Data: ${dataHoje}\n\n` +
 `Qualquer dúvida, fico à disposição.\n\n` +
-`Atenciosamente,\n${corretor}\n${new Date().toLocaleDateString('pt-BR')}`;
+`Atenciosamente,\n✍️  ${corretor || 'Corretor'}`;
                 },
 
                 enviarDocumentacaoCorrespondente: function() {
