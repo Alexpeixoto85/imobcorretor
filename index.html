@@ -18,6 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
     <style>
         /* ===== PALETA FUNIL PRO — aplicada ao sistema imobiliário ===== */
@@ -5020,7 +5021,91 @@
             </form>
         </div>
 
-        <!-- MODAL DO IMÓVEL (MODIFICADO) -->
+        <!-- MODAL ENVIAR DOCUMENTAÇÃO AO CORRESPONDENTE -->
+        <div class="modal-overlay" id="overlay-envio-docs"></div>
+        <div class="modal-sheet" id="sheet-envio-docs">
+            <div class="sheet-handle"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <div style="width:44px;height:44px;background:linear-gradient(135deg,#1a73e8,#0d47a1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas fa-paper-plane" style="color:white;font-size:1.2rem;"></i>
+                </div>
+                <div>
+                    <h3 style="font-size:1.1rem;font-weight:800;color:var(--dark);margin:0;">Enviar Documentação</h3>
+                    <div style="font-size:0.78rem;color:var(--text-secondary);">Correspondente Bancário</div>
+                </div>
+            </div>
+
+            <!-- Dados do cliente (somente leitura) -->
+            <div style="background:rgba(46,74,49,0.06);border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid rgba(46,74,49,0.12);">
+                <div style="font-size:0.72rem;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">📋 Dados do Cliente</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);">Cliente</div>
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--dark);" id="envio-cliente-nome">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);">Telefone</div>
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--dark);" id="envio-cliente-tel">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);">E-mail do Cliente</div>
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--dark);" id="envio-cliente-email">—</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-secondary);">Documentos Anexados</div>
+                        <div style="font-size:0.88rem;font-weight:700;color:var(--primary);" id="envio-docs-count">0 arquivos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos editáveis -->
+            <div class="form-group">
+                <label class="form-label">E-mail do Correspondente <span style="color:var(--danger)">*</span></label>
+                <input type="email" id="envio-email-correspondente" class="form-control" placeholder="correspondente@banco.com.br">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Nome do Empreendimento</label>
+                <input type="text" id="envio-empreendimento" class="form-control" placeholder="Ex: Reserva Aldeprime">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Corretor</label>
+                    <input type="text" id="envio-corretor" class="form-control" placeholder="Nome do corretor">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Gerente</label>
+                    <input type="text" id="envio-gerente" class="form-control" placeholder="Nome do gerente">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Valor de Avaliação (R$)</label>
+                <input type="text" id="envio-valor-avaliacao" class="form-control" placeholder="0,00" inputmode="numeric" onkeydown="Utils.keydownMoneyReais(event, this)" readonly onfocus="this.removeAttribute('readonly')">
+            </div>
+
+            <!-- Preview do corpo do email -->
+            <div style="margin-bottom:16px;">
+                <div style="font-size:0.8rem;font-weight:700;color:var(--dark);margin-bottom:6px;">📧 Prévia do Corpo do E-mail</div>
+                <div id="envio-preview-email" style="background:var(--light);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:0.8rem;color:var(--dark);line-height:1.6;max-height:180px;overflow-y:auto;white-space:pre-wrap;font-family:monospace;"></div>
+            </div>
+
+            <!-- Lista de documentos a enviar -->
+            <div id="envio-docs-lista-wrap" style="margin-bottom:16px;display:none;">
+                <div style="font-size:0.8rem;font-weight:700;color:var(--dark);margin-bottom:6px;">📎 Documentos para Enviar</div>
+                <div id="envio-docs-lista" style="background:var(--light);border:1px solid var(--border);border-radius:10px;padding:10px;max-height:150px;overflow-y:auto;"></div>
+                <div style="font-size:0.72rem;color:var(--text-secondary);margin-top:6px;"><i class="fas fa-info-circle"></i> Os documentos serão baixados como ZIP para você anexar manualmente ao e-mail.</div>
+            </div>
+
+            <button type="button" class="btn-block" style="background:linear-gradient(135deg,#1a73e8,#0d47a1);display:flex;align-items:center;justify-content:center;gap:8px;" onclick="App.cliente.enviarDocumentacaoCorrespondente()">
+                <i class="fas fa-paper-plane"></i> Abrir E-mail com Documentação
+            </button>
+            <button type="button" id="envio-btn-baixar-zip" class="btn-block" style="background:linear-gradient(135deg,#10b981,#059669);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;display:none;" onclick="App.cliente.baixarDocsZip()">
+                <i class="fas fa-file-archive"></i> Baixar Documentos (ZIP)
+            </button>
+            <button type="button" class="btn-block" style="background:var(--light);color:var(--secondary);margin-top:8px;" onclick="UI.closeModals()">Cancelar</button>
+        </div>
         <div class="modal-overlay" id="overlay-imovel"></div>
         <div class="modal-sheet" id="sheet-imovel">
             <div class="sheet-handle"></div>
@@ -6466,31 +6551,88 @@
             },
             
             maskMoney: (input) => {
-                let v = input.value.replace(/\D/g, "");
-                
-                if (v === "") {
-                    input.value = "";
+                // Remove tudo que não for dígito
+                let v = input.value.replace(/\D/g, '');
+
+                if (v === '') {
+                    input.value = '';
                     return;
                 }
-                
+
+                // Remove zeros à esquerda
                 v = v.replace(/^0+/, '') || '0';
-                
-                if (v.length === 1) v = '0' + v;
-                if (v.length === 2) v = '0' + v;
-                
-                const reais = v.slice(0, -2);
+
+                // Trata os dígitos como centavos acumulados (padrão caixa registradora)
+                // Ex: digitar 2 → 0,02 | 25 → 0,25 | 250 → 2,50 | 2500 → 25,00 | 25000 → 250,00 | 250000 → 2.500,00
+                while (v.length < 3) v = '0' + v;
+
                 const centavos = v.slice(-2);
-                
-                let reaisFormatado = '';
-                if (reais === '' || reais === '0') {
-                    reaisFormatado = '0';
-                } else {
-                    reaisFormatado = parseInt(reais).toLocaleString('pt-BR');
-                }
-                
+                const reaisStr = v.slice(0, -2).replace(/^0+/, '') || '0';
+                const reaisNum = parseInt(reaisStr, 10);
+                const reaisFormatado = reaisNum === 0 ? '0' : reaisNum.toLocaleString('pt-BR');
+
                 const resultado = reaisFormatado + ',' + centavos;
                 input.value = resultado;
-                
+
+                setTimeout(() => {
+                    input.selectionStart = input.selectionEnd = resultado.length;
+                }, 0);
+            },
+
+            keydownMoneyReais: (e, input) => {
+                const key = e.key;
+                if (['Tab','ArrowLeft','ArrowRight','Home','End'].includes(key)) return;
+                if (e.ctrlKey || e.metaKey) return;
+
+                e.preventDefault();
+
+                // Estado puro: apenas os dígitos reais (guardados em data-raw)
+                let raw = input.dataset.raw || '';
+
+                if (key === 'Backspace' || key === 'Delete') {
+                    raw = raw.slice(0, -1);
+                } else if (/^[0-9]$/.test(key)) {
+                    if (raw.length >= 9) return; // máx 999.999.999,00
+                    raw = raw + key;
+                } else {
+                    return;
+                }
+
+                input.dataset.raw = raw;
+
+                if (raw === '') {
+                    input.value = '';
+                    return;
+                }
+
+                const num = parseInt(raw.replace(/^0+/, '') || '0', 10);
+                if (num === 0) { input.value = ''; return; }
+                input.value = num.toLocaleString('pt-BR') + ',00';
+            },
+
+            maskMoneyReais: (input) => {
+                // Lê apenas os dígitos do atributo data-digits (estado puro, sem formatação)
+                // Isso evita que o novo dígito entre depois da vírgula do valor já formatado
+                let digits = (input.dataset.digits || '').replace(/\D/g, '');
+
+                // Pega o novo dígito que foi digitado (diferença entre o value atual e os digits)
+                const rawInput = input.value.replace(/\D/g, '');
+                // rawInput tem todos os dígitos que aparecem no campo agora
+                digits = rawInput;
+
+                if (digits === '' || digits === '0') {
+                    input.value = '';
+                    input.dataset.digits = '';
+                    return;
+                }
+
+                digits = digits.replace(/^0+/, '') || '0';
+                input.dataset.digits = digits;
+
+                const num = parseInt(digits, 10);
+                const resultado = num.toLocaleString('pt-BR') + ',00';
+                input.value = resultado;
+
                 setTimeout(() => {
                     input.selectionStart = input.selectionEnd = resultado.length;
                 }, 0);
@@ -10206,6 +10348,9 @@
                             </button>
                             <button class="btn-details btn-details-secondary" onclick="App.cliente.agendarAtividade('${cliente.id}')">
                                 <i class="fas fa-calendar-plus"></i> Agendar
+                            </button>
+                            <button class="btn-details" style="background:linear-gradient(135deg,#1a73e8,#0d47a1);color:white;flex:1;" onclick="event.stopPropagation(); App.cliente.abrirEnvioDocumentacao('${cliente.id}')">
+                                <i class="fas fa-paper-plane"></i> Enviar Documentação
                             </button>
                             <button class="btn-details btn-details-secondary" style="background: var(--danger); color: white;" onclick="event.stopPropagation(); if(confirm('Excluir cliente?')) { App.cliente.delete('${cliente.id}'); UI.closeModals(); }">
                                 <i class="fas fa-trash"></i> Excluir
@@ -14317,6 +14462,203 @@
                     if (estadoEl) estadoEl.value = olds.estado || '';
                     if (telEl) telEl.value = olds.tel || '';
                     if (checkedEl) checkedEl.value = olds.checked || '{}';
+                },
+
+                // ===== ENVIO DE DOCUMENTAÇÃO AO CORRESPONDENTE =====
+                _envioClienteId: null,
+                _envioDocsData: [],
+
+                abrirEnvioDocumentacao: async function(clienteId) {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+
+                    App.cliente._envioClienteId = clienteId;
+                    App.cliente._envioDocsData = cliente.documentos || [];
+
+                    const setEl = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v || '—'; };
+                    setEl('envio-cliente-nome', cliente.nome);
+                    setEl('envio-cliente-tel', cliente.telefone);
+                    setEl('envio-cliente-email', cliente.email || 'Não informado');
+                    setEl('envio-docs-count', `${App.cliente._envioDocsData.length} arquivo${App.cliente._envioDocsData.length !== 1 ? 's' : ''}`);
+
+                    const settings = await Storage.getSettings();
+                    const inputVal = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+
+                    // Limpa campos antes de preencher
+                    ['envio-empreendimento','envio-corretor','envio-gerente','envio-valor-avaliacao','envio-email-correspondente'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+
+                    inputVal('envio-corretor', settings.nome);
+
+                    if (cliente.imovelInteresse) {
+                        const imovel = UI.data.imoveis.find(i => i.id === cliente.imovelInteresse);
+                        if (imovel) {
+                            inputVal('envio-empreendimento', imovel.titulo);
+                            if (imovel.precoVenda) {
+                                const el = document.getElementById('envio-valor-avaliacao');
+                                if (el) {
+                                    const num = Math.round(parseFloat(imovel.precoVenda));
+                                    if (num > 0) {
+                                        el.dataset.raw = String(num);
+                                        el.value = num.toLocaleString('pt-BR') + ',00';
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    const listaWrap = document.getElementById('envio-docs-lista-wrap');
+                    const listaEl = document.getElementById('envio-docs-lista');
+                    const btnZip = document.getElementById('envio-btn-baixar-zip');
+                    if (App.cliente._envioDocsData.length > 0) {
+                        if (listaWrap) listaWrap.style.display = 'block';
+                        if (btnZip) btnZip.style.display = 'flex';
+                        if (listaEl) listaEl.innerHTML = App.cliente._envioDocsData.map((d, i) => `
+                            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;${i < App.cliente._envioDocsData.length-1 ? 'border-bottom:1px solid var(--border);' : ''}">
+                                <i class="fas fa-file-${d.nome && d.nome.match(/\.pdf$/i) ? 'pdf' : 'image'}" style="color:${d.nome && d.nome.match(/\.pdf$/i) ? 'var(--danger)' : 'var(--sky)'};font-size:0.9rem;flex-shrink:0;"></i>
+                                <div style="flex:1;min-width:0;">
+                                    <div style="font-size:0.82rem;font-weight:600;color:var(--dark);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.tipoLabel || d.nome}</div>
+                                    <div style="font-size:0.7rem;color:var(--text-secondary);">${d.nome}</div>
+                                </div>
+                                <i class="fas fa-check-circle" style="color:var(--success);font-size:0.85rem;flex-shrink:0;"></i>
+                            </div>`).join('');
+                    } else {
+                        if (listaWrap) listaWrap.style.display = 'none';
+                        if (btnZip) btnZip.style.display = 'none';
+                    }
+
+                    App.cliente._atualizarPreviewEmail();
+                    ['envio-empreendimento','envio-corretor','envio-gerente','envio-valor-avaliacao'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.oninput = () => App.cliente._atualizarPreviewEmail();
+                    });
+
+                    UI.openModal('envio-docs');
+                },
+
+                _atualizarPreviewEmail: function() {
+                    const clienteId = App.cliente._envioClienteId;
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+
+                    const getVal = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+                    const corpo = App.cliente._gerarCorpoEmail(
+                        cliente,
+                        getVal('envio-empreendimento') || '[Empreendimento]',
+                        getVal('envio-corretor') || '[Corretor]',
+                        getVal('envio-gerente') || '[Gerente]',
+                        getVal('envio-valor-avaliacao') || '[Valor]',
+                        App.cliente._envioDocsData.length
+                    );
+                    const previewEl = document.getElementById('envio-preview-email');
+                    if (previewEl) previewEl.textContent = corpo;
+                },
+
+                _gerarCorpoEmail: function(cliente, empreendimento, corretor, gerente, valorAvaliacao, nDocs) {
+                    const listaDoc = nDocs > 0
+                        ? (App.cliente._envioDocsData || []).map((d, i) => `${i+1}. ${d.tipoLabel || d.nome}`).join('\n')
+                        : '(Nenhum documento cadastrado no sistema)';
+                    return `Prezado(a) Correspondente,\n\nEncaminho abaixo os dados e a documentação do cliente para análise e prosseguimento do processo de financiamento.\n\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+`📋 DADOS DO CLIENTE\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+`Cliente: ${cliente.nome}\n` +
+`Telefone de contato: ${cliente.telefone || 'Não informado'}\n` +
+`E-mail: ${cliente.email || 'Não informado'}\n\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+`🏢 DADOS DO EMPREENDIMENTO\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+`Nome do Empreendimento: ${empreendimento}\n` +
+`Corretor: ${corretor}\n` +
+`Gerente: ${gerente}\n` +
+`Valor de Avaliação: R$ ${valorAvaliacao}\n\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+`📎 DOCUMENTOS ANEXADOS (${nDocs} arquivo${nDocs !== 1 ? 's' : ''})\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+`${listaDoc}\n\n` +
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+`Qualquer dúvida, fico à disposição.\n\n` +
+`Atenciosamente,\n${corretor}\n${new Date().toLocaleDateString('pt-BR')}`;
+                },
+
+                enviarDocumentacaoCorrespondente: function() {
+                    const emailEl = document.getElementById('envio-email-correspondente');
+                    const emailCorrespondente = emailEl ? emailEl.value.trim() : '';
+                    if (!emailCorrespondente) {
+                        Utils.toast('Informe o e-mail do correspondente!', 'error');
+                        return;
+                    }
+
+                    const cliente = UI.data.clientes.find(c => c.id === App.cliente._envioClienteId);
+                    if (!cliente) return;
+
+                    const getVal = id => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+                    const empreendimento = getVal('envio-empreendimento');
+                    const corretor = getVal('envio-corretor');
+                    const gerente = getVal('envio-gerente');
+                    const valorAvaliacao = getVal('envio-valor-avaliacao');
+                    const nDocs = App.cliente._envioDocsData.length;
+
+                    const assunto = encodeURIComponent('Documentacao para Analise - ' + cliente.nome + (empreendimento ? ' - ' + empreendimento : ''));
+                    const corpo = App.cliente._gerarCorpoEmail(cliente, empreendimento, corretor, gerente, valorAvaliacao, nDocs);
+                    const corpoEnc = encodeURIComponent(corpo);
+
+                    window.location.href = 'mailto:' + emailCorrespondente + '?subject=' + assunto + '&body=' + corpoEnc;
+
+                    if (nDocs > 0) {
+                        Utils.toast('E-mail aberto! Baixando documentos para anexar...', 'success');
+                        setTimeout(() => App.cliente.baixarDocsZip(), 1500);
+                    } else {
+                        Utils.toast('E-mail aberto no cliente de e-mail!', 'success');
+                    }
+                },
+
+                baixarDocsZip: async function() {
+                    const docs = App.cliente._envioDocsData || [];
+                    if (docs.length === 0) { Utils.toast('Nenhum documento para baixar.', 'error'); return; }
+
+                    const cliente = UI.data.clientes.find(c => c.id === App.cliente._envioClienteId);
+                    const nomeCliente = cliente ? cliente.nome.replace(/\s+/g, '_') : 'Cliente';
+
+                    if (window.JSZip) {
+                        try {
+                            const zip = new window.JSZip();
+                            for (let i = 0; i < docs.length; i++) {
+                                const d = docs[i];
+                                const base64Data = d.dados.split(',')[1];
+                                const ext = d.nome.split('.').pop();
+                                zip.file((i+1) + '_' + (d.tipoLabel || 'documento').replace(/[^a-zA-Z0-9]/g,'_') + '.' + ext, base64Data, { base64: true });
+                            }
+                            const blob = await zip.generateAsync({ type: 'blob' });
+                            const a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = 'Docs_' + nomeCliente + '.zip';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            Utils.toast('ZIP baixado com sucesso!');
+                        } catch(e) {
+                            App.cliente._baixarDocsSeparados(docs, nomeCliente);
+                        }
+                    } else {
+                        App.cliente._baixarDocsSeparados(docs, nomeCliente);
+                    }
+                },
+
+                _baixarDocsSeparados: function(docs, nomeCliente) {
+                    docs.forEach(function(d, i) {
+                        setTimeout(function() {
+                            const a = document.createElement('a');
+                            a.href = d.dados;
+                            a.download = (i+1) + '_' + d.nome;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                        }, i * 400);
+                    });
+                    Utils.toast(docs.length + ' documento(s) sendo baixado(s)...', 'success');
                 },
             },
             
