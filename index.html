@@ -3791,6 +3791,45 @@
         .sim-alert.bad  { background:rgba(184,48,48,0.08);  border-color:var(--danger);  color:#7a1a1a; }
         .sim-alert.age  { background:rgba(68,84,71,0.08);   border-color:var(--secondary);color:var(--secondary); }
         .sim-alert.dep  { background:rgba(196,114,74,0.08); border-color:var(--accent);  color:#6a3010; }
+        /* ── Toggle Switch corrigido ── */
+        .sim-toggle-wrap {
+            position: relative;
+            width: 40px;
+            height: 24px;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .sim-toggle-cb {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            margin: 0;
+            pointer-events: none;
+        }
+        .sim-toggle-track {
+            position: absolute;
+            inset: 0;
+            background: var(--border);
+            border-radius: 12px;
+            transition: background 0.22s;
+            cursor: pointer;
+        }
+        .sim-toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+            transition: transform 0.22s cubic-bezier(.4,0,.2,1);
+            pointer-events: none;
+        }
+        .sim-toggle-cb:checked ~ .sim-toggle-track { background: var(--primary); }
+        .sim-toggle-cb:checked ~ .sim-toggle-thumb { transform: translateX(16px); }
+        .sim-toggle-wrap:active .sim-toggle-track { filter: brightness(0.92); }
         .sim-ring-wrap { display:flex; align-items:center; gap:14px; padding:12px 0; }
         .sim-ring { position:relative; width:72px; height:72px; flex-shrink:0; }
         .sim-ring svg { transform:rotate(-90deg); }
@@ -4858,21 +4897,23 @@
                         </div>
 
                         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
-                                <input type="checkbox" id="s-fgts" style="opacity:0;width:0;height:0;position:absolute;">
-                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
-                            </label>
-                            <div>
+                            <div class="sim-toggle-wrap" id="s-fgts-wrap" onclick="document.getElementById('s-fgts').click()">
+                                <input type="checkbox" id="s-fgts" class="sim-toggle-cb" onchange="document.getElementById('s-fgts-track').style.background=this.checked?'var(--primary)':'var(--border)'">
+                                <span id="s-fgts-track" class="sim-toggle-track"></span>
+                                <span class="sim-toggle-thumb" id="s-fgts-thumb"></span>
+                            </div>
+                            <div onclick="document.getElementById('s-fgts').click()" style="cursor:pointer;flex:1;">
                                 <div style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS</div>
                                 <div style="font-size:0.72rem;color:var(--text-secondary);">≥ 3 anos CLT — redução de 0,5 p.p. na taxa</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
-                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
-                                <input type="checkbox" id="s-rel" style="opacity:0;width:0;height:0;position:absolute;">
-                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
-                            </label>
-                            <div>
+                            <div class="sim-toggle-wrap" id="s-rel-wrap" onclick="document.getElementById('s-rel').click()">
+                                <input type="checkbox" id="s-rel" class="sim-toggle-cb" onchange="document.getElementById('s-rel-track').style.background=this.checked?'var(--primary)':'var(--border)'">
+                                <span id="s-rel-track" class="sim-toggle-track"></span>
+                                <span class="sim-toggle-thumb" id="s-rel-thumb"></span>
+                            </div>
+                            <div onclick="document.getElementById('s-rel').click()" style="cursor:pointer;flex:1;">
                                 <div style="font-size:0.82rem;font-weight:600;color:var(--dark);">Correntista Caixa</div>
                                 <div style="font-size:0.72rem;color:var(--text-secondary);">Débito automático + crédito de salário</div>
                             </div>
@@ -4963,11 +5004,12 @@
                             </select>
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
-                                <input type="checkbox" id="r-fgts" style="opacity:0;width:0;height:0;position:absolute;">
-                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
-                            </label>
-                            <span style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p. na taxa</span></span>
+                            <div class="sim-toggle-wrap" onclick="document.getElementById('r-fgts').click()">
+                                <input type="checkbox" id="r-fgts" class="sim-toggle-cb" onchange="document.getElementById('r-fgts-track').style.background=this.checked?'var(--primary)':'var(--border)'">
+                                <span id="r-fgts-track" class="sim-toggle-track"></span>
+                                <span class="sim-toggle-thumb"></span>
+                            </div>
+                            <span onclick="document.getElementById('r-fgts').click()" style="font-size:0.82rem;font-weight:600;color:var(--dark);cursor:pointer;">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p. na taxa</span></span>
                         </div>
                     </div>
                     <button onclick="Simulador.calcRenda()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:14px;">💰 Calcular Renda Mínima</button>
@@ -5018,11 +5060,12 @@
                             </select>
                         </div>
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
-                                <input type="checkbox" id="i-fgts" style="opacity:0;width:0;height:0;position:absolute;">
-                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
-                            </label>
-                            <span style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p.</span></span>
+                            <div class="sim-toggle-wrap" onclick="document.getElementById('i-fgts').click()">
+                                <input type="checkbox" id="i-fgts" class="sim-toggle-cb" onchange="document.getElementById('i-fgts-track').style.background=this.checked?'var(--primary)':'var(--border)'">
+                                <span id="i-fgts-track" class="sim-toggle-track"></span>
+                                <span class="sim-toggle-thumb"></span>
+                            </div>
+                            <span onclick="document.getElementById('i-fgts').click()" style="font-size:0.82rem;font-weight:600;color:var(--dark);cursor:pointer;">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p.</span></span>
                         </div>
                     </div>
                     <button onclick="Simulador.calcImovel()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:14px;">🏠 Calcular Imóvel Máximo</button>
@@ -21187,63 +21230,134 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 try{
                     const jsPDF=window.jspdf?window.jspdf.jsPDF:window.jsPDF;
                     const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-                    const W=210,mg=18; let y=mg;
-                    const C_PRI=[46,74,49],C_ACC=[196,114,74],C_TXT=[26,43,28],C_MUT=[122,138,124],C_WAR=[184,112,32],C_BOR=[210,205,195];
+                    const W=210, H=297;
+                    // Margens compactas para caber em uma folha
+                    const mg=10, cw=(W-mg*2-6)/2; // largura de cada coluna (2 colunas com gap=6)
+                    let y=0;
+
+                    const C_PRI=[46,74,49],C_ACC=[196,114,74],C_TXT=[26,43,28],C_MUT=[110,125,112],C_WAR=[184,112,32],C_BOR=[215,212,205],C_WHT=[255,255,255];
                     const sf=(sz,w,col)=>{doc.setFontSize(sz);doc.setFont('helvetica',w||'normal');doc.setTextColor(...(col||C_TXT));};
-                    const fr=(x,yx,w,h,col,r)=>{doc.setFillColor(...col);r?doc.roundedRect(x,yx,w,h,2,2,'F'):doc.rect(x,yx,w,h,'F');};
-                    const ln=(x1,y1,x2,y2,col,lw)=>{doc.setDrawColor(...(col||C_BOR));doc.setLineWidth(lw||0.3);doc.line(x1,y1,x2,y2);};
-                    const np=()=>{doc.addPage();y=mg;fr(0,0,W,11,C_PRI);sf(7,'normal',[255,255,255]);doc.text('ImobiPro — Simulador CEF',mg,7.5);doc.text('SIMULAÇÃO — valores sujeitos a variação',W-mg,7.5,{align:'right'});y=18;};
-                    const chk=(n)=>{if(y+n>285)np();};
-                    const sec=(t)=>{chk(10);fr(mg,y,W-mg*2,7,C_PRI,true);sf(8.5,'bold',[255,255,255]);doc.text(t.toUpperCase(),mg+4,y+4.8);y+=11;};
-                    const row=(l,v,vc)=>{chk(7);sf(8,'normal',C_MUT);doc.text(l,mg+2,y);sf(8.5,'bold',vc||C_TXT);doc.text(v,W-mg-2,y,{align:'right'});ln(mg,y+1.5,W-mg,y+1.5,C_BOR,0.2);y+=7;};
-                    const alrt=(t,bg,tc)=>{chk(12);fr(mg,y,W-mg*2,10,bg,true);doc.setDrawColor(...C_BOR);doc.setLineWidth(0.3);doc.roundedRect(mg,y,W-mg*2,10,2,2,'S');sf(7.5,'normal',tc||C_TXT);const ls=doc.splitTextToSize(t,W-mg*2-8);doc.text(ls,mg+4,y+4);y+=Math.max(10,ls.length*4.2)+3;};
+                    const fr=(x,yx,w,h,col,r)=>{doc.setFillColor(...col);r?doc.roundedRect(x,yx,w,h,1.5,1.5,'F'):doc.rect(x,yx,w,h,'F');};
+                    const ln=(x1,y1,x2,y2,col,lw)=>{doc.setDrawColor(...(col||C_BOR));doc.setLineWidth(lw||0.2);doc.line(x1,y1,x2,y2);};
 
-                    // Capa
-                    fr(0,0,W,52,C_PRI);
-                    sf(20,'bold',[255,255,255]);doc.text('Simulador CEF',mg,24);
-                    sf(11,'normal',[200,220,180]);doc.text('ImobiPro — Caixa Econômica Federal',mg,33);
-                    sf(7.5,'normal',[160,190,140]);doc.text('MCMV · SBPE · SAC · Price · Regra 30% · Idade · Dependentes',mg,40);
-                    doc.text('Gerado em '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}),mg,47);
-                    y=60;
+                    // ── CABEÇALHO compacto ──────────────────────────────────
+                    fr(0,0,W,18,C_PRI);
+                    sf(13,'bold',C_WHT);doc.text('ImobiPro — Simulação CEF',mg,11);
+                    sf(7,'normal',[180,210,160]);
+                    doc.text('Gerado em '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric'}),W-mg,11,{align:'right'});
+                    sf(6.5,'normal',[160,195,145]);
+                    doc.text('Documento orientativo · Não tem valor contratual · Consulte agência CEF para proposta oficial',W/2,16.5,{align:'center'});
+                    y=22;
 
-                    // AVISO LEGAL
-                    fr(mg,y,W-mg*2,30,[255,248,220],true);doc.setDrawColor(...C_WAR);doc.setLineWidth(0.5);doc.roundedRect(mg,y,W-mg*2,30,2,2,'S');
-                    sf(8.5,'bold',C_WAR);doc.text('⚠  AVISO — DOCUMENTO DE SIMULAÇÃO',mg+5,y+7);
-                    sf(7.5,'normal',[100,75,0]);
-                    const aviso='Este documento é uma SIMULAÇÃO ORIENTATIVA e NÃO representa proposta ou oferta de crédito. Os valores apresentados são estimativas baseadas nos dados informados e nas taxas de referência vigentes. Na avaliação real realizada pela Caixa Econômica Federal, parcelas, taxas, prazo aprovado e valor financiado podem variar conforme análise de crédito, perfil do cliente, avaliação do imóvel, políticas internas e condições de mercado na data da contratação. Consulte uma agência CEF para proposta oficial.';
-                    const aLines=doc.splitTextToSize(aviso,W-mg*2-10);doc.text(aLines,mg+5,y+13);
-                    y+=Math.max(30,aLines.length*4)+8;
+                    // ── AVISO resumido ─────────────────────────────────────
+                    fr(mg,y,W-mg*2,8,[255,250,230],true);
+                    doc.setDrawColor(...C_WAR);doc.setLineWidth(0.3);doc.roundedRect(mg,y,W-mg*2,8,1.5,1.5,'S');
+                    sf(6.5,'bold',C_WAR);doc.text('⚠ SIMULACAO ORIENTATIVA',mg+3,y+3.8);
+                    sf(6.5,'normal',[110,72,0]);doc.text('Valores estimados. Taxas, prazo e parcelas reais dependem de analise de credito da CEF.',mg+3,y+6.8);
+                    y+=11;
+
+                    // ── helpers de linha para coluna ──────────────────────
+                    // row2col: desenha uma linha label+valor dentro de uma coluna (x=início da coluna, cw=largura coluna)
+                    const row2=(x,cw2,l,v,vc,bold)=>{
+                        sf(6.5,'normal',C_MUT);doc.text(l,x+1,y);
+                        sf(bold?7.5:7,bold?'bold':'bold',vc||C_TXT);doc.text(String(v),x+cw2-1,y,{align:'right'});
+                        ln(x,y+1,x+cw2,y+1,C_BOR,0.15);
+                        y+=5.2;
+                    };
+                    // sec2col: cabeçalho de seção de coluna
+                    const sec2=(x,cw2,t)=>{
+                        fr(x,y,cw2,5.5,C_PRI,true);
+                        sf(6.5,'bold',C_WHT);doc.text(t.toUpperCase(),x+2,y+3.8);
+                        y+=8;
+                    };
+                    // alrt2: alerta de status dentro de coluna
+                    const alrt2=(x,cw2,t,bg,tc)=>{
+                        const lines=doc.splitTextToSize(t,cw2-6);
+                        const h=Math.max(7,lines.length*4)+2;
+                        fr(x,y,cw2,h,bg,true);
+                        doc.setDrawColor(...C_BOR);doc.setLineWidth(0.2);doc.roundedRect(x,y,cw2,h,1.5,1.5,'S');
+                        sf(6,'normal',tc||C_TXT);doc.text(lines,x+3,y+4);
+                        y+=h+2;
+                    };
 
                     const s=lastData.simular;
+                    const r=lastData.renda;
+                    const im=lastData.imovel;
+
+                    // ── LAYOUT DUAS COLUNAS ────────────────────────────────
+                    const xL=mg, xR=mg+cw+6;
+                    let yL=y, yR=y;
+
+                    // Coluna ESQUERDA — Simulação Principal
                     if(s){
-                        sec('Simulação Principal');
-                        row('Modalidade',NOMES[s.mModal]);row('Taxa',((s.ta)*100).toFixed(2)+'% a.a. + TR');
-                        row('Valor financiado',br(s.pv));row('Entrada',br(s.ev)+' ('+s.entPct.toFixed(0)+'%)');
-                        row('Prazo',s.prazo+' meses ('+Math.round(s.prazo/12)+' anos)');
-                        row('Sistema',s.sis==='sac'?'SAC — parcelas decrescentes':'Price — parcela fixa');
-                        if(s.nDep>0){row('Dependentes',s.nDep+' — desconto: −'+br(s.desc)+'/mês');row('Renda efetiva',br(s.rEf),C_PRI);}
-                        row(s.sis==='sac'?'1ª parcela':'Parcela fixa',br(s.p1));
-                        row('Total pago',br(s.totalPago));row('Total de juros',br(s.totalPago-s.pv));
                         const compV=s.rEf>0?s.p1/s.rEf*100:0;
                         const cCol=compV<=30?[46,125,66]:compV<=35?C_WAR:[184,48,48];
-                        row('Comprometimento renda ef.',compV.toFixed(1)+'%',cCol);
-                        row('Renda bruta mínima ideal',br(s.p1/0.30+s.desc));
-                        y+=4;
-                        if(compV>35) alrt('Comprometimento '+compV.toFixed(1)+'% > 35% — crédito provavelmente reprovado.',[255,230,230],[130,30,30]);
-                        else if(compV>30) alrt('Comprometimento '+compV.toFixed(1)+'% entre 30–35% — risco de reprovação.',[255,248,220],[100,70,0]);
-                        else alrt('Comprometimento '+compV.toFixed(1)+'% dentro do limite. Perfil aprovável.',[230,244,237],[30,100,50]);
+                        // Destaque principal (parcela)
+                        fr(xL,yL,cw,20,C_PRI,true);
+                        sf(7,'bold',[180,215,160]);doc.text('SIMULACAO PRINCIPAL',xL+cw/2,yL+5,{align:'center'});
+                        sf(7,'normal',[180,215,160]);doc.text(NOMES[s.mModal],xL+cw/2,yL+9,{align:'center'});
+                        sf(13,'bold',C_WHT);doc.text(br(s.p1),xL+cw/2,yL+16,{align:'center'});
+                        sf(6,'normal',[180,215,160]);doc.text(s.sis==='sac'?'1a parcela SAC':'Parcela Price (fixa)',xL+cw/2,yL+19.5,{align:'center'});
+                        yL+=23;y=yL;
+                        sec2(xL,cw,'Dados do Financiamento');yL=y;
+                        y=yL;row2(xL,cw,'Valor do imovel',br(s.pv+s.ev));yL=y;
+                        y=yL;row2(xL,cw,'Entrada',br(s.ev)+' ('+s.entPct.toFixed(0)+'%)');yL=y;
+                        y=yL;row2(xL,cw,'Financiado',br(s.pv),C_PRI,true);yL=y;
+                        y=yL;row2(xL,cw,'Prazo',s.prazo+'m / '+Math.round(s.prazo/12)+'a');yL=y;
+                        y=yL;row2(xL,cw,'Sistema',s.sis==='sac'?'SAC decrescente':'Price fixo');yL=y;
+                        y=yL;row2(xL,cw,'Taxa',((s.ta)*100).toFixed(2)+'% a.a. + TR');yL=y;
+                        if(s.nDep>0){y=yL;row2(xL,cw,'Dependentes ('+s.nDep+'x)','-'+br(s.desc)+'/mes');yL=y;y=yL;row2(xL,cw,'Renda efetiva',br(s.rEf),C_PRI,true);yL=y;}
+                        y=yL;row2(xL,cw,'Total pago',br(s.totalPago));yL=y;
+                        y=yL;row2(xL,cw,'Total de juros',br(s.totalPago-s.pv),[184,48,48]);yL=y;
+                        y=yL;row2(xL,cw,'Renda bruta minima',br(s.p1/0.30+s.desc),C_PRI,true);yL=y;
+                        y=yL;row2(xL,cw,'Comprometimento',compV.toFixed(1)+'%',cCol,true);yL=y;
+                        y=yL;
+                        const alrtTxt=compV>35?'Comprometimento '+compV.toFixed(1)+'% > 35% — credito provavelmente reprovado.':compV>30?'Comprometimento '+compV.toFixed(1)+'% entre 30-35% — risco de reprovacao.':'Perfil aprovavel — comprometimento '+compV.toFixed(1)+'% dentro do limite de 30%.';
+                        const alrtBg=compV>35?[255,230,230]:compV>30?[255,250,220]:[228,244,234];
+                        const alrtTc=compV>35?[130,30,30]:compV>30?[100,70,0]:[25,90,45];
+                        alrt2(xL,cw,alrtTxt,alrtBg,alrtTc);yL=y;
+                    } else {
+                        fr(xL,yL,cw,14,[240,240,235],true);
+                        sf(7,'normal',C_MUT);doc.text('Nenhuma simulacao calculada.',xL+cw/2,yL+9,{align:'center'});
+                        yL+=17;
                     }
 
-                    np();
-                    const r=lastData.renda;
-                    if(r){sec('Renda Ideal por Imóvel');row('Modalidade',NOMES[r.modal]);row('Taxa',(r.ta*100).toFixed(2)+'% a.a.');row('Valor financiado',br(r.pv));row('Prazo',r.prazo+' meses');if(r.nDep>0)row('Desconto deps.','+'+br(r.desc)+'/mês');row('1ª parcela SAC',br(r.p1SAC));row('Renda bruta mín. SAC',br(r.rBrutaSAC),C_PRI);row('Renda bruta mín. Price',br(r.rBrutaPrice),[30,80,160]);}
+                    // Coluna DIREITA — Renda Ideal + Imovel Maximo
+                    y=yR;
+                    if(r){
+                        sec2(xR,cw,'Renda Ideal por Imovel');yR=y;
+                        y=yR;row2(xR,cw,'Modalidade',NOMES[r.modal]);yR=y;
+                        y=yR;row2(xR,cw,'Taxa',(r.ta*100).toFixed(2)+'% a.a.');yR=y;
+                        y=yR;row2(xR,cw,'Financiado',br(r.pv));yR=y;
+                        y=yR;row2(xR,cw,'Prazo',r.prazo+' meses');yR=y;
+                        if(r.nDep>0){y=yR;row2(xR,cw,'Desconto deps.','-'+br(r.desc)+'/mes');yR=y;}
+                        y=yR;row2(xR,cw,'1a parcela SAC',br(r.p1SAC));yR=y;
+                        y=yR;row2(xR,cw,'Renda min. SAC',br(r.rBrutaSAC),C_PRI,true);yR=y;
+                        y=yR;row2(xR,cw,'Renda min. Price',br(r.rBrutaPrice),[30,80,160],true);yR=y;
+                        yR+=3;y=yR;
+                    }
+                    if(im){
+                        sec2(xR,cw,'Imovel Maximo por Renda');yR=y;
+                        y=yR;row2(xR,cw,'Renda bruta',br(im.renda));yR=y;
+                        if(im.nDep>0){y=yR;row2(xR,cw,'-Desconto deps.','-'+br(im.desc));yR=y;y=yR;row2(xR,cw,'Renda efetiva',br(im.rEf),C_PRI,true);yR=y;}
+                        y=yR;row2(xR,cw,'Parcela max. 30%',br(im.pmax));yR=y;
+                        y=yR;row2(xR,cw,'Entrada',br(im.ent));yR=y;
+                        y=yR;row2(xR,cw,'Imovel max. SAC',br(im.ivFSAC),C_PRI,true);yR=y;
+                        y=yR;row2(xR,cw,'Imovel max. Price',br(im.ivFPrice),[30,80,160],true);yR=y;
+                        yR+=3;y=yR;
+                    }
+                    if(!r&&!im){
+                        y=yR;
+                        fr(xR,yR,cw,14,[240,240,235],true);
+                        sf(7,'normal',C_MUT);doc.text('Use as abas Renda e Imovel',xR+cw/2,yR+9,{align:'center'});
+                        yR+=17;y=yR;
+                    }
 
-                    const i=lastData.imovel;
-                    if(i){y+=6;sec('Imóvel Máximo por Renda');row('Renda bruta',br(i.renda));if(i.nDep>0){row('−Desconto deps.','-'+br(i.desc));row('Renda efetiva',br(i.rEf),C_PRI);}row('Parcela máx. 30% ef.',br(i.pmax));row('Entrada disponível',br(i.ent));row('Imóvel máximo SAC',br(i.ivFSAC),C_PRI);row('Imóvel máximo Price',br(i.ivFPrice),[30,80,160]);}
-
-                    chk(24);y+=6;ln(mg,y,W-mg,y,C_PRI,0.4);y+=6;
-                    sf(7,'normal',C_MUT);
-                    doc.text(['Simulação gerada pelo ImobiPro — Não tem valor legal ou contratual.','Regras: parcela ≤ 30% renda efetiva · idade + prazo ≤ 80a6m · desconto/dep. ≈ R$246/mês.','Para contratação: habitacao.caixa.gov.br ou agência CEF mais próxima.'],mg,y,{lineHeightFactor:1.7});
+                    // ── LINHA SEPARADORA e rodapé ─────────────────────────
+                    const yFinal=Math.max(yL,yR)+4;
+                    ln(mg,yFinal,W-mg,yFinal,C_PRI,0.4);
+                    sf(5.5,'normal',C_MUT);
+                    doc.text('ImobiPro — Simulacao orientativa. Regras: parcela <= 30% renda efetiva · idade + prazo <= 80a6m · desc. dep. ~R$246/mes. Para contratar: habitacao.caixa.gov.br',W/2,yFinal+4,{align:'center'});
 
                     doc.save('simulacao-cef-'+new Date().toISOString().slice(0,10)+'.pdf');
                     if(window.UI&&UI.showToast) UI.showToast('✅ PDF baixado!');
@@ -21314,11 +21428,6 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             }
 
             function init(){
-                // Set toggle visual states
-                document.querySelectorAll('#simulador-view input[type=checkbox]').forEach(cb=>{
-                    const track=cb.nextElementSibling;
-                    if(track) cb.addEventListener('change',()=>{track.style.background=cb.checked?'var(--primary)':'var(--border)';});
-                });
                 // Set max date
                 const today=new Date().toISOString().split('T')[0];
                 ['s-nasc','r-nasc','i-nasc'].forEach(id=>{const el=document.getElementById(id);if(el)el.max=today;});
