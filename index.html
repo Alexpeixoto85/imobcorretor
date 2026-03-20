@@ -3761,6 +3761,58 @@
             font-size: 0.72rem;
             font-weight: 800;
         }
+
+        /* ===== SIMULADOR CEF ===== */
+        .sim-chip {
+            padding: 7px 14px; border-radius: 18px;
+            border: 1.5px solid var(--border); background: var(--light);
+            font-size: 0.82rem; font-weight: 600; color: var(--text-secondary);
+            cursor: pointer; transition: all .18s; font-family: inherit;
+        }
+        .sim-chip.active { border-color: var(--primary); background: rgba(46,74,49,0.1); color: var(--primary); }
+        .sim-row { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid var(--border); font-size:0.82rem; gap:8px; }
+        .sim-row:last-child { border-bottom:none; }
+        .sim-lbl { color:var(--text-secondary); flex:1; }
+        .sim-val { font-weight:700; color:var(--dark); text-align:right; }
+        .sim-val.ok   { color:var(--success); }
+        .sim-val.warn { color:var(--warning); }
+        .sim-val.bad  { color:var(--danger); }
+        .sim-val.gold { color:var(--accent); }
+        .sim-metric-row { display:flex; gap:10px; margin-bottom:12px; }
+        .sim-metric { flex:1; background:var(--light); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center; }
+        .sim-metric.accent { background:rgba(46,74,49,0.07); border-color:rgba(46,74,49,0.25); }
+        .sim-metric.gold   { background:rgba(196,114,74,0.07); border-color:rgba(196,114,74,0.25); }
+        .sim-metric-lbl { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px; }
+        .sim-metric-val { font-size:1.05rem; font-weight:800; color:var(--dark); line-height:1.1; }
+        .sim-metric-sub { font-size:0.65rem; color:var(--text-secondary); margin-top:2px; }
+        .sim-alert { padding:10px 12px; border-radius:10px; font-size:0.78rem; line-height:1.5; margin-bottom:8px; border-left:3px solid; display:flex; gap:7px; align-items:flex-start; }
+        .sim-alert.ok   { background:rgba(46,125,66,0.08);  border-color:var(--success); color:#1a5c32; }
+        .sim-alert.warn { background:rgba(184,112,32,0.08); border-color:var(--warning); color:#7a4800; }
+        .sim-alert.bad  { background:rgba(184,48,48,0.08);  border-color:var(--danger);  color:#7a1a1a; }
+        .sim-alert.age  { background:rgba(68,84,71,0.08);   border-color:var(--secondary);color:var(--secondary); }
+        .sim-alert.dep  { background:rgba(196,114,74,0.08); border-color:var(--accent);  color:#6a3010; }
+        .sim-ring-wrap { display:flex; align-items:center; gap:14px; padding:12px 0; }
+        .sim-ring { position:relative; width:72px; height:72px; flex-shrink:0; }
+        .sim-ring svg { transform:rotate(-90deg); }
+        .sim-ring .sim-pct { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem; }
+        .sim-ring-body { flex:1; }
+        .sim-ring-body .srb-lbl  { font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text-secondary); }
+        .sim-ring-body .srb-stat { font-size:0.95rem; font-weight:800; margin:2px 0; }
+        .sim-ring-body .srb-det  { font-size:0.72rem; color:var(--text-secondary); }
+        /* dark mode */
+        body.dark-mode .sim-chip { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.15); color:#aaa; }
+        body.dark-mode .sim-chip.active { background:rgba(46,74,49,0.3); border-color:var(--primary-light); color:#9dbfa0; }
+        body.dark-mode .sim-metric { background:rgba(255,255,255,0.04); border-color:rgba(255,255,255,0.1); }
+        body.dark-mode .sim-metric.accent { background:rgba(46,74,49,0.2); }
+        body.dark-mode .sim-metric.gold   { background:rgba(196,114,74,0.15); }
+        body.dark-mode .sim-metric-val, body.dark-mode .sim-val { color:#e0e0e0; }
+        body.dark-mode .sim-lbl, body.dark-mode .sim-metric-lbl, body.dark-mode .sim-metric-sub { color:#888; }
+        body.dark-mode .sim-alert.ok   { background:rgba(46,125,66,0.15); color:#7dbb8a; }
+        body.dark-mode .sim-alert.warn { background:rgba(184,112,32,0.15); color:#d4a040; }
+        body.dark-mode .sim-alert.bad  { background:rgba(184,48,48,0.15); color:#d07070; }
+        body.dark-mode .sim-alert.age  { background:rgba(68,84,71,0.2); color:#9dbfa0; }
+        body.dark-mode .sim-alert.dep  { background:rgba(196,114,74,0.15); color:#d98a62; }
+
     </style>
 </head>
 <body>
@@ -4707,6 +4759,322 @@
             </div>
             <!-- END NOTAS VIEW -->
 
+
+            <!-- ===== SIMULADOR CEF VIEW ===== -->
+            <div id="simulador-view" class="view">
+                <!-- Sub-tabs -->
+                <div class="coach-tabs" id="sim-tabs">
+                    <button class="coach-tab-btn active" onclick="Simulador.switchTab('simular',this)">🏦 Simular</button>
+                    <button class="coach-tab-btn" onclick="Simulador.switchTab('renda',this)">💰 Renda ideal</button>
+                    <button class="coach-tab-btn" onclick="Simulador.switchTab('imovel',this)">🏠 Imóvel máx.</button>
+                    <button class="coach-tab-btn" onclick="Simulador.switchTab('faixas',this)">📋 Faixas</button>
+                </div>
+
+                <!-- TAB: SIMULAR -->
+                <div id="sim-tab-simular" class="coach-tab-panel active">
+                    <!-- Hero -->
+                    <div style="background:linear-gradient(135deg,#1A2B1C,#2E4A31);border-radius:16px;padding:18px 16px;margin-bottom:14px;color:white;position:relative;overflow:hidden;">
+                        <div style="position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(196,114,74,0.15);"></div>
+                        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+                            <div style="width:44px;height:44px;background:linear-gradient(135deg,#C4724A,#D98A62);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;box-shadow:0 4px 12px rgba(196,114,74,0.4);">🏦</div>
+                            <div>
+                                <div style="font-size:1rem;font-weight:800;letter-spacing:-0.3px;">Simulador CEF</div>
+                                <div style="font-size:0.72rem;opacity:0.7;margin-top:1px;">MCMV · SBPE · SAC · Price · Regra dos 30%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dados do imóvel -->
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">🏠 Dados do Imóvel <span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span></div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Valor do imóvel (R$)</label>
+                            <input type="number" id="s-imovel" value="350000" step="1000" inputmode="numeric" class="form-control" oninput="Simulador.entrUpdate()">
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Percentual de entrada — mín. 20%</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" id="s-ent-pct" min="20" max="80" value="20" step="1" style="flex:1;accent-color:var(--primary);" oninput="Simulador.entrPct()">
+                                <span id="s-ent-pct-lbl" style="font-size:0.85rem;font-weight:700;color:var(--primary);min-width:40px;text-align:right;">20%</span>
+                            </div>
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-top:8px;margin-bottom:5px;">Valor da entrada (R$)</label>
+                            <input type="number" id="s-entrada" value="70000" step="1000" inputmode="numeric" class="form-control" oninput="Simulador.entrVal()">
+                        </div>
+                        <div>
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Prazo do financiamento</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" id="s-prazo" min="60" max="420" value="360" step="12" style="flex:1;accent-color:var(--primary);" oninput="Simulador.prazoUpdate('s')">
+                                <span id="s-prazo-lbl" style="font-size:0.85rem;font-weight:700;color:var(--primary);min-width:60px;text-align:right;">360 m</span>
+                            </div>
+                            <div id="s-prazo-hint" style="font-size:0.72rem;color:var(--accent);margin-top:4px;font-weight:700;display:none;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Perfil do titular -->
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:12px;display:flex;align-items:center;gap:8px;">👤 Perfil do Titular <span style="flex:1;height:1px;background:var(--border);display:inline-block;"></span></div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Data de nascimento (titular mais velho)</label>
+                            <input type="date" id="s-nasc" class="form-control" oninput="Simulador.nascUpdate('s')">
+                            <div id="s-age-widget" style="display:none;margin-top:8px;background:rgba(46,74,49,0.07);border:1px solid rgba(46,74,49,0.2);border-radius:10px;padding:10px 12px;">
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+                                    <span id="s-age-bubble" style="background:var(--primary);color:white;font-weight:700;font-size:0.8rem;padding:4px 10px;border-radius:14px;white-space:nowrap;"></span>
+                                    <span id="s-age-info" style="font-size:0.75rem;color:var(--text-secondary);line-height:1.4;flex:1;"></span>
+                                </div>
+                                <div style="height:5px;background:rgba(46,74,49,0.15);border-radius:3px;overflow:hidden;">
+                                    <div id="s-age-bar" style="height:100%;border-radius:3px;transition:width .4s ease;"></div>
+                                </div>
+                                <div id="s-age-note" style="font-size:0.72rem;font-weight:700;color:var(--primary);margin-top:5px;"></div>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Renda familiar bruta (R$)</label>
+                            <input type="number" id="s-renda" value="8000" step="500" inputmode="numeric" class="form-control">
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Dependentes (filhos, cônjuge sem renda)</label>
+                            <div style="display:flex;gap:7px;flex-wrap:wrap;" id="s-dep-chips">
+                                <button class="sim-chip active" onclick="Simulador.setDep('s',0,this)">Nenhum</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('s',1,this)">1</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('s',2,this)">2</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('s',3,this)">3</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('s',4,this)">4+</button>
+                            </div>
+                            <div id="s-dep-info" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(184,112,32,0.08);border:1px solid rgba(184,112,32,0.25);border-radius:8px;font-size:0.75rem;color:var(--warning);line-height:1.5;"></div>
+                        </div>
+
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Modalidade</label>
+                            <select id="s-modal" class="form-control">
+                                <option value="mcmv1">MCMV Faixa 1 — renda até R$ 2.850</option>
+                                <option value="mcmv2">MCMV Faixa 2 — renda até R$ 4.700</option>
+                                <option value="mcmv3">MCMV Faixa 3 — renda até R$ 8.600</option>
+                                <option value="mcmv4">MCMV Faixa 4 — renda até R$ 12.000</option>
+                                <option value="sbpe" selected>SBPE / SFH — balcão</option>
+                            </select>
+                        </div>
+
+                        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
+                                <input type="checkbox" id="s-fgts" style="opacity:0;width:0;height:0;position:absolute;">
+                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
+                            </label>
+                            <div>
+                                <div style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS</div>
+                                <div style="font-size:0.72rem;color:var(--text-secondary);">≥ 3 anos CLT — redução de 0,5 p.p. na taxa</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
+                                <input type="checkbox" id="s-rel" style="opacity:0;width:0;height:0;position:absolute;">
+                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
+                            </label>
+                            <div>
+                                <div style="font-size:0.82rem;font-weight:600;color:var(--dark);">Correntista Caixa</div>
+                                <div style="font-size:0.72rem;color:var(--text-secondary);">Débito automático + crédito de salário</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Sistema de amortização</label>
+                            <select id="s-sis" class="form-control">
+                                <option value="sac">SAC — parcelas decrescentes</option>
+                                <option value="price">Price — parcela fixa</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Botão calcular -->
+                    <button onclick="Simulador.calcSimular()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:14px;letter-spacing:0.01em;">🏦 Calcular Financiamento</button>
+
+                    <!-- Resultado -->
+                    <div id="s-resultado"></div>
+                    <div id="s-alertas"></div>
+
+                    <!-- Tabela amortização -->
+                    <div class="vc-card" style="margin-bottom:12px;padding:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">📊 Tabela — Primeiros 12 meses</div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:0.75rem;min-width:300px;">
+                                <thead><tr style="background:var(--primary);">
+                                    <th style="color:white;padding:7px 8px;text-align:left;font-size:0.65rem;text-transform:uppercase;">Mês</th>
+                                    <th style="color:white;padding:7px 8px;text-align:right;font-size:0.65rem;text-transform:uppercase;">Amort.</th>
+                                    <th style="color:white;padding:7px 8px;text-align:right;font-size:0.65rem;text-transform:uppercase;">Juros</th>
+                                    <th style="color:white;padding:7px 8px;text-align:right;font-size:0.65rem;text-transform:uppercase;">Parcela</th>
+                                    <th style="color:white;padding:7px 8px;text-align:right;font-size:0.65rem;text-transform:uppercase;">Saldo</th>
+                                </tr></thead>
+                                <tbody id="s-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Botão PDF -->
+                    <button onclick="Simulador.gerarPDF()" style="width:100%;padding:12px;background:linear-gradient(135deg,#C4724A,#D98A62);color:white;border:none;border-radius:14px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:8px;"><i class="fas fa-file-pdf"></i> Baixar Simulação em PDF</button>
+                </div>
+
+                <!-- TAB: RENDA IDEAL -->
+                <div id="sim-tab-renda" class="coach-tab-panel">
+                    <div style="background:rgba(46,74,49,0.06);border:1px solid rgba(46,74,49,0.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;color:var(--primary);line-height:1.6;">
+                        <strong>Regra dos 30%:</strong> a 1ª parcela SAC (ou parcela Price) não pode ultrapassar 30% da renda efetiva (após desconto de dependentes). Informe nascimento para limitar prazo pela regra de idade.
+                    </div>
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="margin-bottom:12px;"><label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Valor do imóvel (R$)</label><input type="number" id="r-imovel" value="300000" step="1000" inputmode="numeric" class="form-control"></div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Entrada (%)</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" id="r-ent" min="20" max="80" value="20" step="1" style="flex:1;accent-color:var(--primary);" oninput="document.getElementById('r-ent-lbl').textContent=this.value+'%'">
+                                <span id="r-ent-lbl" style="font-size:0.85rem;font-weight:700;color:var(--primary);min-width:40px;text-align:right;">20%</span>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Prazo (meses)</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" id="r-prazo" min="60" max="420" value="360" step="12" style="flex:1;accent-color:var(--primary);" oninput="Simulador.prazoUpdate('r')">
+                                <span id="r-prazo-lbl" style="font-size:0.85rem;font-weight:700;color:var(--primary);min-width:60px;text-align:right;">360 m</span>
+                            </div>
+                            <div id="r-prazo-hint" style="font-size:0.72rem;color:var(--accent);margin-top:4px;font-weight:700;display:none;"></div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Data de nascimento</label>
+                            <input type="date" id="r-nasc" class="form-control" oninput="Simulador.nascUpdate('r')">
+                            <div id="r-age-widget" style="display:none;margin-top:8px;background:rgba(46,74,49,0.07);border:1px solid rgba(46,74,49,0.2);border-radius:10px;padding:10px 12px;">
+                                <span id="r-age-bubble" style="background:var(--primary);color:white;font-weight:700;font-size:0.8rem;padding:4px 10px;border-radius:14px;"></span>
+                                <div id="r-age-note" style="font-size:0.72rem;font-weight:700;color:var(--primary);margin-top:5px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Dependentes</label>
+                            <div style="display:flex;gap:7px;flex-wrap:wrap;" id="r-dep-chips">
+                                <button class="sim-chip active" onclick="Simulador.setDep('r',0,this)">Nenhum</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('r',1,this)">1</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('r',2,this)">2</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('r',3,this)">3</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('r',4,this)">4+</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Modalidade / taxa</label>
+                            <select id="r-modal" class="form-control">
+                                <option value="mcmv1">MCMV F1 — 5,00% a.a.</option><option value="mcmv2">MCMV F2 — 7,00% a.a.</option>
+                                <option value="mcmv3">MCMV F3 — 8,16% a.a.</option><option value="mcmv4">MCMV F4 — 10,00% a.a.</option>
+                                <option value="sbpe" selected>SBPE balcão — 11,19% a.a.</option><option value="sbpe_rel">SBPE correntista — 10,26% a.a.</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
+                                <input type="checkbox" id="r-fgts" style="opacity:0;width:0;height:0;position:absolute;">
+                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
+                            </label>
+                            <span style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p. na taxa</span></span>
+                        </div>
+                    </div>
+                    <button onclick="Simulador.calcRenda()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:14px;">💰 Calcular Renda Mínima</button>
+                    <div id="r-resultado"></div>
+                    <div id="r-alertas"></div>
+                </div>
+
+                <!-- TAB: IMÓVEL MÁXIMO -->
+                <div id="sim-tab-imovel" class="coach-tab-panel">
+                    <div style="background:rgba(46,74,49,0.06);border:1px solid rgba(46,74,49,0.2);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;color:var(--primary);line-height:1.6;">
+                        <strong>4 limitadores:</strong> (1) parcela ≤ 30% renda efetiva, (2) cota máx. modalidade, (3) teto da faixa, (4) prazo máx. pela regra de idade. Dependentes reduzem a renda efetiva.
+                    </div>
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="margin-bottom:12px;"><label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Renda familiar bruta (R$)</label><input type="number" id="i-renda" value="6000" step="500" inputmode="numeric" class="form-control"></div>
+                        <div style="margin-bottom:12px;"><label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Entrada disponível (R$)</label><input type="number" id="i-entrada" value="50000" step="1000" inputmode="numeric" class="form-control"></div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Prazo desejado (meses)</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" id="i-prazo" min="60" max="420" value="360" step="12" style="flex:1;accent-color:var(--primary);" oninput="Simulador.prazoUpdate('i')">
+                                <span id="i-prazo-lbl" style="font-size:0.85rem;font-weight:700;color:var(--primary);min-width:60px;text-align:right;">360 m</span>
+                            </div>
+                            <div id="i-prazo-hint" style="font-size:0.72rem;color:var(--accent);margin-top:4px;font-weight:700;display:none;"></div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Data de nascimento</label>
+                            <input type="date" id="i-nasc" class="form-control" oninput="Simulador.nascUpdate('i')">
+                            <div id="i-age-widget" style="display:none;margin-top:8px;background:rgba(46,74,49,0.07);border:1px solid rgba(46,74,49,0.2);border-radius:10px;padding:10px 12px;">
+                                <span id="i-age-bubble" style="background:var(--primary);color:white;font-weight:700;font-size:0.8rem;padding:4px 10px;border-radius:14px;"></span>
+                                <div id="i-age-note" style="font-size:0.72rem;font-weight:700;color:var(--primary);margin-top:5px;"></div>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:8px;">Dependentes</label>
+                            <div style="display:flex;gap:7px;flex-wrap:wrap;" id="i-dep-chips">
+                                <button class="sim-chip active" onclick="Simulador.setDep('i',0,this)">Nenhum</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('i',1,this)">1</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('i',2,this)">2</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('i',3,this)">3</button>
+                                <button class="sim-chip" onclick="Simulador.setDep('i',4,this)">4+</button>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:12px;">
+                            <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:5px;">Modalidade / taxa</label>
+                            <select id="i-modal" class="form-control">
+                                <option value="mcmv1">MCMV F1 — 5,00% a.a.</option><option value="mcmv2">MCMV F2 — 7,00% a.a.</option>
+                                <option value="mcmv3">MCMV F3 — 8,16% a.a.</option><option value="mcmv4">MCMV F4 — 10,00% a.a.</option>
+                                <option value="sbpe" selected>SBPE balcão — 11,19% a.a.</option><option value="sbpe_rel">SBPE correntista — 10,26% a.a.</option>
+                            </select>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <label style="position:relative;width:38px;height:22px;flex-shrink:0;display:inline-block;">
+                                <input type="checkbox" id="i-fgts" style="opacity:0;width:0;height:0;position:absolute;">
+                                <span onclick="this.previousElementSibling.click()" style="position:absolute;inset:0;background:var(--border);border-radius:11px;cursor:pointer;transition:background .2s;"></span>
+                            </label>
+                            <span style="font-size:0.82rem;font-weight:600;color:var(--dark);">Cotista FGTS <span style="font-weight:400;color:var(--text-secondary);">— −0,5 p.p.</span></span>
+                        </div>
+                    </div>
+                    <button onclick="Simulador.calcImovel()" style="width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;margin-bottom:14px;">🏠 Calcular Imóvel Máximo</button>
+                    <div id="i-resultado"></div>
+                    <div id="i-alertas"></div>
+                </div>
+
+                <!-- TAB: FAIXAS -->
+                <div id="sim-tab-faixas" class="coach-tab-panel">
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">📋 Faixas CEF — 2026</div>
+                        <div style="overflow-x:auto;">
+                            <table style="width:100%;border-collapse:collapse;font-size:0.72rem;min-width:400px;">
+                                <thead><tr style="background:var(--primary);">
+                                    <th style="color:white;padding:7px 8px;text-align:left;">Faixa</th><th style="color:white;padding:7px 8px;text-align:left;">Renda</th>
+                                    <th style="color:white;padding:7px 8px;text-align:center;">Taxa a.a.</th><th style="color:white;padding:7px 8px;text-align:center;">Teto</th><th style="color:white;padding:7px 8px;text-align:center;">Cota</th>
+                                </tr></thead>
+                                <tbody>
+                                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;"><span style="background:#e6f4ed;color:#1a5c35;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.65rem;">MCMV F1</span></td><td style="padding:8px;color:var(--text-secondary);">≤ R$2.850</td><td style="padding:8px;text-align:center;">4–5%</td><td style="padding:8px;text-align:center;">R$275k</td><td style="padding:8px;text-align:center;">90%</td></tr>
+                                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;"><span style="background:#e6eefa;color:#184a80;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.65rem;">MCMV F2</span></td><td style="padding:8px;color:var(--text-secondary);">R$2.851–4.700</td><td style="padding:8px;text-align:center;">5,5–7%</td><td style="padding:8px;text-align:center;">R$350k</td><td style="padding:8px;text-align:center;">80%</td></tr>
+                                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;"><span style="background:#fdf5e0;color:#8c5f00;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.65rem;">MCMV F3</span></td><td style="padding:8px;color:var(--text-secondary);">R$4.701–8.600</td><td style="padding:8px;text-align:center;">7,66–8,16%</td><td style="padding:8px;text-align:center;">R$350k</td><td style="padding:8px;text-align:center;">80%</td></tr>
+                                    <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;"><span style="background:#ede8f8;color:#4a2a9a;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.65rem;">MCMV F4</span></td><td style="padding:8px;color:var(--text-secondary);">R$8.601–12.000</td><td style="padding:8px;text-align:center;">10–10,5%</td><td style="padding:8px;text-align:center;">R$500k</td><td style="padding:8px;text-align:center;">80%</td></tr>
+                                    <tr><td style="padding:8px;"><span style="background:#fff3f0;color:#8c3020;padding:2px 8px;border-radius:10px;font-weight:700;font-size:0.65rem;">SBPE</span></td><td style="padding:8px;color:var(--text-secondary);">Qualquer</td><td style="padding:8px;text-align:center;">10,26–11,19%</td><td style="padding:8px;text-align:center;">R$2,25M</td><td style="padding:8px;text-align:center;">80%</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">⏱ Regra de Idade</div>
+                        <div style="background:var(--dark);color:#c8dbb8;border-radius:10px;padding:12px;font-family:monospace;font-size:0.72rem;line-height:1.9;white-space:pre;">Idade + Prazo ≤ 80 anos e 6 meses (966 m)
+Prazo_max = 966 − idade_em_meses
+Ex: 55 anos → 966−660 = 306 m → 25 anos
+Ex: 65 anos → 966−780 = 186 m → 15 anos</div>
+                    </div>
+                    <div class="vc-card" style="margin-bottom:12px;">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">👥 Regra de Dependentes</div>
+                        <div style="background:var(--dark);color:#c8dbb8;border-radius:10px;padding:12px;font-family:monospace;font-size:0.72rem;line-height:1.9;white-space:pre;">Desconto por dependente ≈ R$246/mês
+Renda_efetiva = Renda_bruta − (N×246)
+Parcela_max = Renda_efetiva × 0,30
+MCMV F1/F2: desconto reduzido (R$148/dep)</div>
+                    </div>
+                    <div class="vc-card">
+                        <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">📐 Prazo máximo por idade</div>
+                        <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+                            <thead><tr style="background:var(--primary);"><th style="color:white;padding:6px 8px;text-align:left;">Idade</th><th style="color:white;padding:6px 8px;text-align:center;">Prazo máx.</th><th style="color:white;padding:6px 8px;text-align:center;">Anos</th></tr></thead>
+                            <tbody id="sim-age-table"></tbody>
+                        </table></div>
+                    </div>
+                </div>
+            </div>
+            <!-- END SIMULADOR VIEW -->
+
         <button class="fab" onclick="UI.openNewImovel()" id="main-fab">
             <i class="fas fa-plus"></i>
         </button>
@@ -4741,6 +5109,9 @@
             </a>
             <a href="#" class="nav-item" data-target="leitura-view" onclick="UI.switchTab(this); Leitura.init(); return false;">
                 <i class="fas fa-book-open"></i> <span>Leitura</span>
+            </a>
+            <a href="#" class="nav-item" data-target="simulador-view" onclick="UI.switchTab(this); Simulador.init(); return false;">
+                <i class="fas fa-calculator"></i> <span>Simulador</span>
             </a>
             <a href="#" class="nav-item" data-target="notas-view" onclick="UI.switchTab(this); Notas.init(); return false;">
                 <i class="fas fa-sticky-note"></i> <span>Notas</span>
@@ -4995,6 +5366,16 @@
                 <div class="form-group">
                     <label class="form-label">Taxa de Juros Anual (%)</label>
                     <input type="number" id="c-taxa-juros" class="form-control" placeholder="Ex: 8.5" min="0" max="30" step="0.01" value="8.5">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dependentes (filhos, cônjuge sem renda própria)</label>
+                    <select id="c-dependentes" class="form-control">
+                        <option value="0">Nenhum</option>
+                        <option value="1">1 dependente</option>
+                        <option value="2">2 dependentes</option>
+                        <option value="3">3 dependentes</option>
+                        <option value="4">4 ou mais dependentes</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Faixa de Preço (Interesse)</label>
@@ -8490,6 +8871,9 @@
                     UI.renderFunil();
                 } else if (target === 'coach-view') {
                     fab.style.display = 'none';
+                } else if (target === 'simulador-view') {
+                    fab.style.display = 'none';
+                    Simulador.init();
                 } else {
                     fab.style.display = 'none';
                 }
@@ -10383,6 +10767,9 @@
                             </button>
                             <button class="btn-details btn-details-whatsapp" onclick="App.whatsapp.confirmOpenCliente('${cliente.id}')">
                                 <i class="fab fa-whatsapp"></i> WhatsApp
+                            </button>
+                            <button class="btn-details" style="background:linear-gradient(135deg,#2E4A31,#3D6142);color:white;flex:1;" onclick="event.stopPropagation(); Simulador.prefillFromCliente('${cliente.id}')">
+                                <i class="fas fa-calculator"></i> Simular Financiamento
                             </button>
                             <button class="btn-details btn-details-secondary" onclick="Utils.generateClientePDF('${cliente.id}')">
                                 <i class="fas fa-file-pdf"></i> Relatório PDF
@@ -13109,6 +13496,7 @@
                     const clienteExistente = UI.data.clientes.find(c => c.id === id);
                     const contatos = clienteExistente?.contatos || 0;
 
+                    const dependentes = parseInt(document.getElementById('c-dependentes')?.value || '0');
                     const newClient = { 
                         id, nome, tipo, etapaFunil, telefone, cpf, email, 
                         imovelInteresseId, dataNascimento, rendaMensal, taxaJuros,
@@ -13116,6 +13504,7 @@
                         tipoInteresse, loteDocsChecked,
                         profissao, estadoCivil, profissaoDocsChecked,
                         conjugeNome, conjugeCpf, conjugeRendaFormal,
+                        dependentes,
                         dataCriacao: clienteExistente ? clienteExistente.dataCriacao : new Date().toISOString(),
                         dataEntradaFunil: new Date().toISOString().split('T')[0],
                         dataAtualizacao: new Date().toISOString(),
@@ -13167,6 +13556,7 @@
                     document.getElementById('c-imovel-interesse').value = cliente.imovelInteresseId || '';
                     document.getElementById('c-data-nascimento').value = cliente.dataNascimento || '';
                     document.getElementById('c-renda-mensal').value = cliente.rendaMensal ? cliente.rendaMensal.toString() : '';
+                    if(document.getElementById('c-dependentes')) document.getElementById('c-dependentes').value = (cliente.dependentes || 0).toString();
                     document.getElementById('c-taxa-juros').value = cliente.taxaJuros || '';
                     document.getElementById('c-faixa-preco').value = cliente.faixaPreco || '';
                     document.getElementById('c-observacoes').value = cliente.observacoes || '';
@@ -20482,6 +20872,495 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 e.preventDefault();
             }
         }, { passive: false });
-    </script>
+    
+        // ================================================================
+        //  SIMULADOR CEF — Módulo integrado ao ImobiPro
+        // ================================================================
+        const Simulador = (() => {
+            const TAXAS   = { mcmv1:.05, mcmv2:.07, mcmv3:.0816, mcmv4:.10, sbpe:.1119, sbpe_rel:.1026 };
+            const TETOS   = { mcmv1:275000, mcmv2:350000, mcmv3:350000, mcmv4:500000, sbpe:2250000, sbpe_rel:2250000 };
+            const COTAS   = { mcmv1:.90, mcmv2:.80, mcmv3:.80, mcmv4:.80, sbpe:.80, sbpe_rel:.80 };
+            const FGTS_OK = ['mcmv1','mcmv2','mcmv3'];
+            const NOMES   = { mcmv1:'MCMV Faixa 1', mcmv2:'MCMV Faixa 2', mcmv3:'MCMV Faixa 3', mcmv4:'MCMV Faixa 4', sbpe:'SBPE/SFH Balcão', sbpe_rel:'SBPE Correntista' };
+            const LIMITE  = 966; // 80a6m em meses
+            const PRAZO_MAX = 420;
+            const PRAZO_MIN = 60;
+            const DESC_DEP  = 246;
+            const DESC_DEP_12 = 148;
+            let lastData = {};
+            const DEP = { s:0, r:0, i:0 };
+            const AGES = { s:null, r:null, i:null };
+
+            const br  = v => 'R$ ' + Math.round(v).toLocaleString('pt-BR');
+            const taxa = (m, fgts) => {
+                let t = TAXAS[m] || TAXAS.sbpe;
+                if (fgts && FGTS_OK.includes(m)) t = Math.max(0.04, t-.005);
+                return t;
+            };
+            const imM = a => Math.pow(1+a,1/12)-1;
+            const descDep = (n,m) => n<=0?0 : n*((m==='mcmv1'||m==='mcmv2')?DESC_DEP_12:DESC_DEP);
+            const rendaEf = (renda,n,m) => Math.max(0, renda - descDep(n,m));
+
+            function calcSAC(pv,n,r){ if(!n||!pv)return{p1:0,amort:0,j1:0,total:0}; const a=pv/n,j1=pv*r; let tot=0,s=pv; for(let k=0;k<n;k++){tot+=a+s*r;s-=a;} return{p1:a+j1,amort:a,j1,total:tot}; }
+            function calcPrice(pv,n,r){ if(!n||!pv||!r)return{pmt:pv/n,total:pv}; const pmt=pv*(r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1); return{pmt,total:pmt*n}; }
+            function compSt(p){ if(p<=30)return{cls:'ok',lbl:'Aprovável',col:'#2E7D42',bg:'rgba(46,125,66,0.1)'}; if(p<=35)return{cls:'warn',lbl:'Risco',col:'#B87020',bg:'rgba(184,112,32,0.1)'}; return{cls:'bad',lbl:'Improvável',col:'#B83030',bg:'rgba(184,48,48,0.1)'}; }
+
+            function calcIdade(nascStr){
+                if(!nascStr) return null;
+                const nasc=new Date(nascStr+'T00:00:00'), hoje=new Date();
+                if(isNaN(nasc)||nasc>=hoje) return null;
+                let mV=(hoje.getFullYear()-nasc.getFullYear())*12+(hoje.getMonth()-nasc.getMonth());
+                if(hoje.getDate()<nasc.getDate()) mV--;
+                const anos=Math.floor(mV/12), meses=mV%12;
+                const pmaxBruto=LIMITE-mV;
+                const pmaxM=Math.max(0,Math.min(PRAZO_MAX,Math.floor(pmaxBruto/12)*12));
+                const barPct=Math.min(100,(mV/LIMITE)*100);
+                const invalid=anos>=80||pmaxM<PRAZO_MIN;
+                const pmA=Math.floor(pmaxM/12), pmMm=pmaxM%12;
+                let note='';
+                if(anos>=80) note='⚠ Titular com 80+ anos — financiamento inviável';
+                else if(pmaxM<PRAZO_MIN) note=`⚠ Prazo máx. ${pmaxM}m < mínimo`;
+                else if(pmaxM<PRAZO_MAX) note=`Prazo máx. por idade: ${pmaxM}m (${pmA}a${pmMm>0?pmMm+'m':''})`;
+                else note=`Sem restrição de prazo — máx. ${PRAZO_MAX}m`;
+                return{anos,meses,mV,pmaxM,barPct,invalid,note};
+            }
+
+            function renderAge(prefix, info){
+                const w=document.getElementById(prefix+'-age-widget');
+                if(!w) return;
+                if(!info){w.style.display='none';return;}
+                w.style.display='block';
+                const bubble=document.getElementById(prefix+'-age-bubble');
+                const note=document.getElementById(prefix+'-age-note');
+                const bar=document.getElementById(prefix+'-age-bar');
+                if(bubble) bubble.textContent=`${info.anos}a ${info.meses}m`;
+                if(note) note.textContent=info.note;
+                if(bar){const col=info.barPct>85?'#B83030':info.barPct>70?'#B87020':info.invalid?'#B83030':'#2E4A31';bar.style.width=info.barPct.toFixed(1)+'%';bar.style.background=col;}
+                const infoEl=document.getElementById(prefix+'-age-info');
+                if(infoEl) infoEl.textContent=`Idade: ${info.mV} meses — prazo máx. ${info.pmaxM} meses`;
+                w.style.borderColor=info.invalid?'rgba(184,48,48,0.3)':'rgba(46,74,49,0.2)';
+                w.style.background=info.invalid?'rgba(184,48,48,0.05)':'rgba(46,74,49,0.07)';
+            }
+
+            function applyAgePrazo(prefix, info){
+                const sl=document.getElementById(prefix+'-prazo');
+                const hint=document.getElementById(prefix+'-prazo-hint');
+                if(!sl) return;
+                if(info&&info.pmaxM>0){
+                    if(+sl.value>info.pmaxM) sl.value=info.pmaxM;
+                    sl.max=info.pmaxM;
+                    if(hint){hint.style.display='block';hint.textContent=`⏱ Limite pela idade: ${info.pmaxM} meses (${Math.floor(info.pmaxM/12)} anos)`;} 
+                } else {
+                    sl.max=PRAZO_MAX;
+                    if(hint) hint.style.display='none';
+                }
+                const lbl=document.getElementById(prefix+'-prazo-lbl');
+                if(lbl) lbl.textContent=sl.value+' m';
+            }
+
+            function compRing(pct){
+                const capped=Math.min(pct,100);
+                const st=compSt(pct);
+                const r=30,circ=2*Math.PI*r,dash=(capped/100)*circ;
+                return `<div class="sim-ring-wrap">
+                    <div class="sim-ring">
+                        <svg width="72" height="72" viewBox="0 0 72 72">
+                            <circle cx="36" cy="36" r="${r}" fill="${st.bg}" stroke="${st.bg}" stroke-width="9"/>
+                            <circle cx="36" cy="36" r="${r}" fill="none" stroke="${st.col}" stroke-width="5"
+                                stroke-dasharray="${dash.toFixed(1)} ${circ.toFixed(1)}" stroke-linecap="round"/>
+                        </svg>
+                        <div class="sim-pct" style="color:${st.col}">${pct.toFixed(0)}%</div>
+                    </div>
+                    <div class="sim-ring-body">
+                        <div class="srb-lbl">Comprometimento de renda</div>
+                        <div class="srb-stat" style="color:${st.col}">${st.lbl}</div>
+                        <div class="srb-det">Limite recomendado: 30% da renda efetiva</div>
+                    </div>
+                </div>`;
+            }
+
+            function alert(cls,icon,msg){ return `<div class="sim-alert ${cls}"><span style="flex-shrink:0;">${icon}</span><span>${msg}</span></div>`; }
+
+            function rowHTML(lbl,val,cls){return `<div class="sim-row"><span class="sim-lbl">${lbl}</span><span class="sim-val ${cls||''}">${val}</span></div>`;}
+
+            // ── SIMULAR ─────────────────────────────────────────────────
+            function calcSimular(){
+                const iv   = +document.getElementById('s-imovel').value||0;
+                const ev   = +document.getElementById('s-entrada').value||0;
+                const prazo= +document.getElementById('s-prazo').value;
+                const renda= +document.getElementById('s-renda').value||0;
+                const modal= document.getElementById('s-modal').value;
+                const fgts = document.getElementById('s-fgts').checked;
+                const rel  = document.getElementById('s-rel').checked;
+                const sis  = document.getElementById('s-sis').value;
+                const nDep = DEP['s'];
+                const info = AGES['s'];
+
+                const mModal=(rel&&modal==='sbpe')?'sbpe_rel':modal;
+                const ta=taxa(mModal,fgts), im=imM(ta);
+                const pv=iv-ev, entPct=iv>0?ev/iv*100:0;
+                const cotaUsada=iv>0?pv/iv:0, cotaMax=COTAS[modal];
+                const teto=TETOS[modal];
+                const desc=descDep(nDep,modal), rEf=rendaEf(renda,nDep,modal);
+
+                let p1,pFim,totalPago;
+                if(sis==='sac'){
+                    const r=calcSAC(pv,prazo,im);
+                    p1=r.p1;totalPago=r.total;pFim=pv/prazo+(pv/prazo)*im;
+                }else{
+                    const r=calcPrice(pv,prazo,im);
+                    p1=r.pmt;pFim=r.pmt;totalPago=r.total;
+                }
+                const comp=rEf>0?p1/rEf*100:0;
+                const rendaMinEf=p1/0.30, rendaMinBruta=rendaMinEf+desc;
+                const st=compSt(comp);
+                lastData.simular={mModal,ta,im,pv,prazo,renda,rEf,desc,nDep,comp,p1,pFim,totalPago,ev,entPct,sis};
+
+                document.getElementById('s-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
+                    <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">📊 Resultado</div>
+                    <div style="margin-bottom:10px;"><span style="background:rgba(46,74,49,0.1);color:var(--primary);border:1px solid rgba(46,74,49,0.25);padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:700;">${NOMES[mModal]} · ${(ta*100).toFixed(2)}% a.a. + TR</span></div>
+                    <div class="sim-metric-row">
+                        <div class="sim-metric accent">
+                            <div class="sim-metric-lbl">${sis==='sac'?'1ª parcela':'Parcela fixa'}</div>
+                            <div class="sim-metric-val" style="color:${st.col}">${br(p1)}</div>
+                            <div class="sim-metric-sub">${sis==='sac'?'Última: '+br(pFim):'Fixa todo prazo'}</div>
+                        </div>
+                        <div class="sim-metric gold">
+                            <div class="sim-metric-lbl">Total juros</div>
+                            <div class="sim-metric-val">${br(totalPago-pv)}</div>
+                            <div class="sim-metric-sub">Total: ${br(totalPago)}</div>
+                        </div>
+                    </div>
+                    ${compRing(comp)}
+                    <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
+                    ${nDep>0?rowHTML('Renda bruta',br(renda))+rowHTML('Desconto '+nDep+' dep.','-'+br(desc),'warn')+rowHTML('Renda efetiva p/ análise',br(rEf),'ok'):''}
+                    ${rowHTML('Parcela máx. 30% renda ef.',br(rEf*0.30))}
+                    ${rowHTML('Renda bruta mínima ideal',br(rendaMinBruta),(comp>35?'bad':comp>30?'warn':'ok'))}
+                    ${rowHTML('Valor financiado',br(pv))}
+                    ${rowHTML('Entrada',br(ev)+' ('+entPct.toFixed(0)+'%)')}
+                    ${rowHTML('Prazo',prazo+' m / '+Math.round(prazo/12)+' a'+(info&&info.pmaxM<PRAZO_MAX?' ★ limite idade':''))}
+                </div>`;
+
+                let alertsHTML='';
+                if(info&&info.invalid) alertsHTML+=alert('age','🔒',info.note);
+                else if(info&&info.pmaxM<PRAZO_MAX) alertsHTML+=alert('age','⏱','Prazo limitado a '+info.pmaxM+' meses pela regra de idade (titular + prazo ≤ 80a6m)');
+                if(nDep>0) alertsHTML+=alert('dep','👥',nDep+' dependente'+(nDep>1?'s':'')+': renda efetiva reduzida em '+br(desc)+'/mês para análise de crédito.');
+                if(ev>0&&entPct<20) alertsHTML+=alert('bad','❌','Entrada de '+entPct.toFixed(0)+'% abaixo do mínimo exigido (20%). Operação reprovada.');
+                if(cotaUsada>cotaMax) alertsHTML+=alert('warn','⚠','Cota de financiamento ('+((cotaUsada)*100).toFixed(0)+'%) supera o máximo da modalidade ('+((cotaMax)*100).toFixed(0)+'%).');
+                if(iv>teto) alertsHTML+=alert('bad','❌','Imóvel de '+br(iv)+' acima do teto '+NOMES[modal]+' ('+br(teto)+').');
+                if(comp>35) alertsHTML+=alert('bad','❌','Comprometimento '+comp.toFixed(1)+'% > 35%. Crédito provavelmente reprovado. Renda bruta mínima: '+br(rendaMinBruta)+'.');
+                else if(comp>30) alertsHTML+=alert('warn','⚠','Comprometimento '+comp.toFixed(1)+'% entre 30–35%. Risco de reprovação.');
+                else if(pv>0) alertsHTML+=alert('ok','✔','Comprometimento '+comp.toFixed(1)+'% dentro do limite. Perfil aprovável.');
+                document.getElementById('s-alertas').innerHTML=alertsHTML;
+
+                // Tabela
+                const tbody=document.getElementById('s-tbody');
+                tbody.innerHTML=''; let saldo=pv;
+                for(let m=1;m<=Math.min(12,prazo);m++){
+                    let amort,juros,parcela;
+                    if(sis==='sac'){amort=pv/prazo;juros=saldo*im;parcela=amort+juros;}
+                    else{const pmt=calcPrice(pv,prazo,im).pmt;juros=saldo*im;amort=pmt-juros;parcela=pmt;}
+                    saldo-=amort;
+                    const tr=document.createElement('tr');
+                    if(m===1) tr.style.background='rgba(196,114,74,0.1)';
+                    tr.innerHTML=`<td style="padding:6px 8px;border-bottom:1px solid var(--border);">${m}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(amort)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(juros)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;">${br(parcela)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(Math.max(0,saldo))}</td>`;
+                    tbody.appendChild(tr);
+                }
+                if(window.UI&&UI.showToast) UI.showToast('✅ Simulação calculada!');
+            }
+
+            // ── RENDA IDEAL ─────────────────────────────────────────────
+            function calcRenda(){
+                const iv   =+document.getElementById('r-imovel').value||0;
+                const entP =+document.getElementById('r-ent').value;
+                const prazo=+document.getElementById('r-prazo').value;
+                const modal=document.getElementById('r-modal').value;
+                const fgts =document.getElementById('r-fgts').checked;
+                const nDep =DEP['r'];
+                const info =AGES['r'];
+                const ta=taxa(modal,fgts), im=imM(ta);
+                const ev=iv*entP/100, pv=iv-ev;
+                const desc=descDep(nDep,modal);
+                const amortSAC=pv/prazo, j1SAC=pv*im, p1SAC=amortSAC+j1SAC;
+                const pmtPrice=calcPrice(pv,prazo,im).pmt;
+                const rEfSAC=p1SAC/0.30, rEfPrice=pmtPrice/0.30;
+                const rBrutaSAC=rEfSAC+desc, rBrutaPrice=rEfPrice+desc;
+                lastData.renda={modal,ta,pv,prazo,p1SAC,pmtPrice,rBrutaSAC,rBrutaPrice,nDep,desc};
+
+                document.getElementById('r-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
+                    <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">💰 Renda Mínima Necessária</div>
+                    <div class="sim-metric-row">
+                        <div class="sim-metric accent">
+                            <div class="sim-metric-lbl">Renda bruta — SAC</div>
+                            <div class="sim-metric-val">${br(rBrutaSAC)}</div>
+                            <div class="sim-metric-sub">Ef.: ${br(rEfSAC)}</div>
+                        </div>
+                        <div class="sim-metric gold">
+                            <div class="sim-metric-lbl">Renda bruta — Price</div>
+                            <div class="sim-metric-val">${br(rBrutaPrice)}</div>
+                            <div class="sim-metric-sub">Ef.: ${br(rEfPrice)}</div>
+                        </div>
+                    </div>
+                    ${rowHTML('Valor financiado',br(pv))}
+                    ${rowHTML('1ª parcela SAC',br(p1SAC),'ok')}
+                    ${rowHTML('Parcela Price',br(pmtPrice),'gold')}
+                    ${nDep>0?rowHTML('Desconto '+nDep+' dep.','+'+br(desc)+'/mês','warn'):''}
+                    ${rowHTML('Prazo',prazo+' m / '+Math.round(prazo/12)+' a'+(info&&info.pmaxM<PRAZO_MAX?' ★':''))}
+                    ${rowHTML('Taxa efetiva',(ta*100).toFixed(2)+'% a.a.')}
+                </div>`;
+
+                let al='';
+                if(info&&info.invalid) al+=alert('age','🔒',info.note);
+                else if(info&&info.pmaxM<PRAZO_MAX) al+=alert('age','⏱','Prazo limitado a '+info.pmaxM+' meses pela regra de idade.');
+                if(nDep>0) al+=alert('dep','👥',nDep+' dep.: acrescente '+br(desc)+'/mês à renda efetiva para obter a renda bruta.');
+                al+=alert('ok','ℹ','SAC exige renda maior pois usa a 1ª parcela (saldo cheio). A renda SAC dará conforto crescente ao longo do contrato.');
+                document.getElementById('r-alertas').innerHTML=al;
+                if(window.UI&&UI.showToast) UI.showToast('✅ Renda calculada!');
+            }
+
+            // ── IMÓVEL MÁXIMO ───────────────────────────────────────────
+            function calcImovel(){
+                const renda=+document.getElementById('i-renda').value||0;
+                const ent  =+document.getElementById('i-entrada').value||0;
+                const prazo=+document.getElementById('i-prazo').value;
+                const modal=document.getElementById('i-modal').value;
+                const fgts =document.getElementById('i-fgts').checked;
+                const nDep =DEP['i'];
+                const info =AGES['i'];
+                const ta=taxa(modal,fgts), im=imM(ta);
+                const desc=descDep(nDep,modal), rEf=rendaEf(renda,nDep,modal);
+                const pmax=rEf*0.30;
+                const pvSAC=pmax/(1/prazo+im), ivBySAC=pvSAC+ent;
+                const k=(im*Math.pow(1+im,prazo))/(Math.pow(1+im,prazo)-1);
+                const pvPrice=pmax/k, ivByPrice=pvPrice+ent;
+                const cotaMax=COTAS[modal], ivByCota=ent/(1-cotaMax), teto=TETOS[modal];
+                const ivFSAC=Math.min(ivBySAC,ivByCota,teto), ivFPrice=Math.min(ivByPrice,ivByCota,teto);
+                const pvFSAC=ivFSAC-ent, pvFPrice=ivFPrice-ent;
+                const prazoLim=info&&info.pmaxM<PRAZO_MAX;
+                const factorSAC=ivBySAC<ivByCota&&ivBySAC<teto?'Renda ef.':ivByCota<teto?'Cota máx.':'Teto da faixa';
+                lastData.imovel={modal,ta,prazo,renda,rEf,desc,nDep,pmax,pvFSAC,pvFPrice,ivFSAC,ivFPrice,ent};
+
+                document.getElementById('i-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
+                    <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">🏠 Imóvel Máximo Financiável</div>
+                    <div class="sim-metric-row">
+                        <div class="sim-metric accent">
+                            <div class="sim-metric-lbl">Pelo SAC</div>
+                            <div class="sim-metric-val">${br(ivFSAC)}</div>
+                            <div class="sim-metric-sub">Fin. ${br(pvFSAC)}</div>
+                        </div>
+                        <div class="sim-metric gold">
+                            <div class="sim-metric-lbl">Pelo Price</div>
+                            <div class="sim-metric-val">${br(ivFPrice)}</div>
+                            <div class="sim-metric-sub">Fin. ${br(pvFPrice)}</div>
+                        </div>
+                    </div>
+                    ${nDep>0?rowHTML('Renda bruta',br(renda))+rowHTML('-Desconto '+nDep+' dep.','-'+br(desc),'warn')+rowHTML('Renda efetiva',br(rEf),'ok'):''}
+                    ${rowHTML('Parcela máx. 30% ef.',br(pmax))}
+                    ${rowHTML('Entrada disponível',br(ent))}
+                    ${rowHTML('Cota máx. modalidade',((cotaMax)*100).toFixed(0)+'%')}
+                    ${rowHTML('Fator limitante (SAC)',factorSAC,'gold')}
+                    ${prazoLim?rowHTML('Prazo máx. por idade',info.pmaxM+' m / '+Math.floor(info.pmaxM/12)+' a','warn'):''}
+                </div>`;
+
+                let al='';
+                if(info&&info.invalid) al+=alert('age','🔒',info.note);
+                else if(prazoLim) al+=alert('age','⏱','Prazo limitado a '+info.pmaxM+' meses — prazo menor eleva parcela e reduz imóvel máximo.');
+                if(nDep>0) al+=alert('dep','👥',nDep+' dep.: renda efetiva = '+br(rEf)+' (−'+br(desc)+'). Parcela máx. = '+br(pmax)+'.');
+                if(ivFSAC>=teto) al+=alert('warn','⚠','Limitado pelo teto '+NOMES[modal]+' ('+br(teto)+').');
+                if(ent<ivFSAC*0.20) al+=alert('warn','⚠','Entrada insuficiente. Mínimo 20% = '+br(ivFSAC*0.20)+'.');
+                document.getElementById('i-alertas').innerHTML=al;
+                if(window.UI&&UI.showToast) UI.showToast('✅ Imóvel máximo calculado!');
+            }
+
+            // ── PDF ─────────────────────────────────────────────────────
+            function gerarPDF(){
+                if(!window.jspdf&&!window.jsPDF){
+                    const script=document.createElement('script');
+                    script.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+                    script.onload=()=>_buildPDF();
+                    document.head.appendChild(script);
+                    if(window.UI&&UI.showToast) UI.showToast('📄 Carregando gerador de PDF...');
+                } else { _buildPDF(); }
+            }
+
+            function _buildPDF(){
+                try{
+                    const jsPDF=window.jspdf?window.jspdf.jsPDF:window.jsPDF;
+                    const doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+                    const W=210,mg=18; let y=mg;
+                    const C_PRI=[46,74,49],C_ACC=[196,114,74],C_TXT=[26,43,28],C_MUT=[122,138,124],C_WAR=[184,112,32],C_BOR=[210,205,195];
+                    const sf=(sz,w,col)=>{doc.setFontSize(sz);doc.setFont('helvetica',w||'normal');doc.setTextColor(...(col||C_TXT));};
+                    const fr=(x,yx,w,h,col,r)=>{doc.setFillColor(...col);r?doc.roundedRect(x,yx,w,h,2,2,'F'):doc.rect(x,yx,w,h,'F');};
+                    const ln=(x1,y1,x2,y2,col,lw)=>{doc.setDrawColor(...(col||C_BOR));doc.setLineWidth(lw||0.3);doc.line(x1,y1,x2,y2);};
+                    const np=()=>{doc.addPage();y=mg;fr(0,0,W,11,C_PRI);sf(7,'normal',[255,255,255]);doc.text('ImobiPro — Simulador CEF',mg,7.5);doc.text('SIMULAÇÃO — valores sujeitos a variação',W-mg,7.5,{align:'right'});y=18;};
+                    const chk=(n)=>{if(y+n>285)np();};
+                    const sec=(t)=>{chk(10);fr(mg,y,W-mg*2,7,C_PRI,true);sf(8.5,'bold',[255,255,255]);doc.text(t.toUpperCase(),mg+4,y+4.8);y+=11;};
+                    const row=(l,v,vc)=>{chk(7);sf(8,'normal',C_MUT);doc.text(l,mg+2,y);sf(8.5,'bold',vc||C_TXT);doc.text(v,W-mg-2,y,{align:'right'});ln(mg,y+1.5,W-mg,y+1.5,C_BOR,0.2);y+=7;};
+                    const alrt=(t,bg,tc)=>{chk(12);fr(mg,y,W-mg*2,10,bg,true);doc.setDrawColor(...C_BOR);doc.setLineWidth(0.3);doc.roundedRect(mg,y,W-mg*2,10,2,2,'S');sf(7.5,'normal',tc||C_TXT);const ls=doc.splitTextToSize(t,W-mg*2-8);doc.text(ls,mg+4,y+4);y+=Math.max(10,ls.length*4.2)+3;};
+
+                    // Capa
+                    fr(0,0,W,52,C_PRI);
+                    sf(20,'bold',[255,255,255]);doc.text('Simulador CEF',mg,24);
+                    sf(11,'normal',[200,220,180]);doc.text('ImobiPro — Caixa Econômica Federal',mg,33);
+                    sf(7.5,'normal',[160,190,140]);doc.text('MCMV · SBPE · SAC · Price · Regra 30% · Idade · Dependentes',mg,40);
+                    doc.text('Gerado em '+new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'}),mg,47);
+                    y=60;
+
+                    // AVISO LEGAL
+                    fr(mg,y,W-mg*2,30,[255,248,220],true);doc.setDrawColor(...C_WAR);doc.setLineWidth(0.5);doc.roundedRect(mg,y,W-mg*2,30,2,2,'S');
+                    sf(8.5,'bold',C_WAR);doc.text('⚠  AVISO — DOCUMENTO DE SIMULAÇÃO',mg+5,y+7);
+                    sf(7.5,'normal',[100,75,0]);
+                    const aviso='Este documento é uma SIMULAÇÃO ORIENTATIVA e NÃO representa proposta ou oferta de crédito. Os valores apresentados são estimativas baseadas nos dados informados e nas taxas de referência vigentes. Na avaliação real realizada pela Caixa Econômica Federal, parcelas, taxas, prazo aprovado e valor financiado podem variar conforme análise de crédito, perfil do cliente, avaliação do imóvel, políticas internas e condições de mercado na data da contratação. Consulte uma agência CEF para proposta oficial.';
+                    const aLines=doc.splitTextToSize(aviso,W-mg*2-10);doc.text(aLines,mg+5,y+13);
+                    y+=Math.max(30,aLines.length*4)+8;
+
+                    const s=lastData.simular;
+                    if(s){
+                        sec('Simulação Principal');
+                        row('Modalidade',NOMES[s.mModal]);row('Taxa',((s.ta)*100).toFixed(2)+'% a.a. + TR');
+                        row('Valor financiado',br(s.pv));row('Entrada',br(s.ev)+' ('+s.entPct.toFixed(0)+'%)');
+                        row('Prazo',s.prazo+' meses ('+Math.round(s.prazo/12)+' anos)');
+                        row('Sistema',s.sis==='sac'?'SAC — parcelas decrescentes':'Price — parcela fixa');
+                        if(s.nDep>0){row('Dependentes',s.nDep+' — desconto: −'+br(s.desc)+'/mês');row('Renda efetiva',br(s.rEf),C_PRI);}
+                        row(s.sis==='sac'?'1ª parcela':'Parcela fixa',br(s.p1));
+                        row('Total pago',br(s.totalPago));row('Total de juros',br(s.totalPago-s.pv));
+                        const compV=s.rEf>0?s.p1/s.rEf*100:0;
+                        const cCol=compV<=30?[46,125,66]:compV<=35?C_WAR:[184,48,48];
+                        row('Comprometimento renda ef.',compV.toFixed(1)+'%',cCol);
+                        row('Renda bruta mínima ideal',br(s.p1/0.30+s.desc));
+                        y+=4;
+                        if(compV>35) alrt('Comprometimento '+compV.toFixed(1)+'% > 35% — crédito provavelmente reprovado.',[255,230,230],[130,30,30]);
+                        else if(compV>30) alrt('Comprometimento '+compV.toFixed(1)+'% entre 30–35% — risco de reprovação.',[255,248,220],[100,70,0]);
+                        else alrt('Comprometimento '+compV.toFixed(1)+'% dentro do limite. Perfil aprovável.',[230,244,237],[30,100,50]);
+                    }
+
+                    np();
+                    const r=lastData.renda;
+                    if(r){sec('Renda Ideal por Imóvel');row('Modalidade',NOMES[r.modal]);row('Taxa',(r.ta*100).toFixed(2)+'% a.a.');row('Valor financiado',br(r.pv));row('Prazo',r.prazo+' meses');if(r.nDep>0)row('Desconto deps.','+'+br(r.desc)+'/mês');row('1ª parcela SAC',br(r.p1SAC));row('Renda bruta mín. SAC',br(r.rBrutaSAC),C_PRI);row('Renda bruta mín. Price',br(r.rBrutaPrice),[30,80,160]);}
+
+                    const i=lastData.imovel;
+                    if(i){y+=6;sec('Imóvel Máximo por Renda');row('Renda bruta',br(i.renda));if(i.nDep>0){row('−Desconto deps.','-'+br(i.desc));row('Renda efetiva',br(i.rEf),C_PRI);}row('Parcela máx. 30% ef.',br(i.pmax));row('Entrada disponível',br(i.ent));row('Imóvel máximo SAC',br(i.ivFSAC),C_PRI);row('Imóvel máximo Price',br(i.ivFPrice),[30,80,160]);}
+
+                    chk(24);y+=6;ln(mg,y,W-mg,y,C_PRI,0.4);y+=6;
+                    sf(7,'normal',C_MUT);
+                    doc.text(['Simulação gerada pelo ImobiPro — Não tem valor legal ou contratual.','Regras: parcela ≤ 30% renda efetiva · idade + prazo ≤ 80a6m · desconto/dep. ≈ R$246/mês.','Para contratação: habitacao.caixa.gov.br ou agência CEF mais próxima.'],mg,y,{lineHeightFactor:1.7});
+
+                    doc.save('simulacao-cef-'+new Date().toISOString().slice(0,10)+'.pdf');
+                    if(window.UI&&UI.showToast) UI.showToast('✅ PDF baixado!');
+                }catch(e){console.error(e);if(window.UI&&UI.showToast)UI.showToast('Erro ao gerar PDF. Calcule antes de baixar.','error');}
+            }
+
+            // ── HELPERS externos ─────────────────────────────────────────
+            function setDep(prefix,n,btn){
+                DEP[prefix]=n;
+                document.querySelectorAll('#'+prefix+'-dep-chips .sim-chip').forEach(c=>c.classList.remove('active'));
+                btn.classList.add('active');
+                const el=document.getElementById(prefix+'-dep-info');
+                if(el){
+                    if(n===0){el.style.display='none';}
+                    else{el.style.display='block';el.innerHTML='<strong>'+n+' dependente'+(n>1?'s':'')+':</strong> desconto de aprox. R$'+((n*DESC_DEP).toLocaleString('pt-BR'))+'/mês na renda efetiva para análise de crédito.';}
+                }
+            }
+
+            function nascUpdate(prefix){
+                const info=calcIdade(document.getElementById(prefix+'-nasc').value);
+                AGES[prefix]=info;
+                renderAge(prefix,info);
+                applyAgePrazo(prefix,info);
+            }
+
+            function prazoUpdate(prefix){
+                const sl=document.getElementById(prefix+'-prazo');
+                const lbl=document.getElementById(prefix+'-prazo-lbl');
+                if(lbl) lbl.textContent=sl.value+' m';
+            }
+
+            function entrUpdate(){
+                const iv=+document.getElementById('s-imovel').value||0;
+                const pct=+document.getElementById('s-ent-pct').value;
+                document.getElementById('s-entrada').value=Math.round(iv*pct/100);
+            }
+            function entrPct(){
+                const iv=+document.getElementById('s-imovel').value||0;
+                const p=+document.getElementById('s-ent-pct').value;
+                document.getElementById('s-ent-pct-lbl').textContent=p+'%';
+                document.getElementById('s-entrada').value=Math.round(iv*p/100);
+            }
+            function entrVal(){
+                const iv=+document.getElementById('s-imovel').value||1;
+                const ev=+document.getElementById('s-entrada').value||0;
+                const p=Math.min(80,Math.max(0,Math.round(ev/iv*100)));
+                document.getElementById('s-ent-pct').value=p;
+                document.getElementById('s-ent-pct-lbl').textContent=p+'%';
+            }
+
+            function switchTab(id,btn){
+                document.querySelectorAll('#sim-tabs .coach-tab-btn').forEach(b=>b.classList.remove('active'));
+                document.querySelectorAll('#simulador-view .coach-tab-panel').forEach(p=>p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('sim-tab-'+id).classList.add('active');
+            }
+
+            function buildAgeTable(){
+                const tb=document.getElementById('sim-age-table');
+                if(!tb) return;
+                [20,25,30,35,40,45,50,55,60,65,70,75].forEach(age=>{
+                    const pm=Math.max(0,Math.min(PRAZO_MAX,Math.floor((LIMITE-age*12)/12)*12));
+                    const tr=document.createElement('tr');
+                    if(age>=70)tr.style.background=age>=75?'rgba(184,48,48,0.06)':'rgba(184,112,32,0.06)';
+                    tr.innerHTML=`<td style="padding:7px 8px;border-bottom:1px solid var(--border);">${age} anos</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${pm} m</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${Math.floor(pm/12)} a</td>`;
+                    tb.appendChild(tr);
+                });
+            }
+
+            function init(){
+                // Set toggle visual states
+                document.querySelectorAll('#simulador-view input[type=checkbox]').forEach(cb=>{
+                    const track=cb.nextElementSibling;
+                    if(track) cb.addEventListener('change',()=>{track.style.background=cb.checked?'var(--primary)':'var(--border)';});
+                });
+                // Set max date
+                const today=new Date().toISOString().split('T')[0];
+                ['s-nasc','r-nasc','i-nasc'].forEach(id=>{const el=document.getElementById(id);if(el)el.max=today;});
+                buildAgeTable();
+            }
+
+
+            function prefillFromCliente(clienteId) {
+                const cliente = window.UI && UI.data && UI.data.clientes.find(x => x.id === clienteId);
+                if (!cliente) return;
+                // Navigate to simulator
+                const navEl = document.querySelector('.nav-item[data-target="simulador-view"]');
+                if (navEl) UI.switchTab(navEl);
+                // Prefill renda
+                const sRenda = document.getElementById('s-renda');
+                if (sRenda && cliente.rendaMensal) sRenda.value = cliente.rendaMensal;
+                // Prefill nascimento
+                const sNasc = document.getElementById('s-nasc');
+                if (sNasc && cliente.dataNascimento) { sNasc.value = cliente.dataNascimento; nascUpdate('s'); }
+                // Prefill dependentes
+                const nDep = parseInt(cliente.dependentes || 0);
+                DEP['s'] = nDep;
+                document.querySelectorAll('#s-dep-chips .sim-chip').forEach((btn, i) => {
+                    btn.classList.remove('active');
+                    const chipVal = i === 4 ? 4 : i;
+                    if (chipVal === nDep) btn.classList.add('active');
+                });
+                // Prefill imovel if linked
+                if (cliente.imovelInteresseId && window.UI && UI.data) {
+                    const imovel = UI.data.imoveis.find(x => x.id === cliente.imovelInteresseId);
+                    if (imovel && imovel.precoVenda) {
+                        const sImovel = document.getElementById('s-imovel');
+                        if (sImovel) { sImovel.value = imovel.precoVenda; entrUpdate(); }
+                    }
+                }
+                UI.closeModals();
+                if (window.UI && UI.showToast) UI.showToast('✅ Dados de ' + cliente.nome + ' carregados no simulador!');
+            }
+
+            return { init, switchTab, setDep, nascUpdate, prazoUpdate, entrUpdate, entrPct, entrVal, calcSimular, calcRenda, calcImovel, gerarPDF, prefillFromCliente };
+        })();
+
+        </script>
 </body>
 </html>
