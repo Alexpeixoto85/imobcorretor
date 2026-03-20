@@ -20925,11 +20925,35 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
             const COTAS   = { mcmv1:.90, mcmv2:.80, mcmv3:.80, mcmv4:.80, sbpe:.80, sbpe_rel:.80 };
             const FGTS_OK = ['mcmv1','mcmv2','mcmv3'];
             const NOMES   = { mcmv1:'MCMV Faixa 1', mcmv2:'MCMV Faixa 2', mcmv3:'MCMV Faixa 3', mcmv4:'MCMV Faixa 4', sbpe:'SBPE/SFH Balcão', sbpe_rel:'SBPE Correntista' };
-            const LIMITE  = 966; // 80a6m em meses
-            const PRAZO_MAX = 420;
-            const PRAZO_MIN = 60;
+            const LIMITE  = 966; // 80 anos e 6 meses em meses (80*12+6)
+            const PRAZO_MAX = 420; // 35 anos
+            const PRAZO_MIN = 60;  // 5 anos
             const DESC_DEP  = 246;
             const DESC_DEP_12 = 148;
+
+            // ── SEGURO HABITACIONAL (CEF referência 2024) ────────────────
+            // MIP (Morte e Invalidez): alíquota mensal sobre saldo devedor, varia por faixa etária
+            // DFI (Danos Físicos do Imóvel): alíquota fixa mensal sobre valor do imóvel
+            // Taxa de Administração: valor fixo mensal por contrato
+            const SEG_DFI_ANUAL = 0.000150;  // 0,015% a.m. sobre saldo devedor (referência CAIXA)
+            const SEG_MIP_FAIXAS = [          // alíquotas mensais por faixa etária (MIP sobre saldo)
+                { maxAge:25,  taxa:0.000168 },
+                { maxAge:30,  taxa:0.000168 },
+                { maxAge:35,  taxa:0.000168 },
+                { maxAge:40,  taxa:0.000220 },
+                { maxAge:45,  taxa:0.000330 },
+                { maxAge:50,  taxa:0.000508 },
+                { maxAge:55,  taxa:0.000753 },
+                { maxAge:60,  taxa:0.001089 },
+                { maxAge:65,  taxa:0.001848 },
+                { maxAge:70,  taxa:0.002739 },
+                { maxAge:75,  taxa:0.004064 },
+                { maxAge:999, taxa:0.006095 },
+            ];
+            const TAXA_ADM = 25; // R$ 25/mês taxa de administração (ref. CAIXA)
+
+            function getMipTaxa(idadeAnos){ for(const f of SEG_MIP_FAIXAS){ if(idadeAnos<=f.maxAge) return f.taxa; } return SEG_MIP_FAIXAS[SEG_MIP_FAIXAS.length-1].taxa; }
+
             let lastData = {};
             const DEP = { s:0, r:0, i:0 };
             const AGES = { s:null, r:null, i:null };
@@ -20955,16 +20979,20 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 let mV=(hoje.getFullYear()-nasc.getFullYear())*12+(hoje.getMonth()-nasc.getMonth());
                 if(hoje.getDate()<nasc.getDate()) mV--;
                 const anos=Math.floor(mV/12), meses=mV%12;
-                const pmaxBruto=LIMITE-mV;
-                const pmaxM=Math.max(0,Math.min(PRAZO_MAX,Math.floor(pmaxBruto/12)*12));
+                // CORRECAO: prazo maximo em meses = LIMITE - idade_em_meses (sem arredondar para anos)
+                // Ex: nascido em 1985 = ~480 meses -> pmaxBruto = 966-480 = 486 -> min(420,486) = 420... NAO!
+                // A regra e: NO MOMENTO DA CONTRATACAO, idade_atual + prazo <= 966 meses
+                // Logo pmaxM = min(PRAZO_MAX, LIMITE - mV) — sem arredondamento para multiplos de 12
+                const pmaxBruto = LIMITE - mV;
+                const pmaxM = Math.max(0, Math.min(PRAZO_MAX, pmaxBruto));
                 const barPct=Math.min(100,(mV/LIMITE)*100);
                 const invalid=anos>=80||pmaxM<PRAZO_MIN;
                 const pmA=Math.floor(pmaxM/12), pmMm=pmaxM%12;
                 let note='';
-                if(anos>=80) note='⚠ Titular com 80+ anos — financiamento inviável';
-                else if(pmaxM<PRAZO_MIN) note=`⚠ Prazo máx. ${pmaxM}m < mínimo`;
-                else if(pmaxM<PRAZO_MAX) note=`Prazo máx. por idade: ${pmaxM}m (${pmA}a${pmMm>0?pmMm+'m':''})`;
-                else note=`Sem restrição de prazo — máx. ${PRAZO_MAX}m`;
+                if(anos>=80) note='&#9888; Titular com 80+ anos — financiamento inviável';
+                else if(pmaxM<PRAZO_MIN) note=`&#9888; Prazo máx. ${pmaxM}m < mínimo de ${PRAZO_MIN}m`;
+                else if(pmaxM<PRAZO_MAX) note=`Prazo máx. por idade: ${pmaxM}m (${pmA}a${pmMm>0?' '+pmMm+'m':''}) — regra: idade + prazo ≤ 80a6m`;
+                else note=`Sem restrição de prazo — máx. ${PRAZO_MAX}m (35 anos)`;
                 return{anos,meses,mV,pmaxM,barPct,invalid,note};
             }
 
@@ -21046,33 +21074,63 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const teto=TETOS[modal];
                 const desc=descDep(nDep,modal), rEf=rendaEf(renda,nDep,modal);
 
-                let p1,pFim,totalPago;
+                // ── Seguro e taxa admin ──────────────────────────────────
+                const idadeAnos = info ? info.anos : 35; // fallback 35a se não informado
+                const mipTaxa = getMipTaxa(idadeAnos);
+                const seg1MIP = pv * mipTaxa;             // MIP 1ª parcela (sobre saldo inicial)
+                const seg1DFI = pv * SEG_DFI_ANUAL;       // DFI 1ª parcela (sobre saldo inicial)
+                const segTotal1 = seg1MIP + seg1DFI;       // seguro total 1ª parcela
+                const taxaAdm = TAXA_ADM;
+
+                let p1,pFim,totalPago,p1ComEncargos,pFimComEncargos;
                 if(sis==='sac'){
                     const r=calcSAC(pv,prazo,im);
-                    p1=r.p1;totalPago=r.total;pFim=pv/prazo+(pv/prazo)*im;
+                    p1=r.p1; totalPago=r.total;
+                    const amort=pv/prazo;
+                    const jFim=amort*im; // última parcela: saldo = amort
+                    pFim=amort+jFim;
+                    // Seguro sobre saldo da última parcela
+                    const segFimMIP=amort*mipTaxa, segFimDFI=amort*SEG_DFI_ANUAL;
+                    p1ComEncargos = p1 + segTotal1 + taxaAdm;
+                    pFimComEncargos = pFim + segFimMIP + segFimDFI + taxaAdm;
                 }else{
                     const r=calcPrice(pv,prazo,im);
-                    p1=r.pmt;pFim=r.pmt;totalPago=r.total;
+                    p1=r.pmt; pFim=r.pmt; totalPago=r.total;
+                    // No Price o saldo decresce — seguro diminui ao longo do tempo
+                    p1ComEncargos = p1 + segTotal1 + taxaAdm;
+                    pFimComEncargos = null; // calculado na tabela
                 }
-                const comp=rEf>0?p1/rEf*100:0;
-                const rendaMinEf=p1/0.30, rendaMinBruta=rendaMinEf+desc;
+                // Comprometimento usa parcela COM encargos (realidade do cliente)
+                const comp=rEf>0?p1ComEncargos/rEf*100:0;
+                const rendaMinEf=p1ComEncargos/0.30, rendaMinBruta=rendaMinEf+desc;
                 const st=compSt(comp);
-                lastData.simular={mModal,ta,im,pv,prazo,renda,rEf,desc,nDep,comp,p1,pFim,totalPago,ev,entPct,sis};
+                lastData.simular={mModal,ta,im,pv,iv,prazo,renda,rEf,desc,nDep,comp,p1,p1ComEncargos,pFim,pFimComEncargos,totalPago,ev,entPct,sis,seg1MIP,seg1DFI,segTotal1,taxaAdm,mipTaxa,idadeAnos};
+
+                const segInfo=`<div style="font-size:0.7rem;color:var(--text-secondary);margin-top:2px;">MIP ${(mipTaxa*100).toFixed(4)}% + DFI ${(SEG_DFI_ANUAL*100).toFixed(4)}% s/ saldo · Adm. R$${taxaAdm}/mês</div>`;
 
                 document.getElementById('s-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
                     <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">📊 Resultado</div>
                     <div style="margin-bottom:10px;"><span style="background:rgba(46,74,49,0.1);color:var(--primary);border:1px solid rgba(46,74,49,0.25);padding:3px 10px;border-radius:12px;font-size:0.72rem;font-weight:700;">${NOMES[mModal]} · ${(ta*100).toFixed(2)}% a.a. + TR</span></div>
                     <div class="sim-metric-row">
                         <div class="sim-metric accent">
-                            <div class="sim-metric-lbl">${sis==='sac'?'1ª parcela':'Parcela fixa'}</div>
-                            <div class="sim-metric-val" style="color:${st.col}">${br(p1)}</div>
-                            <div class="sim-metric-sub">${sis==='sac'?'Última: '+br(pFim):'Fixa todo prazo'}</div>
+                            <div class="sim-metric-lbl">${sis==='sac'?'1ª parcela total':'Parcela total'} <span style="font-size:0.65rem;opacity:0.7;">(c/ seguro+adm)</span></div>
+                            <div class="sim-metric-val" style="color:${st.col}">${br(p1ComEncargos)}</div>
+                            <div class="sim-metric-sub">${sis==='sac'?'Financ.: '+br(p1)+' · Última: '+br(pFimComEncargos):'Financ.: '+br(p1)+' · Encargos dim. c/ saldo'}</div>
                         </div>
                         <div class="sim-metric gold">
                             <div class="sim-metric-lbl">Total juros</div>
                             <div class="sim-metric-val">${br(totalPago-pv)}</div>
-                            <div class="sim-metric-sub">Total: ${br(totalPago)}</div>
+                            <div class="sim-metric-sub">Total financ.: ${br(totalPago)}</div>
                         </div>
+                    </div>
+                    <div style="background:rgba(79,70,229,0.07);border:1px solid rgba(79,70,229,0.15);border-radius:10px;padding:10px 12px;margin:8px 0;">
+                        <div style="font-size:0.72rem;font-weight:800;color:#4F46E5;margin-bottom:6px;">🛡️ Encargos Mensais (1ª Parcela)</div>
+                        ${rowHTML('Amortização + Juros',br(p1))}
+                        ${rowHTML('Seguro MIP ('+idadeAnos+'a)',br(seg1MIP))}
+                        ${rowHTML('Seguro DFI',br(seg1DFI))}
+                        ${rowHTML('Taxa de Administração','R$ '+taxaAdm+'/mês')}
+                        ${rowHTML('TOTAL 1ª Parcela',br(p1ComEncargos),'ok')}
+                        ${segInfo}
                     </div>
                     ${compRing(comp)}
                     <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
@@ -21098,15 +21156,23 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                 // Tabela
                 const tbody=document.getElementById('s-tbody');
+                // Atualiza cabeçalho da tabela para incluir seguro e taxa adm
+                const thead=tbody.closest('table')&&tbody.closest('table').querySelector('thead tr');
+                if(thead&&thead.children.length===5){
+                    thead.innerHTML=`<th style="padding:6px 8px;text-align:left;">Mês</th><th style="padding:6px 8px;text-align:right;">Amortiz.</th><th style="padding:6px 8px;text-align:right;">Juros</th><th style="padding:6px 8px;text-align:right;">Seguro</th><th style="padding:6px 8px;text-align:right;">Adm.</th><th style="padding:6px 8px;text-align:right;font-weight:800;">Total</th><th style="padding:6px 8px;text-align:right;">Saldo</th>`;
+                }
                 tbody.innerHTML=''; let saldo=pv;
                 for(let m=1;m<=Math.min(12,prazo);m++){
                     let amort,juros,parcela;
                     if(sis==='sac'){amort=pv/prazo;juros=saldo*im;parcela=amort+juros;}
                     else{const pmt=calcPrice(pv,prazo,im).pmt;juros=saldo*im;amort=pmt-juros;parcela=pmt;}
+                    // Seguro baseado no saldo atual do mês
+                    const segMIP=saldo*mipTaxa, segDFI=saldo*SEG_DFI_ANUAL, segM=segMIP+segDFI;
+                    const totalM=parcela+segM+taxaAdm;
                     saldo-=amort;
                     const tr=document.createElement('tr');
                     if(m===1) tr.style.background='rgba(196,114,74,0.1)';
-                    tr.innerHTML=`<td style="padding:6px 8px;border-bottom:1px solid var(--border);">${m}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(amort)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(juros)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;">${br(parcela)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(Math.max(0,saldo))}</td>`;
+                    tr.innerHTML=`<td style="padding:6px 8px;border-bottom:1px solid var(--border);">${m}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(amort)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(juros)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:#4F46E5;">${br(segM)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;color:var(--text-secondary);">R$ ${taxaAdm}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;font-weight:700;">${br(totalM)}</td><td style="padding:6px 8px;border-bottom:1px solid var(--border);text-align:right;">${br(Math.max(0,saldo))}</td>`;
                     tbody.appendChild(tr);
                 }
                 if(window.UI&&UI.showToast) UI.showToast('✅ Simulação calculada!');
@@ -21124,11 +21190,18 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const ta=taxa(modal,fgts), im=imM(ta);
                 const ev=iv*entP/100, pv=iv-ev;
                 const desc=descDep(nDep,modal);
+                // Seguro e adm
+                const idadeAnos = info ? info.anos : 35;
+                const mipTaxa = getMipTaxa(idadeAnos);
+                const seg1 = pv*(mipTaxa+SEG_DFI_ANUAL);
                 const amortSAC=pv/prazo, j1SAC=pv*im, p1SAC=amortSAC+j1SAC;
                 const pmtPrice=calcPrice(pv,prazo,im).pmt;
-                const rEfSAC=p1SAC/0.30, rEfPrice=pmtPrice/0.30;
+                // Parcela total com encargos
+                const p1SACTotal=p1SAC+seg1+TAXA_ADM;
+                const pmtPriceTotal=pmtPrice+seg1+TAXA_ADM;
+                const rEfSAC=p1SACTotal/0.30, rEfPrice=pmtPriceTotal/0.30;
                 const rBrutaSAC=rEfSAC+desc, rBrutaPrice=rEfPrice+desc;
-                lastData.renda={modal,ta,pv,prazo,p1SAC,pmtPrice,rBrutaSAC,rBrutaPrice,nDep,desc};
+                lastData.renda={modal,ta,pv,prazo,p1SAC,p1SACTotal,pmtPrice,pmtPriceTotal,rBrutaSAC,rBrutaPrice,nDep,desc,seg1,mipTaxa,idadeAnos};
 
                 document.getElementById('r-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
                     <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">💰 Renda Mínima Necessária</div>
@@ -21144,9 +21217,15 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                             <div class="sim-metric-sub">Ef.: ${br(rEfPrice)}</div>
                         </div>
                     </div>
+                    <div style="background:rgba(79,70,229,0.07);border:1px solid rgba(79,70,229,0.15);border-radius:10px;padding:10px 12px;margin:8px 0;">
+                        <div style="font-size:0.72rem;font-weight:800;color:#4F46E5;margin-bottom:6px;">🛡️ Encargos inclusos na parcela</div>
+                        ${rowHTML('Financiamento SAC (1ª)',br(p1SAC))}
+                        ${rowHTML('Seguro MIP+DFI ('+idadeAnos+'a)',br(seg1))}
+                        ${rowHTML('Taxa de Administração','R$ '+TAXA_ADM+'/mês')}
+                        ${rowHTML('Total 1ª parcela SAC',br(p1SACTotal),'ok')}
+                        ${rowHTML('Total parcela Price',br(pmtPriceTotal),'gold')}
+                    </div>
                     ${rowHTML('Valor financiado',br(pv))}
-                    ${rowHTML('1ª parcela SAC',br(p1SAC),'ok')}
-                    ${rowHTML('Parcela Price',br(pmtPrice),'gold')}
                     ${nDep>0?rowHTML('Desconto '+nDep+' dep.','+'+br(desc)+'/mês','warn'):''}
                     ${rowHTML('Prazo',prazo+' m / '+Math.round(prazo/12)+' a'+(info&&info.pmaxM<PRAZO_MAX?' ★':''))}
                     ${rowHTML('Taxa efetiva',(ta*100).toFixed(2)+'% a.a.')}
@@ -21173,15 +21252,37 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const ta=taxa(modal,fgts), im=imM(ta);
                 const desc=descDep(nDep,modal), rEf=rendaEf(renda,nDep,modal);
                 const pmax=rEf*0.30;
-                const pvSAC=pmax/(1/prazo+im), ivBySAC=pvSAC+ent;
+
+                // Seguro e adm impactam na capacidade de financiamento
+                const idadeAnos = info ? info.anos : 35;
+                const mipTaxa = getMipTaxa(idadeAnos);
+                const segTaxa = mipTaxa + SEG_DFI_ANUAL;
+
+                // A parcela total = parcelaFinanc + pv*segTaxa + TAXA_ADM
+                // Para SAC 1ª: parcelaFinanc = pv*(1/prazo + im)
+                // pv*(1/prazo+im+segTaxa) = pmax - TAXA_ADM
+                const pmaxLiq = Math.max(0, pmax - TAXA_ADM);
+                const pvSAC = pmaxLiq / (1/prazo + im + segTaxa);
+                const ivBySAC = pvSAC + ent;
+
+                // Para Price: parcelaFinanc = pv*k
                 const k=(im*Math.pow(1+im,prazo))/(Math.pow(1+im,prazo)-1);
-                const pvPrice=pmax/k, ivByPrice=pvPrice+ent;
-                const cotaMax=COTAS[modal], ivByCota=ent/(1-cotaMax), teto=TETOS[modal];
-                const ivFSAC=Math.min(ivBySAC,ivByCota,teto), ivFPrice=Math.min(ivByPrice,ivByCota,teto);
+                const pvPrice = pmaxLiq / (k + segTaxa);
+                const ivByPrice = pvPrice + ent;
+
+                const cotaMax=COTAS[modal];
+                const ivByCota = ent>0 ? ent/(1-cotaMax) : Infinity;
+                const teto=TETOS[modal];
+                const ivFSAC=Math.min(ivBySAC, ivByCota, teto);
+                const ivFPrice=Math.min(ivByPrice, ivByCota, teto);
                 const pvFSAC=ivFSAC-ent, pvFPrice=ivFPrice-ent;
+
+                // Seguro sobre pv final
+                const seg1SAC=pvFSAC*segTaxa, seg1Price=pvFPrice*segTaxa;
+
                 const prazoLim=info&&info.pmaxM<PRAZO_MAX;
-                const factorSAC=ivBySAC<ivByCota&&ivBySAC<teto?'Renda ef.':ivByCota<teto?'Cota máx.':'Teto da faixa';
-                lastData.imovel={modal,ta,prazo,renda,rEf,desc,nDep,pmax,pvFSAC,pvFPrice,ivFSAC,ivFPrice,ent};
+                const factorSAC=ivBySAC<Math.min(ivByCota,teto)?'Renda ef.':ivByCota<teto?'Cota máx.':'Teto da faixa';
+                lastData.imovel={modal,ta,prazo,renda,rEf,desc,nDep,pmax,pvFSAC,pvFPrice,ivFSAC,ivFPrice,ent,seg1SAC,seg1Price,mipTaxa,idadeAnos};
 
                 document.getElementById('i-resultado').innerHTML=`<div class="vc-card" style="margin-bottom:12px;">
                     <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text-secondary);margin-bottom:10px;">🏠 Imóvel Máximo Financiável</div>
@@ -21197,8 +21298,15 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                             <div class="sim-metric-sub">Fin. ${br(pvFPrice)}</div>
                         </div>
                     </div>
+                    <div style="background:rgba(79,70,229,0.07);border:1px solid rgba(79,70,229,0.15);border-radius:10px;padding:10px 12px;margin:8px 0;">
+                        <div style="font-size:0.72rem;font-weight:800;color:#4F46E5;margin-bottom:6px;">🛡️ Composição da Parcela Máxima</div>
+                        ${rowHTML('Parcela máx. 30% renda ef.',br(pmax))}
+                        ${rowHTML('(-) Taxa de Administração','-R$ '+TAXA_ADM+'/mês')}
+                        ${rowHTML('(-) Seguro MIP+DFI SAC','-'+br(seg1SAC))}
+                        ${rowHTML('= Disponível p/ financiamento',br(pmaxLiq-seg1SAC),'ok')}
+                        <div style="font-size:0.68rem;color:var(--text-secondary);margin-top:4px;">MIP ${(mipTaxa*100).toFixed(4)}% + DFI ${(SEG_DFI_ANUAL*100).toFixed(4)}% s/ saldo · Adm R$${TAXA_ADM}/mês · Idade: ${idadeAnos}a</div>
+                    </div>
                     ${nDep>0?rowHTML('Renda bruta',br(renda))+rowHTML('-Desconto '+nDep+' dep.','-'+br(desc),'warn')+rowHTML('Renda efetiva',br(rEf),'ok'):''}
-                    ${rowHTML('Parcela máx. 30% ef.',br(pmax))}
                     ${rowHTML('Entrada disponível',br(ent))}
                     ${rowHTML('Cota máx. modalidade',((cotaMax)*100).toFixed(0)+'%')}
                     ${rowHTML('Fator limitante (SAC)',factorSAC,'gold')}
@@ -21210,7 +21318,8 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 else if(prazoLim) al+=alert('age','⏱','Prazo limitado a '+info.pmaxM+' meses — prazo menor eleva parcela e reduz imóvel máximo.');
                 if(nDep>0) al+=alert('dep','👥',nDep+' dep.: renda efetiva = '+br(rEf)+' (−'+br(desc)+'). Parcela máx. = '+br(pmax)+'.');
                 if(ivFSAC>=teto) al+=alert('warn','⚠','Limitado pelo teto '+NOMES[modal]+' ('+br(teto)+').');
-                if(ent<ivFSAC*0.20) al+=alert('warn','⚠','Entrada insuficiente. Mínimo 20% = '+br(ivFSAC*0.20)+'.');
+                if(ent>0&&ent<ivFSAC*0.20) al+=alert('warn','⚠','Entrada insuficiente. Mínimo 20% = '+br(ivFSAC*0.20)+'.');
+                al+=alert('ok','ℹ','Seguro (MIP+DFI) e taxa de adm. já descontados da parcela antes de calcular o imóvel máximo.');
                 document.getElementById('i-alertas').innerHTML=al;
                 if(window.UI&&UI.showToast) UI.showToast('✅ Imóvel máximo calculado!');
             }
@@ -21357,7 +21466,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     const yFinal=Math.max(yL,yR)+4;
                     ln(mg,yFinal,W-mg,yFinal,C_PRI,0.4);
                     sf(5.5,'normal',C_MUT);
-                    doc.text('ImobiPro — Simulacao orientativa. Regras: parcela <= 30% renda efetiva · idade + prazo <= 80a6m · desc. dep. ~R$246/mes. Para contratar: habitacao.caixa.gov.br',W/2,yFinal+4,{align:'center'});
+                    doc.text('ImobiPro — Simulacao orientativa. Regras: parcela total (c/ seguro+adm) <= 30% renda efetiva · idade + prazo <= 80a6m · Seguro MIP+DFI e taxa adm R$25/mes inclusos. Para contratar: habitacao.caixa.gov.br',W/2,yFinal+4,{align:'center'});
 
                     doc.save('simulacao-cef-'+new Date().toISOString().slice(0,10)+'.pdf');
                     if(window.UI&&UI.showToast) UI.showToast('✅ PDF baixado!');
@@ -21419,10 +21528,11 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 const tb=document.getElementById('sim-age-table');
                 if(!tb) return;
                 [20,25,30,35,40,45,50,55,60,65,70,75].forEach(age=>{
-                    const pm=Math.max(0,Math.min(PRAZO_MAX,Math.floor((LIMITE-age*12)/12)*12));
+                    // Prazo máximo = LIMITE - idade_em_meses (sem arredondar para múltiplos de 12)
+                    const pm=Math.max(0,Math.min(PRAZO_MAX, LIMITE - age*12));
                     const tr=document.createElement('tr');
                     if(age>=70)tr.style.background=age>=75?'rgba(184,48,48,0.06)':'rgba(184,112,32,0.06)';
-                    tr.innerHTML=`<td style="padding:7px 8px;border-bottom:1px solid var(--border);">${age} anos</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${pm} m</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${Math.floor(pm/12)} a</td>`;
+                    tr.innerHTML=`<td style="padding:7px 8px;border-bottom:1px solid var(--border);">${age} anos</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${pm} m</td><td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:center;">${Math.floor(pm/12)} a ${pm%12>0?pm%12+'m':''}</td>`;
                     tb.appendChild(tr);
                 });
             }
