@@ -1,5 +1,6 @@
 
 
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -20380,30 +20381,41 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                     const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
                     const v = this._consData || {};
-                    const W = 210, H = 297, MG = 15;
-                    const CW = W - MG * 2;  // content width
+                    const W = 210, H = 297;
+                    // Margens bem delimitadas
+                    const MG_LEFT = 18, MG_RIGHT = 18, MG_TOP = 18;
+                    const CW = W - MG_LEFT - MG_RIGHT;
                     let y = 0;
 
-                    // ── PALETA ─────────────────────────────────────────────
+                    // ── PALETA CLARA E HARMONIOSA ───────────────────────────
                     const C = {
-                        verde:    [46, 74, 49],
-                        verdeM:   [61, 97, 66],
-                        verdeC:   [228, 240, 228],
-                        verdeT:   [232, 244, 233],
-                        acc:      [196, 114, 74],
-                        accC:     [252, 238, 229],
-                        warn:     [184, 112, 32],
-                        warnC:    [254, 245, 220],
-                        danger:   [184, 48, 48],
-                        dangerC:  [254, 228, 228],
-                        azul:     [30, 80, 160],
-                        azulC:    [224, 235, 252],
-                        dark:     [26, 43, 28],
-                        mid:      [80, 100, 82],
-                        muted:    [140, 155, 142],
-                        border:   [210, 218, 210],
-                        bg:       [246, 248, 245],
-                        white:    [255, 255, 255],
+                        // Primários — tons suaves de ardósia/azul-acinzentado
+                        primary:   [52, 84, 105],     // azul-ardósia principal
+                        primaryM:  [74, 112, 138],    // médio
+                        primaryL:  [235, 242, 248],   // clarinho
+                        primaryXL: [247, 250, 253],   // quase branco
+                        // Acento — verde-sálvia harmonioso
+                        accent:    [72, 130, 100],    // verde-sálvia
+                        accentL:   [236, 248, 241],   // verde clarinho
+                        accentXL:  [248, 253, 250],   // verde quase branco
+                        // Warning — âmbar suave
+                        warn:      [159, 111, 23],
+                        warnL:     [254, 248, 230],
+                        // Danger — vermelho suave
+                        danger:    [172, 55, 55],
+                        dangerL:   [254, 235, 235],
+                        // Neutros
+                        dark:      [34, 42, 54],      // quase preto azulado
+                        textMid:   [78, 94, 114],     // cinza-azul médio
+                        muted:     [140, 156, 172],   // cinza claro
+                        border:    [213, 222, 232],   // borda suave
+                        borderL:   [232, 238, 245],   // borda levíssima
+                        bg:        [249, 251, 253],   // fundo levíssimo
+                        bgAlt:     [243, 247, 251],   // alternado
+                        white:     [255, 255, 255],
+                        // Separador topo capa
+                        capaTopo:  [38, 62, 80],      // escuro capa
+                        capaAcc:   [72, 130, 100],    // acento verde capa
                     };
 
                     // ── HELPERS ─────────────────────────────────────────────
@@ -20413,80 +20425,105 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                     const sf  = (sz, stl, col) => { doc.setFontSize(sz); doc.setFont('helvetica', stl||'normal'); doc.setTextColor(...(col||C.dark)); };
                     const fc  = (...col) => doc.setFillColor(...col);
-                    const tc  = (...col) => doc.setTextColor(...col);
                     const dc  = (...col) => doc.setDrawColor(...col);
                     const rect = (x,yy,w,h,fill,r) => { fc(...fill); r ? doc.roundedRect(x,yy,w,h,r,r,'F') : doc.rect(x,yy,w,h,'F'); };
-                    const line = (x1,yy1,x2,yy2,col,lw) => { doc.setLineWidth(lw||0.3); dc(...(col||C.border)); doc.line(x1,yy1,x2,yy2); };
 
-                    const chk = (need) => { if (y + need > H - 18) { addFooter(); doc.addPage(); y = MG; addPageBg(); } };
+                    // Margem superior das páginas internas (após capa)
+                    const PAGE_TOP = MG_TOP;
+                    let pageNum = 1;
+
+                    const chk = (need) => {
+                        if (y + need > H - 20) {
+                            addFooter();
+                            doc.addPage();
+                            pageNum++;
+                            y = PAGE_TOP;
+                            addPageBg();
+                        }
+                    };
 
                     const addPageBg = () => {
-                        fc(...C.bg); doc.rect(0,0,W,H,'F');
-                        // subtle left accent bar
-                        fc(...C.verdeM); doc.rect(0,0,4,H,'F');
+                        // Fundo branco limpo
+                        fc(...C.white); doc.rect(0, 0, W, H, 'F');
+                        // Faixa superior fina com tom primário bem suave
+                        fc(...C.primaryL); doc.rect(0, 0, W, 2, 'F');
+                        // Faixa inferior fina accent verde
+                        fc(...C.accentL); doc.rect(0, H-2, W, 2, 'F');
+                        // Marca d'agua lateral — linha vertical bem suave
+                        fc(...C.borderL); doc.rect(MG_LEFT - 4, 0, 1, H, 'F');
+                        fc(...C.borderL); doc.rect(W - MG_RIGHT + 3, 0, 1, H, 'F');
                     };
 
                     const addFooter = () => {
-                        const fy = H - 12;
-                        fc(...C.verde); doc.rect(0, fy, W, 12, 'F');
-                        sf(6.5,'normal',C.white);
-                        doc.text('DOCUMENTO ORIENTATIVO — nao substitui consultoria contabil ou juridica profissional', W/2, fy+4.5, {align:'center'});
-                        doc.text('habitacao.caixa.gov.br  |  receita.fazenda.gov.br  |  ImobiPro ' + new Date().getFullYear(), W/2, fy+9, {align:'center'});
+                        const fy = H - 16;
+                        // Linha separadora fina
+                        dc(...C.border); doc.setLineWidth(0.3); doc.line(MG_LEFT, fy, W - MG_RIGHT, fy);
+                        // Texto rodapé em duas partes
+                        sf(6, 'normal', C.muted);
+                        doc.text('Documento orientativo — nao substitui consultoria contabil ou juridica profissional', MG_LEFT, fy + 4.5);
+                        sf(6, 'normal', C.muted);
+                        doc.text('ImobiPro · ' + new Date().getFullYear() + '   |   Pag. ' + pageNum, W - MG_RIGHT, fy + 4.5, {align:'right'});
+                        sf(6, 'normal', C.muted);
+                        doc.text('habitacao.caixa.gov.br  |  receita.fazenda.gov.br', MG_LEFT, fy + 10);
                     };
 
-                    const sectionHeader = (title, icon, fillCol, textCol) => {
-                        chk(12);
-                        rect(MG, y, CW, 9, fillCol, 2);
-                        sf(9,'bold', textCol||C.white);
-                        doc.text(icon + '  ' + title, MG + 4, y + 6);
-                        y += 12;
+                    // Cabeçalho de seção — visual limpo com linha colorida lateral
+                    const sectionHeader = (title, _icon, accentCol) => {
+                        chk(14);
+                        // Linha colorida à esquerda
+                        fc(...(accentCol||C.primary)); doc.rect(MG_LEFT, y, 3, 9, 'F');
+                        // Fundo levíssimo para a faixa inteira
+                        fc(...C.bg); doc.rect(MG_LEFT + 3, y, CW - 3, 9, 'F');
+                        // Texto da seção
+                        sf(9, 'bold', accentCol||C.primary);
+                        doc.text(title, MG_LEFT + 8, y + 6.2);
+                        // Linha separadora inferior
+                        dc(...C.border); doc.setLineWidth(0.25); doc.line(MG_LEFT, y + 9, MG_LEFT + CW, y + 9);
+                        y += 13;
                     };
 
+                    // Linha de info com zebra suave
                     const infoRow = (label, value, altBg) => {
                         chk(7);
-                        if (altBg) { fc(...C.bg); doc.rect(MG, y, CW, 6.5, 'F'); }
-                        sf(7.5, 'bold', C.mid); doc.text(label, MG + 3, y + 4.5);
-                        sf(7.5, 'bold', C.dark); doc.text(value, MG + CW - 3, y + 4.5, {align:'right'});
-                        dc(...C.border); doc.setLineWidth(0.2); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        if (altBg) { fc(...C.bgAlt); doc.rect(MG_LEFT, y, CW, 6.5, 'F'); }
+                        sf(7.5, 'normal', C.textMid); doc.text(label, MG_LEFT + 3, y + 4.5);
+                        sf(7.5, 'bold', C.dark); doc.text(value, MG_LEFT + CW - 3, y + 4.5, {align:'right'});
+                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y+6.5, MG_LEFT+CW, y+6.5);
                         y += 6.5;
                     };
 
-                    const badge = (x, yy, w, h, bg, txt, tcol) => {
-                        fc(...bg); doc.roundedRect(x,yy,w,h,2,2,'F');
-                        sf(7,'bold', tcol||C.white); doc.text(txt, x+w/2, yy+h/2+2.5, {align:'center'});
-                    };
-
                     const textBlock = (content, indent) => {
-                        const ix = MG + (indent||3);
-                        const cw2 = CW - (indent||3) - 3;
-                        sf(8,'normal',C.dark);
-                        // Render line by line detecting bullets and bold-ish patterns
+                        const ix = MG_LEFT + (indent||4);
+                        sf(8, 'normal', C.dark);
                         const rawLines = (content||'').split('\n');
                         rawLines.forEach(raw => {
                             if (!raw.trim()) { y += 2.5; return; }
                             const isBullet = /^[\s•\-*·]/.test(raw) || /^\d+\./.test(raw.trim());
                             const isHeader = raw.includes(':') && raw.length < 60 && raw === raw.toUpperCase();
-                            const isSubHdr = /^[A-ZÁÉÍÓÚÀÃÕ][A-ZÁÉÍÓÚÀÃÕ\s\/\-()]{5,}:$/.test(raw.trim()) || raw.trim().endsWith(':') && raw.trim().length < 50;
+                            const isSubHdr = raw.trim().endsWith(':') && raw.trim().length < 55;
 
                             if (isHeader) {
-                                chk(8);
-                                sf(8,'bold',C.verde);
-                                doc.text(raw.trim().replace(/^[•\-*·]\s*/,''), ix, y+4); y += 6;
+                                chk(9);
+                                sf(8, 'bold', C.primary);
+                                doc.text(raw.trim().replace(/^[•\-*·]\s*/,''), ix, y+4); y += 6.5;
                             } else if (isSubHdr) {
                                 chk(7);
-                                sf(7.5,'bold',C.verdeM);
+                                sf(7.5, 'bold', C.primaryM);
                                 doc.text(raw.trim(), ix, y+4); y += 5.5;
                             } else {
                                 const clean = raw.trim().replace(/^[•\-*·]\s*/, '');
-                                const bx = isBullet ? ix + 3 : ix;
-                                const bcw = CW - (bx - MG) - 3;
-                                if (isBullet) { fc(...C.acc); doc.circle(ix+1, y+3.5, 0.8, 'F'); }
+                                const bx = isBullet ? ix + 4 : ix;
+                                const bcw = CW - (bx - MG_LEFT) - 4;
+                                if (isBullet) {
+                                    // Bullet como quadradinho accent
+                                    fc(...C.accent); doc.rect(ix, y+2.5, 2, 2, 'F');
+                                }
                                 const wrapped = doc.splitTextToSize(clean, bcw);
-                                sf(8,'normal',C.dark);
-                                wrapped.forEach((wl, wi) => {
+                                sf(8, 'normal', C.dark);
+                                wrapped.forEach(wl => {
                                     chk(5.5);
                                     doc.text(wl, bx, y+4);
-                                    y += 5.3;
+                                    y += 5.5;
                                 });
                             }
                         });
@@ -20494,61 +20531,75 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     };
 
                     // ══════════════════════════════════════════════════════
-                    // PÁGINA 1
+                    // PÁGINA 1 — CAPA PROFISSIONAL
                     // ══════════════════════════════════════════════════════
-                    addPageBg();
+                    // Fundo branco limpo
+                    fc(...C.white); doc.rect(0, 0, W, H, 'F');
 
-                    // ── CAPA / HEADER ─────────────────────────────────────
-                    // Faixa verde escura topo
-                    fc(...C.verde); doc.rect(0,0,W,52,'F');
-                    // Faixa accent
-                    fc(...C.acc); doc.rect(0,52,W,3,'F');
+                    // Bloco superior (capa) — tom primário elegante
+                    fc(...C.capaTopo); doc.rect(0, 0, W, 68, 'F');
+                    // Acento verde sálvia — faixa fina divisória
+                    fc(...C.capaAcc); doc.rect(0, 68, W, 3, 'F');
+                    // Fundo restante da capa
+                    fc(...C.primaryXL); doc.rect(0, 71, W, H - 71, 'F');
+                    // Bordas laterais muito sutis
+                    fc(...C.primaryL); doc.rect(0, 71, 2, H - 71, 'F');
+                    fc(...C.primaryL); doc.rect(W - 2, 71, 2, H - 71, 'F');
 
-                    // Logo / Título
-                    sf(22,'bold',C.white);
-                    doc.text('CONSULTORIA', MG, 20);
-                    sf(22,'bold',[196,114,74]);
-                    doc.text('FINANCEIRA', MG, 32);
-                    sf(9,'normal',C.white);
-                    doc.text('Analise completa de credito imobiliario', MG, 42);
+                    // Título principal
+                    sf(26, 'bold', C.white);
+                    doc.text('CONSULTORIA', MG_LEFT, 24);
+                    sf(26, 'bold', C.capaAcc);
+                    doc.text('FINANCEIRA', MG_LEFT, 38);
+                    sf(9, 'normal', [190, 210, 225]);
+                    doc.text('Analise completa de credito imobiliario — ImobiPro', MG_LEFT, 50);
 
-                    // Data e brand (canto direito)
-                    sf(7,'normal',[200,220,200]);
-                    doc.text('ImobiPro', W - MG, 16, {align:'right'});
-                    doc.text('Emitido em ' + new Date().toLocaleDateString('pt-BR'), W - MG, 22, {align:'right'});
-                    doc.text('Documento Orientativo', W - MG, 28, {align:'right'});
+                    // Data / brand à direita
+                    sf(7, 'normal', [170, 195, 215]);
+                    doc.text('ImobiPro', W - MG_RIGHT, 20, {align:'right'});
+                    doc.text('Emitido em ' + new Date().toLocaleDateString('pt-BR'), W - MG_RIGHT, 28, {align:'right'});
+                    doc.text('Documento Orientativo', W - MG_RIGHT, 36, {align:'right'});
 
-                    y = 62;
+                    y = 82;
 
                     // ── SCORES (4 cards em linha) ────────────────────────
                     const compPct = v.comprometimento || 0;
-                    const compCor = compPct <= 20 ? C.verde : compPct <= 30 ? C.warn : C.danger;
+                    const compCor  = compPct <= 20 ? C.accent  : compPct <= 30 ? C.warn  : C.danger;
+                    const compCorL = compPct <= 20 ? C.accentL : compPct <= 30 ? C.warnL : C.dangerL;
                     const compLabel = compPct <= 20 ? 'EXCELENTE' : compPct <= 30 ? 'BOM' : compPct <= 35 ? 'ATENCAO' : 'CRITICO';
-                    const restricaoCor = v.restricao === 'sim' ? C.danger : C.verde;
+                    const restricaoCor  = v.restricao === 'sim' ? C.danger  : C.accent;
+                    const restricaoCorL = v.restricao === 'sim' ? C.dangerL : C.accentL;
                     const restricaoLabel = v.restricao === 'sim' ? 'RESTRICAO' : v.restricao === 'desconhecido' ? 'VERIFICAR' : 'LIMPO';
 
                     const cw4 = (CW - 9) / 4;
-                    const cardH = 22;
+                    const cardH = 26;
+
                     const cards4 = [
-                        { label: 'RENDA BRUTA', val: br0(v.rendaTotal||0), sub: 'mensal', bg: C.verde, tc: C.white },
-                        { label: 'COMPROMETIMENTO', val: pct(compPct), sub: compLabel, bg: compCor, tc: C.white },
-                        { label: 'FGTS + POUPANCA', val: br0((v.fgts||0)+(v.poupanca||0)), sub: 'disponivel', bg: C.acc, tc: C.white },
-                        { label: 'CPF / SCORE', val: restricaoLabel, sub: v.restricao==='sim'?'Regularizar':'Consultar Serasa', bg: restricaoCor, tc: C.white },
+                        { label: 'RENDA BRUTA',     val: br0(v.rendaTotal||0), sub: 'mensal',   bg: C.primary,   bgL: C.primaryL,  tc: C.white, tdark: C.primary },
+                        { label: 'COMPROMETIMENTO', val: pct(compPct),         sub: compLabel,  bg: compCor,     bgL: compCorL,    tc: C.white, tdark: compCor },
+                        { label: 'FGTS + POUPANCA', val: br0((v.fgts||0)+(v.poupanca||0)), sub: 'disponivel', bg: C.primaryM, bgL: C.primaryL, tc: C.white, tdark: C.primaryM },
+                        { label: 'CPF / SCORE',    val: restricaoLabel, sub: v.restricao==='sim'?'Regularizar':'Consultar Serasa', bg: restricaoCor, bgL: restricaoCorL, tc: C.white, tdark: restricaoCor },
                     ];
+
                     cards4.forEach((c2, i) => {
-                        const cx = MG + i * (cw4 + 3);
-                        fc(...c2.bg); doc.roundedRect(cx, y, cw4, cardH, 2,2,'F');
-                        sf(6,'bold',[255,255,255,160]); doc.text(c2.label, cx+cw4/2, y+5, {align:'center'});
-                        sf(9,'bold',c2.tc); doc.text(c2.val, cx+cw4/2, y+13, {align:'center'});
-                        sf(6,'normal',[255,255,255,180]); doc.text(c2.sub, cx+cw4/2, y+19, {align:'center'});
+                        const cx = MG_LEFT + i * (cw4 + 3);
+                        // Card com fundo colorido suave e borda top colorida
+                        fc(...c2.bgL); doc.roundedRect(cx, y, cw4, cardH, 3, 3, 'F');
+                        fc(...c2.bg);  doc.roundedRect(cx, y, cw4, 4, 3, 3, 'F');
+                        // Label
+                        sf(5.5, 'bold', c2.tc); doc.text(c2.label, cx + cw4/2, y + 3, {align:'center'});
+                        // Valor
+                        sf(9, 'bold', c2.tdark); doc.text(c2.val, cx + cw4/2, y + 15, {align:'center'});
+                        // Sub
+                        sf(6, 'normal', C.textMid); doc.text(c2.sub, cx + cw4/2, y + 22, {align:'center'});
                     });
-                    y += cardH + 8;
+                    y += cardH + 10;
 
                     // ── TABELA RESUMO PERFIL ─────────────────────────────
-                    sectionHeader('RESUMO DO PERFIL FINANCEIRO', '', C.dark, C.white);
+                    sectionHeader('RESUMO DO PERFIL FINANCEIRO', '', C.primary);
 
                     // 2 colunas
-                    const col1 = MG, col2 = MG + CW/2 + 2;
+                    const col1 = MG_LEFT, col2 = MG_LEFT + CW/2 + 2;
                     const colW = CW/2 - 2;
 
                     const profileRows = [
@@ -20566,36 +20617,36 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     profileRows.forEach((pair, ri) => {
                         chk(7);
                         const altBg = ri % 2 === 0;
-                        if (altBg) { fc(...C.bg); doc.rect(MG, y, CW, 6.5, 'F'); }
+                        if (altBg) { fc(...C.bgAlt); doc.rect(MG_LEFT, y, CW, 6.5, 'F'); }
                         pair.forEach((cell, ci) => {
                             const cx = ci === 0 ? col1 : col2;
                             const isTotalRow = cell[0].startsWith('TOTAL') || cell[0] === 'Comprometimento';
-                            sf(7, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.verde : C.mid);
+                            sf(7, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.primary : C.textMid);
                             doc.text(cell[0], cx + 3, y + 4.5);
-                            sf(7.5, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.verde : C.dark);
+                            sf(7.5, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.primary : C.dark);
                             doc.text(cell[1], cx + colW - 3, y + 4.5, {align:'right'});
                         });
-                        dc(...C.border); doc.setLineWidth(0.15); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y+6.5, MG_LEFT+CW, y+6.5);
                         // vertical separator
-                        doc.line(MG + CW/2, y, MG + CW/2, y+6.5);
+                        dc(...C.border); doc.line(MG_LEFT + CW/2, y, MG_LEFT + CW/2, y+6.5);
                         y += 6.5;
                     });
                     y += 5;
 
                     // ── BARRA DE COMPROMETIMENTO ─────────────────────────
-                    chk(18);
-                    sf(7.5,'bold',C.dark); doc.text('Comprometimento de Renda (limite Caixa: 30%)', MG, y+4); y += 7;
-                    // track
-                    fc(...C.border); doc.roundedRect(MG, y, CW, 6, 3,3,'F');
-                    // fill
+                    chk(20);
+                    sf(7.5, 'bold', C.dark); doc.text('Comprometimento de Renda (limite Caixa: 30%)', MG_LEFT, y+4); y += 7;
+                    // track background suave
+                    fc(...C.borderL); doc.roundedRect(MG_LEFT, y, CW, 7, 3.5, 3.5, 'F');
+                    // fill colorido
                     const barW = Math.min(CW, (compPct / 100) * CW);
-                    fc(...compCor); doc.roundedRect(MG, y, barW, 6, 3,3,'F');
-                    // 30% marker
-                    const marker30 = MG + CW * 0.30;
-                    dc(...C.danger); doc.setLineWidth(0.5); doc.setLineDash([1,1]); doc.line(marker30, y-2, marker30, y+8); doc.setLineDash([]);
-                    sf(6,'bold',C.danger); doc.text('30%', marker30+1, y-0.5);
-                    sf(7.5,'bold',compCor); doc.text(pct(compPct), MG + barW - 1, y+4.5, {align:'right'});
-                    y += 12;
+                    fc(...compCor); doc.roundedRect(MG_LEFT, y, Math.max(barW, 3), 7, 3.5, 3.5, 'F');
+                    // Marcador 30%
+                    const marker30 = MG_LEFT + CW * 0.30;
+                    dc(...C.danger); doc.setLineWidth(0.5); doc.setLineDash([1, 1]); doc.line(marker30, y - 2, marker30, y + 9); doc.setLineDash([]);
+                    sf(6, 'bold', C.danger); doc.text('30%', marker30 + 1, y - 0.5);
+                    sf(7.5, 'bold', compCor); doc.text(pct(compPct), MG_LEFT + barW - 1, y + 5, {align:'right'});
+                    y += 13;
 
                     // ══════════════════════════════════════════════════════
                     // Extrair seções do texto
@@ -20616,38 +20667,39 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     const secPlano = extr('PLANO_ORGANIZACAO|PLANO_ORGANIZAÇÃO');
 
                     // ── SAÚDE FINANCEIRA ─────────────────────────────────
-                    const saudeCor = compPct <= 20 ? C.verde : compPct <= 30 ? C.warn : C.danger;
-                    const saudeCbg = compPct <= 20 ? C.verdeT : compPct <= 30 ? C.warnC : C.dangerC;
+                    const saudeCor = compPct <= 20 ? C.accent : compPct <= 30 ? C.warn : C.danger;
+                    const saudeCbg = compPct <= 20 ? C.accentL : compPct <= 30 ? C.warnL : C.dangerL;
                     chk(14);
-                    sectionHeader('SAUDE FINANCEIRA', '', saudeCor, C.white);
-                    rect(MG, y, CW, 1.5, saudeCbg); // top accent line
-                    fc(...saudeCbg); doc.roundedRect(MG, y, CW, 60, 2, 2, 'F'); // bg hint
-                    y += 3;
+                    sectionHeader('SAUDE FINANCEIRA', '', saudeCor);
+                    // Bloco de fundo levíssimo para a seção
+                    fc(...saudeCbg); doc.roundedRect(MG_LEFT, y, CW, 3, 2, 2, 'F');
+                    y += 2;
                     textBlock(secSaude);
 
                     // ── PENDÊNCIAS ──────────────────────────────────────
                     chk(14);
-                    sectionHeader('PENDENCIAS IDENTIFICADAS', '', C.danger, C.white);
+                    sectionHeader('PENDENCIAS IDENTIFICADAS', '', C.danger);
                     textBlock(secPend);
 
                     // ── TABELA IR ────────────────────────────────────────
                     chk(80);
-                    sectionHeader('IMPOSTO DE RENDA — REGRAS 2025', '', C.warn, C.white);
+                    sectionHeader('IMPOSTO DE RENDA — REGRAS 2025', '', C.warn);
 
-                    // Tabela de faixas
+                    // Tabela de faixas — nova paleta harmoniosa
                     const irFaixas = [
-                        ['Ate R$ 2.259,20 / mes', 'ISENTO', '0%', C.verde, C.verdeT],
-                        ['R$ 2.259,21 a R$ 2.826,65', '7,5%', 'Ded. R$ 169,44', C.verdeM, C.verdeT],
-                        ['R$ 2.826,66 a R$ 3.751,05', '15%', 'Ded. R$ 381,44', C.warn, C.warnC],
-                        ['R$ 3.751,06 a R$ 4.664,68', '22,5%', 'Ded. R$ 662,77', [160,80,0], C.warnC],
-                        ['Acima de R$ 4.664,68', '27,5%', 'Ded. R$ 896,00', C.danger, C.dangerC],
+                        ['Ate R$ 2.259,20 / mes',      'ISENTO', '0%',              C.accent,  C.accentL],
+                        ['R$ 2.259,21 a R$ 2.826,65',  '7,5%',   'Ded. R$ 169,44', C.accent,  C.accentXL],
+                        ['R$ 2.826,66 a R$ 3.751,05',  '15%',    'Ded. R$ 381,44', C.warn,    C.warnL],
+                        ['R$ 3.751,06 a R$ 4.664,68',  '22,5%',  'Ded. R$ 662,77', C.warn,    C.warnL],
+                        ['Acima de R$ 4.664,68',        '27,5%',  'Ded. R$ 896,00', C.danger,  C.dangerL],
                     ];
-                    // header
-                    fc(...C.dark); doc.rect(MG, y, CW, 7, 'F');
-                    sf(7,'bold',C.white);
-                    doc.text('FAIXA DE RENDA MENSAL', MG+3, y+4.8);
-                    doc.text('ALIQUOTA', MG + CW*0.56, y+4.8, {align:'center'});
-                    doc.text('DEDUCAO MENSAL', MG + CW*0.82, y+4.8, {align:'center'});
+
+                    // Header da tabela
+                    fc(...C.primary); doc.rect(MG_LEFT, y, CW, 7, 'F');
+                    sf(7, 'bold', C.white);
+                    doc.text('FAIXA DE RENDA MENSAL', MG_LEFT + 4, y + 4.8);
+                    doc.text('ALIQUOTA', MG_LEFT + CW * 0.56, y + 4.8, {align:'center'});
+                    doc.text('DEDUCAO MENSAL', MG_LEFT + CW * 0.82, y + 4.8, {align:'center'});
                     y += 7;
 
                     const rendaMes = (v.rendaClt||0) + (v.rendaApo||0);
@@ -20659,17 +20711,17 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                             (faixa.includes('4.664') && rendaMes > 3751.05 && rendaMes <= 4664.68) ||
                             (faixa.includes('Acima') && rendaMes > 4664.68)
                         );
-                        fc(...(isActive ? bgCor : C.white)); doc.rect(MG, y, CW, 6.5, 'F');
+                        fc(...(isActive ? bgCor : C.white)); doc.rect(MG_LEFT, y, CW, 6.5, 'F');
                         if (isActive) {
-                            fc(...cor); doc.rect(MG, y, 2.5, 6.5, 'F');
-                            sf(7,'bold',cor); doc.text('► ' + faixa, MG+4, y+4.5);
+                            fc(...cor); doc.rect(MG_LEFT, y, 3, 6.5, 'F');
+                            sf(7, 'bold', cor); doc.text('> ' + faixa, MG_LEFT + 5, y + 4.5);
                         } else {
-                            sf(7,'normal',C.mid); doc.text(faixa, MG+4, y+4.5);
+                            sf(7, 'normal', C.textMid); doc.text(faixa, MG_LEFT + 5, y + 4.5);
                         }
-                        sf(7, isActive?'bold':'normal', isActive?cor:C.muted);
-                        doc.text(aliq, MG + CW*0.56, y+4.5, {align:'center'});
-                        doc.text(ded, MG + CW*0.82, y+4.5, {align:'center'});
-                        dc(...C.border); doc.setLineWidth(0.15); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        sf(7, isActive ? 'bold' : 'normal', isActive ? cor : C.muted);
+                        doc.text(aliq, MG_LEFT + CW * 0.56, y + 4.5, {align:'center'});
+                        doc.text(ded,  MG_LEFT + CW * 0.82, y + 4.5, {align:'center'});
+                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y + 6.5, MG_LEFT + CW, y + 6.5);
                         y += 6.5;
                     });
                     y += 4;
@@ -20680,31 +20732,31 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                     // ── DICAS CAIXA ──────────────────────────────────────
                     chk(14);
-                    sectionHeader('APROVACAO NA CAIXA ECONOMICA FEDERAL', '', C.azul, C.white);
+                    sectionHeader('APROVACAO NA CAIXA ECONOMICA FEDERAL', '', C.primaryM);
                     textBlock(secCaixa);
 
                     // ── PLANO 30-60-90 ───────────────────────────────────
                     chk(14);
-                    sectionHeader('PLANO DE ACAO — 30 / 60 / 90 DIAS', '', C.verdeM, C.white);
+                    sectionHeader('PLANO DE ACAO — 30 / 60 / 90 DIAS', '', C.accent);
 
-                    // 3 colunas de prazo
+                    // 3 colunas de prazo com nova paleta
                     const prazoCols = [
-                        { titulo: '30 DIAS', cor: C.verde, bgCor: C.verdeT },
-                        { titulo: '60 DIAS', cor: C.acc,   bgCor: C.accC },
-                        { titulo: '90 DIAS', cor: C.azul,  bgCor: C.azulC },
+                        { titulo: '30 DIAS', cor: C.primary,  bgCor: C.primaryL  },
+                        { titulo: '60 DIAS', cor: C.primaryM, bgCor: C.primaryXL },
+                        { titulo: '90 DIAS', cor: C.accent,   bgCor: C.accentL   },
                     ];
                     const cwP = (CW - 6) / 3;
                     chk(8);
                     prazoCols.forEach((p, i) => {
-                        const px = MG + i * (cwP + 3);
-                        fc(...p.cor); doc.roundedRect(px, y, cwP, 7, 2,2,'F');
-                        sf(7.5,'bold',C.white); doc.text(p.titulo, px + cwP/2, y+4.8, {align:'center'});
+                        const px = MG_LEFT + i * (cwP + 3);
+                        fc(...p.cor); doc.roundedRect(px, y, cwP, 8, 2, 2, 'F');
+                        sf(7.5, 'bold', C.white); doc.text(p.titulo, px + cwP / 2, y + 5.5, {align:'center'});
                     });
-                    y += 9;
+                    y += 10;
 
                     // Extrair linhas por bloco de dias
                     const planoLines = (secPlano||'').split('\n').filter(l => l.trim());
-                    const blocos = [[],[],[]];
+                    const blocos = [[], [], []];
                     let blocoAtual = 0;
                     planoLines.forEach(l => {
                         if (/30.DIAS|proximos.30/i.test(l)) { blocoAtual = 0; return; }
@@ -20718,52 +20770,58 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                         chk(7);
                         const rowBg = ri % 2 === 0;
                         prazoCols.forEach((p, ci) => {
-                            const px = MG + ci * (cwP + 3);
+                            const px = MG_LEFT + ci * (cwP + 3);
                             if (rowBg) { fc(...p.bgCor); doc.rect(px, y, cwP, 6.5, 'F'); }
                             const txt = blocos[ci][ri] || '';
-                            const clean = txt.replace(/^[\d\.•\-*·]\s*/, '').replace(/^\d+\.\s*/,'');
+                            const clean = txt.replace(/^[\d\.•\-*·]\s*/, '').replace(/^\d+\.\s*/, '');
                             if (clean) {
                                 const wrapped = doc.splitTextToSize(clean, cwP - 6);
                                 sf(7, 'normal', C.dark);
-                                doc.text(wrapped[0] || '', px+3, y+4.5);
+                                doc.text(wrapped[0] || '', px + 3, y + 4.5);
                             }
                         });
-                        dc(...C.border); doc.setLineWidth(0.15);
+                        dc(...C.borderL); doc.setLineWidth(0.15);
                         prazoCols.forEach((p, ci) => {
-                            const px = MG + ci * (cwP + 3);
-                            doc.line(px, y+6.5, px+cwP, y+6.5);
+                            const px = MG_LEFT + ci * (cwP + 3);
+                            doc.line(px, y + 6.5, px + cwP, y + 6.5);
                         });
                         y += 6.5;
                     }
-                    y += 6;
+                    y += 7;
 
-                    // ── DEDUÇÕES IR (box) ────────────────────────────────
-                    chk(40);
-                    fc(...C.warnC); doc.roundedRect(MG, y, CW, 36, 3,3,'F');
-                    fc(...C.warn); doc.roundedRect(MG, y, CW, 8, 3,3,'F');
-                    sf(8,'bold',C.white); doc.text('DEDUCOES PERMITIDAS NO IR 2025', MG+4, y+5.5);
-                    y += 11;
+                    // ── DEDUÇÕES IR (box) — design limpo ─────────────────
+                    chk(44);
+                    // Borda esquerda accent
+                    fc(...C.warn); doc.rect(MG_LEFT, y, 3, 42, 'F');
+                    // Fundo suave
+                    fc(...C.warnL); doc.rect(MG_LEFT + 3, y, CW - 3, 42, 'F');
+                    // Header
+                    sf(8, 'bold', C.warn);
+                    doc.text('DEDUCOES PERMITIDAS NO IR 2025', MG_LEFT + 8, y + 6);
+                    dc(...C.border); doc.setLineWidth(0.25);
+                    doc.line(MG_LEFT + 3, y + 9, MG_LEFT + CW, y + 9);
+                    y += 12;
                     const deds = [
-                        ['Dependentes', 'R$ 2.275,08 / ano por dependente'],
-                        ['Plano de Saude', '100% dedutivel (sem limite)'],
-                        ['Educacao', 'Ate R$ 3.561,50 / ano por pessoa'],
-                        ['Previdencia PGBL', 'Ate 12% da renda bruta anual'],
-                        ['Pensao Alimenticia', '100% dedutivel (com ordem judicial)'],
-                        ['INSS recolhido', '100% dedutivel'],
+                        ['Dependentes',         'R$ 2.275,08 / ano por dependente'],
+                        ['Plano de Saude',       '100% dedutivel (sem limite)'],
+                        ['Educacao',             'Ate R$ 3.561,50 / ano por pessoa'],
+                        ['Previdencia PGBL',     'Ate 12% da renda bruta anual'],
+                        ['Pensao Alimenticia',   '100% dedutivel (com ordem judicial)'],
+                        ['INSS recolhido',       '100% dedutivel'],
                     ];
                     deds.forEach(([label, val], i) => {
-                        if (i % 2 === 0) { fc(...C.warnC); } else { fc(255,253,240); }
-                        doc.rect(MG+3, y, CW-6, 6, 'F');
-                        sf(7,'bold',C.warn); doc.text(label, MG+6, y+4.2);
-                        sf(7,'normal',C.dark); doc.text(val, MG+CW-6, y+4.2, {align:'right'});
-                        y += 6;
+                        if (i % 2 === 0) { fc(...C.warnL); } else { fc(...C.white); }
+                        doc.rect(MG_LEFT + 4, y, CW - 7, 5.5, 'F');
+                        sf(7, 'bold', C.warn); doc.text(label, MG_LEFT + 7, y + 4);
+                        sf(7, 'normal', C.dark); doc.text(val, MG_LEFT + CW - 4, y + 4, {align:'right'});
+                        y += 5.5;
                     });
-                    y += 8;
+                    y += 10;
 
                     // Rodapé na última página
                     addFooter();
 
-                    doc.save('cartilha-consultoria-imobipro-' + new Date().toISOString().slice(0,10) + '.pdf');
+                    doc.save('cartilha-consultoria-imobipro-' + new Date().toISOString().slice(0, 10) + '.pdf');
                     if (window.UI && UI.showToast) UI.showToast('✅ Cartilha PDF profissional baixada!');
                 } catch(e) {
                     console.error(e);
