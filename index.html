@@ -1644,6 +1644,56 @@
             color: var(--text-secondary);
         }
 
+        /* ===== PHONE DISPLAY IN SCHEDULING MODAL ===== */
+        .cliente-phone-display {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, rgba(46,74,49,0.07) 0%, rgba(61,97,66,0.05) 100%);
+            border: 1.5px solid rgba(46,74,49,0.18);
+            border-radius: var(--radius-md);
+            padding: 11px 14px;
+            margin-top: 8px;
+            animation: phoneSlideIn 0.22s ease;
+        }
+        .cliente-phone-display.visible { display: flex; }
+        @keyframes phoneSlideIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .cliente-phone-icon {
+            width: 34px; height: 34px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 0.82rem; flex-shrink: 0;
+        }
+        .cliente-phone-info { flex: 1; min-width: 0; }
+        .cliente-phone-label {
+            font-size: 0.72rem; color: var(--text-secondary);
+            font-weight: 500; text-transform: uppercase;
+            letter-spacing: 0.04em; margin-bottom: 2px;
+        }
+        .cliente-phone-number {
+            font-size: 0.97rem; font-weight: 700;
+            color: var(--primary); letter-spacing: 0.02em;
+        }
+        .cliente-phone-number.no-phone {
+            color: var(--text-secondary); font-weight: 400;
+            font-style: italic; font-size: 0.88rem;
+        }
+        .cliente-phone-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .btn-phone-action {
+            width: 34px; height: 34px; border: none;
+            border-radius: 10px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.82rem; transition: all 0.15s;
+        }
+        .btn-phone-action:active { transform: scale(0.93); }
+        .btn-phone-call    { background: rgba(46,74,49,0.1);    color: var(--primary); }
+        .btn-phone-whatsapp{ background: rgba(37,211,102,0.12); color: #16a34a; }
+        .btn-phone-copy    { background: rgba(122,138,124,0.1); color: var(--text-secondary); }
+
         .progress-envio {
             margin-top: 16px;
             padding: 16px;
@@ -5857,9 +5907,17 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
 
                 <div class="form-group cliente-dependent-group">
                     <label class="form-label">Cliente</label>
-                    <select id="v-cliente" class="form-control">
+                    <select id="v-cliente" class="form-control" onchange="UI.onClienteAgendamentoChange(this.value)">
                         <option value="">Selecione...</option>
                     </select>
+                    <div class="cliente-phone-display" id="v-cliente-phone-display">
+                        <div class="cliente-phone-icon"><i class="fas fa-phone"></i></div>
+                        <div class="cliente-phone-info">
+                            <div class="cliente-phone-label">Telefone do Cliente</div>
+                            <div class="cliente-phone-number" id="v-cliente-phone-number">—</div>
+                        </div>
+                        <div class="cliente-phone-actions" id="v-cliente-phone-actions"></div>
+                    </div>
                 </div>
 
                 <div class="form-group imovel-dependent-group">
@@ -12909,6 +12967,10 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                 form.reset();
                 document.getElementById('v-id').value = '';
                 document.getElementById('title-visita').innerText = 'Novo Agendamento';
+
+                // Reset phone display
+                const phoneDisplay = document.getElementById('v-cliente-phone-display');
+                if (phoneDisplay) phoneDisplay.classList.remove('visible');
                 
                 // Prefill date from calendar selected date if available
                 const prefillDate = UI._prefilledDate || UI.calendarSelectedDate || Utils.getToday();
@@ -12926,6 +12988,72 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                 UI.toggleVisitaFields();
                 
                 UI.openModal('visita');
+            },
+
+            onClienteAgendamentoChange: (clienteId) => {
+                const display   = document.getElementById('v-cliente-phone-display');
+                const numEl     = document.getElementById('v-cliente-phone-number');
+                const actionsEl = document.getElementById('v-cliente-phone-actions');
+                if (!display || !numEl) return;
+
+                if (!clienteId) {
+                    display.classList.remove('visible');
+                    return;
+                }
+
+                const cliente = UI.data && UI.data.clientes.find(c => c.id === clienteId);
+                display.classList.remove('visible');
+                void display.offsetWidth; // force reflow para reativar animação
+                display.classList.add('visible');
+                actionsEl.innerHTML = '';
+
+                if (cliente && cliente.telefone) {
+                    numEl.textContent = Utils.formatPhone(cliente.telefone);
+                    numEl.classList.remove('no-phone');
+
+                    const btnCall = document.createElement('button');
+                    btnCall.type = 'button';
+                    btnCall.className = 'btn-phone-action btn-phone-call';
+                    btnCall.title = 'Ligar';
+                    btnCall.innerHTML = '<i class="fas fa-phone"></i>';
+                    btnCall.onclick = () => { window.location.href = 'tel:' + cliente.telefone.replace(/\D/g,''); };
+
+                    const btnWa = document.createElement('button');
+                    btnWa.type = 'button';
+                    btnWa.className = 'btn-phone-action btn-phone-whatsapp';
+                    btnWa.title = 'WhatsApp';
+                    btnWa.innerHTML = '<i class="fab fa-whatsapp"></i>';
+                    btnWa.onclick = () => App.whatsapp.confirmOpenCliente(clienteId);
+
+                    const btnCopy = document.createElement('button');
+                    btnCopy.type = 'button';
+                    btnCopy.className = 'btn-phone-action btn-phone-copy';
+                    btnCopy.title = 'Copiar número';
+                    btnCopy.innerHTML = '<i class="fas fa-copy"></i>';
+                    btnCopy.onclick = () => {
+                        navigator.clipboard.writeText(cliente.telefone)
+                            .then(() => Utils.toast('Telefone copiado!'))
+                            .catch(() => Utils.toast('Não foi possível copiar', 'error'));
+                    };
+
+                    actionsEl.appendChild(btnCall);
+                    actionsEl.appendChild(btnWa);
+                    actionsEl.appendChild(btnCopy);
+
+                    // Auto-fill campo de telefone por tipo
+                    const tipo = (document.getElementById('v-tipo') || {}).value;
+                    if (tipo === 'ligacao') {
+                        const fld = document.getElementById('v-ligacao-numero');
+                        if (fld && !fld.value) fld.value = cliente.telefone;
+                    }
+                    if (tipo === 'whatsapp') {
+                        const fld = document.getElementById('v-whatsapp-numero');
+                        if (fld && !fld.value) fld.value = cliente.telefone;
+                    }
+                } else {
+                    numEl.textContent = 'Telefone não cadastrado';
+                    numEl.classList.add('no-phone');
+                }
             },
 
             toggleVisitaFields: () => {
@@ -12960,6 +13088,11 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                 
                 if (clienteField) clienteField.required = tiposComCliente.includes(tipo);
                 if (imovelField) imovelField.required = tiposComImovel.includes(tipo);
+
+                // Re-trigger phone fill when tipo changes (ex: muda para ligação/whatsapp)
+                if (clienteField && clienteField.value) {
+                    UI.onClienteAgendamentoChange(clienteField.value);
+                }
             },
             
             openNewVisitaFromImovel: (imovelId) => {
@@ -13840,8 +13973,11 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                     UI.openNewVisita();
                     setTimeout(() => {
                         const select = document.getElementById('v-cliente');
-                        if (select) select.value = clienteId;
-                    }, 100);
+                        if (select) {
+                            select.value = clienteId;
+                            UI.onClienteAgendamentoChange(clienteId);
+                        }
+                    }, 120);
                 },
 
                 scanDocumento: function() {
