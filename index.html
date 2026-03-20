@@ -4294,6 +4294,7 @@
                     <button class="coach-tab-btn" onclick="VendaCerta.switchTab('metas', this)">🏆 Metas</button>
                     <button class="coach-tab-btn" onclick="VendaCerta.switchTab('posvenda', this)">⭐ Pós-Venda</button>
                     <button class="coach-tab-btn" onclick="VendaCerta.switchTab('ia', this)">🤖 Coach IA</button>
+                    <button class="coach-tab-btn" onclick="VendaCerta.switchTab('consultoria', this)">📋 Consultoria</button>
                 </div>
 
                 <!-- TAB: PIPELINE -->
@@ -4539,6 +4540,222 @@
                     <!-- Dicas do Dia -->
                     <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">💡 Dicas de Alta Performance</div>
                     <div id="vc-ia-dicas-container"></div>
+                </div>
+
+                <!-- TAB: CONSULTORIA -->
+                <div id="vc-tab-consultoria" class="coach-tab-panel">
+
+                    <!-- Hero -->
+                    <div class="vc-hero" style="background:linear-gradient(135deg,#1A2B1C 0%,#2E4A31 60%,#3D6142 100%);">
+                        <div class="vc-hero-title" style="font-size:1.2rem;">📋 Consultoria Financeira</div>
+                        <div class="vc-hero-sub">Análise completa · IR · Aprovação Caixa Econômica</div>
+                        <div class="vc-score-row">
+                            <div class="vc-score-item"><div class="vc-score-val" id="cons-score-saude" style="font-size:1.1rem;">—</div><div class="vc-score-lbl">Saúde Fin.</div></div>
+                            <div class="vc-score-item"><div class="vc-score-val" id="cons-score-ir" style="font-size:1.1rem;">—</div><div class="vc-score-lbl">Obrig. IR</div></div>
+                            <div class="vc-score-item"><div class="vc-score-val" id="cons-score-comprometimento" style="font-size:1.1rem;">—</div><div class="vc-score-lbl">Comprometim.</div></div>
+                            <div class="vc-score-item"><div class="vc-score-val" id="cons-score-aprovacao" style="font-size:1.1rem;">—</div><div class="vc-score-lbl">Aprovação</div></div>
+                        </div>
+                    </div>
+
+                    <!-- Seletor de cliente -->
+                    <div class="vc-card" style="margin-bottom:14px;">
+                        <div style="font-weight:700;font-size:0.9rem;margin-bottom:10px;color:var(--dark);display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <div style="display:flex;align-items:center;gap:8px;"><span style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#2E4A31,#3D6142);color:white;display:flex;align-items:center;justify-content:center;font-size:0.8rem;">👤</span> Selecionar Cliente</div>
+                            <span id="cons-clientes-badge" style="font-size:0.7rem;color:var(--text-secondary);font-weight:600;"></span>
+                        </div>
+                        <select id="cons-cliente-select" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:0.9rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" onchange="VendaCerta.consLoadCliente(this.value)">
+                            <option value="">— Selecione um cliente para analisar —</option>
+                        </select>
+                        <button onclick="VendaCerta.consInit()" style="margin-top:8px;width:100%;padding:8px;background:rgba(46,74,49,0.07);border:1px solid rgba(46,74,49,0.15);border-radius:8px;color:var(--primary);font-size:0.8rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''">
+                            <i class="fas fa-sync-alt"></i> Atualizar lista de clientes
+                        </button>
+                    </div>
+
+                    <!-- Formulário de dados financeiros -->
+                    <div id="cons-form-area">
+                        <div class="vc-section-title"><i class="fas fa-wallet"></i> Dados Financeiros do Cliente</div>
+                        <div class="vc-card" style="margin-bottom:14px;">
+                            <!-- Renda -->
+                            <div style="font-weight:700;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">💰 Fontes de Renda</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Renda CLT / Formal (R$)</label>
+                                    <input type="number" id="cons-renda-clt" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Renda MEI / PJ (R$)</label>
+                                    <input type="number" id="cons-renda-mei" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Renda Autônomo (R$)</label>
+                                    <input type="number" id="cons-renda-autonomo" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Renda Aluguéis (R$)</label>
+                                    <input type="number" id="cons-renda-aluguel" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Aposentadoria / Pensão (R$)</label>
+                                    <input type="number" id="cons-renda-apo" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Outras Rendas (R$)</label>
+                                    <input type="number" id="cons-renda-outras" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                            </div>
+
+                            <!-- Despesas e Dívidas -->
+                            <div style="font-weight:700;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:8px;">💸 Comprometimentos Mensais</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Financiamentos (R$)</label>
+                                    <input type="number" id="cons-div-financ" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Cartão de Crédito (R$)</label>
+                                    <input type="number" id="cons-div-cartao" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Empréstimos (R$)</label>
+                                    <input type="number" id="cons-div-emprest" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Aluguel Atual (R$)</label>
+                                    <input type="number" id="cons-div-aluguel" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                            </div>
+
+                            <!-- Patrimônio e FGTS -->
+                            <div style="font-weight:700;font-size:0.8rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;margin-top:8px;">🏦 Patrimônio & Recursos</div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Saldo FGTS (R$)</label>
+                                    <input type="number" id="cons-fgts" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Poupança / Investimentos (R$)</label>
+                                    <input type="number" id="cons-poupanca" placeholder="0,00" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" oninput="VendaCerta.consCalc()">
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Dependentes</label>
+                                    <select id="cons-dependentes" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" onchange="VendaCerta.consCalc()">
+                                        <option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4+</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Possui restrição (SPC/Serasa)?</label>
+                                    <select id="cons-restricao" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" onchange="VendaCerta.consCalc()">
+                                        <option value="nao">Não</option><option value="sim">Sim</option><option value="desconhecido">Não sei</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Situação de trabalho e programa -->
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Tipo de vínculo</label>
+                                    <select id="cons-vinculo" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" onchange="VendaCerta.consCalc()">
+                                        <option value="clt">CLT (Carteira)</option>
+                                        <option value="servidor">Servidor Público</option>
+                                        <option value="mei">MEI</option>
+                                        <option value="autonomo">Autônomo</option>
+                                        <option value="aposentado">Aposentado/Pensionista</option>
+                                        <option value="empresario">Empresário (Sócio)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;display:block;margin-bottom:4px;">Programa pretendido</label>
+                                    <select id="cons-programa" style="width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.88rem;background:white;color:var(--dark);outline:none;font-family:'Inter',sans-serif;" onchange="VendaCerta.consCalc()">
+                                        <option value="mcmv1">MCMV Faixa 1 (até R$2.640)</option>
+                                        <option value="mcmv2">MCMV Faixa 2 (até R$4.400)</option>
+                                        <option value="mcmv3">MCMV Faixa 3 (até R$8.000)</option>
+                                        <option value="sbpe">SBPE (Acima R$8.000)</option>
+                                        <option value="pronampe">Pró-Cotista FGTS</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botão Analisar -->
+                        <button onclick="VendaCerta.consAnalisar()" style="width:100%;padding:14px;background:linear-gradient(135deg,#2E4A31,#3D6142);color:white;border:none;border-radius:12px;font-size:0.95rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;box-shadow:0 4px 16px rgba(46,74,49,0.25);letter-spacing:0.3px;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform=''">
+                            <i class="fas fa-search-dollar"></i> Analisar Perfil Completo com IA
+                        </button>
+                    </div>
+
+                    <!-- Resultado -->
+                    <div id="cons-loading" style="display:none;background:rgba(46,74,49,0.06);border-radius:14px;padding:24px;text-align:center;margin-bottom:16px;">
+                        <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;">
+                            <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite;"></div>
+                            <div style="width:10px;height:10px;background:var(--accent);border-radius:50%;animation:vcDot 1.2s infinite 0.4s;"></div>
+                            <div style="width:10px;height:10px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite 0.8s;"></div>
+                        </div>
+                        <div style="font-size:0.85rem;color:var(--text-secondary);font-weight:600;">Consultora IA analisando as finanças...</div>
+                    </div>
+
+                    <div id="cons-resultado" style="display:none;margin-bottom:16px;">
+                        <!-- Score cards dinâmicos -->
+                        <div id="cons-score-cards" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
+
+                        <!-- Análise por seções -->
+                        <div id="cons-secao-saude" class="vc-card" style="margin-bottom:12px;display:none;">
+                            <div style="font-weight:800;font-size:0.88rem;color:var(--primary);display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span>💰</span> Saúde Financeira</div>
+                            <div id="cons-texto-saude" style="font-size:0.84rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;"></div>
+                        </div>
+
+                        <div id="cons-secao-pendencias" class="vc-card" style="margin-bottom:12px;display:none;">
+                            <div style="font-weight:800;font-size:0.88rem;color:var(--danger);display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span>⚠️</span> Pendências Identificadas</div>
+                            <div id="cons-texto-pendencias" style="font-size:0.84rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;"></div>
+                        </div>
+
+                        <div id="cons-secao-ir" class="vc-card" style="margin-bottom:12px;display:none;">
+                            <div style="font-weight:800;font-size:0.88rem;color:var(--warning);display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span>📄</span> Imposto de Renda</div>
+                            <div id="cons-texto-ir" style="font-size:0.84rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;"></div>
+                        </div>
+
+                        <div id="cons-secao-caixa" class="vc-card" style="margin-bottom:12px;display:none;">
+                            <div style="font-weight:800;font-size:0.88rem;color:var(--primary);display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span>🏦</span> Dicas para Aprovação na Caixa</div>
+                            <div id="cons-texto-caixa" style="font-size:0.84rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;"></div>
+                        </div>
+
+                        <div id="cons-secao-organizacao" class="vc-card" style="margin-bottom:12px;display:none;">
+                            <div style="font-weight:800;font-size:0.88rem;color:var(--success);display:flex;align-items:center;gap:8px;margin-bottom:10px;"><span>📋</span> Plano de Organização</div>
+                            <div id="cons-texto-organizacao" style="font-size:0.84rem;line-height:1.75;color:var(--dark);white-space:pre-wrap;"></div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+                            <button onclick="VendaCerta.consDownloadPDF()" style="flex:1;min-width:140px;padding:12px;background:linear-gradient(135deg,#C4724A,#D98A62);color:white;border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-file-pdf"></i> Baixar Cartilha PDF</button>
+                            <button onclick="VendaCerta.consNovoChatIA()" style="flex:1;min-width:120px;padding:12px;background:rgba(46,74,49,0.1);color:var(--primary);border:none;border-radius:10px;font-size:0.85rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-comments"></i> Chat IA</button>
+                        </div>
+                    </div>
+
+                    <!-- Chat Consultoria IA -->
+                    <div class="vc-section-title" style="margin-top:8px;"><i class="fas fa-robot"></i> Chat Consultoria Financeira</div>
+                    <div id="cons-chat-container" style="background:var(--surface);border-radius:14px;border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow-sm);margin-bottom:12px;">
+                        <div id="cons-chat-messages" style="min-height:160px;max-height:280px;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;">
+                            <div class="vc-chat-msg vc-chat-bot">
+                                <div class="vc-chat-avatar">📋</div>
+                                <div class="vc-chat-bubble bot">Olá! Sou sua Consultora IA de Finanças. Preencha o formulário acima e clique em "Analisar" para uma análise completa. Ou pergunte diretamente sobre IR, FGTS, Caixa Econômica, organização financeira e muito mais!</div>
+                            </div>
+                        </div>
+                        <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;background:rgba(239,240,236,0.5);">
+                            <textarea id="cons-chat-input" placeholder="Pergunte sobre IR, FGTS, aprovação na Caixa..." style="flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:0.85rem;resize:none;min-height:42px;max-height:100px;font-family:'Inter',sans-serif;background:white;outline:none;color:var(--dark);" rows="1" onkeydown="VendaCerta.consChatKeyDown(event)" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';"></textarea>
+                            <button onclick="VendaCerta.consSendChat()" style="background:var(--primary);color:white;border:none;border-radius:10px;width:42px;height:42px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" onmousedown="this.style.transform='scale(0.9)'" onmouseup="this.style.transform='scale(1)'">
+                                <i class="fas fa-paper-plane" style="font-size:0.9rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Perguntas rápidas -->
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;">Perguntas frequentes:</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px;">
+                        <button onclick="VendaCerta.consChatSuggest('Quem é obrigado a declarar IR em 2025?')" class="vc-chat-sugg">📄 Obrigação IR</button>
+                        <button onclick="VendaCerta.consChatSuggest('Como usar o FGTS na compra do imóvel pela Caixa?')" class="vc-chat-sugg">🏦 FGTS + Caixa</button>
+                        <button onclick="VendaCerta.consChatSuggest('Quais documentos são necessários para financiamento na Caixa Econômica?')" class="vc-chat-sugg">📁 Documentos</button>
+                        <button onclick="VendaCerta.consChatSuggest('Como limpar o nome antes de pedir financiamento?')" class="vc-chat-sugg">✅ Limpar nome</button>
+                        <button onclick="VendaCerta.consChatSuggest('O que pode reprovar um financiamento na Caixa?')" class="vc-chat-sugg">❌ Reprovação</button>
+                        <button onclick="VendaCerta.consChatSuggest('Como declarar imóvel comprado no IR?')" class="vc-chat-sugg">🏠 Imóvel no IR</button>
+                    </div>
                 </div>
 
             </div>
@@ -17892,7 +18109,7 @@ Para cada objeção: a causa-raiz + o script exato em português + a técnica ps
 
             async switchTab(tab, btn) {
                 document.querySelectorAll('#vc-tabs .coach-tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('#vc-tab-pipeline, #vc-tab-prospecao, #vc-tab-kpis, #vc-tab-metas, #vc-tab-posvenda, #vc-tab-ia').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('#vc-tab-pipeline, #vc-tab-prospecao, #vc-tab-kpis, #vc-tab-metas, #vc-tab-posvenda, #vc-tab-ia, #vc-tab-consultoria').forEach(p => p.classList.remove('active'));
                 if (btn) btn.classList.add('active');
                 const panel = document.getElementById('vc-tab-' + tab);
                 if (panel) panel.classList.add('active');
@@ -17912,6 +18129,10 @@ Para cada objeção: a causa-raiz + o script exato em português + a técnica ps
                     case 'metas':     this.renderMetas(data); break;
                     case 'posvenda':  this.renderPosVenda(data); break;
                     case 'ia':        this._renderIAResumo(); this._updateCRMSnapshot(); break;
+                    case 'consultoria':
+                        // Garante dados frescos e popula selector
+                        this._consPopulateSelect(UI.data.clientes || []);
+                        break;
                 }
             },
 
@@ -19725,6 +19946,966 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     el.innerHTML += `<div style="text-align:center;font-size:0.75rem;color:var(--text-secondary);padding:8px;">+ ${vendidos.length - 15} clientes em pós-venda</div>`;
                 }
             },
+
+            // ══════════════════════════════════════════════════
+            // ── CONSULTORIA FINANCEIRA ─────────────────────────
+            // ══════════════════════════════════════════════════
+            _consData: {},
+            _consAnalysis: '',
+
+            async consInit() {
+                // Estratégia robusta: tenta todas as fontes de dados disponíveis
+                let clientes = [];
+
+                try {
+                    // 1ª opção: UI.data já carregado (mais rápido, sem I/O)
+                    if (window.UI && UI.data && Array.isArray(UI.data.clientes) && UI.data.clientes.length > 0) {
+                        clientes = UI.data.clientes;
+                    }
+                    // 2ª opção: busca via DB.getAll direto (mais confiável)
+                    else if (window.DB && DB.db) {
+                        clientes = await DB.getAll('clientes') || [];
+                        if (window.UI && UI.data) UI.data.clientes = clientes;
+                    }
+                    // 3ª opção: aguarda DB inicializar e tenta novamente
+                    else if (window.DB) {
+                        await new Promise(r => setTimeout(r, 400));
+                        if (DB.db) {
+                            clientes = await DB.getAll('clientes') || [];
+                            if (window.UI && UI.data) UI.data.clientes = clientes;
+                        }
+                    }
+                } catch(e) {
+                    console.warn('consInit erro:', e);
+                    // Fallback final: usa o que estiver em UI.data mesmo
+                    clientes = (window.UI && UI.data && UI.data.clientes) || [];
+                }
+
+                this._consPopulateSelect(clientes);
+            },
+
+            _consPopulateSelect(clientes) {
+                const sel = document.getElementById('cons-cliente-select');
+                if (!sel) return;
+                const prev = sel.value;
+
+                sel.innerHTML = '<option value="">— Selecione um cliente —</option>';
+
+                if (!clientes || clientes.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.disabled = true;
+                    opt.textContent = '⚠️ Nenhum cliente cadastrado no CRM';
+                    sel.appendChild(opt);
+                } else {
+                    // Ordena por nome A-Z
+                    [...clientes]
+                        .sort((a, b) => (a.nome || '').localeCompare(b.nome || ''))
+                        .forEach(c => {
+                            const opt = document.createElement('option');
+                            opt.value = c.id;
+                            const renda = c.rendaMensal
+                                ? ' · R$ ' + parseFloat(c.rendaMensal).toLocaleString('pt-BR')
+                                : '';
+                            const ETAPAS = {
+                                lead:'Lead', contato:'Contato', cpf:'CPF', 'sem-restricao':'Sem Restrição',
+                                documentacao:'Documentação', aprovado:'Aprovado', contrato:'Contrato', venda:'Venda'
+                            };
+                            const etapa = c.etapaFunil ? ' [' + (ETAPAS[c.etapaFunil] || c.etapaFunil) + ']' : '';
+                            opt.textContent = (c.nome || 'Cliente') + renda + etapa;
+                            sel.appendChild(opt);
+                        });
+                }
+
+                if (prev) sel.value = prev;
+
+                const badge = document.getElementById('cons-clientes-badge');
+                if (badge) {
+                    badge.textContent = clientes.length > 0
+                        ? clientes.length + ' cliente' + (clientes.length !== 1 ? 's' : '')
+                        : 'Sem clientes';
+                }
+            },
+
+            async consLoadCliente(id) {
+                if (!id) return;
+
+                // Tenta encontrar o cliente em UI.data primeiro, depois no DB
+                let c = null;
+                try {
+                    const cached = (window.UI && UI.data && UI.data.clientes) || [];
+                    c = cached.find(x => x.id === id || String(x.id) === String(id));
+                    if (!c && window.DB && DB.db) {
+                        c = await DB.get('clientes', id) || await DB.get('clientes', parseInt(id));
+                    }
+                } catch(e) { console.warn('consLoadCliente:', e); }
+
+                if (!c) {
+                    if (window.UI && UI.showToast) UI.showToast('Cliente não encontrado. Tente atualizar a lista.', 'error');
+                    return;
+                }
+
+                // Mapeia os campos do cliente para os campos do formulário
+                const set = (elId, val) => {
+                    const el = document.getElementById(elId);
+                    if (el && val !== undefined && val !== null && val !== '' && val !== 0) el.value = val;
+                };
+
+                // Renda: tenta vários campos possíveis
+                const renda = c.rendaMensal || c.renda || c.rendaBruta || c.salario || '';
+                set('cons-renda-clt', renda);
+
+                // FGTS
+                const fgts = c.fgts || c.saldoFGTS || c.saldoFgts || '';
+                set('cons-fgts', fgts);
+
+                // Poupança
+                const poupc = c.poupanca || c.investimentos || c.reserva || '';
+                set('cons-poupanca', poupc);
+
+                // Dependentes
+                const depEl = document.getElementById('cons-dependentes');
+                if (depEl) {
+                    const dep = parseInt(c.dependentes || c.numeroDependentes || 0);
+                    depEl.value = Math.min(4, Math.max(0, dep));
+                }
+
+                // Vínculo empregatício
+                const vincEl = document.getElementById('cons-vinculo');
+                if (vincEl && (c.tipoRenda || c.vinculo || c.tipoVinculo)) {
+                    const raw = (c.tipoRenda || c.vinculo || c.tipoVinculo || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+                    const MAP = {
+                        clt:'clt', carteira:'clt', formal:'clt', empregado:'clt',
+                        servidor:'servidor', publico:'servidor', concursado:'servidor',
+                        mei:'mei', microempreendedor:'mei',
+                        autonomo:'autonomo', freelancer:'autonomo', liberal:'autonomo',
+                        aposentado:'aposentado', pensionista:'aposentado', inss:'aposentado',
+                        empresario:'empresario', socio:'empresario', cnpj:'empresario'
+                    };
+                    const found = Object.keys(MAP).find(k => raw.includes(k));
+                    if (found) vincEl.value = MAP[found];
+                }
+
+                // Programa (baseado na renda)
+                const rendaNum = parseFloat(renda) || 0;
+                const progEl = document.getElementById('cons-programa');
+                if (progEl && rendaNum > 0) {
+                    if (rendaNum <= 2640) progEl.value = 'mcmv1';
+                    else if (rendaNum <= 4400) progEl.value = 'mcmv2';
+                    else if (rendaNum <= 8000) progEl.value = 'mcmv3';
+                    else progEl.value = 'sbpe';
+                }
+
+                this.consCalc();
+
+                const nome = c.nome || 'Cliente';
+                if (window.UI && UI.showToast) UI.showToast('✅ ' + nome + ' carregado!');
+            },
+
+            consGetValues() {
+                const n = id => parseFloat(document.getElementById(id)?.value || 0) || 0;
+                const s = id => document.getElementById(id)?.value || '';
+                const rendaClt = n('cons-renda-clt');
+                const rendaMei = n('cons-renda-mei');
+                const rendaAut = n('cons-renda-autonomo');
+                const rendaAlug = n('cons-renda-aluguel');
+                const rendaApo = n('cons-renda-apo');
+                const rendaOut = n('cons-renda-outras');
+                const rendaTotal = rendaClt + rendaMei + rendaAut + rendaAlug + rendaApo + rendaOut;
+                const divFinanc = n('cons-div-financ');
+                const divCartao = n('cons-div-cartao');
+                const divEmprest = n('cons-div-emprest');
+                const divAluguel = n('cons-div-aluguel');
+                const totalDividas = divFinanc + divCartao + divEmprest + divAluguel;
+                const fgts = n('cons-fgts');
+                const poupanca = n('cons-poupanca');
+                const dependentes = parseInt(s('cons-dependentes') || 0);
+                const restricao = s('cons-restricao');
+                const vinculo = s('cons-vinculo');
+                const programa = s('cons-programa');
+                const comprometimento = rendaTotal > 0 ? (totalDividas / rendaTotal) * 100 : 0;
+                const rendaEfetiva = rendaTotal - (dependentes * 248.39);
+                return { rendaClt, rendaMei, rendaAut, rendaAlug, rendaApo, rendaOut, rendaTotal, divFinanc, divCartao, divEmprest, divAluguel, totalDividas, fgts, poupanca, dependentes, restricao, vinculo, programa, comprometimento, rendaEfetiva };
+            },
+
+            consCalc() {
+                const v = this.consGetValues();
+                // Update hero scores
+                const fmt = (n) => n >= 1000 ? 'R$' + (n/1000).toFixed(0) + 'k' : 'R$' + n.toFixed(0);
+                const saude = v.comprometimento <= 20 ? '✅ Boa' : v.comprometimento <= 35 ? '⚠️ Atenção' : '❌ Crítica';
+                const irObrig = v.rendaTotal * 12 >= 33888 ? '✅ Obrig.' : '📋 Isento';
+                const compStr = v.rendaTotal > 0 ? v.comprometimento.toFixed(0) + '%' : '—';
+                const aprovStr = v.restricao === 'sim' ? '❌ Risco' : v.comprometimento > 35 ? '⚠️ Parcial' : v.rendaTotal > 0 ? '✅ Viável' : '—';
+                const s = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+                s('cons-score-saude', saude);
+                s('cons-score-ir', irObrig);
+                s('cons-score-comprometimento', compStr);
+                s('cons-score-aprovacao', aprovStr);
+            },
+
+            async consAnalisar() {
+                const v = this.consGetValues();
+                if (v.rendaTotal === 0) {
+                    if (window.UI && UI.showToast) UI.showToast('Preencha ao menos uma fonte de renda.', 'error');
+                    return;
+                }
+                const loading = document.getElementById('cons-loading');
+                const resultado = document.getElementById('cons-resultado');
+                if (loading) loading.style.display = 'block';
+                if (resultado) resultado.style.display = 'none';
+
+                // Simula tempo de processamento (UX)
+                await new Promise(r => setTimeout(r, 900));
+
+                const analise = this._consGerarAnalise(v);
+                this._consAnalysis = analise.fullText;
+                this._consData = v;
+
+                if (loading) loading.style.display = 'none';
+                this.consRenderResult(analise, v);
+            },
+
+            _consGerarAnalise(v) {
+                const br2 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+                const br0 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+                const PROG = { mcmv1:'MCMV Faixa 1', mcmv2:'MCMV Faixa 2', mcmv3:'MCMV Faixa 3', sbpe:'SBPE', pronampe:'Pró-Cotista FGTS' };
+                const VINC = { clt:'CLT', servidor:'Servidor Público', mei:'MEI', autonomo:'Autônomo', aposentado:'Aposentado/Pensionista', empresario:'Empresário' };
+                const prog = PROG[v.programa] || v.programa;
+                const vinc = VINC[v.vinculo] || v.vinculo;
+                const rendaAnual = v.rendaTotal * 12;
+                const compPct = v.comprometimento;
+                const parcelaMax30 = v.rendaEfetiva * 0.30;
+
+                // ── SAÚDE FINANCEIRA ──────────────────────────────────────────
+                let saude = '';
+                if (compPct <= 20) {
+                    saude = `✅ SITUAÇÃO FINANCEIRA: EXCELENTE\n\nA renda total bruta de ${br0(v.rendaTotal)}/mês está bem organizada. Com apenas ${compPct.toFixed(1)}% comprometido em dívidas (${br0(v.totalDividas)}/mês), o cliente está muito abaixo do limite de 30% exigido pela Caixa Econômica Federal.\n\nCapacidade de parcela disponível: ${br0(parcelaMax30)} / mês (30% da renda efetiva de ${br0(v.rendaEfetiva)}).\n\nRenda efetiva após dedução de dependentes (${v.dependentes} x R$ 248,39): ${br0(v.rendaEfetiva)}/mês.\n\nReserva potencial mensal para poupança/entrada: aproximadamente ${br0(v.rendaEfetiva - v.totalDividas - (v.rendaEfetiva * 0.4))}.`;
+                } else if (compPct <= 30) {
+                    saude = `✅ SITUAÇÃO FINANCEIRA: BOA\n\nRenda total bruta: ${br0(v.rendaTotal)}/mês. Comprometimento atual de ${compPct.toFixed(1)}% (${br0(v.totalDividas)}/mês em dívidas) — dentro do limite de 30% da Caixa, mas com pouca margem.\n\nCapacidade de parcela disponível: ${br0(parcelaMax30)}/mês.\nRenda efetiva (com ${v.dependentes} dependente${v.dependentes!==1?'s':''}): ${br0(v.rendaEfetiva)}/mês.\n\n⚠️ Atenção: ao assumir um financiamento, o comprometimento total (dívidas atuais + nova parcela) não pode ultrapassar 30% da renda efetiva. Isso limita a parcela máxima do financiamento a: ${br0(parcelaMax30 - v.totalDividas)}/mês.`;
+                } else if (compPct <= 35) {
+                    saude = `⚠️ SITUAÇÃO FINANCEIRA: ATENÇÃO\n\nRenda total bruta: ${br0(v.rendaTotal)}/mês. O comprometimento atual de ${compPct.toFixed(1)}% (${br0(v.totalDividas)}/mês) já ultrapassa o limite preferencial de 30% da Caixa. Ainda existe possibilidade de aprovação, mas será necessário justificar o perfil.\n\nA parcela total de financiamento permitida seria muito baixa ou nula com a dívida atual. Recomenda-se quitação parcial das dívidas antes de solicitar o crédito.\n\nCapacidade de parcela disponível (considerando 30% da renda efetiva): ${br0(parcelaMax30)}/mês — mas dívidas atuais já consomem ${br0(v.totalDividas)}/mês disso.`;
+                } else {
+                    saude = `❌ SITUAÇÃO FINANCEIRA: CRÍTICA\n\nRenda total bruta: ${br0(v.rendaTotal)}/mês. O comprometimento de ${compPct.toFixed(1)}% (${br0(v.totalDividas)}/mês) está ${(compPct-30).toFixed(1)} pontos percentuais acima do limite máximo de 30% da Caixa Econômica Federal.\n\nNessa situação, o financiamento tende a ser REPROVADO automaticamente na análise de crédito. É imprescindível quitar pelo menos ${br0(v.totalDividas - parcelaMax30)} em dívidas antes de solicitar o financiamento.\n\nCapacidade teórica de parcela: ${br0(parcelaMax30)}/mês, mas comprometimento atual já excede esse valor.`;
+                }
+
+                // ── PENDÊNCIAS ───────────────────────────────────────────────
+                const pendencias = [];
+                if (v.restricao === 'sim') pendencias.push('🔴 RESTRIÇÃO NO CPF (SPC/SERASA)\nO cliente possui restrição cadastral. Isso impede QUALQUER aprovação de crédito na Caixa. Passos para resolver:\n  1. Consulte o débito em serasa.com.br ou spc.org.br\n  2. Negocie o pagamento ou parcelamento direto com o credor\n  3. Após pagamento, aguarde 5 dias úteis para baixa automática\n  4. Confirme a limpeza antes de solicitar análise de crédito\n  ⚡ Dica: a Caixa faz consulta ao SPC, Serasa, Bacen e SCR (Banco Central). Todos precisam estar limpos.');
+                if (v.restricao === 'desconhecido') pendencias.push('🟡 SITUAÇÃO CPF DESCONHECIDA\nVerifique urgentemente o CPF em: serasa.com.br (gratuito) ou consultando o banco. Dívidas não conhecidas são a causa mais comum de reprovações surpresa.');
+                if (compPct > 30) pendencias.push(`🔴 COMPROMETIMENTO DE RENDA ELEVADO (${compPct.toFixed(1)}%)\nA Caixa limita o comprometimento a 30% da renda efetiva. É necessário quitar pelo menos ${br0(v.totalDividas - parcelaMax30)} em dívidas antes de solicitar o financiamento.`);
+                if (v.divCartao > 0 && v.divCartao > v.rendaTotal * 0.1) pendencias.push(`🟡 CARTÃO DE CRÉDITO ALTO (${br0(v.divCartao)}/mês)\nPagamentos mínimos de cartão prejudicam o score e aumentam o comprometimento. Quite o saldo total ou pelo menos reduza ao mínimo antes da análise.`);
+                if (v.vinculo === 'autonomo' || v.vinculo === 'mei') pendencias.push(`🟡 COMPROVAÇÃO DE RENDA (${vinc})\nAutônomos e MEI têm dificuldade em comprovar renda formal. Será necessário apresentar: extratos bancários dos últimos 3 meses, declaração de IR (última), DECORE (emitido por contador), comprovante de pagamentos recebidos. Dica: mantenha movimentação bancária consistente por pelo menos 6 meses antes da solicitação.`);
+                if (v.vinculo === 'empresario') pendencias.push('🟡 EMPRESÁRIO/SÓCIO — DOCUMENTAÇÃO ESPECIAL\nSócios precisam apresentar: contrato social, declaração de IR PF e PJ dos últimos 2 anos, balanço patrimonial assinado por contador, pró-labore com comprovante de pagamento.');
+                if (v.fgts < 3000 && v.poupanca < v.rendaTotal * 3) pendencias.push(`🟡 RECURSOS PARA ENTRADA POSSIVELMENTE INSUFICIENTES\nFGTS disponível: ${br0(v.fgts)}. Poupança: ${br0(v.poupanca)}. A entrada mínima na Caixa é de 20% do valor do imóvel (SBPE) ou pode ser reduzida com subsídio MCMV. Verifique se os recursos cobrem a entrada + custas de cartório (3-5% do valor) + ITBI (2-3% dependendo do município).`);
+                if (pendencias.length === 0) pendencias.push('✅ Nenhuma pendência crítica identificada com as informações fornecidas. Perfil financeiro apto para prosseguir com a análise de crédito na Caixa Econômica Federal.');
+                const secPendencias = pendencias.join('\n\n');
+
+                // ── IMPOSTO DE RENDA ─────────────────────────────────────────
+                let irText = '';
+                const limiteObrigIR = 33888; // 2025
+                const obrigIR = rendaAnual >= limiteObrigIR ||
+                    (v.rendaAlug * 12 > 40000) ||
+                    (v.fgts + v.poupanca > 800000);
+
+                if (obrigIR) {
+                    irText = `📋 OBRIGATORIEDADE: SIM — DECLARAÇÃO OBRIGATÓRIA\n\nRenda tributável anual estimada: ${br0(rendaAnual)} — acima do limite de R$ 33.888/ano (2025).\n\n`;
+                } else {
+                    irText = `📋 OBRIGATORIEDADE: POSSIVELMENTE ISENTO\n\nRenda tributável anual estimada: ${br0(rendaAnual)} — abaixo do limite de R$ 33.888/ano (2025). Verifique se há outras obrigatoriedades.\n\n`;
+                }
+
+                // Tabela IRPF 2025
+                irText += `TABELA IRPF 2025 (rendimentos mensais):\n`;
+                irText += `  • Até R$ 2.259,20 .............. ISENTO\n`;
+                irText += `  • R$ 2.259,21 a R$ 2.826,65 ... 7,5%\n`;
+                irText += `  • R$ 2.826,66 a R$ 3.751,05 ... 15%\n`;
+                irText += `  • R$ 3.751,06 a R$ 4.664,68 ... 22,5%\n`;
+                irText += `  • Acima de R$ 4.664,68 ......... 27,5%\n\n`;
+
+                // Alíquota aplicável
+                const rm = v.rendaClt + v.rendaApo + (v.vinculo === 'servidor' ? v.rendaTotal : 0);
+                let aliq = '';
+                if (rm <= 2259.20) aliq = 'ISENTO';
+                else if (rm <= 2826.65) aliq = '7,5%';
+                else if (rm <= 3751.05) aliq = '15%';
+                else if (rm <= 4664.68) aliq = '22,5%';
+                else aliq = '27,5%';
+                irText += `Alíquota estimada para renda formal (${br0(rm)}/mês): ${aliq}\n\n`;
+
+                irText += `COMO DECLARAR CADA TIPO DE RENDA:\n`;
+                if (v.rendaClt > 0) irText += `  • CLT/Formal (${br0(v.rendaClt)}/mês): Informe no campo "Rendimentos Tributáveis Recebidos de PJ" usando o informe fornecido pelo empregador.\n`;
+                if (v.rendaMei > 0) irText += `  • MEI (${br0(v.rendaMei)}/mês): Declare como "Rendimentos de Pessoa Jurídica" na proporção dos rendimentos distribuídos. MEI tem isenção parcial: até R$ 81.000/ano não paga IR sobre o lucro presumido se distribuído adequadamente.\n`;
+                if (v.rendaAut > 0) irText += `  • Autônomo (${br0(v.rendaAut)}/mês): Declare como "Rendimentos Tributáveis Recebidos de PF/Exterior" ou PJ. Se recebe de PF, deve ter carnê-leão mensal na Receita Federal.\n`;
+                if (v.rendaAlug > 0) irText += `  • Aluguéis (${br0(v.rendaAlug)}/mês): Sujeito a carnê-leão mensal obrigatório se pago por PF. Declare em "Rendimentos Recebidos de PF — Aluguéis". Deduções permitidas: IPTU, condomínio, taxa de administração imobiliária.\n`;
+                if (v.rendaApo > 0) irText += `  • Aposentadoria (${br0(v.rendaApo)}/mês): Para maiores de 65 anos, há isenção de até R$ 1.903,98/mês. O restante é tributável normalmente.\n`;
+
+                irText += `\n💡 DEDUÇÕES IMPORTANTES:\n  • Dependentes: R$ 2.275,08/ano por dependente (${v.dependentes} dependentes = ${br0(v.dependentes * 2275.08)}/ano)\n  • Plano de saúde: 100% dedutível (sem limite)\n  • Educação: até R$ 3.561,50/ano por pessoa\n  • Previdência privada PGBL: até 12% da renda bruta anual`;
+
+                if (v.fgts > 0) irText += `\n\n🏦 FGTS E IR: O saque do FGTS para compra de imóvel é ISENTO de imposto de renda. Declare o imóvel adquirido em "Bens e Direitos" (código 11) pelo valor total pago, incluindo entrada + financiamento.`;
+
+                // ── DICAS CAIXA ──────────────────────────────────────────────
+                let caixaText = `PROGRAMA: ${prog} | VÍNCULO: ${vinc}\n\n`;
+
+                // Por programa
+                if (v.programa === 'mcmv1') {
+                    caixaText += `🏠 MINHA CASA MINHA VIDA — FAIXA 1 (renda familiar até R$ 2.640/mês)\n• Subsídio máximo de até R$ 55.000 (varia por cidade/região)\n• Taxa de juros: a partir de 4,5% a.a. + TR\n• Entrada mínima: pode ser zero com subsídio suficiente\n• Prazo: até 420 meses (35 anos)\n• Obrigatório: não possuir imóvel no nome nem ter recebido benefício habitacional federal anteriormente\n\n`;
+                } else if (v.programa === 'mcmv2') {
+                    caixaText += `🏠 MINHA CASA MINHA VIDA — FAIXA 2 (renda até R$ 4.400/mês)\n• Subsídio de até R$ 29.000\n• Taxa de juros: a partir de 4,75% a.a. + TR\n• Entrada mínima: 10% do valor do imóvel\n• Prazo: até 360 meses (30 anos)\n\n`;
+                } else if (v.programa === 'mcmv3') {
+                    caixaText += `🏠 MINHA CASA MINHA VIDA — FAIXA 3 (renda até R$ 8.000/mês)\n• Sem subsídio direto, mas com juros reduzidos\n• Taxa de juros: a partir de 7,66% a.a. + TR\n• Entrada mínima: 20% do valor do imóvel\n• Prazo: até 360 meses\n\n`;
+                } else if (v.programa === 'sbpe') {
+                    caixaText += `🏠 SBPE — SISTEMA BRASILEIRO DE POUPANÇA E EMPRÉSTIMO\n• Sem limite de valor do imóvel (até R$ 1.500.000 com recursos FGTS)\n• Taxa de juros: a partir de 9% a.a. + TR\n• Entrada mínima: 20% do valor do imóvel\n• Prazo: até 360 meses\n\n`;
+                } else if (v.programa === 'pronampe') {
+                    caixaText += `🏠 PRÓ-COTISTA FGTS\n• Exclusivo para trabalhadores com FGTS\n• Saldo FGTS atual: ${br0(v.fgts)} — ${v.fgts >= 10 ? 'dentro do mínimo exigido (R$ 10,00+)' : 'insuficiente, exige saldo mínimo'}\n• Taxa diferenciada para cotistas com 3+ anos de carteira\n• Prazo: até 360 meses\n\n`;
+                }
+
+                // Documentos por vínculo
+                caixaText += `📁 DOCUMENTAÇÃO NECESSÁRIA (${vinc}):\n`;
+                const docsComuns = ['RG e CPF de todos os compradores', 'Certidão de nascimento ou casamento', 'Comprovante de residência recente (últimos 90 dias)', 'Declaração de IR (últimos 2 anos) + recibo', 'Extratos bancários dos últimos 3 meses'];
+                if (v.vinculo === 'clt') docsComuns.push('3 últimos holerites', 'Carteira de trabalho (CTPS)', 'Declaração do empregador ou carta de emprego');
+                if (v.vinculo === 'servidor') docsComuns.push('3 últimos contracheques', 'Declaração do órgão público', 'Comprovante de estabilidade');
+                if (v.vinculo === 'mei') docsComuns.push('CCMEI (certificado MEI)', 'Extratos bancários PJ dos últimos 6 meses', 'Declaração anual do MEI (DASN-SIMEI)', 'Recibos de pagamentos recebidos', 'DECORE (emitido por contador CRC)');
+                if (v.vinculo === 'autonomo') docsComuns.push('Extratos bancários dos últimos 6 meses', 'DECORE (emitido por contador)', 'Carnê-leão em dia com a Receita Federal', 'Recibos de serviços prestados');
+                if (v.vinculo === 'aposentado') docsComuns.push('Carta de concessão do benefício (INSS)', 'Extrato do benefício (app Meu INSS)', '3 últimos comprovantes de depósito');
+                if (v.vinculo === 'empresario') docsComuns.push('Contrato social + última alteração', 'Balanço patrimonial (último exercício)', 'Pró-labore com comprovante de pagamento', 'Certidão Negativa de Débitos (CND Federal, Estadual, Municipal)');
+                docsComuns.forEach(d => { caixaText += `  • ${d}\n`; });
+
+                if (v.fgts > 0) {
+                    caixaText += `\n🏦 USO DO FGTS (saldo: ${br0(v.fgts)}):\n`;
+                    caixaText += `  • Pode ser usado como entrada, amortização ou pagamento de parcelas\n`;
+                    caixaText += `  • Requisitos: mínimo 3 anos de trabalho sob regime do FGTS (não precisam ser consecutivos)\n`;
+                    caixaText += `  • Não possuir imóvel no município onde trabalha ou reside\n`;
+                    caixaText += `  • Solicitar extrato FGTS na Caixa com antecedência de 30 dias\n`;
+                }
+
+                caixaText += `\n✅ DICAS PARA AUMENTAR CHANCES DE APROVAÇÃO:\n`;
+                caixaText += `  1. Mantenha conta na Caixa Econômica há pelo menos 6 meses (clientes Caixa têm prioridade)\n`;
+                caixaText += `  2. Regularize pendências fiscais (CND Receita Federal limpa)\n`;
+                caixaText += `  3. Movimente a conta com depósitos regulares (demonstra estabilidade)\n`;
+                caixaText += `  4. Não faça outros financiamentos ou empréstimos nos 3 meses anteriores à solicitação\n`;
+                caixaText += `  5. Comprometimento total incluindo nova parcela deve ficar abaixo de 30% da renda efetiva\n`;
+                if (compPct > 20) caixaText += `  6. ⚠️ Quite dívidas prioritariamente antes de solicitar — comprometimento atual de ${compPct.toFixed(1)}% é um risco\n`;
+
+                // ── PLANO DE ORGANIZAÇÃO ─────────────────────────────────────
+                let plano = '';
+                if (compPct <= 25 && v.restricao === 'nao') {
+                    plano = `✅ PERFIL PRONTO PARA FINANCIAMENTO\n\n📅 PRÓXIMOS 30 DIAS:\n  1. Solicite extrato do FGTS na Caixa (agência ou app)\n  2. Reúna toda a documentação listada acima\n  3. Calcule o valor exato que pode financiar (parcela máxima: ${br0(parcelaMax30 - v.totalDividas)}/mês)\n  4. Pesquise imóveis dentro da faixa do seu programa (${prog})\n  5. Abra conta na Caixa se ainda não tiver (acelera aprovação)\n\n📅 PRÓXIMOS 60 DIAS:\n  1. Dê entrada na simulação pelo app Habitação Caixa ou agência\n  2. Apresente proposta formal ao agente de crédito\n  3. Aguarde análise do imóvel (engenheiro da Caixa visita o imóvel)\n\n📅 PRÓXIMOS 90 DIAS:\n  1. Assinatura do contrato de financiamento (em cartório ou na Caixa)\n  2. Registro do imóvel no cartório de imóveis\n  3. Início do pagamento das parcelas`;
+                } else {
+                    const mesesReserva = Math.ceil((v.rendaTotal * 3 - v.poupanca - v.fgts) / (v.rendaEfetiva * 0.15));
+                    plano = `🛠️ PLANO DE PREPARAÇÃO\n\n📅 PRÓXIMOS 30 DIAS — ORGANIZAÇÃO:\n`;
+                    if (v.restricao === 'sim' || v.restricao === 'desconhecido') plano += `  1. 🚨 PRIORIDADE: Consultar e quitar restrições no CPF (serasa.com.br gratuito)\n`;
+                    if (compPct > 30) plano += `  ${v.restricao!=='nao'?2:1}. Listar todas as dívidas por taxa de juros (cartão > empréstimo > financiamento)\n  ${v.restricao!=='nao'?3:2}. Quitar/negociar dívidas mais caras primeiro (método avalanche)\n  ${v.restricao!=='nao'?4:3}. Meta: reduzir comprometimento de ${compPct.toFixed(1)}% para abaixo de 25%\n`;
+                    plano += `  • Abrir conta na Caixa Econômica (se não tiver)\n  • Organizar documentação (lista acima)\n\n`;
+                    plano += `📅 PRÓXIMOS 60 DIAS — FORTALECIMENTO:\n  • Movimentar conta Caixa regularmente com depósitos\n  • Separar ${br0(v.rendaEfetiva * 0.15)}/mês para poupança de entrada (15% da renda efetiva)\n  • Manter carnê-leão em dia (autônomos) ou FGTS atualizado\n  • Evitar qualquer novo empréstimo ou financiamento\n\n`;
+                    plano += `📅 PRÓXIMOS 90 DIAS — EXECUÇÃO:\n  • Meta de entrada acumulada: ${br0(v.fgts + v.poupanca)} (atual) + poupança mensal\n  • Com dívidas quitadas e CPF limpo: solicitar simulação na Caixa\n  • Parcela máxima possível após organização: ${br0(parcelaMax30)}/mês`;
+                }
+
+                const fullText = `##SAÚDE_FINANCEIRA##\n${saude}\n\n##PENDÊNCIAS##\n${secPendencias}\n\n##IMPOSTO_DE_RENDA##\n${irText}\n\n##DICAS_CAIXA##\n${caixaText}\n\n##PLANO_ORGANIZACAO##\n${plano}`;
+
+                return { saude, pendencias: secPendencias, ir: irText, caixa: caixaText, plano, fullText };
+            },
+
+            consRenderResult(analise, v) {
+                const resultado = document.getElementById('cons-resultado');
+                if (!resultado) return;
+                resultado.style.display = 'block';
+
+                // analise pode ser objeto (motor local) ou string (legado)
+                const secSaude = typeof analise === 'object' ? analise.saude : this._extractSection(analise, 'SAÚDE_FINANCEIRA|SAUDE_FINANCEIRA');
+                const secPend  = typeof analise === 'object' ? analise.pendencias : this._extractSection(analise, 'PENDÊNCIAS|PENDENCIAS');
+                const secIR    = typeof analise === 'object' ? analise.ir   : this._extractSection(analise, 'IMPOSTO_DE_RENDA');
+                const secCaixa = typeof analise === 'object' ? analise.caixa : this._extractSection(analise, 'DICAS_CAIXA');
+                const secPlano = typeof analise === 'object' ? analise.plano : this._extractSection(analise, 'PLANO_ORGANIZACAO|PLANO_ORGANIZAÇÃO');
+
+                // Score cards
+                const cards = document.getElementById('cons-score-cards');
+                if (cards) {
+                    const comprCor = v.comprometimento <= 20 ? '#2E7D42' : v.comprometimento <= 35 ? '#B87020' : '#B83030';
+                    const comprLabel = v.comprometimento <= 20 ? 'Excelente' : v.comprometimento <= 30 ? 'Bom' : v.comprometimento <= 35 ? 'Atenção' : 'Crítico';
+                    const br2 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+                    const comprRgb = v.comprometimento <= 20 ? '46,125,66' : v.comprometimento <= 35 ? '184,112,32' : '184,48,48';
+                    const restricaoCor = v.restricao === 'sim' ? '#B83030' : '#2E7D42';
+                    const restricaoRgb = v.restricao === 'sim' ? '184,48,48' : '46,125,66';
+                    const restricaoLabel = v.restricao === 'sim' ? '⚠️ Restrição' : v.restricao === 'desconhecido' ? '❓ Verificar' : '✅ Limpo';
+                    cards.innerHTML = `
+                        <div style="padding:12px;background:linear-gradient(135deg,rgba(46,74,49,0.1),rgba(61,97,66,0.05));border-radius:12px;border-left:3px solid var(--primary);">
+                            <div style="font-size:1.05rem;font-weight:900;color:var(--primary);">${br2(v.rendaTotal)}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:3px;font-weight:600;">💰 Renda Total Bruta</div>
+                        </div>
+                        <div style="padding:12px;background:linear-gradient(135deg,rgba(${comprRgb},0.1),rgba(0,0,0,0.02));border-radius:12px;border-left:3px solid ${comprCor};">
+                            <div style="font-size:1.05rem;font-weight:900;color:${comprCor};">${v.comprometimento.toFixed(1)}% — ${comprLabel}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:3px;font-weight:600;">📊 Comprometimento Atual</div>
+                        </div>
+                        <div style="padding:12px;background:linear-gradient(135deg,rgba(196,114,74,0.1),rgba(196,114,74,0.03));border-radius:12px;border-left:3px solid var(--accent);">
+                            <div style="font-size:1.05rem;font-weight:900;color:var(--accent);">${br2(v.fgts + v.poupanca)}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:3px;font-weight:600;">🏦 FGTS + Poupança</div>
+                        </div>
+                        <div style="padding:12px;background:linear-gradient(135deg,rgba(${restricaoRgb},0.1),rgba(0,0,0,0.02));border-radius:12px;border-left:3px solid ${restricaoCor};">
+                            <div style="font-size:1.05rem;font-weight:900;color:${restricaoCor};">${restricaoLabel}</div>
+                            <div style="font-size:0.7rem;color:var(--text-secondary);margin-top:3px;font-weight:600;">🔍 CPF / Score</div>
+                        </div>`;
+                }
+
+                const show = (secId, textoId, conteudo) => {
+                    if (!conteudo) return;
+                    const sec = document.getElementById(secId);
+                    const txt = document.getElementById(textoId);
+                    if (sec) sec.style.display = 'block';
+                    if (txt) txt.textContent = conteudo;
+                };
+                show('cons-secao-saude', 'cons-texto-saude', secSaude);
+                show('cons-secao-pendencias', 'cons-texto-pendencias', secPend);
+                show('cons-secao-ir', 'cons-texto-ir', secIR);
+                show('cons-secao-caixa', 'cons-texto-caixa', secCaixa);
+                show('cons-secao-organizacao', 'cons-texto-organizacao', secPlano);
+
+                this.consCalc();
+            },
+
+            _extractSection(text, key) {
+                const keys = key.split('|');
+                for (const k of keys) {
+                    const rx = new RegExp('##' + k + '##\\s*([\\s\\S]*?)(?=##[A-Z_]+##|$)', 'i');
+                    const m = (text||'').match(rx);
+                    if (m) return m[1].trim();
+                }
+                return '';
+            },
+
+            consDownloadPDF() {
+                if (!this._consAnalysis) {
+                    if (window.UI && UI.showToast) UI.showToast('Faça a análise antes de baixar o PDF.', 'error'); return;
+                }
+                try {
+                    const { jsPDF } = window.jspdf || window;
+                    if (!jsPDF) { if (window.UI && UI.showToast) UI.showToast('jsPDF não carregado.', 'error'); return; }
+
+                    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                    const v = this._consData || {};
+                    const W = 210, H = 297, MG = 15;
+                    const CW = W - MG * 2;  // content width
+                    let y = 0;
+
+                    // ── PALETA ─────────────────────────────────────────────
+                    const C = {
+                        verde:    [46, 74, 49],
+                        verdeM:   [61, 97, 66],
+                        verdeC:   [228, 240, 228],
+                        verdeT:   [232, 244, 233],
+                        acc:      [196, 114, 74],
+                        accC:     [252, 238, 229],
+                        warn:     [184, 112, 32],
+                        warnC:    [254, 245, 220],
+                        danger:   [184, 48, 48],
+                        dangerC:  [254, 228, 228],
+                        azul:     [30, 80, 160],
+                        azulC:    [224, 235, 252],
+                        dark:     [26, 43, 28],
+                        mid:      [80, 100, 82],
+                        muted:    [140, 155, 142],
+                        border:   [210, 218, 210],
+                        bg:       [246, 248, 245],
+                        white:    [255, 255, 255],
+                    };
+
+                    // ── HELPERS ─────────────────────────────────────────────
+                    const br0 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+                    const br2 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+                    const pct = n => (n||0).toFixed(1) + '%';
+
+                    const sf  = (sz, stl, col) => { doc.setFontSize(sz); doc.setFont('helvetica', stl||'normal'); doc.setTextColor(...(col||C.dark)); };
+                    const fc  = (...col) => doc.setFillColor(...col);
+                    const tc  = (...col) => doc.setTextColor(...col);
+                    const dc  = (...col) => doc.setDrawColor(...col);
+                    const rect = (x,yy,w,h,fill,r) => { fc(...fill); r ? doc.roundedRect(x,yy,w,h,r,r,'F') : doc.rect(x,yy,w,h,'F'); };
+                    const line = (x1,yy1,x2,yy2,col,lw) => { doc.setLineWidth(lw||0.3); dc(...(col||C.border)); doc.line(x1,yy1,x2,yy2); };
+
+                    const chk = (need) => { if (y + need > H - 18) { addFooter(); doc.addPage(); y = MG; addPageBg(); } };
+
+                    const addPageBg = () => {
+                        fc(...C.bg); doc.rect(0,0,W,H,'F');
+                        // subtle left accent bar
+                        fc(...C.verdeM); doc.rect(0,0,4,H,'F');
+                    };
+
+                    const addFooter = () => {
+                        const fy = H - 12;
+                        fc(...C.verde); doc.rect(0, fy, W, 12, 'F');
+                        sf(6.5,'normal',C.white);
+                        doc.text('DOCUMENTO ORIENTATIVO — nao substitui consultoria contabil ou juridica profissional', W/2, fy+4.5, {align:'center'});
+                        doc.text('habitacao.caixa.gov.br  |  receita.fazenda.gov.br  |  ImobiPro ' + new Date().getFullYear(), W/2, fy+9, {align:'center'});
+                    };
+
+                    const sectionHeader = (title, icon, fillCol, textCol) => {
+                        chk(12);
+                        rect(MG, y, CW, 9, fillCol, 2);
+                        sf(9,'bold', textCol||C.white);
+                        doc.text(icon + '  ' + title, MG + 4, y + 6);
+                        y += 12;
+                    };
+
+                    const infoRow = (label, value, altBg) => {
+                        chk(7);
+                        if (altBg) { fc(...C.bg); doc.rect(MG, y, CW, 6.5, 'F'); }
+                        sf(7.5, 'bold', C.mid); doc.text(label, MG + 3, y + 4.5);
+                        sf(7.5, 'bold', C.dark); doc.text(value, MG + CW - 3, y + 4.5, {align:'right'});
+                        dc(...C.border); doc.setLineWidth(0.2); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        y += 6.5;
+                    };
+
+                    const badge = (x, yy, w, h, bg, txt, tcol) => {
+                        fc(...bg); doc.roundedRect(x,yy,w,h,2,2,'F');
+                        sf(7,'bold', tcol||C.white); doc.text(txt, x+w/2, yy+h/2+2.5, {align:'center'});
+                    };
+
+                    const textBlock = (content, indent) => {
+                        const ix = MG + (indent||3);
+                        const cw2 = CW - (indent||3) - 3;
+                        sf(8,'normal',C.dark);
+                        // Render line by line detecting bullets and bold-ish patterns
+                        const rawLines = (content||'').split('\n');
+                        rawLines.forEach(raw => {
+                            if (!raw.trim()) { y += 2.5; return; }
+                            const isBullet = /^[\s•\-*·]/.test(raw) || /^\d+\./.test(raw.trim());
+                            const isHeader = raw.includes(':') && raw.length < 60 && raw === raw.toUpperCase();
+                            const isSubHdr = /^[A-ZÁÉÍÓÚÀÃÕ][A-ZÁÉÍÓÚÀÃÕ\s\/\-()]{5,}:$/.test(raw.trim()) || raw.trim().endsWith(':') && raw.trim().length < 50;
+
+                            if (isHeader) {
+                                chk(8);
+                                sf(8,'bold',C.verde);
+                                doc.text(raw.trim().replace(/^[•\-*·]\s*/,''), ix, y+4); y += 6;
+                            } else if (isSubHdr) {
+                                chk(7);
+                                sf(7.5,'bold',C.verdeM);
+                                doc.text(raw.trim(), ix, y+4); y += 5.5;
+                            } else {
+                                const clean = raw.trim().replace(/^[•\-*·]\s*/, '');
+                                const bx = isBullet ? ix + 3 : ix;
+                                const bcw = CW - (bx - MG) - 3;
+                                if (isBullet) { fc(...C.acc); doc.circle(ix+1, y+3.5, 0.8, 'F'); }
+                                const wrapped = doc.splitTextToSize(clean, bcw);
+                                sf(8,'normal',C.dark);
+                                wrapped.forEach((wl, wi) => {
+                                    chk(5.5);
+                                    doc.text(wl, bx, y+4);
+                                    y += 5.3;
+                                });
+                            }
+                        });
+                        y += 3;
+                    };
+
+                    // ══════════════════════════════════════════════════════
+                    // PÁGINA 1
+                    // ══════════════════════════════════════════════════════
+                    addPageBg();
+
+                    // ── CAPA / HEADER ─────────────────────────────────────
+                    // Faixa verde escura topo
+                    fc(...C.verde); doc.rect(0,0,W,52,'F');
+                    // Faixa accent
+                    fc(...C.acc); doc.rect(0,52,W,3,'F');
+
+                    // Logo / Título
+                    sf(22,'bold',C.white);
+                    doc.text('CONSULTORIA', MG, 20);
+                    sf(22,'bold',[196,114,74]);
+                    doc.text('FINANCEIRA', MG, 32);
+                    sf(9,'normal',C.white);
+                    doc.text('Analise completa de credito imobiliario', MG, 42);
+
+                    // Data e brand (canto direito)
+                    sf(7,'normal',[200,220,200]);
+                    doc.text('ImobiPro', W - MG, 16, {align:'right'});
+                    doc.text('Emitido em ' + new Date().toLocaleDateString('pt-BR'), W - MG, 22, {align:'right'});
+                    doc.text('Documento Orientativo', W - MG, 28, {align:'right'});
+
+                    y = 62;
+
+                    // ── SCORES (4 cards em linha) ────────────────────────
+                    const compPct = v.comprometimento || 0;
+                    const compCor = compPct <= 20 ? C.verde : compPct <= 30 ? C.warn : C.danger;
+                    const compLabel = compPct <= 20 ? 'EXCELENTE' : compPct <= 30 ? 'BOM' : compPct <= 35 ? 'ATENCAO' : 'CRITICO';
+                    const restricaoCor = v.restricao === 'sim' ? C.danger : C.verde;
+                    const restricaoLabel = v.restricao === 'sim' ? 'RESTRICAO' : v.restricao === 'desconhecido' ? 'VERIFICAR' : 'LIMPO';
+
+                    const cw4 = (CW - 9) / 4;
+                    const cardH = 22;
+                    const cards4 = [
+                        { label: 'RENDA BRUTA', val: br0(v.rendaTotal||0), sub: 'mensal', bg: C.verde, tc: C.white },
+                        { label: 'COMPROMETIMENTO', val: pct(compPct), sub: compLabel, bg: compCor, tc: C.white },
+                        { label: 'FGTS + POUPANCA', val: br0((v.fgts||0)+(v.poupanca||0)), sub: 'disponivel', bg: C.acc, tc: C.white },
+                        { label: 'CPF / SCORE', val: restricaoLabel, sub: v.restricao==='sim'?'Regularizar':'Consultar Serasa', bg: restricaoCor, tc: C.white },
+                    ];
+                    cards4.forEach((c2, i) => {
+                        const cx = MG + i * (cw4 + 3);
+                        fc(...c2.bg); doc.roundedRect(cx, y, cw4, cardH, 2,2,'F');
+                        sf(6,'bold',[255,255,255,160]); doc.text(c2.label, cx+cw4/2, y+5, {align:'center'});
+                        sf(9,'bold',c2.tc); doc.text(c2.val, cx+cw4/2, y+13, {align:'center'});
+                        sf(6,'normal',[255,255,255,180]); doc.text(c2.sub, cx+cw4/2, y+19, {align:'center'});
+                    });
+                    y += cardH + 8;
+
+                    // ── TABELA RESUMO PERFIL ─────────────────────────────
+                    sectionHeader('RESUMO DO PERFIL FINANCEIRO', '', C.dark, C.white);
+
+                    // 2 colunas
+                    const col1 = MG, col2 = MG + CW/2 + 2;
+                    const colW = CW/2 - 2;
+
+                    const profileRows = [
+                        [['Renda CLT/Formal', br2(v.rendaClt||0)], ['Renda MEI/PJ', br2(v.rendaMei||0)]],
+                        [['Renda Autonomo', br2(v.rendaAut||0)], ['Renda Alugueis', br2(v.rendaAlug||0)]],
+                        [['Aposentadoria', br2(v.rendaApo||0)], ['Outras Rendas', br2(v.rendaOut||0)]],
+                        [['TOTAL BRUTO', br2(v.rendaTotal||0)], ['Renda Efetiva', br2(v.rendaEfetiva||0)]],
+                        [['Financiamentos', br2(v.divFinanc||0)], ['Cartao de Credito', br2(v.divCartao||0)]],
+                        [['Emprestimos', br2(v.divEmprest||0)], ['Aluguel Atual', br2(v.divAluguel||0)]],
+                        [['TOTAL DIVIDAS', br2(v.totalDividas||0)], ['Comprometimento', pct(compPct) + ' (lim: 30%)']],
+                        [['Saldo FGTS', br2(v.fgts||0)], ['Poupanca/Invest.', br2(v.poupanca||0)]],
+                        [['Dependentes', (v.dependentes||0) + ' pessoa(s)'], ['Vinculo', ({clt:'CLT',servidor:'Servidor',mei:'MEI',autonomo:'Autonomo',aposentado:'Aposentado',empresario:'Empresario'}[v.vinculo]||v.vinculo||'—')]],
+                    ];
+
+                    profileRows.forEach((pair, ri) => {
+                        chk(7);
+                        const altBg = ri % 2 === 0;
+                        if (altBg) { fc(...C.bg); doc.rect(MG, y, CW, 6.5, 'F'); }
+                        pair.forEach((cell, ci) => {
+                            const cx = ci === 0 ? col1 : col2;
+                            const isTotalRow = cell[0].startsWith('TOTAL') || cell[0] === 'Comprometimento';
+                            sf(7, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.verde : C.mid);
+                            doc.text(cell[0], cx + 3, y + 4.5);
+                            sf(7.5, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.verde : C.dark);
+                            doc.text(cell[1], cx + colW - 3, y + 4.5, {align:'right'});
+                        });
+                        dc(...C.border); doc.setLineWidth(0.15); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        // vertical separator
+                        doc.line(MG + CW/2, y, MG + CW/2, y+6.5);
+                        y += 6.5;
+                    });
+                    y += 5;
+
+                    // ── BARRA DE COMPROMETIMENTO ─────────────────────────
+                    chk(18);
+                    sf(7.5,'bold',C.dark); doc.text('Comprometimento de Renda (limite Caixa: 30%)', MG, y+4); y += 7;
+                    // track
+                    fc(...C.border); doc.roundedRect(MG, y, CW, 6, 3,3,'F');
+                    // fill
+                    const barW = Math.min(CW, (compPct / 100) * CW);
+                    fc(...compCor); doc.roundedRect(MG, y, barW, 6, 3,3,'F');
+                    // 30% marker
+                    const marker30 = MG + CW * 0.30;
+                    dc(...C.danger); doc.setLineWidth(0.5); doc.setLineDash([1,1]); doc.line(marker30, y-2, marker30, y+8); doc.setLineDash([]);
+                    sf(6,'bold',C.danger); doc.text('30%', marker30+1, y-0.5);
+                    sf(7.5,'bold',compCor); doc.text(pct(compPct), MG + barW - 1, y+4.5, {align:'right'});
+                    y += 12;
+
+                    // ══════════════════════════════════════════════════════
+                    // Extrair seções do texto
+                    // ══════════════════════════════════════════════════════
+                    const extr = (key) => {
+                        const keys = key.split('|');
+                        for (const k of keys) {
+                            const rx = new RegExp('##' + k + '##\\s*([\\s\\S]*?)(?=##[A-Z_]+##|$)', 'i');
+                            const m = (this._consAnalysis||'').match(rx);
+                            if (m) return m[1].trim();
+                        }
+                        return '';
+                    };
+                    const secSaude = extr('SAUDE_FINANCEIRA|SAÚDE_FINANCEIRA');
+                    const secPend  = extr('PENDENCIAS|PENDÊNCIAS');
+                    const secIR    = extr('IMPOSTO_DE_RENDA');
+                    const secCaixa = extr('DICAS_CAIXA');
+                    const secPlano = extr('PLANO_ORGANIZACAO|PLANO_ORGANIZAÇÃO');
+
+                    // ── SAÚDE FINANCEIRA ─────────────────────────────────
+                    const saudeCor = compPct <= 20 ? C.verde : compPct <= 30 ? C.warn : C.danger;
+                    const saudeCbg = compPct <= 20 ? C.verdeT : compPct <= 30 ? C.warnC : C.dangerC;
+                    chk(14);
+                    sectionHeader('SAUDE FINANCEIRA', '', saudeCor, C.white);
+                    rect(MG, y, CW, 1.5, saudeCbg); // top accent line
+                    fc(...saudeCbg); doc.roundedRect(MG, y, CW, 60, 2, 2, 'F'); // bg hint
+                    y += 3;
+                    textBlock(secSaude);
+
+                    // ── PENDÊNCIAS ──────────────────────────────────────
+                    chk(14);
+                    sectionHeader('PENDENCIAS IDENTIFICADAS', '', C.danger, C.white);
+                    textBlock(secPend);
+
+                    // ── TABELA IR ────────────────────────────────────────
+                    chk(80);
+                    sectionHeader('IMPOSTO DE RENDA — REGRAS 2025', '', C.warn, C.white);
+
+                    // Tabela de faixas
+                    const irFaixas = [
+                        ['Ate R$ 2.259,20 / mes', 'ISENTO', '0%', C.verde, C.verdeT],
+                        ['R$ 2.259,21 a R$ 2.826,65', '7,5%', 'Ded. R$ 169,44', C.verdeM, C.verdeT],
+                        ['R$ 2.826,66 a R$ 3.751,05', '15%', 'Ded. R$ 381,44', C.warn, C.warnC],
+                        ['R$ 3.751,06 a R$ 4.664,68', '22,5%', 'Ded. R$ 662,77', [160,80,0], C.warnC],
+                        ['Acima de R$ 4.664,68', '27,5%', 'Ded. R$ 896,00', C.danger, C.dangerC],
+                    ];
+                    // header
+                    fc(...C.dark); doc.rect(MG, y, CW, 7, 'F');
+                    sf(7,'bold',C.white);
+                    doc.text('FAIXA DE RENDA MENSAL', MG+3, y+4.8);
+                    doc.text('ALIQUOTA', MG + CW*0.56, y+4.8, {align:'center'});
+                    doc.text('DEDUCAO MENSAL', MG + CW*0.82, y+4.8, {align:'center'});
+                    y += 7;
+
+                    const rendaMes = (v.rendaClt||0) + (v.rendaApo||0);
+                    irFaixas.forEach(([faixa, aliq, ded, cor, bgCor]) => {
+                        const isActive = (
+                            (faixa.includes('2.259') && rendaMes <= 2259.20) ||
+                            (faixa.includes('2.826') && rendaMes > 2259.20 && rendaMes <= 2826.65) ||
+                            (faixa.includes('3.751') && rendaMes > 2826.65 && rendaMes <= 3751.05) ||
+                            (faixa.includes('4.664') && rendaMes > 3751.05 && rendaMes <= 4664.68) ||
+                            (faixa.includes('Acima') && rendaMes > 4664.68)
+                        );
+                        fc(...(isActive ? bgCor : C.white)); doc.rect(MG, y, CW, 6.5, 'F');
+                        if (isActive) {
+                            fc(...cor); doc.rect(MG, y, 2.5, 6.5, 'F');
+                            sf(7,'bold',cor); doc.text('► ' + faixa, MG+4, y+4.5);
+                        } else {
+                            sf(7,'normal',C.mid); doc.text(faixa, MG+4, y+4.5);
+                        }
+                        sf(7, isActive?'bold':'normal', isActive?cor:C.muted);
+                        doc.text(aliq, MG + CW*0.56, y+4.5, {align:'center'});
+                        doc.text(ded, MG + CW*0.82, y+4.5, {align:'center'});
+                        dc(...C.border); doc.setLineWidth(0.15); doc.line(MG, y+6.5, MG+CW, y+6.5);
+                        y += 6.5;
+                    });
+                    y += 4;
+
+                    // Texto IR restante
+                    const irSemTabela = (secIR||'').replace(/TABELA IRPF[\s\S]*?27,5%\n/,'');
+                    textBlock(irSemTabela);
+
+                    // ── DICAS CAIXA ──────────────────────────────────────
+                    chk(14);
+                    sectionHeader('APROVACAO NA CAIXA ECONOMICA FEDERAL', '', C.azul, C.white);
+                    textBlock(secCaixa);
+
+                    // ── PLANO 30-60-90 ───────────────────────────────────
+                    chk(14);
+                    sectionHeader('PLANO DE ACAO — 30 / 60 / 90 DIAS', '', C.verdeM, C.white);
+
+                    // 3 colunas de prazo
+                    const prazoCols = [
+                        { titulo: '30 DIAS', cor: C.verde, bgCor: C.verdeT },
+                        { titulo: '60 DIAS', cor: C.acc,   bgCor: C.accC },
+                        { titulo: '90 DIAS', cor: C.azul,  bgCor: C.azulC },
+                    ];
+                    const cwP = (CW - 6) / 3;
+                    chk(8);
+                    prazoCols.forEach((p, i) => {
+                        const px = MG + i * (cwP + 3);
+                        fc(...p.cor); doc.roundedRect(px, y, cwP, 7, 2,2,'F');
+                        sf(7.5,'bold',C.white); doc.text(p.titulo, px + cwP/2, y+4.8, {align:'center'});
+                    });
+                    y += 9;
+
+                    // Extrair linhas por bloco de dias
+                    const planoLines = (secPlano||'').split('\n').filter(l => l.trim());
+                    const blocos = [[],[],[]];
+                    let blocoAtual = 0;
+                    planoLines.forEach(l => {
+                        if (/30.DIAS|proximos.30/i.test(l)) { blocoAtual = 0; return; }
+                        if (/60.DIAS|proximos.60/i.test(l)) { blocoAtual = 1; return; }
+                        if (/90.DIAS|proximos.90/i.test(l)) { blocoAtual = 2; return; }
+                        if (l.trim()) blocos[blocoAtual].push(l.trim());
+                    });
+
+                    const maxRows = Math.max(blocos[0].length, blocos[1].length, blocos[2].length, 1);
+                    for (let ri = 0; ri < maxRows; ri++) {
+                        chk(7);
+                        const rowBg = ri % 2 === 0;
+                        prazoCols.forEach((p, ci) => {
+                            const px = MG + ci * (cwP + 3);
+                            if (rowBg) { fc(...p.bgCor); doc.rect(px, y, cwP, 6.5, 'F'); }
+                            const txt = blocos[ci][ri] || '';
+                            const clean = txt.replace(/^[\d\.•\-*·]\s*/, '').replace(/^\d+\.\s*/,'');
+                            if (clean) {
+                                const wrapped = doc.splitTextToSize(clean, cwP - 6);
+                                sf(7, 'normal', C.dark);
+                                doc.text(wrapped[0] || '', px+3, y+4.5);
+                            }
+                        });
+                        dc(...C.border); doc.setLineWidth(0.15);
+                        prazoCols.forEach((p, ci) => {
+                            const px = MG + ci * (cwP + 3);
+                            doc.line(px, y+6.5, px+cwP, y+6.5);
+                        });
+                        y += 6.5;
+                    }
+                    y += 6;
+
+                    // ── DEDUÇÕES IR (box) ────────────────────────────────
+                    chk(40);
+                    fc(...C.warnC); doc.roundedRect(MG, y, CW, 36, 3,3,'F');
+                    fc(...C.warn); doc.roundedRect(MG, y, CW, 8, 3,3,'F');
+                    sf(8,'bold',C.white); doc.text('DEDUCOES PERMITIDAS NO IR 2025', MG+4, y+5.5);
+                    y += 11;
+                    const deds = [
+                        ['Dependentes', 'R$ 2.275,08 / ano por dependente'],
+                        ['Plano de Saude', '100% dedutivel (sem limite)'],
+                        ['Educacao', 'Ate R$ 3.561,50 / ano por pessoa'],
+                        ['Previdencia PGBL', 'Ate 12% da renda bruta anual'],
+                        ['Pensao Alimenticia', '100% dedutivel (com ordem judicial)'],
+                        ['INSS recolhido', '100% dedutivel'],
+                    ];
+                    deds.forEach(([label, val], i) => {
+                        if (i % 2 === 0) { fc(...C.warnC); } else { fc(255,253,240); }
+                        doc.rect(MG+3, y, CW-6, 6, 'F');
+                        sf(7,'bold',C.warn); doc.text(label, MG+6, y+4.2);
+                        sf(7,'normal',C.dark); doc.text(val, MG+CW-6, y+4.2, {align:'right'});
+                        y += 6;
+                    });
+                    y += 8;
+
+                    // Rodapé na última página
+                    addFooter();
+
+                    doc.save('cartilha-consultoria-imobipro-' + new Date().toISOString().slice(0,10) + '.pdf');
+                    if (window.UI && UI.showToast) UI.showToast('✅ Cartilha PDF profissional baixada!');
+                } catch(e) {
+                    console.error(e);
+                    if (window.UI && UI.showToast) UI.showToast('Erro ao gerar PDF. Tente novamente.', 'error');
+                }
+            },
+
+            consNovoChatIA() {
+                const el = document.getElementById('cons-chat-messages');
+                if (!el) return;
+                const v = this._consData;
+                if (!v || !v.rendaTotal) return;
+                const msg = `Análise completa realizada! Renda: R$ ${(v.rendaTotal||0).toLocaleString('pt-BR')} | Comprometimento: ${(v.comprometimento||0).toFixed(1)}% | FGTS: R$ ${(v.fgts||0).toLocaleString('pt-BR')}. Faça perguntas específicas para aprofundar a consultoria.`;
+                el.innerHTML += this._consBuildMsg('bot', msg);
+                el.scrollTop = el.scrollHeight;
+                document.getElementById('cons-chat-input')?.focus();
+                document.getElementById('cons-chat-container')?.scrollIntoView({behavior:'smooth'});
+            },
+
+            consChatKeyDown(e) {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.consSendChat(); }
+            },
+
+            consChatSuggest(msg) {
+                const inp = document.getElementById('cons-chat-input');
+                if (inp) { inp.value = msg; this.consSendChat(); }
+            },
+
+            _consBuildMsg(role, text) {
+                const isBot = role === 'bot';
+                return `<div class="vc-chat-msg ${isBot ? 'vc-chat-bot' : 'vc-chat-user'}" style="animation:fadeIn 0.3s ease;">
+                    ${isBot ? '<div class="vc-chat-avatar">📋</div>' : ''}
+                    <div class="vc-chat-bubble ${isBot ? 'bot' : 'user'}">${text.replace(/\n/g,'<br>')}</div>
+                    ${!isBot ? '<div class="vc-chat-avatar" style="background:var(--accent);font-size:0.8rem;">👤</div>' : ''}
+                </div>`;
+            },
+
+            _consHistory: [],
+
+            async consSendChat() {
+                const input = document.getElementById('cons-chat-input');
+                const msgs = document.getElementById('cons-chat-messages');
+                if (!input || !msgs) return;
+                const userMsg = input.value.trim();
+                if (!userMsg) return;
+                input.value = '';
+                input.style.height = '42px';
+
+                msgs.innerHTML += this._consBuildMsg('user', userMsg);
+                msgs.scrollTop = msgs.scrollHeight;
+
+                // Typing indicator
+                const typId = 'cons-typing-' + Date.now();
+                msgs.innerHTML += `<div id="${typId}" class="vc-chat-msg vc-chat-bot"><div class="vc-chat-avatar">📋</div><div class="vc-chat-bubble bot" style="display:flex;gap:5px;align-items:center;padding:12px 14px;"><span style="width:7px;height:7px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite;"></span><span style="width:7px;height:7px;background:var(--accent);border-radius:50%;animation:vcDot 1.2s infinite 0.4s;"></span><span style="width:7px;height:7px;background:var(--primary);border-radius:50%;animation:vcDot 1.2s infinite 0.8s;"></span></div></div>`;
+                msgs.scrollTop = msgs.scrollHeight;
+
+                await new Promise(r => setTimeout(r, 600));
+
+                const botText = this._consResponderLocal(userMsg.toLowerCase(), userMsg);
+                const typEl = document.getElementById(typId);
+                if (typEl) typEl.remove();
+                msgs.innerHTML += this._consBuildMsg('bot', botText);
+                msgs.scrollTop = msgs.scrollHeight;
+            },
+
+            _consResponderLocal(q, original) {
+                const v = this._consData || {};
+                const br0 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+                // ── IR / Imposto de Renda ──
+                if (/ir\b|imposto.renda|declarar|dedar|declaraç|irpf|receita federal|isento|isenção/.test(q)) {
+                    const anual = (v.rendaTotal||0) * 12;
+                    const obrig = anual >= 33888;
+                    return `📄 IMPOSTO DE RENDA 2025\n\n${obrig ? `✅ Com renda anual estimada de ${br0(anual)}, o cliente É OBRIGADO a declarar.` : `📋 Renda anual estimada de ${br0(anual)} — abaixo do limite de R$ 33.888. Verifique demais critérios.`}\n\nTABELA IRPF 2025:\n• Até R$ 2.259,20/mês → ISENTO\n• R$ 2.259,21 a R$ 2.826,65 → 7,5%\n• R$ 2.826,66 a R$ 3.751,05 → 15%\n• R$ 3.751,06 a R$ 4.664,68 → 22,5%\n• Acima de R$ 4.664,68 → 27,5%\n\nOUTROS CRITÉRIOS DE OBRIGATORIEDADE:\n• Recebeu rendimentos isentos > R$ 200.000/ano\n• Teve bens/direitos > R$ 800.000\n• Ganhou capital na venda de imóvel\n• Realizou operações em Bolsa\n\nDEDUÇÕES:\n• Dependentes: R$ 2.275,08/ano cada\n• Plano de saúde: sem limite\n• Educação: até R$ 3.561,50/ano\n• PGBL: até 12% da renda bruta`;
+                }
+
+                // ── FGTS ──
+                if (/fgts|fundo.garantia/.test(q)) {
+                    const saldo = v.fgts || 0;
+                    return `🏦 FGTS — FUNDO DE GARANTIA\n\nSaldo informado: ${br0(saldo)}\n\nUSO NA COMPRA DO IMÓVEL:\n• Pode ser usado como entrada ou para abater o saldo devedor\n• Reduz o valor financiado → parcela menor\n• É ISENTO de Imposto de Renda\n\nREQUISITOS PARA SAQUE HABITACIONAL:\n✅ Mínimo 3 anos de trabalho com FGTS (não precisam ser consecutivos)\n✅ Não possuir imóvel residencial no município onde trabalha ou reside\n✅ Não ter financiamento ativo no SFH em nenhum lugar do país\n✅ Nunca ter usado FGTS para imóvel nos últimos 3 anos\n\nCOMO SOLICITAR:\n1. Extrair extrato na Caixa (app FGTS ou agência)\n2. Apresentar ao banco junto à proposta de financiamento\n3. A Caixa faz a transferência diretamente\n\n💡 Dica: Solicite o extrato com pelo menos 30 dias de antecedência.`;
+                }
+
+                // ── Documentos ──
+                if (/document|comprov|papel|lista.doc/.test(q)) {
+                    const vinc = v.vinculo || 'clt';
+                    const docsBase = '📁 DOCUMENTOS BÁSICOS (todos):\n• RG e CPF de todos os compradores\n• Certidão de nascimento ou casamento\n• Comprovante de residência (últimos 90 dias)\n• Declaração de IR (2 últimos anos + recibo)\n• Extratos bancários (últimos 3 meses)';
+                    const docExtra = vinc === 'clt' ? '\n\nCLT / FORMAL:\n• 3 últimos holerites\n• Carteira de trabalho (CTPS)\n• Declaração do empregador' :
+                        vinc === 'mei' ? '\n\nMEI:\n• CCMEI + extratos PJ (6 meses)\n• DASN-SIMEI (declaração anual MEI)\n• DECORE emitido por contador\n• Recibos de pagamentos' :
+                        vinc === 'autonomo' ? '\n\nAUTÔNOMO:\n• Extratos bancários (6 meses)\n• DECORE (contador)\n• Carnê-leão em dia\n• Recibos de serviços prestados' :
+                        vinc === 'servidor' ? '\n\nSERVIDOR PÚBLICO:\n• 3 últimos contracheques\n• Declaração do órgão\n• Comprovante de estabilidade' :
+                        vinc === 'aposentado' ? '\n\nAPOSENTADO/PENSIONISTA:\n• Carta de concessão INSS\n• Extrato do benefício (app Meu INSS)\n• 3 últimos comprovantes de depósito' :
+                        '\n\nEMPRESÁRIO:\n• Contrato social\n• Balanço patrimonial\n• Pró-labore com comprovante\n• CNDs Federal, Estadual e Municipal';
+                    return docsBase + docExtra + '\n\n💡 Organize tudo em PDF antes de ir à agência — agiliza muito o processo!';
+                }
+
+                // ── Limpar nome / SPC / Serasa ──
+                if (/limpar.nome|spc|serasa|restricao|restrição|cpf.limpo|negativado|score/.test(q)) {
+                    return `🔍 COMO LIMPAR O NOME\n\n1. CONSULTE GRATUITAMENTE:\n   • serasa.com.br → "Meu CPF"\n   • consumidor.gov.br (reclamações)\n   • Banco Central: registrato.bcb.gov.br\n\n2. NEGOCIE A DÍVIDA:\n   • Serasa Limpa Nome (negociação online com desconto)\n   • Feirão da Caixa (quando disponível)\n   • Direto com o credor — peça desconto para à vista\n\n3. PRAZO APÓS PAGAMENTO:\n   • Serasa/SPC: até 5 dias úteis para baixa\n   • Banco Central (SCR): pode levar 30 dias\n\n4. MELHORAR O SCORE:\n   • Pagar contas em dia (maior impacto)\n   • Manter CPF ativo com movimentação bancária\n   • Tempo de relacionamento com bancos conta muito\n   • Renegociar dívidas antigas (mesmo parceladas melhoram o score)\n\n⚠️ ATENÇÃO: A Caixa consulta Serasa, SPC, Bacen e SCR. TODOS precisam estar limpos.`;
+                }
+
+                // ── Reprovação / o que reprova ──
+                if (/reprov|negar|nega.crédito|nao.aprov|rejeitar/.test(q)) {
+                    return `❌ PRINCIPAIS CAUSAS DE REPROVAÇÃO NA CAIXA\n\n🔴 CRÍTICAS (impedem aprovação):\n• CPF com restrição no SPC, Serasa ou Bacen\n• Comprometimento de renda acima de 30%\n• Renda insuficiente para a parcela pretendida\n• Já possuir imóvel financiado pelo SFH ativo\n• Inconsistência nos documentos (renda declarada ≠ comprovada)\n\n🟡 ATENÇÃO (dificultam aprovação):\n• Score de crédito muito baixo (abaixo de 500)\n• Muitos financiamentos simultâneos\n• Mudança de emprego recente (menos de 6 meses)\n• Renda informal sem documentação adequada\n• Imóvel avaliado abaixo do preço de compra\n• Imóvel com irregularidades (documentação)\n\n✅ COMO EVITAR:\n${v.comprometimento > 30 ? '⚠️ Comprometimento atual '+v.comprometimento.toFixed(1)+'% — REDUZIR antes de solicitar!\n' : ''}• Organize toda documentação com antecedência\n• Mantenha renda consistente nos 6 meses anteriores\n• Regularize qualquer pendência fiscal ou bancária`;
+                }
+
+                // ── Imóvel no IR ──
+                if (/imovel.ir|imóvel.ir|declarar.imovel|bens.direitos|casa.declarar/.test(q)) {
+                    return `🏠 COMO DECLARAR IMÓVEL NO IR\n\nCOMPRA DO IMÓVEL:\n• Código: 11 — Imóvel Urbano (ou 12 — Rural)\n• Declarar em "Bens e Direitos"\n• Valor = valor total pago (entrada + prestações pagas no ano)\n• Nunca atualizar pelo valor de mercado — declare sempre pelo custo de aquisição\n\nFINANCIAMENTO:\n• Coluna "Situação em 31/12/ano": valor já pago\n• Cada ano, some as prestações pagas\n• Ao final do financiamento: valor total das prestações + entrada\n\nVENDA DO IMÓVEL:\n• Ganho de capital (venda > compra) é tributável (15% a 22,5%)\n• ISENÇÃO: venda até R$ 440.000 (único imóvel, sem outra venda nos últimos 5 anos)\n• ISENÇÃO: se usar o valor em até 180 dias para comprar outro imóvel residencial no Brasil\n\nFGTS USADO:\n• Inclua no valor total pago pelo imóvel (não é dedutível separadamente)\n• FGTS em si é isento de IR — mas faz parte do custo do bem`;
+                }
+
+                // ── Comprometimento / parcela ──
+                if (/comprometimento|parcela.max|quanto.financ|capacidade|30%|limite.renda/.test(q)) {
+                    if (v.rendaTotal) {
+                        const parcelaMax = v.rendaEfetiva * 0.30;
+                        const parcelaDisp = parcelaMax - (v.totalDividas || 0);
+                        return `📊 ANÁLISE DE COMPROMETIMENTO\n\nRenda efetiva: ${br0(v.rendaEfetiva)}/mês\nLimite 30% Caixa: ${br0(parcelaMax)}/mês\nDívidas atuais: ${br0(v.totalDividas)}/mês\n\nPARCELA MÁXIMA DISPONÍVEL: ${br0(Math.max(0, parcelaDisp))}/mês\n\nCOMPROMETIMENTO ATUAL: ${v.comprometimento.toFixed(1)}%\n${v.comprometimento > 30 ? '❌ Acima do limite! Necessário quitar ' + br0(v.totalDividas - parcelaMax) + ' em dívidas.' : v.comprometimento > 25 ? '⚠️ Próximo ao limite. Recomenda-se quitar dívidas para mais margem.' : '✅ Dentro do limite confortável.'}\n\nREGRA DA CAIXA:\n• Máximo 30% da renda efetiva (após dedução de dependentes: ${v.dependentes} × R$ 248,39)\n• Inclui TODAS as prestações: atual + nova do financiamento\n• Seguro e taxa administrativa entram no cálculo da parcela`;
+                    }
+                    return `📊 REGRA DOS 30% — CAIXA ECONÔMICA\n\nA Caixa limita o comprometimento de renda a 30% da renda efetiva (bruta menos deduções de dependentes: R$ 248,39 por dependente/mês).\n\nA parcela total (financiamento + seguro + taxa adm) + todas as dívidas atuais não pode ultrapassar 30% da renda efetiva.\n\nPreencha o formulário acima para calcular o comprometimento específico do cliente.`;
+                }
+
+                // ── Programas / Minha Casa ──
+                if (/mcmv|minha.casa|faixa|subsidio|subsídio|hab.caixa/.test(q)) {
+                    return `🏠 PROGRAMAS CAIXA 2025\n\nMINHA CASA MINHA VIDA:\n• Faixa 1 (até R$ 2.640/mês) → Subsídio até R$ 55.000 · Juros a partir de 4,5% a.a.\n• Faixa 2 (até R$ 4.400/mês) → Subsídio até R$ 29.000 · Juros a partir de 4,75% a.a.\n• Faixa 3 (até R$ 8.000/mês) → Sem subsídio · Juros a partir de 7,66% a.a.\n\nSBPE (acima de R$ 8.000/mês):\n• Sem limite de valor do imóvel\n• Juros a partir de 9% a.a. + TR\n• Entrada mínima: 20%\n\nPRÓ-COTISTA FGTS:\n• Para trabalhadores com FGTS\n• Juros diferenciados para cotistas com 3+ anos\n\nLIMITES DE VALOR DO IMÓVEL (MCMV 2025):\n• Capitais e DF: até R$ 350.000\n• Demais municípios: até R$ 264.000\n• SP, RJ, DF e Brasília: até R$ 500.000\n\n💡 Simule em: habitacao.caixa.gov.br`;
+                }
+
+                // ── Entrada ──
+                if (/entrada|sinal|quanto.entrada|valor.entrada|down.payment/.test(q)) {
+                    return `💰 ENTRADA NO FINANCIAMENTO\n\nVALORES MÍNIMOS:\n• MCMV Faixa 1: pode ser zero com subsídio suficiente\n• MCMV Faixa 2: 10% do valor do imóvel\n• MCMV Faixa 3 e SBPE: 20% do valor\n\nO QUE PODE COMPOR A ENTRADA:\n✅ Dinheiro próprio (poupança)\n✅ FGTS (saldo: ${br0(v.fgts||0)})\n✅ Doação documentada de terceiros\n✅ Permuta parcial\n\nCUSTAS ADICIONAIS (não entram no financiamento):\n• ITBI: 2 a 3% do valor do imóvel (varia por município)\n• Cartório/Registro: 1 a 2% do valor\n• Taxa de avaliação do imóvel (Caixa): ~R$ 3.200\n\n📌 Planejamento: reserve 25-30% do valor do imóvel para cobrir entrada + custas. Exemplo: imóvel de R$ 300.000 → entrada de R$ 60.000 + ~R$ 15.000 em custas = R$ 75.000 necessários.`;
+                }
+
+                // ── Saudação / genérico ──
+                if (/^(oi|olá|ola|tudo|bom dia|boa tarde|boa noite|salve)/.test(q)) {
+                    return `Olá! 😊 Sou sua Consultora Financeira especializada em imóveis.\n\nPosso te ajudar com:\n📄 Imposto de Renda (obrigatoriedade, faixas, deduções)\n🏦 FGTS (uso na compra, requisitos)\n📁 Documentação para financiamento\n✅ Como limpar o nome / melhorar score\n🏠 Programas da Caixa (MCMV, SBPE)\n💰 Cálculo de entrada e comprometimento\n❌ O que reprova um financiamento\n\nPreencha o formulário acima e clique em Analisar para uma consultoria completa e personalizada. Ou pergunte diretamente!`;
+                }
+
+                // Resposta contextual genérica com dados do cliente
+                if (v.rendaTotal) {
+                    return `📋 Com base no perfil analisado (renda ${br0(v.rendaTotal)}/mês, comprometimento ${(v.comprometimento||0).toFixed(1)}%):\n\nNão encontrei uma resposta específica para sua pergunta no meu banco de conhecimento, mas posso orientar sobre:\n\n• Regras do IR 2025\n• Uso do FGTS\n• Documentação por vínculo empregatício\n• Limpar nome e melhorar score\n• Programas da Caixa (MCMV, SBPE)\n• Comprometimento de renda e parcela máxima\n• O que reprova um financiamento\n\nTente reformular sua pergunta com uma dessas palavras-chave, ou use os botões de perguntas frequentes abaixo! 😊`;
+                }
+                return `📋 Sou sua Consultora Financeira especializada em imóveis e financiamento pela Caixa Econômica Federal.\n\nTópicos disponíveis: IR 2025, FGTS, documentação, limpar nome, score de crédito, programas MCMV/SBPE, comprometimento de renda, entrada e custas.\n\nPreencha o formulário acima para uma análise completa e personalizada!`;
+            },
+            // ── FIM CONSULTORIA ───────────────────────────────
         };
 
 
