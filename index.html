@@ -6572,6 +6572,22 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                 <div class="modal-description" id="whatsapp-confirm-description">
                     Como você gostaria de iniciar a conversa com o cliente?
                 </div>
+
+                <!-- PAINEL DE SCRIPT SUGERIDO -->
+                <div id="whatsapp-script-sugerido" style="display:none; margin: 0 0 14px 0; border-radius: 14px; overflow: hidden; border: 1.5px solid var(--border);">
+                    <div id="whatsapp-script-header" style="padding: 9px 14px; display: flex; align-items: center; gap: 8px; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.03em;">
+                        <i id="whatsapp-script-icon" class="fas fa-comment-alt"></i>
+                        <span id="whatsapp-script-label">Script Sugerido</span>
+                        <span id="whatsapp-script-badge" style="margin-left:auto; background: rgba(255,255,255,0.25); border-radius: 20px; padding: 2px 9px; font-size: 0.72rem;"></span>
+                    </div>
+                    <div style="background: white; padding: 12px 14px;">
+                        <div id="whatsapp-script-texto" style="font-size: 0.83rem; color: var(--dark); line-height: 1.55; white-space: pre-wrap;"></div>
+                        <button onclick="App.whatsapp.copiarScript()" style="margin-top: 10px; width: 100%; background: var(--surface-glass-dark); border: 1px solid var(--border); border-radius: 9px; padding: 8px; font-size: 0.8rem; font-weight: 600; color: var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <i class="fas fa-copy"></i> Copiar script
+                        </button>
+                    </div>
+                </div>
+
                 <div class="confirm-whatsapp-options">
                     <button class="confirm-whatsapp-btn conversa" onclick="App.whatsapp.openConversaSimplesCliente()">
                         <i class="fas fa-comment-dots"></i>
@@ -14029,25 +14045,23 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                 whatsappPersonalizado: async (clienteId) => {
                     const cliente = UI.data.clientes.find(x => x.id === clienteId);
                     if(!cliente) return;
-                    
-                    // Incrementa contatos
-                    cliente.contatos = (cliente.contatos || 0) + 1;
-                    await DB.put('clientes', cliente);
-                    UI.data.clientes = await Storage.getClientes();
 
-                    const settings = await Storage.getSettings();
-                    let message = '';
-                    
-                    const hour = new Date().getHours();
-                    let greeting = "Boa noite";
-                    if (hour >= 5 && hour < 12) greeting = "Bom dia";
-                    if (hour >= 12 && hour < 18) greeting = "Boa tarde";
-                    
-                    const clienteFirstName = cliente.nome.split(' ')[0];
-                    
+                    // Se for aniversário do cliente, usa mensagem especial de parabéns
+                    // independentemente do número de contatos
                     if (Utils.isBirthdayToday(cliente.dataNascimento)) {
+                        const proximoContato = (cliente.contatos || 0) + 1;
+                        cliente.contatos = proximoContato;
+                        await DB.put('clientes', cliente);
+                        UI.data.clientes = await Storage.getClientes();
+
+                        const settings = await Storage.getSettings();
+                        const hour = new Date().getHours();
+                        let greeting = 'Boa noite';
+                        if (hour >= 5 && hour < 12) greeting = 'Bom dia';
+                        if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
+                        const clienteFirstName = cliente.nome.split(' ')[0];
                         const idade = Utils.calculateAge(cliente.dataNascimento);
-                        message = `${greeting}, ${clienteFirstName}! 🎉🎂\n\n`;
+                        let message = `${greeting}, ${clienteFirstName}! 🎉🎂\n\n`;
                         message += `Me chamo ${settings.nome || 'Alex Peixoto'} sou do time de vendas da  ${settings.imobiliaria || 'Resende'}.\n`;
                         message += `Gostaria de parabenizá-lo pelos seus ${idade} anos! 🎊\n\n`;
                         message += `Desejo muita saúde, felicidade e sucesso! ✨\n`;
@@ -14055,20 +14069,15 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                         message += `Fico à disposição para ajudá-lo(a) na realização do sonho da casa própria! 🏠\n\n`;
                         message += `📞 *Contato:* ${settings.telefone || '(82) 99662-2036'}\n`;
                         message += `🏢 *Imobiliária:* ${settings.imobiliaria || 'Resende'}`;
+                        const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
+                        const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodeURIComponent(message)}`;
+                        Utils.openWhatsApp(url);
+                        UI.renderClientes();
+                        UI.renderFunil();
                     } else {
-                        const imovel = cliente.imovelInteresseId ? 
-                            UI.data.imoveis.find(i => i.id === cliente.imovelInteresseId) : null;
-                        
-                        message = await Utils.generateWhatsAppMessage(cliente, imovel);
+                        // Fora de aniversário: usa a lógica de scripts por número de contato
+                        await App.whatsapp.abrirWhatsAppComScript(clienteId);
                     }
-                    
-                    const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
-                    const encodedMessage = encodeURIComponent(message);
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
-                    
-                    Utils.openWhatsApp(url);
-                    UI.renderClientes();
-                    UI.renderFunil();
                 },
                 
                 email: (clienteId) => {
@@ -16737,55 +16746,147 @@ MCMV F1/F2: desconto reduzido (R$148/dep)</div>
                     return true;
                 },
 
-                confirmOpenCliente: (clienteId) => {
-                    UI.currentWhatsappClienteId = clienteId;
-                    
-                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
-                    if (!cliente) return;
-                    
-                    App.whatsapp.verificarTempoEtapa(cliente).then(continuar => {
-                        if (continuar) {
-                            UI.openModal('whatsapp-confirm');
-                        } else {
-                            Utils.toast('Contato cancelado.');
-                        }
+                // ── SCRIPTS DE FOLLOW-UP POR NÚMERO DE CONTATO ──────────
+                SCRIPTS_FOLLOWUP: {
+                    1: {
+                        label: '1º Contato',
+                        icon: 'fas fa-handshake',
+                        cor: '#2E4A31',
+                        badge: '1ª vez',
+                        texto: (nome) =>
+`Olá, ${nome}! 😊
+Sou corretor de imóveis e estou à disposição para te ajudar a encontrar o imóvel ideal.
+
+Gostaria de entender melhor o que você procura: qual região, tipo de imóvel e faixa de preço está considerando? 🏡
+
+Podemos conversar por aqui mesmo, sem compromisso!`
+                    },
+                    2: {
+                        label: '2º Contato',
+                        icon: 'fas fa-redo-alt',
+                        cor: '#B87020',
+                        badge: '2ª tentativa',
+                        texto: (nome) =>
+`Olá, ${nome}! 👋
+Tentei entrar em contato antes, mas talvez não tenha sido um bom momento.
+
+Quero garantir que você não perca as oportunidades que surgem por aqui — às vezes aparecem opções exclusivas que combinam exatamente com o perfil de quem busca! 🔑
+
+Se puder me dar um retorno, fico grato. Estarei por aqui! 😊`
+                    },
+                    3: {
+                        label: '3º Contato — Último',
+                        icon: 'fas fa-flag-checkered',
+                        cor: '#B83030',
+                        badge: '3ª e última',
+                        texto: (nome) =>
+`Olá, ${nome}! 🙏
+Esta será minha última mensagem para não ser inconveniente. Fico por aqui caso precise de mim no futuro!
+
+Mas antes de encerrar, gostaria de saber: posso continuar te enviando oportunidades de imóveis que se encaixem no seu perfil? Muitas vezes surgem opções exclusivas que podem te interessar. 🔑
+
+Se quiser, é só responder ✅ SIM ou ❌ NÃO. Sem compromisso nenhum!`
+                    }
+                },
+
+                // Retorna o script correto baseado no número de contatos já realizados
+                // (o próximo contato será contatos+1)
+                getScriptParaProximoContato(cliente) {
+                    const proximoContato = (cliente.contatos || 0) + 1;
+                    const scripts = App.whatsapp.SCRIPTS_FOLLOWUP;
+                    const primeiroNome = (cliente.nome || 'Cliente').split(' ')[0];
+                    if (proximoContato >= 3) return { ...scripts[3], texto: scripts[3].texto(primeiroNome) };
+                    return { ...scripts[proximoContato] || scripts[1], texto: (scripts[proximoContato] || scripts[1]).texto(primeiroNome) };
+                },
+
+                // Copia o script atual para a área de transferência
+                copiarScript() {
+                    const texto = document.getElementById('whatsapp-script-texto')?.innerText || '';
+                    if (!texto) return;
+                    navigator.clipboard.writeText(texto).then(() => {
+                        Utils.toast('✅ Script copiado!');
+                    }).catch(() => {
+                        Utils.toast('Não foi possível copiar. Selecione o texto manualmente.', 'error');
                     });
                 },
 
-                openConversaSimplesCliente: async () => {
-                    if (!UI.currentWhatsappClienteId) {
-                        UI.closeModals();
-                        return;
-                    }
-                    const cliente = UI.data.clientes.find(c => c.id === UI.currentWhatsappClienteId);
-                    if (!cliente) {
-                        UI.closeModals();
-                        return;
-                    }
-                    
-                    cliente.contatos = (cliente.contatos || 0) + 1;
+                confirmOpenCliente: (clienteId) => {
+                    UI.currentWhatsappClienteId = clienteId;
+
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+
+                    App.whatsapp.verificarTempoEtapa(cliente).then(continuar => {
+                        if (!continuar) { Utils.toast('Contato cancelado.'); return; }
+                        App.whatsapp.abrirWhatsAppComScript(clienteId);
+                    });
+                },
+
+                // Núcleo: incrementa contador e abre WhatsApp com mensagem baseada no nº de contatos
+                abrirWhatsAppComScript: async (clienteId) => {
+                    const cliente = UI.data.clientes.find(c => c.id === clienteId);
+                    if (!cliente) return;
+
+                    // Determina o próximo número de contato (antes de incrementar)
+                    const proximoContato = (cliente.contatos || 0) + 1;
+
+                    // Incrementa e salva
+                    cliente.contatos = proximoContato;
                     await DB.put('clientes', cliente);
                     UI.data.clientes = await Storage.getClientes();
 
-                    const saudacao = Utils.getGreeting();
-                    const message = `${saudacao}, ${cliente.nome.split(' ')[0]}! Tudo bem? Gostaria de conversar sobre imóveis. Podemos bater um papo?`;
+                    const primeiroNome = cliente.nome.split(' ')[0];
                     const phoneNumber = Utils.formatPhoneForWhatsApp(cliente.telefone);
-                    const encodedMessage = encodeURIComponent(message);
-                    const url = `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`;
+
+                    // Seleciona mensagem pelo número do contato (1, 2 ou 3)
+                    // Fora desse intervalo → abre WhatsApp sem mensagem
+                    let mensagem = '';
+                    if (proximoContato === 1) {
+                        mensagem =
+`Olá, ${primeiroNome}! 😊
+Sou corretor de imóveis e estou à disposição para te ajudar a encontrar o imóvel ideal.
+
+Gostaria de entender melhor o que você procura: qual região, tipo de imóvel e faixa de preço está considerando? 🏡
+
+Podemos conversar por aqui mesmo, sem compromisso!`;
+                    } else if (proximoContato === 2) {
+                        mensagem =
+`Olá, ${primeiroNome}! 👋
+Tentei entrar em contato antes, mas talvez não tenha sido um bom momento.
+
+Quero garantir que você não perca as oportunidades que surgem por aqui — às vezes aparecem opções exclusivas que combinam exatamente com o perfil de quem busca! 🔑
+
+Se puder me dar um retorno, fico grato. Estarei por aqui! 😊`;
+                    } else if (proximoContato === 3) {
+                        mensagem =
+`Olá, ${primeiroNome}! 🙏
+Esta será minha última mensagem para não ser inconveniente. Fico por aqui caso precise de mim no futuro!
+
+Mas antes de encerrar, gostaria de saber: posso continuar te enviando oportunidades de imóveis que se encaixem no seu perfil? Muitas vezes surgem opções exclusivas que podem te interessar. 🔑
+
+Se quiser, é só responder ✅ SIM ou ❌ NÃO. Sem compromisso nenhum!`;
+                    }
+                    // proximoContato > 3 → mensagem permanece '' → WhatsApp abre sem texto
+
+                    const encodedMessage = mensagem ? encodeURIComponent(mensagem) : '';
+                    const url = encodedMessage
+                        ? `https://api.whatsapp.com/send?phone=${phoneNumber}&text=${encodedMessage}`
+                        : `https://api.whatsapp.com/send?phone=${phoneNumber}`;
+
                     Utils.openWhatsApp(url);
                     UI.closeModals();
                     UI.renderClientes();
                     UI.renderFunil();
                 },
 
+                openConversaSimplesCliente: async () => {
+                    if (!UI.currentWhatsappClienteId) { UI.closeModals(); return; }
+                    await App.whatsapp.abrirWhatsAppComScript(UI.currentWhatsappClienteId);
+                },
+
                 openMensagemPersonalizadaCliente: async () => {
-                    if (!UI.currentWhatsappClienteId) {
-                        UI.closeModals();
-                        return;
-                    }
-                    
-                    await App.cliente.whatsappPersonalizado(UI.currentWhatsappClienteId);
-                    UI.closeModals();
+                    if (!UI.currentWhatsappClienteId) { UI.closeModals(); return; }
+                    await App.whatsapp.abrirWhatsAppComScript(UI.currentWhatsappClienteId);
                 },
 
                 confirmOpenImovel: (imovelId) => {
@@ -18522,11 +18623,36 @@ Para cada objeção: a causa-raiz + o script exato em português + a técnica ps
                     { title: '🤝 Solicitação de Indicação', body: '"[Nome], que alegria que você está feliz com a sua nova casa! Uma coisa que me ajuda muito: você conhece algum amigo, familiar ou colega que esteja pensando em comprar ou vender um imóvel? Sua indicação significa muito para mim."' },
                     { title: '🔄 Follow-up após Visita', body: '"[Nome], boa tarde! Ontem você visitou o apartamento em [endereço]. Quero saber o que achou e se ficou alguma dúvida. Já estou consultando as condições especiais de financiamento para te apresentar. Podemos conversar hoje?"' },
                 ];
+                const SCRIPTS_FOLLOWUP = [
+                    {
+                        cor: '#2E4A31',
+                        title: '💬 1º Contato WhatsApp',
+                        body: 'Olá, [Nome]! 😊\nSou corretor de imóveis e estou à disposição para te ajudar a encontrar o imóvel ideal.\n\nGostaria de entender melhor o que você procura: qual região, tipo de imóvel e faixa de preço está considerando? 🏡\n\nPodemos conversar por aqui mesmo, sem compromisso!'
+                    },
+                    {
+                        cor: '#B87020',
+                        title: '🔄 2º Contato WhatsApp — Follow-up',
+                        body: 'Olá, [Nome]! 👋\nTentei entrar em contato antes, mas talvez não tenha sido um bom momento.\n\nQuero garantir que você não perca as oportunidades que surgem por aqui — às vezes aparecem opções exclusivas que combinam exatamente com o perfil de quem busca! 🔑\n\nSe puder me dar um retorno, fico grato. Estarei por aqui! 😊'
+                    },
+                    {
+                        cor: '#B83030',
+                        title: '🏁 3º Contato WhatsApp — Último',
+                        body: 'Olá, [Nome]! 🙏\nEsta será minha última mensagem para não ser inconveniente. Fico por aqui caso precise de mim no futuro!\n\nMas antes de encerrar, gostaria de saber: posso continuar te enviando oportunidades de imóveis que se encaixem no seu perfil? Muitas vezes surgem opções exclusivas que podem te interessar. 🔑\n\nSe quiser, é só responder ✅ SIM ou ❌ NÃO. Sem compromisso nenhum!'
+                    },
+                ];
                 el.innerHTML = SCRIPTS.map(s => `
                     <div class="vc-script-card">
                         <div class="vc-script-title">${s.title}</div>
                         <div class="vc-script-body">${s.body}</div>
-                    </div>`).join('');
+                    </div>`).join('') +
+                    `<div style="margin-top:14px; padding: 12px 0 4px; border-top: 1.5px solid var(--border);">
+                        <div style="font-size:0.78rem; font-weight:800; color:var(--text-secondary); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:10px;">📱 Scripts de Follow-up por Nº de Contato</div>
+                        ${SCRIPTS_FOLLOWUP.map(s => `
+                        <div class="vc-script-card" style="border-left: 4px solid ${s.cor}; margin-bottom:10px;">
+                            <div class="vc-script-title" style="color:${s.cor};">${s.title}</div>
+                            <div class="vc-script-body" style="white-space:pre-wrap;">${s.body.replace(/\n/g,'\n')}</div>
+                        </div>`).join('')}
+                    </div>`;
             },
 
             renderChecklistProspector() {
@@ -20159,6 +20285,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
 
                 const analise = this._consGerarAnalise(v);
                 this._consAnalysis = analise.fullText;
+                this._consAnaliseObj = analise;  // guarda objeto estruturado para o PDF
                 this._consData = v;
 
                 if (loading) loading.style.display = 'none';
@@ -20371,7 +20498,7 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                 return '';
             },
 
-            consDownloadPDF() {
+            async consDownloadPDF() {
                 if (!this._consAnalysis) {
                     if (window.UI && UI.showToast) UI.showToast('Faça a análise antes de baixar o PDF.', 'error'); return;
                 }
@@ -20379,457 +20506,789 @@ Regras: responda em português do Brasil, seja direto e prático, cite números 
                     const { jsPDF } = window.jspdf || window;
                     if (!jsPDF) { if (window.UI && UI.showToast) UI.showToast('jsPDF não carregado.', 'error'); return; }
 
-                    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+                    const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'portrait' });
                     const v = this._consData || {};
-                    const W = 210, H = 297;
-                    // Margens bem delimitadas
-                    const MG_LEFT = 18, MG_RIGHT = 18, MG_TOP = 18;
-                    const CW = W - MG_LEFT - MG_RIGHT;
-                    let y = 0;
+                    const W=210, H=297, MG=12, MGR=12, CW=W-MG-MGR;
 
-                    // ── PALETA CLARA E HARMONIOSA ───────────────────────────
-                    const C = {
-                        // Primários — tons suaves de ardósia/azul-acinzentado
-                        primary:   [52, 84, 105],     // azul-ardósia principal
-                        primaryM:  [74, 112, 138],    // médio
-                        primaryL:  [235, 242, 248],   // clarinho
-                        primaryXL: [247, 250, 253],   // quase branco
-                        // Acento — verde-sálvia harmonioso
-                        accent:    [72, 130, 100],    // verde-sálvia
-                        accentL:   [236, 248, 241],   // verde clarinho
-                        accentXL:  [248, 253, 250],   // verde quase branco
-                        // Warning — âmbar suave
-                        warn:      [159, 111, 23],
-                        warnL:     [254, 248, 230],
-                        // Danger — vermelho suave
-                        danger:    [172, 55, 55],
-                        dangerL:   [254, 235, 235],
+                    /* ═══════════════════════════════════════════════
+                       PALETA — cores sólidas (jsPDF não suporta alpha)
+                    ═══════════════════════════════════════════════ */
+                    const P = {
+                        // Verdes
+                        g1:[20,38,22],   g2:[38,64,41],   g3:[58,92,63],
+                        g4:[90,130,96],  gL:[220,236,222],gXL:[240,246,241],
+                        // Terracota
+                        t1:[196,114,74], t2:[218,148,108],tL:[245,228,215],tXL:[251,244,238],
+                        // Semânticas
+                        ok:[36,118,58],  okL:[218,244,226],okXL:[238,250,241],
+                        wa:[172,108,24], waL:[253,242,210],waXL:[255,250,232],
+                        er:[168,44,44],  erL:[252,225,225],erXL:[255,240,240],
                         // Neutros
-                        dark:      [34, 42, 54],      // quase preto azulado
-                        textMid:   [78, 94, 114],     // cinza-azul médio
-                        muted:     [140, 156, 172],   // cinza claro
-                        border:    [213, 222, 232],   // borda suave
-                        borderL:   [232, 238, 245],   // borda levíssima
-                        bg:        [249, 251, 253],   // fundo levíssimo
-                        bgAlt:     [243, 247, 251],   // alternado
-                        white:     [255, 255, 255],
-                        // Separador topo capa
-                        capaTopo:  [38, 62, 80],      // escuro capa
-                        capaAcc:   [72, 130, 100],    // acento verde capa
+                        bk:[22,32,24],   mk:[78,100,82],  mt:[138,158,142],
+                        b0:[236,241,234],b1:[245,248,243],b2:[251,253,250],
+                        wh:[255,255,255],
+                        bd:[205,218,207],bdL:[228,237,230],
+                        // Sombra simulada (cinza muito claro)
+                        sh:[210,218,212],
                     };
 
-                    // ── HELPERS ─────────────────────────────────────────────
-                    const br0 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
-                    const br2 = n => 'R$ ' + (n||0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-                    const pct = n => (n||0).toFixed(1) + '%';
+                    /* ═══════════════════════════════════════════════
+                       FUNÇÕES BASE
+                    ═══════════════════════════════════════════════ */
+                    const br2 = n=>'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+                    const br0 = n=>'R$ '+(n||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0});
+                    const pct = n=>(n||0).toFixed(1)+'%';
 
-                    const sf  = (sz, stl, col) => { doc.setFontSize(sz); doc.setFont('helvetica', stl||'normal'); doc.setTextColor(...(col||C.dark)); };
-                    const fc  = (...col) => doc.setFillColor(...col);
-                    const dc  = (...col) => doc.setDrawColor(...col);
-                    const rect = (x,yy,w,h,fill,r) => { fc(...fill); r ? doc.roundedRect(x,yy,w,h,r,r,'F') : doc.rect(x,yy,w,h,'F'); };
-
-                    // Margem superior das páginas internas (após capa)
-                    const PAGE_TOP = MG_TOP;
-                    let pageNum = 1;
-
-                    const chk = (need) => {
-                        if (y + need > H - 20) {
-                            addFooter();
-                            doc.addPage();
-                            pageNum++;
-                            y = PAGE_TOP;
-                            addPageBg();
-                        }
+                    // Sanitiza Latin-1
+                    const S = s => {
+                        if (!s) return '';
+                        return String(s)
+                            .replace(/[àáâãä]/g,'a').replace(/[ÀÁÂÃÄ]/g,'A')
+                            .replace(/[èéêë]/g,'e').replace(/[ÈÉÊË]/g,'E')
+                            .replace(/[ìíîï]/g,'i').replace(/[ÌÍÎÏ]/g,'I')
+                            .replace(/[òóôõö]/g,'o').replace(/[ÒÓÔÕÖ]/g,'O')
+                            .replace(/[ùúûü]/g,'u').replace(/[ÙÚÛÜ]/g,'U')
+                            .replace(/ç/g,'c').replace(/Ç/g,'C')
+                            .replace(/[""„]/g,'"').replace(/[''‛]/g,"'")
+                            .replace(/[–—]/g,'-').replace(/[…]/g,'...')
+                            .replace(/[^\x20-\x7E]/g,'');
                     };
 
-                    const addPageBg = () => {
-                        // Fundo branco limpo
-                        fc(...C.white); doc.rect(0, 0, W, H, 'F');
-                        // Faixa superior fina com tom primário bem suave
-                        fc(...C.primaryL); doc.rect(0, 0, W, 2, 'F');
-                        // Faixa inferior fina accent verde
-                        fc(...C.accentL); doc.rect(0, H-2, W, 2, 'F');
-                        // Marca d'agua lateral — linha vertical bem suave
-                        fc(...C.borderL); doc.rect(MG_LEFT - 4, 0, 1, H, 'F');
-                        fc(...C.borderL); doc.rect(W - MG_RIGHT + 3, 0, 1, H, 'F');
+                    // Limpa texto IA: remove emojis, normaliza quebras
+                    const cleanAI = t => S(t||'')
+                        .replace(/\r\n/g,'\n')
+                        .replace(/([.!?])\s+([A-Z])/g,'$1\n$2')  // insere quebra após pontuação
+                        .replace(/([.!?])([A-Z])/g,'$1\n$2')     // sem espaço mas letra maiúscula
+                        .replace(/:\s*([A-Z])/g,':\n$1')          // após dois-pontos
+                        .replace(/\n{3,}/g,'\n\n')
+                        .trim();
+
+                    // Primitivos de desenho
+                    const fc=(...c)=>doc.setFillColor(...c);
+                    const dc=(...c)=>doc.setDrawColor(...c);
+                    const lw=w=>doc.setLineWidth(w);
+                    const sf=(sz,st,col)=>{doc.setFontSize(sz);doc.setFont('helvetica',st||'normal');if(col)doc.setTextColor(...col);};
+                    const FR=(x,y,w,h,col,r)=>{ fc(...col); r?doc.roundedRect(x,y,w,h,r,r,'F'):doc.rect(x,y,w,h,'F'); };
+                    const tx=(t,x,y,sz,st,col,al)=>{ sf(sz,st,col); doc.text(S(String(t)),x,y,{align:al||'left'}); };
+                    const ln=(x1,y1,x2,y2,col,w2,dash)=>{ dc(...col);lw(w2||0.2);if(dash)doc.setLineDash(dash);doc.line(x1,y1,x2,y2);if(dash)doc.setLineDash([]); };
+
+                    /* ── CARD com sombra simulada ── */
+                    const card=(x,y,w,h,bg,r,borderCol)=>{
+                        r=r||4;
+                        // Sombra (deslocada 0.8mm)
+                        FR(x+0.8,y+0.8,w,h,P.sh,r);
+                        // Corpo
+                        FR(x,y,w,h,bg||P.wh,r);
+                        if(borderCol){dc(...borderCol);lw(0.25);doc.roundedRect(x,y,w,h,r,r,'S');}
                     };
 
-                    const addFooter = () => {
-                        const fy = H - 16;
-                        // Linha separadora fina
-                        dc(...C.border); doc.setLineWidth(0.3); doc.line(MG_LEFT, fy, W - MG_RIGHT, fy);
-                        // Texto rodapé em duas partes
-                        sf(6, 'normal', C.muted);
-                        doc.text('Documento orientativo — nao substitui consultoria contabil ou juridica profissional', MG_LEFT, fy + 4.5);
-                        sf(6, 'normal', C.muted);
-                        doc.text('ImobiPro · ' + new Date().getFullYear() + '   |   Pag. ' + pageNum, W - MG_RIGHT, fy + 4.5, {align:'right'});
-                        sf(6, 'normal', C.muted);
-                        doc.text('habitacao.caixa.gov.br  |  receita.fazenda.gov.br', MG_LEFT, fy + 10);
+                    /* ── Header de card (faixa colorida com título) ── */
+                    const cardHdr=(x,y,w,h,col,title,icon)=>{
+                        FR(x,y,w,h,col,4);
+                        FR(x,y+h-4,w,4,col); // retângulo embaixo para fechar borda inferior
+                        // Ícone badge branco
+                        FR(x+5,y+2,h-4,h-4,P.wh,3);
+                        tx(icon||'#',x+5+(h-4)/2,y+h/2+1,6.5,'bold',col,'center');
+                        tx(S(title),x+h+4,y+h/2+1,8.5,'bold',P.wh);
                     };
 
-                    // Cabeçalho de seção — visual limpo com linha colorida lateral
-                    const sectionHeader = (title, _icon, accentCol) => {
-                        chk(14);
-                        // Linha colorida à esquerda
-                        fc(...(accentCol||C.primary)); doc.rect(MG_LEFT, y, 3, 9, 'F');
-                        // Fundo levíssimo para a faixa inteira
-                        fc(...C.bg); doc.rect(MG_LEFT + 3, y, CW - 3, 9, 'F');
-                        // Texto da seção
-                        sf(9, 'bold', accentCol||C.primary);
-                        doc.text(title, MG_LEFT + 8, y + 6.2);
-                        // Linha separadora inferior
-                        dc(...C.border); doc.setLineWidth(0.25); doc.line(MG_LEFT, y + 9, MG_LEFT + CW, y + 9);
-                        y += 13;
+                    /* ── Linha kv zebra dentro de card ── */
+                    const kv=(x,y,w,label,val,i,hl)=>{
+                        const bg=hl?hl.bg:(i%2===0?P.b1:P.b2);
+                        FR(x,y,w,7.5,bg);
+                        if(hl&&hl.bar){FR(x,y,3,7.5,hl.bar);}
+                        tx(S(label),x+(hl&&hl.bar?5:4),y+5.4,7.5,hl?'bold':'normal',hl?hl.tc:P.mk);
+                        tx(S(val),x+w-4,y+5.4,7.5,'bold',hl?hl.tc:P.bk,'right');
+                        ln(x,y+7.5,x+w,y+7.5,P.bdL,0.1);
                     };
 
-                    // Linha de info com zebra suave
-                    const infoRow = (label, value, altBg) => {
-                        chk(7);
-                        if (altBg) { fc(...C.bgAlt); doc.rect(MG_LEFT, y, CW, 6.5, 'F'); }
-                        sf(7.5, 'normal', C.textMid); doc.text(label, MG_LEFT + 3, y + 4.5);
-                        sf(7.5, 'bold', C.dark); doc.text(value, MG_LEFT + CW - 3, y + 4.5, {align:'right'});
-                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y+6.5, MG_LEFT+CW, y+6.5);
-                        y += 6.5;
+                    /* ── Linha kv DUPLA (2 colunas) ── */
+                    const kv2=(x,y,w,l1,v1,l2,v2,i)=>{
+                        const hw=(w-0.5)/2;
+                        FR(x,y,w,7.5,i%2===0?P.b1:P.b2);
+                        ln(x+hw+0.5,y,x+hw+0.5,y+7.5,P.bdL,0.1);
+                        tx(S(l1),x+4,y+5.4,7,'normal',P.mk);
+                        tx(S(v1),x+hw-3,y+5.4,7.5,'bold',P.bk,'right');
+                        tx(S(l2),x+hw+4,y+5.4,7,'normal',P.mk);
+                        tx(S(v2),x+w-3,y+5.4,7.5,'bold',P.bk,'right');
+                        ln(x,y+7.5,x+w,y+7.5,P.bdL,0.1);
                     };
 
-                    const textBlock = (content, indent) => {
-                        const ix = MG_LEFT + (indent||4);
-                        sf(8, 'normal', C.dark);
-                        const rawLines = (content||'').split('\n');
-                        rawLines.forEach(raw => {
-                            if (!raw.trim()) { y += 2.5; return; }
-                            const isBullet = /^[\s•\-*·]/.test(raw) || /^\d+\./.test(raw.trim());
-                            const isHeader = raw.includes(':') && raw.length < 60 && raw === raw.toUpperCase();
-                            const isSubHdr = raw.trim().endsWith(':') && raw.trim().length < 55;
+                    /* ── Total row ── */
+                    const kvTotal=(x,y,w,label,val,col)=>{
+                        FR(x,y,w,9,col||P.g2);
+                        FR(x,y,4,9,P.g1);
+                        tx(S(label),x+8,y+6.3,8,'bold',P.wh);
+                        tx(S(val),x+w-4,y+6.3,8.5,'bold',P.wh,'right');
+                    };
 
-                            if (isHeader) {
-                                chk(9);
-                                sf(8, 'bold', C.primary);
-                                doc.text(raw.trim().replace(/^[•\-*·]\s*/,''), ix, y+4); y += 6.5;
-                            } else if (isSubHdr) {
-                                chk(7);
-                                sf(7.5, 'bold', C.primaryM);
-                                doc.text(raw.trim(), ix, y+4); y += 5.5;
-                            } else {
-                                const clean = raw.trim().replace(/^[•\-*·]\s*/, '');
-                                const bx = isBullet ? ix + 4 : ix;
-                                const bcw = CW - (bx - MG_LEFT) - 4;
-                                if (isBullet) {
-                                    // Bullet como quadradinho accent
-                                    fc(...C.accent); doc.rect(ix, y+2.5, 2, 2, 'F');
+                    /* ── Seção title (separador horizontal) ── */
+                    let sN=0;
+                    const secHdr=(title,icon,col)=>{
+                        sN++;
+                        const c=col||P.g2;
+                        need(14);
+                        // Linha
+                        ln(MG,Y,MG+CW,Y,c,0.6);
+                        // Pill numerado
+                        FR(MG,Y-4,9,8,c,4);
+                        tx(String(sN),MG+4.5,Y+0.5,6,'bold',P.wh,'center');
+                        // Ícone
+                        tx(icon||'',MG+12,Y+0.5,8.5,'bold',c);
+                        // Título
+                        tx(S(title),MG+22,Y+0.5,9,'bold',c);
+                        Y+=10;
+                    };
+
+                    /* ── Renderiza texto IA com hierarquia visual ── */
+                    const renderAI=(rawTxt,cardX,cardW,skipCard)=>{
+                        if(!rawTxt||!rawTxt.trim()){return;}
+                        const iw=cardW-10, ix=cardX+5;
+                        const lines=cleanAI(rawTxt).split('\n');
+                        lines.forEach(line=>{
+                            const t=line.trim();
+                            if(!t){Y+=2;return;}
+                            const isNum=/^\d+[\.\)]\s+/.test(t);
+                            const isBul=/^[-*]\s+/.test(t);
+                            const isHd=!isNum&&!isBul&&t.endsWith(':')&&t.length<80;
+
+                            if(isHd){
+                                need(10);
+                                FR(cardX,Y,cardW,9,P.b0);
+                                FR(cardX,Y,3,9,P.g3);
+                                tx(t,cardX+6,Y+6.5,7.5,'bold',P.g2);
+                                Y+=11;
+                            } else if(isNum||isBul){
+                                const body=t.replace(/^\d+[\.\)]\s+/,'').replace(/^[-*]\s+/,'');
+                                doc.setFontSize(8); const wrap=doc.splitTextToSize(body,iw-8);
+                                const rh=wrap.length*5.5+4;
+                                need(rh+1);
+                                FR(cardX,Y,cardW,rh,P.b2);
+                                if(isNum){
+                                    const nm=t.match(/^(\d+)/)[1];
+                                    FR(ix,Y+1.5,5.5,5.5,P.g2,1.5);
+                                    tx(nm,ix+2.75,Y+5.3,5.5,'bold',P.wh,'center');
+                                }else{
+                                    FR(ix+1,Y+3.5,2.5,2.5,P.t1);
                                 }
-                                const wrapped = doc.splitTextToSize(clean, bcw);
-                                sf(8, 'normal', C.dark);
-                                wrapped.forEach(wl => {
-                                    chk(5.5);
-                                    doc.text(wl, bx, y+4);
-                                    y += 5.5;
-                                });
+                                sf(8,'normal',P.bk);
+                                wrap.forEach((wl,wi)=>doc.text(wl,ix+8,Y+5.5+wi*5.5));
+                                ln(cardX,Y+rh,cardX+cardW,Y+rh,P.bdL,0.1);
+                                Y+=rh+0.5;
+                            } else {
+                                doc.setFontSize(8);
+                                const wrap=doc.splitTextToSize(t,iw);
+                                const rh=wrap.length*5.5+3;
+                                need(rh+1);
+                                FR(cardX,Y,cardW,rh,P.b2);
+                                sf(8,'normal',P.bk);
+                                wrap.forEach(wl=>{doc.text(wl,ix,Y+5.5);Y+=5.5;});
+                                ln(cardX,Y,cardX+cardW,Y,P.bdL,0.1);
+                                Y+=2;
                             }
                         });
-                        y += 3;
+                        Y+=3;
                     };
 
-                    // ══════════════════════════════════════════════════════
-                    // PÁGINA 1 — CAPA PROFISSIONAL
-                    // ══════════════════════════════════════════════════════
-                    // Fundo branco limpo
-                    fc(...C.white); doc.rect(0, 0, W, H, 'F');
-
-                    // Bloco superior (capa) — tom primário elegante
-                    fc(...C.capaTopo); doc.rect(0, 0, W, 68, 'F');
-                    // Acento verde sálvia — faixa fina divisória
-                    fc(...C.capaAcc); doc.rect(0, 68, W, 3, 'F');
-                    // Fundo restante da capa
-                    fc(...C.primaryXL); doc.rect(0, 71, W, H - 71, 'F');
-                    // Bordas laterais muito sutis
-                    fc(...C.primaryL); doc.rect(0, 71, 2, H - 71, 'F');
-                    fc(...C.primaryL); doc.rect(W - 2, 71, 2, H - 71, 'F');
-
-                    // Título principal
-                    sf(26, 'bold', C.white);
-                    doc.text('CONSULTORIA', MG_LEFT, 24);
-                    sf(26, 'bold', C.capaAcc);
-                    doc.text('FINANCEIRA', MG_LEFT, 38);
-                    sf(9, 'normal', [190, 210, 225]);
-                    doc.text('Analise completa de credito imobiliario — ImobiPro', MG_LEFT, 50);
-
-                    // Data / brand à direita
-                    sf(7, 'normal', [170, 195, 215]);
-                    doc.text('ImobiPro', W - MG_RIGHT, 20, {align:'right'});
-                    doc.text('Emitido em ' + new Date().toLocaleDateString('pt-BR'), W - MG_RIGHT, 28, {align:'right'});
-                    doc.text('Documento Orientativo', W - MG_RIGHT, 36, {align:'right'});
-
-                    y = 82;
-
-                    // ── SCORES (4 cards em linha) ────────────────────────
-                    const compPct = v.comprometimento || 0;
-                    const compCor  = compPct <= 20 ? C.accent  : compPct <= 30 ? C.warn  : C.danger;
-                    const compCorL = compPct <= 20 ? C.accentL : compPct <= 30 ? C.warnL : C.dangerL;
-                    const compLabel = compPct <= 20 ? 'EXCELENTE' : compPct <= 30 ? 'BOM' : compPct <= 35 ? 'ATENCAO' : 'CRITICO';
-                    const restricaoCor  = v.restricao === 'sim' ? C.danger  : C.accent;
-                    const restricaoCorL = v.restricao === 'sim' ? C.dangerL : C.accentL;
-                    const restricaoLabel = v.restricao === 'sim' ? 'RESTRICAO' : v.restricao === 'desconhecido' ? 'VERIFICAR' : 'LIMPO';
-
-                    const cw4 = (CW - 9) / 4;
-                    const cardH = 26;
-
-                    const cards4 = [
-                        { label: 'RENDA BRUTA',     val: br0(v.rendaTotal||0), sub: 'mensal',   bg: C.primary,   bgL: C.primaryL,  tc: C.white, tdark: C.primary },
-                        { label: 'COMPROMETIMENTO', val: pct(compPct),         sub: compLabel,  bg: compCor,     bgL: compCorL,    tc: C.white, tdark: compCor },
-                        { label: 'FGTS + POUPANCA', val: br0((v.fgts||0)+(v.poupanca||0)), sub: 'disponivel', bg: C.primaryM, bgL: C.primaryL, tc: C.white, tdark: C.primaryM },
-                        { label: 'CPF / SCORE',    val: restricaoLabel, sub: v.restricao==='sim'?'Regularizar':'Consultar Serasa', bg: restricaoCor, bgL: restricaoCorL, tc: C.white, tdark: restricaoCor },
-                    ];
-
-                    cards4.forEach((c2, i) => {
-                        const cx = MG_LEFT + i * (cw4 + 3);
-                        // Card com fundo colorido suave e borda top colorida
-                        fc(...c2.bgL); doc.roundedRect(cx, y, cw4, cardH, 3, 3, 'F');
-                        fc(...c2.bg);  doc.roundedRect(cx, y, cw4, 4, 3, 3, 'F');
-                        // Label
-                        sf(5.5, 'bold', c2.tc); doc.text(c2.label, cx + cw4/2, y + 3, {align:'center'});
-                        // Valor
-                        sf(9, 'bold', c2.tdark); doc.text(c2.val, cx + cw4/2, y + 15, {align:'center'});
-                        // Sub
-                        sf(6, 'normal', C.textMid); doc.text(c2.sub, cx + cw4/2, y + 22, {align:'center'});
-                    });
-                    y += cardH + 10;
-
-                    // ── TABELA RESUMO PERFIL ─────────────────────────────
-                    sectionHeader('RESUMO DO PERFIL FINANCEIRO', '', C.primary);
-
-                    // 2 colunas
-                    const col1 = MG_LEFT, col2 = MG_LEFT + CW/2 + 2;
-                    const colW = CW/2 - 2;
-
-                    const profileRows = [
-                        [['Renda CLT/Formal', br2(v.rendaClt||0)], ['Renda MEI/PJ', br2(v.rendaMei||0)]],
-                        [['Renda Autonomo', br2(v.rendaAut||0)], ['Renda Alugueis', br2(v.rendaAlug||0)]],
-                        [['Aposentadoria', br2(v.rendaApo||0)], ['Outras Rendas', br2(v.rendaOut||0)]],
-                        [['TOTAL BRUTO', br2(v.rendaTotal||0)], ['Renda Efetiva', br2(v.rendaEfetiva||0)]],
-                        [['Financiamentos', br2(v.divFinanc||0)], ['Cartao de Credito', br2(v.divCartao||0)]],
-                        [['Emprestimos', br2(v.divEmprest||0)], ['Aluguel Atual', br2(v.divAluguel||0)]],
-                        [['TOTAL DIVIDAS', br2(v.totalDividas||0)], ['Comprometimento', pct(compPct) + ' (lim: 30%)']],
-                        [['Saldo FGTS', br2(v.fgts||0)], ['Poupanca/Invest.', br2(v.poupanca||0)]],
-                        [['Dependentes', (v.dependentes||0) + ' pessoa(s)'], ['Vinculo', ({clt:'CLT',servidor:'Servidor',mei:'MEI',autonomo:'Autonomo',aposentado:'Aposentado',empresario:'Empresario'}[v.vinculo]||v.vinculo||'—')]],
-                    ];
-
-                    profileRows.forEach((pair, ri) => {
-                        chk(7);
-                        const altBg = ri % 2 === 0;
-                        if (altBg) { fc(...C.bgAlt); doc.rect(MG_LEFT, y, CW, 6.5, 'F'); }
-                        pair.forEach((cell, ci) => {
-                            const cx = ci === 0 ? col1 : col2;
-                            const isTotalRow = cell[0].startsWith('TOTAL') || cell[0] === 'Comprometimento';
-                            sf(7, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.primary : C.textMid);
-                            doc.text(cell[0], cx + 3, y + 4.5);
-                            sf(7.5, isTotalRow ? 'bold' : 'normal', isTotalRow ? C.primary : C.dark);
-                            doc.text(cell[1], cx + colW - 3, y + 4.5, {align:'right'});
-                        });
-                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y+6.5, MG_LEFT+CW, y+6.5);
-                        // vertical separator
-                        dc(...C.border); doc.line(MG_LEFT + CW/2, y, MG_LEFT + CW/2, y+6.5);
-                        y += 6.5;
-                    });
-                    y += 5;
-
-                    // ── BARRA DE COMPROMETIMENTO ─────────────────────────
-                    chk(20);
-                    sf(7.5, 'bold', C.dark); doc.text('Comprometimento de Renda (limite Caixa: 30%)', MG_LEFT, y+4); y += 7;
-                    // track background suave
-                    fc(...C.borderL); doc.roundedRect(MG_LEFT, y, CW, 7, 3.5, 3.5, 'F');
-                    // fill colorido
-                    const barW = Math.min(CW, (compPct / 100) * CW);
-                    fc(...compCor); doc.roundedRect(MG_LEFT, y, Math.max(barW, 3), 7, 3.5, 3.5, 'F');
-                    // Marcador 30%
-                    const marker30 = MG_LEFT + CW * 0.30;
-                    dc(...C.danger); doc.setLineWidth(0.5); doc.setLineDash([1, 1]); doc.line(marker30, y - 2, marker30, y + 9); doc.setLineDash([]);
-                    sf(6, 'bold', C.danger); doc.text('30%', marker30 + 1, y - 0.5);
-                    sf(7.5, 'bold', compCor); doc.text(pct(compPct), MG_LEFT + barW - 1, y + 5, {align:'right'});
-                    y += 13;
-
-                    // ══════════════════════════════════════════════════════
-                    // Extrair seções do texto
-                    // ══════════════════════════════════════════════════════
-                    const extr = (key) => {
-                        const keys = key.split('|');
-                        for (const k of keys) {
-                            const rx = new RegExp('##' + k + '##\\s*([\\s\\S]*?)(?=##[A-Z_]+##|$)', 'i');
-                            const m = (this._consAnalysis||'').match(rx);
-                            if (m) return m[1].trim();
-                        }
-                        return '';
-                    };
-                    const secSaude = extr('SAUDE_FINANCEIRA|SAÚDE_FINANCEIRA');
-                    const secPend  = extr('PENDENCIAS|PENDÊNCIAS');
-                    const secIR    = extr('IMPOSTO_DE_RENDA');
-                    const secCaixa = extr('DICAS_CAIXA');
-                    const secPlano = extr('PLANO_ORGANIZACAO|PLANO_ORGANIZAÇÃO');
-
-                    // ── SAÚDE FINANCEIRA ─────────────────────────────────
-                    const saudeCor = compPct <= 20 ? C.accent : compPct <= 30 ? C.warn : C.danger;
-                    const saudeCbg = compPct <= 20 ? C.accentL : compPct <= 30 ? C.warnL : C.dangerL;
-                    chk(14);
-                    sectionHeader('SAUDE FINANCEIRA', '', saudeCor);
-                    // Bloco de fundo levíssimo para a seção
-                    fc(...saudeCbg); doc.roundedRect(MG_LEFT, y, CW, 3, 2, 2, 'F');
-                    y += 2;
-                    textBlock(secSaude);
-
-                    // ── PENDÊNCIAS ──────────────────────────────────────
-                    chk(14);
-                    sectionHeader('PENDENCIAS IDENTIFICADAS', '', C.danger);
-                    textBlock(secPend);
-
-                    // ── TABELA IR ────────────────────────────────────────
-                    chk(80);
-                    sectionHeader('IMPOSTO DE RENDA — REGRAS 2025', '', C.warn);
-
-                    // Tabela de faixas — nova paleta harmoniosa
-                    const irFaixas = [
-                        ['Ate R$ 2.259,20 / mes',      'ISENTO', '0%',              C.accent,  C.accentL],
-                        ['R$ 2.259,21 a R$ 2.826,65',  '7,5%',   'Ded. R$ 169,44', C.accent,  C.accentXL],
-                        ['R$ 2.826,66 a R$ 3.751,05',  '15%',    'Ded. R$ 381,44', C.warn,    C.warnL],
-                        ['R$ 3.751,06 a R$ 4.664,68',  '22,5%',  'Ded. R$ 662,77', C.warn,    C.warnL],
-                        ['Acima de R$ 4.664,68',        '27,5%',  'Ded. R$ 896,00', C.danger,  C.dangerL],
-                    ];
-
-                    // Header da tabela
-                    fc(...C.primary); doc.rect(MG_LEFT, y, CW, 7, 'F');
-                    sf(7, 'bold', C.white);
-                    doc.text('FAIXA DE RENDA MENSAL', MG_LEFT + 4, y + 4.8);
-                    doc.text('ALIQUOTA', MG_LEFT + CW * 0.56, y + 4.8, {align:'center'});
-                    doc.text('DEDUCAO MENSAL', MG_LEFT + CW * 0.82, y + 4.8, {align:'center'});
-                    y += 7;
-
-                    const rendaMes = (v.rendaClt||0) + (v.rendaApo||0);
-                    irFaixas.forEach(([faixa, aliq, ded, cor, bgCor]) => {
-                        const isActive = (
-                            (faixa.includes('2.259') && rendaMes <= 2259.20) ||
-                            (faixa.includes('2.826') && rendaMes > 2259.20 && rendaMes <= 2826.65) ||
-                            (faixa.includes('3.751') && rendaMes > 2826.65 && rendaMes <= 3751.05) ||
-                            (faixa.includes('4.664') && rendaMes > 3751.05 && rendaMes <= 4664.68) ||
-                            (faixa.includes('Acima') && rendaMes > 4664.68)
-                        );
-                        fc(...(isActive ? bgCor : C.white)); doc.rect(MG_LEFT, y, CW, 6.5, 'F');
-                        if (isActive) {
-                            fc(...cor); doc.rect(MG_LEFT, y, 3, 6.5, 'F');
-                            sf(7, 'bold', cor); doc.text('> ' + faixa, MG_LEFT + 5, y + 4.5);
-                        } else {
-                            sf(7, 'normal', C.textMid); doc.text(faixa, MG_LEFT + 5, y + 4.5);
-                        }
-                        sf(7, isActive ? 'bold' : 'normal', isActive ? cor : C.muted);
-                        doc.text(aliq, MG_LEFT + CW * 0.56, y + 4.5, {align:'center'});
-                        doc.text(ded,  MG_LEFT + CW * 0.82, y + 4.5, {align:'center'});
-                        dc(...C.borderL); doc.setLineWidth(0.15); doc.line(MG_LEFT, y + 6.5, MG_LEFT + CW, y + 6.5);
-                        y += 6.5;
-                    });
-                    y += 4;
-
-                    // Texto IR restante
-                    const irSemTabela = (secIR||'').replace(/TABELA IRPF[\s\S]*?27,5%\n/,'');
-                    textBlock(irSemTabela);
-
-                    // ── DICAS CAIXA ──────────────────────────────────────
-                    chk(14);
-                    sectionHeader('APROVACAO NA CAIXA ECONOMICA FEDERAL', '', C.primaryM);
-                    textBlock(secCaixa);
-
-                    // ── PLANO 30-60-90 ───────────────────────────────────
-                    chk(14);
-                    sectionHeader('PLANO DE ACAO — 30 / 60 / 90 DIAS', '', C.accent);
-
-                    // 3 colunas de prazo com nova paleta
-                    const prazoCols = [
-                        { titulo: '30 DIAS', cor: C.primary,  bgCor: C.primaryL  },
-                        { titulo: '60 DIAS', cor: C.primaryM, bgCor: C.primaryXL },
-                        { titulo: '90 DIAS', cor: C.accent,   bgCor: C.accentL   },
-                    ];
-                    const cwP = (CW - 6) / 3;
-                    chk(8);
-                    prazoCols.forEach((p, i) => {
-                        const px = MG_LEFT + i * (cwP + 3);
-                        fc(...p.cor); doc.roundedRect(px, y, cwP, 8, 2, 2, 'F');
-                        sf(7.5, 'bold', C.white); doc.text(p.titulo, px + cwP / 2, y + 5.5, {align:'center'});
-                    });
-                    y += 10;
-
-                    // Extrair linhas por bloco de dias
-                    const planoLines = (secPlano||'').split('\n').filter(l => l.trim());
-                    const blocos = [[], [], []];
-                    let blocoAtual = 0;
-                    planoLines.forEach(l => {
-                        if (/30.DIAS|proximos.30/i.test(l)) { blocoAtual = 0; return; }
-                        if (/60.DIAS|proximos.60/i.test(l)) { blocoAtual = 1; return; }
-                        if (/90.DIAS|proximos.90/i.test(l)) { blocoAtual = 2; return; }
-                        if (l.trim()) blocos[blocoAtual].push(l.trim());
-                    });
-
-                    const maxRows = Math.max(blocos[0].length, blocos[1].length, blocos[2].length, 1);
-                    for (let ri = 0; ri < maxRows; ri++) {
-                        chk(7);
-                        const rowBg = ri % 2 === 0;
-                        prazoCols.forEach((p, ci) => {
-                            const px = MG_LEFT + ci * (cwP + 3);
-                            if (rowBg) { fc(...p.bgCor); doc.rect(px, y, cwP, 6.5, 'F'); }
-                            const txt = blocos[ci][ri] || '';
-                            const clean = txt.replace(/^[\d\.•\-*·]\s*/, '').replace(/^\d+\.\s*/, '');
-                            if (clean) {
-                                const wrapped = doc.splitTextToSize(clean, cwP - 6);
-                                sf(7, 'normal', C.dark);
-                                doc.text(wrapped[0] || '', px + 3, y + 4.5);
+                    /* ── Estima altura do bloco IA ── */
+                    const estAI=(raw,cw2)=>{
+                        if(!raw||!raw.trim())return 14;
+                        let h2=0;
+                        cleanAI(raw).split('\n').forEach(line=>{
+                            const t=line.trim();
+                            if(!t){h2+=2;return;}
+                            const isNum=/^\d+[\.\)]\s+/.test(t);
+                            const isBul=/^[-*]\s+/.test(t);
+                            const isHd=!isNum&&!isBul&&t.endsWith(':')&&t.length<80;
+                            if(isHd){h2+=11;}
+                            else if(isNum||isBul){
+                                const body=t.replace(/^\d+[\.\)]\s+/,'').replace(/^[-*]\s+/,'');
+                                doc.setFontSize(8);h2+=doc.splitTextToSize(body,cw2-18).length*5.5+4.5;
+                            }else{
+                                doc.setFontSize(8);h2+=doc.splitTextToSize(t,cw2-10).length*5.5+3;
                             }
                         });
-                        dc(...C.borderL); doc.setLineWidth(0.15);
-                        prazoCols.forEach((p, ci) => {
-                            const px = MG_LEFT + ci * (cwP + 3);
-                            doc.line(px, y + 6.5, px + cwP, y + 6.5);
-                        });
-                        y += 6.5;
+                        return h2+8;
+                    };
+
+                    /* ── Card IA completo com header ── */
+                    const cardAI=(hdrTitle,hdrIcon,hdrCol,rawTxt,fallbackMsg)=>{
+                        const HDH=12;
+                        const contH=rawTxt&&rawTxt.trim()?estAI(rawTxt,CW):14;
+                        const totalH=HDH+contH+4;
+                        need(totalH+6);
+                        card(MG,Y,CW,totalH,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,HDH,hdrCol||P.g2,hdrTitle,hdrIcon||'i');
+                        const bodyY=Y+HDH+2;
+                        if(rawTxt&&rawTxt.trim()){
+                            const savedY=Y; Y=bodyY;
+                            renderAI(rawTxt,MG,CW);
+                            Y=Math.max(Y,savedY+totalH+2);
+                        }else{
+                            FR(MG,bodyY,CW,12,P.okL);FR(MG,bodyY,3,12,P.ok);
+                            tx(S(fallbackMsg||'Analise nao disponivel.'),MG+7,bodyY+8.5,8,'normal',P.ok);
+                            Y+=totalH+6;
+                        }
+                        Y+=4;
+                    };
+
+                    /* ═══════════════════════════════════════════════
+                       DADOS DO CORRETOR
+                    ═══════════════════════════════════════════════ */
+                    const settings=(await DB.get('settings','main'))||{};
+                    const corNome =settings.nome||'';
+                    const corTel  =settings.telefone||'';
+                    const corImob =settings.imobiliaria||'ImobiPro';
+                    const corCreci=settings.creci||'';
+                    const corEmail=settings.email||'';
+                    const nomeCli =v.clienteNome||'';
+
+                    /* ═══════════════════════════════════════════════
+                       PAGINAÇÃO
+                    ═══════════════════════════════════════════════ */
+                    let Y=0, pg=0;
+
+                    const pageBg=()=>{
+                        FR(0,0,W,H,P.wh);            // fundo branco
+                        FR(0,0,2,H,P.g2);             // barra esq verde
+                        FR(W-1.5,0,1.5,H,P.bdL);      // barra dir
+                        // Header
+                        FR(2,0,W-3.5,12,P.gXL);
+                        ln(2,12,W-1.5,12,P.bd,0.3);
+                        const hn=S(corNome||corImob);
+                        tx(hn,MG,8.5,6.5,'bold',P.g2);
+                        tx('pagina '+pg,W-MGR,8.5,6,'normal',P.mt,'right');
+                        // Footer
+                        FR(0,H-10,W,10,P.g1);
+                        ln(0,H-10,W,H-10,P.g2,0.3);
+                        tx('Documento orientativo — nao substitui consultoria contabil ou juridica profissional',MG,H-5,5.5,'normal',P.gL);
+                        tx('habitacao.caixa.gov.br  |  receita.fazenda.gov.br',W-MGR,H-5,5.5,'normal',P.t1,'right');
+                    };
+
+                    const newPg=(skip)=>{
+                        if(pg>0&&!skip)doc.addPage();
+                        pg++;Y=0;pageBg();Y=16;
+                    };
+
+                    const need=(n)=>{if(Y+n>H-14)newPg();};
+
+                    /* ═══════════════════════════════════════════════
+                       DADOS DE ANÁLISE IA
+                    ═══════════════════════════════════════════════ */
+                    const A=this._consAnaliseObj||{};
+                    const getRaw=(field,fbs)=>{
+                        if(A[field]&&A[field].trim())return A[field];
+                        const full=this._consAnalysis||'';
+                        for(const k of fbs){
+                            const rx=new RegExp('##\\s*'+k+'\\s*##[^#]*?\\n([\\s\\S]*?)(?=##|$)','i');
+                            const m=full.match(rx);
+                            if(m&&m[1].trim())return m[1].trim();
+                        }
+                        return'';
+                    };
+                    const rawSaude=getRaw('saude',  ['SAUDE_FINANCEIRA','SAUDE']);
+                    const rawPend =getRaw('pendencias',['PENDENCIAS','PENDENCIA']);
+                    const rawIR   =getRaw('ir',      ['IMPOSTO_DE_RENDA','IR']);
+                    const rawCaixa=getRaw('caixa',   ['DICAS_CAIXA','APROVACAO_CAIXA','CAIXA']);
+                    const rawPlano=getRaw('plano',   ['PLANO_ORGANIZACAO','PLANO_ACAO','PLANO']);
+
+                    /* ═══════════════════════════════════════════════
+                       CAPA — página 1
+                    ═══════════════════════════════════════════════ */
+                    pg=1; Y=0;
+
+                    // Gradiente simulado topo: faixas horizontais verde escuro → médio
+                    const CH=Math.round(H*0.58);
+                    for(let i=0;i<70;i++){
+                        const t=i/70;
+                        fc(Math.round(20+t*20),Math.round(38+t*32),Math.round(22+t*24));
+                        doc.rect(0,i*(CH/70),W,CH/70+0.6,'F');
                     }
-                    y += 7;
+                    // Faixa terracota
+                    FR(0,CH,W,6,P.t1);
+                    // Base creme
+                    FR(0,CH+6,W,H-CH-6,P.b0);
+                    // Barra esq accent
+                    FR(0,0,3,CH,P.g3);
 
-                    // ── DEDUÇÕES IR (box) — design limpo ─────────────────
-                    chk(44);
-                    // Borda esquerda accent
-                    fc(...C.warn); doc.rect(MG_LEFT, y, 3, 42, 'F');
-                    // Fundo suave
-                    fc(...C.warnL); doc.rect(MG_LEFT + 3, y, CW - 3, 42, 'F');
-                    // Header
-                    sf(8, 'bold', C.warn);
-                    doc.text('DEDUCOES PERMITIDAS NO IR 2025', MG_LEFT + 8, y + 6);
-                    dc(...C.border); doc.setLineWidth(0.25);
-                    doc.line(MG_LEFT + 3, y + 9, MG_LEFT + CW, y + 9);
-                    y += 12;
-                    const deds = [
-                        ['Dependentes',         'R$ 2.275,08 / ano por dependente'],
-                        ['Plano de Saude',       '100% dedutivel (sem limite)'],
-                        ['Educacao',             'Ate R$ 3.561,50 / ano por pessoa'],
-                        ['Previdencia PGBL',     'Ate 12% da renda bruta anual'],
-                        ['Pensao Alimenticia',   '100% dedutivel (com ordem judicial)'],
-                        ['INSS recolhido',       '100% dedutivel'],
+                    // Decoração: círculos sólidos sobrepostos
+                    fc(...P.g3); doc.circle(W-6,10,30,'F');
+                    fc(...P.g2); doc.circle(W+2,30,18,'F');
+                    fc(...P.g1); doc.circle(W-2,56,22,'F');
+                    // Ponto decorativo terracota
+                    FR(W-28,CH-11,10,10,P.t1,5);
+
+                    // Linhas decorativas horizontais
+                    dc(...P.g3); lw(0.3);
+                    for(let i=0;i<7;i++) doc.line(3,CH-54+i*9,65,CH-54+i*9);
+
+                    // Badge logo
+                    FR(MG,14,26,26,P.t1,5);
+                    tx('IP',MG+13,29.5,15,'bold',P.wh,'center');
+
+                    // Título
+                    tx('CONSULTORIA',MG,58,32,'bold',P.wh);
+                    FR(MG,61.5,72,2,P.t1);  // linha accent
+                    tx('FINANCEIRA',MG,74,32,'bold',P.gL);
+                    tx('Analise completa de credito imobiliario  ·  IR  ·  FGTS  ·  Caixa',MG,83,9,'normal',P.g4);
+
+                    // Meta dados canto direito
+                    const dtE=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+                    tx('Emitido em '+dtE,W-MGR,32,6.5,'normal',P.g4,'right');
+                    tx('Versao 2.0',W-MGR,40,6.5,'normal',P.g4,'right');
+
+                    // Card do corretor (fundo escuro semi-opaco → sólido)
+                    const bxY=CH-38;
+                    FR(MG,bxY,CW,30,[28,48,31],4);
+                    dc(...P.t1); lw(0.7); doc.roundedRect(MG,bxY,CW,30,4,4,'S');
+                    FR(MG+5,bxY+7,16,16,P.t1,3);
+                    tx('C',MG+13,bxY+17,10,'bold',P.wh,'center');
+                    const nd=S(corNome||corImob);
+                    const cr=corCreci?'   CRECI: '+S(corCreci):'';
+                    tx(nd+cr,MG+26,bxY+15,8.5,'bold',[222,242,226]);
+                    const cp=[]; if(corTel)cp.push('Tel: '+S(corTel)); if(corEmail)cp.push(S(corEmail)); if(corImob)cp.push(S(corImob));
+                    tx(cp.join('   |   '),MG+26,bxY+23,7,'normal',P.g4);
+
+                    // 4 KPI cards
+                    const cPct=v.comprometimento||0;
+                    const cOk=cPct<=20, cBom=cPct<=30;
+                    const cCor=cOk?P.ok:cBom?P.wa:P.er;
+                    const cCorL=cOk?P.okL:cBom?P.waL:P.erL;
+                    const cLbl=cOk?'EXCELENTE':cBom?'BOM':cPct<=35?'ATENCAO':'CRITICO';
+                    const rCor=v.restricao==='sim'?P.er:P.ok;
+                    const rLbl=v.restricao==='sim'?'RESTRICAO':v.restricao==='desconhecido'?'VERIFICAR':'LIMPO';
+                    const cw4=(CW-9)/4, cY=CH+10;
+                    const kpis=[
+                        {lbl:'RENDA BRUTA',  val:br0(v.rendaTotal||0), sub:'mensal',    tc:P.g2},
+                        {lbl:'COMPROMETIM.', val:pct(cPct),             sub:cLbl,        tc:cCor},
+                        {lbl:'FGTS+POUPANCA',val:br0((v.fgts||0)+(v.poupanca||0)),sub:'disponivel',tc:P.g3},
+                        {lbl:'NOME / CPF',   val:rLbl, sub:v.restricao==='sim'?'Regularizar':'Consulte Serasa',tc:rCor},
                     ];
-                    deds.forEach(([label, val], i) => {
-                        if (i % 2 === 0) { fc(...C.warnL); } else { fc(...C.white); }
-                        doc.rect(MG_LEFT + 4, y, CW - 7, 5.5, 'F');
-                        sf(7, 'bold', C.warn); doc.text(label, MG_LEFT + 7, y + 4);
-                        sf(7, 'normal', C.dark); doc.text(val, MG_LEFT + CW - 4, y + 4, {align:'right'});
-                        y += 5.5;
+                    kpis.forEach((k,i)=>{
+                        const cx=MG+i*(cw4+3);
+                        // Sombra
+                        FR(cx+0.8,cY+0.8,cw4,28,P.sh,4);
+                        // Card body
+                        FR(cx,cY,cw4,28,P.wh,4);
+                        // Top bar
+                        FR(cx,cY,cw4,8,k.tc,4); FR(cx,cY+5,cw4,3,k.tc);
+                        // Textos
+                        tx(k.lbl,cx+cw4/2,cY+6,5.5,'bold',P.wh,'center');
+                        tx(S(k.val),cx+cw4/2,cY+18.5,9,'bold',k.tc,'center');
+                        tx(S(k.sub),cx+cw4/2,cY+24.5,5.5,'normal',P.mk,'center');
                     });
-                    y += 10;
 
-                    // Rodapé na última página
-                    addFooter();
+                    tx('Analise personalizada por IA  ·  Documento confidencial',W/2,H-6,6,'normal',P.mt,'center');
 
-                    doc.save('cartilha-consultoria-imobipro-' + new Date().toISOString().slice(0, 10) + '.pdf');
-                    if (window.UI && UI.showToast) UI.showToast('✅ Cartilha PDF profissional baixada!');
+                    /* ═══════════════════════════════════════════════
+                       PÁGINA 2 — Perfil financeiro completo
+                    ═══════════════════════════════════════════════ */
+                    newPg();
+
+                    // Banner interno
+                    FR(MG,Y-2,CW,18,P.g1,3);
+                    FR(MG,Y-2,6,18,P.t1,3); FR(MG,Y-2,6,9,P.t1);
+                    tx('CONSULTORIA FINANCEIRA IMOBILIARIA',MG+10,Y+8,10,'bold',P.wh);
+                    if(nomeCli) tx('Cliente: '+S(nomeCli),W-MGR,Y+8,7.5,'normal',P.g4,'right');
+                    Y+=22;
+
+                    /* ── SEÇÃO 1: Perfil ──────────────────────────── */
+                    secHdr('RESUMO DO PERFIL FINANCEIRO','[1]',P.g2);
+
+                    // CARD Renda
+                    {
+                        const rows=[
+                            ['Renda CLT / Formal',br2(v.rendaClt||0),'Renda MEI / PJ',br2(v.rendaMei||0)],
+                            ['Renda Autonomo',br2(v.rendaAut||0),'Renda Alugueis',br2(v.rendaAlug||0)],
+                            ['Aposentadoria',br2(v.rendaApo||0),'Outras Rendas',br2(v.rendaOut||0)],
+                        ];
+                        const h2=13+rows.length*7.5+9+2;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.g2,'FONTES DE RENDA','$');
+                        let cy=Y+14;
+                        rows.forEach((r,i)=>{ kv2(MG,cy,CW,r[0],r[1],r[2],r[3],i); cy+=7.5; });
+                        kvTotal(MG,cy,CW,'TOTAL DE RENDA BRUTA',br2(v.rendaTotal||0),P.g2);
+                        Y+=h2+5;
+                    }
+
+                    // CARD Comprometimentos
+                    {
+                        const rows=[
+                            ['Financiamentos existentes',br2(v.divFinanc||0),'Cartao de Credito',br2(v.divCartao||0)],
+                            ['Emprestimos',br2(v.divEmprest||0),'Aluguel Atual',br2(v.divAluguel||0)],
+                        ];
+                        const h2=13+rows.length*7.5+9+2;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.er,'COMPROMETIMENTOS MENSAIS','!');
+                        let cy=Y+14;
+                        rows.forEach((r,i)=>{ kv2(MG,cy,CW,r[0],r[1],r[2],r[3],i); cy+=7.5; });
+                        kvTotal(MG,cy,CW,'TOTAL DE DIVIDAS / MES',br2(v.totalDividas||0),(v.totalDividas||0)>0?P.er:P.ok);
+                        Y+=h2+5;
+                    }
+
+                    // CARD Patrimônio
+                    {
+                        const vincL={clt:'CLT (Carteira)',servidor:'Servidor Publico',mei:'MEI',autonomo:'Autonomo',aposentado:'Aposentado',empresario:'Empresario'};
+                        const progL={mcmv1:'MCMV F1 (ate R$2.640)',mcmv2:'MCMV F2 (ate R$4.400)',mcmv3:'MCMV F3 (ate R$8.000)',sbpe:'SBPE (acima R$8.000)',pronampe:'Pro-Cotista FGTS'};
+                        const rows=[
+                            ['Saldo FGTS',br2(v.fgts||0),'Poupanca / Investimentos',br2(v.poupanca||0)],
+                            ['Dependentes',(v.dependentes||0)+' pessoa(s)','Restricao CPF',v.restricao==='sim'?'SIM':v.restricao==='desconhecido'?'Nao verificado':'Nao consta'],
+                            ['Vinculo',vincL[v.vinculo]||S(v.vinculo)||'-','Programa',progL[v.programa]||'-'],
+                        ];
+                        const h2=13+rows.length*7.5+2;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.ok,'PATRIMONIO E RECURSOS','P');
+                        let cy=Y+14;
+                        rows.forEach((r,i)=>{ kv2(MG,cy,CW,r[0],r[1],r[2],r[3],i); cy+=7.5; });
+                        Y+=h2+5;
+                    }
+
+                    // CARD Barra comprometimento
+                    {
+                        need(52);
+                        card(MG,Y,CW,50,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,cCor,'ANALISE DE COMPROMETIMENTO','%');
+                        let cy=Y+17;
+                        // Track cinza
+                        FR(MG+5,cy,CW-10,7,P.bdL,3.5);
+                        // Fill colorido
+                        const bW=Math.min(CW-10,Math.max(4,(cPct/100)*(CW-10)));
+                        FR(MG+5,cy,bW,7,cCor,3.5);
+                        // Marcador 30%
+                        const m30=MG+5+(CW-10)*0.30;
+                        dc(...P.er); lw(0.8); doc.setLineDash([1.5,1.5]);
+                        doc.line(m30,cy-2,m30,cy+9); doc.setLineDash([]);
+                        tx('30%',m30+1,cy-0.5,5.5,'bold',P.er);
+                        tx(pct(cPct)+' comprometido',MG+6+bW,cy+5.5,7.5,'bold',cCor);
+                        cy+=12;
+                        // Faixas indicativas
+                        const fxs=[
+                            {lbl:'0-20%',desc:'Excelente',col:P.ok,from:0,to:0.20},
+                            {lbl:'20-30%',desc:'Bom',     col:P.wa,from:0.20,to:0.30},
+                            {lbl:'30-35%',desc:'Atencao', col:P.wa,from:0.30,to:0.35},
+                            {lbl:'35%+', desc:'Critico',  col:P.er,from:0.35,to:1},
+                        ];
+                        const fw2=(CW-14)/4;
+                        fxs.forEach((f,i)=>{
+                            const fx=MG+4+i*(fw2+3);
+                            const act=cPct/100>=f.from&&cPct/100<f.to;
+                            FR(fx,cy,fw2,act?13:11,act?f.col:P.bdL,2);
+                            tx(f.lbl,fx+fw2/2,cy+(act?7:6),5.5,act?'bold':'normal',act?P.wh:P.mt,'center');
+                            if(act) tx(f.desc,fx+fw2/2,cy+11.5,5,'bold',P.wh,'center');
+                        });
+                        Y+=50+5;
+                    }
+
+                    /* ── SEÇÃO 2: Saúde ──────────────────────────── */
+                    secHdr('SAUDE FINANCEIRA','[2]',cCor);
+                    cardAI('Diagnostico de Saude Financeira','S',cCor,rawSaude,'Perfil saudavel para financiamento.');
+
+                    /* ── SEÇÃO 3: Pendências ─────────────────────── */
+                    secHdr('PENDENCIAS E ALERTAS','[3]',P.er);
+                    cardAI('Pendencias Identificadas','!',P.er,rawPend,'Nenhuma pendencia critica identificada na analise.');
+
+                    /* ── SEÇÃO 4: IR ─────────────────────────────── */
+                    secHdr('IMPOSTO DE RENDA — REGRAS 2025','[4]',P.wa);
+
+                    // CARD: Tabela IRPF
+                    {
+                        const irFx=[
+                            {f:'Ate R$ 2.259,20 / mes',     a:'ISENTO',  d:'R$ 0,00',       lim:2259.20},
+                            {f:'R$ 2.259,21 a R$ 2.826,65', a:'7,5%',    d:'R$ 169,44/mes', lim:2826.65},
+                            {f:'R$ 2.826,66 a R$ 3.751,05', a:'15%',     d:'R$ 381,44/mes', lim:3751.05},
+                            {f:'R$ 3.751,06 a R$ 4.664,68', a:'22,5%',   d:'R$ 662,77/mes', lim:4664.68},
+                            {f:'Acima de R$ 4.664,68',       a:'27,5%',   d:'R$ 896,00/mes', lim:Infinity},
+                        ];
+                        const rMes=(v.rendaClt||0)+(v.rendaApo||0)+(v.rendaMei||0)*0.6;
+                        let irA=irFx.findIndex((f,i)=>rMes<=f.lim&&(i===0||rMes>irFx[i-1].lim));
+                        if(irA<0)irA=4;
+                        const h2=13+10+irFx.length*10+4;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.wa,'TABELA DE ALIQUOTAS IRPF 2025','IR');
+                        let cy=Y+14;
+                        // Sub-header tabela
+                        FR(MG,cy,CW,10,P.bk);
+                        tx('FAIXA DE RENDA',MG+4,cy+7,7,'bold',P.wh);
+                        tx('ALIQUOTA',MG+CW*0.57,cy+7,7,'bold',P.wh,'center');
+                        tx('DEDUCAO',MG+CW*0.81,cy+7,7,'bold',P.wh,'center');
+                        cy+=10;
+                        irFx.forEach(({f,a,d},i)=>{
+                            const at=i===irA;
+                            const rb=at?(i<2?P.okL:i<4?P.waL:P.erL):(i%2===0?P.b1:P.b2);
+                            const rt=at?(i<2?P.ok:i<4?P.wa:P.er):P.bk;
+                            FR(MG,cy,CW,10,rb);
+                            if(at){FR(MG,cy,3.5,10,rt); FR(MG+4,cy+2,20,6,rt,3); tx('VOCE',MG+14,cy+5.8,5.5,'bold',P.wh,'center');}
+                            tx(f,MG+(at?28:5),cy+7,7.5,at?'bold':'normal',rt);
+                            tx(a,MG+CW*0.57,cy+7,7.5,at?'bold':'normal',rt,'center');
+                            tx(d,MG+CW*0.81,cy+7,7.5,at?'bold':'normal',rt,'center');
+                            ln(MG,cy+10,MG+CW,cy+10,P.bdL,0.1);
+                            cy+=10;
+                        });
+                        Y+=h2+5;
+                    }
+
+                    // CARD: Análise IA sobre IR
+                    if(rawIR){
+                        const irTxt=cleanAI(rawIR).replace(/TABELA IRPF[\s\S]*?27,5[%\w ,\/\n]*/i,'').trim();
+                        if(irTxt) cardAI('Analise e Orientacoes sobre IR','I',P.wa,irTxt,'');
+                    }
+
+                    // CARD: Deduções
+                    {
+                        const deds=[
+                            ['Dependentes','R$ 2.275,08 / ano por dependente'],
+                            ['Plano de Saude','Integral dedutivel (sem teto)'],
+                            ['Educacao','Ate R$ 3.561,50 / ano por pessoa'],
+                            ['Previdencia PGBL','Ate 12% da renda bruta anual'],
+                            ['Pensao Alimenticia','Integral (ordem judicial)'],
+                            ['INSS Recolhido','Integral dedutivel'],
+                            ['Livro-Caixa','Profissionais liberais e autonomos'],
+                        ];
+                        const h2=13+deds.length*8.5+2;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.wa,'DEDUCOES PERMITIDAS — IRPF 2025','D');
+                        let cy=Y+14;
+                        deds.forEach(([lb,vl],i)=>{
+                            FR(MG,cy,CW,8.5,i%2===0?P.b1:P.b2);
+                            FR(MG,cy,3,8.5,P.wa);
+                            tx(lb,MG+6,cy+6.2,7.5,'bold',P.wa);
+                            tx(vl,MG+CW-4,cy+6.2,7.5,'normal',P.bk,'right');
+                            ln(MG,cy+8.5,MG+CW,cy+8.5,P.bdL,0.1);
+                            cy+=8.5;
+                        });
+                        Y+=h2+5;
+                    }
+
+                    /* ── SEÇÃO 5: Aprovação Caixa ────────────────── */
+                    secHdr('APROVACAO NA CAIXA ECONOMICA FEDERAL','[5]',P.g2);
+
+                    // CARD checklist de aptidão
+                    {
+                        const reqs=[
+                            {ok:v.restricao!=='sim',        lbl:'CPF sem restricoes / Score positivo'},
+                            {ok:cPct<=30,                   lbl:'Comprometimento dentro do limite (30%)'},
+                            {ok:(v.fgts||0)>0,             lbl:'FGTS disponivel para entrada'},
+                            {ok:(v.rendaTotal||0)>1412,    lbl:'Renda minima comprovada'},
+                            {ok:(v.poupanca||0)>0,         lbl:'Recursos proprios complementares'},
+                            {ok:!!v.vinculo,               lbl:'Vinculo empregaticio definido'},
+                        ];
+                        const h2=13+reqs.length*9.5+2;
+                        need(h2+4);
+                        card(MG,Y,CW,h2,P.wh,4,P.bdL);
+                        cardHdr(MG,Y,CW,13,P.g2,'CHECKLIST DE APTIDAO','C');
+                        let cy=Y+14;
+                        reqs.forEach((req,i)=>{
+                            FR(MG,cy,CW,9.5,i%2===0?P.b1:P.b2);
+                            FR(MG+4,cy+2,6,6,req.ok?P.ok:P.er,3);
+                            tx(req.ok?'OK':'X',MG+7,cy+6.8,5,'bold',P.wh,'center');
+                            tx(S(req.lbl),MG+14,cy+6.8,8,req.ok?'normal':'bold',req.ok?P.bk:P.er);
+                            ln(MG,cy+9.5,MG+CW,cy+9.5,P.bdL,0.1);
+                            cy+=9.5;
+                        });
+                        Y+=h2+5;
+                    }
+
+                    // CARD IA Caixa
+                    if(rawCaixa) cardAI('Orientacoes para Aprovacao na Caixa','B',P.g3,rawCaixa,'');
+
+                    /* ── SEÇÃO 6: Plano 30/60/90 ─────────────────── */
+                    secHdr('PLANO DE ACAO — 30 · 60 · 90 DIAS','[6]',P.t1);
+
+                    const parsePlano=txt=>{
+                        if(!txt||!txt.trim())return[[],[],[]];
+                        const cl=cleanAI(txt);
+                        const b=[[],[],[]];
+                        // Regex flexível: aceita com/sem acentos
+                        const R30=/(?:pr[oó]ximos?\s*30|30\s*dias?)\s*[:—\-]?\s*/i;
+                        const R60=/(?:pr[oó]ximos?\s*60|60\s*dias?)\s*[:—\-]?\s*/i;
+                        const R90=/(?:pr[oó]ximos?\s*90|90\s*dias?)\s*[:—\-]?\s*/i;
+                        const p30=cl.split(R30); const a30=p30.length>1?p30[1]:cl;
+                        const p60=a30.split(R60); const a60=p60.length>1?p60[1]:'';
+                        const p90=a60.split(R90);
+                        const ext=blk=>(blk||'').split('\n')
+                            .map(l=>l.replace(/^\d+[\.\)]\s*/,'').replace(/^[-*•]\s*/,'').trim())
+                            .filter(l=>l.length>4&&l.length<140);
+                        b[0]=ext(p60.length>1?p60[0]:a30);
+                        b[1]=ext(p90.length>1?p90[0]:a60);
+                        b[2]=ext(p90.length>1?p90[1]:'');
+                        // Fallback: distribuição equitativa
+                        if(!b[0].length&&!b[1].length&&!b[2].length){
+                            const all=ext(cl); const n=Math.ceil(all.length/3);
+                            b[0]=all.slice(0,n);b[1]=all.slice(n,n*2);b[2]=all.slice(n*2);
+                        }
+                        if(!b[1].length&&b[0].length>2){const m=Math.ceil(b[0].length/2);b[1]=b[0].splice(m);}
+                        if(!b[2].length&&b[1].length>2){const m=Math.ceil(b[1].length/2);b[2]=b[1].splice(m);}
+                        return b;
+                    };
+
+                    const blocos=parsePlano(rawPlano);
+                    const pcfg=[
+                        {titulo:'30 DIAS',sub:'Acoes imediatas',     cor:P.g2,bg:P.b1},
+                        {titulo:'60 DIAS',sub:'Preparacao',          cor:P.g3,bg:P.tXL},
+                        {titulo:'90 DIAS',sub:'Finalizacao',         cor:P.t1,bg:P.tL},
+                    ];
+                    const cwP=(CW-6)/3;
+                    // Calcula altura total necessária
+                    let colHs=[13,13,13];
+                    pcfg.forEach((p,ci)=>{
+                        blocos[ci].forEach(item=>{
+                            doc.setFontSize(7.5);
+                            colHs[ci]+=doc.splitTextToSize(item,cwP-10).length*5.5+5;
+                        });
+                    });
+                    const plH=Math.max(...colHs)+6;
+                    need(plH+6);
+                    card(MG,Y,CW,plH,P.wh,4,P.bdL);
+                    // Headers das colunas
+                    pcfg.forEach((p,i)=>{
+                        const px=MG+i*(cwP+3);
+                        FR(px,Y,cwP,13,p.cor,4);FR(px,Y+10,cwP,3,p.cor);
+                        tx(p.titulo,px+cwP/2,Y+8,8.5,'bold',P.wh,'center');
+                        tx(p.sub,px+cwP/2,Y+12.5,5,'normal',P.gL,'center');
+                    });
+                    let rowY=Y+14;
+                    const maxR=Math.max(blocos[0].length,blocos[1].length,blocos[2].length,1);
+                    for(let ri=0;ri<maxR;ri++){
+                        let rh=9;
+                        pcfg.forEach((p,ci)=>{
+                            const t=blocos[ci][ri]||'';
+                            if(t){doc.setFontSize(7.5);rh=Math.max(rh,doc.splitTextToSize(t,cwP-10).length*5.5+6);}
+                        });
+                        pcfg.forEach((p,ci)=>{
+                            const px=MG+ci*(cwP+3);
+                            FR(px,rowY,cwP,rh,ri%2===0?p.bg:P.b2);
+                            const t=blocos[ci][ri]||'';
+                            if(t){
+                                FR(px+3.5,rowY+rh/2-1.5,3,3,p.cor);
+                                doc.setFontSize(7.5);doc.setFont('helvetica','normal');doc.setTextColor(...P.bk);
+                                doc.splitTextToSize(t,cwP-10).forEach((wl,wi)=>doc.text(wl,px+9,rowY+5.5+wi*5.5));
+                            }
+                            ln(px,rowY+rh,px+cwP,rowY+rh,P.bdL,0.1);
+                        });
+                        rowY+=rh;
+                    }
+                    Y+=plH+6;
+
+                    /* ── SEÇÃO 7: Checklist documentos ───────────── */
+                    secHdr('CHECKLIST DE DOCUMENTOS PARA FINANCIAMENTO','[7]',P.g2);
+
+                    const docGrps=[
+                        {t:'DOCUMENTOS PESSOAIS',c:P.g2,its:['RG e CPF originais + copia autenticada','Certidao de nascimento ou casamento','Comprovante de residencia (ultimos 3 meses)','CNH — opcional']},
+                        {t:'COMPROVACAO DE RENDA',c:P.g3,its:['CLT: 3 contracheques + CTPS + Dec. IR','Autonomo: DECORE + extrato 6 meses','MEI: DASN-SIMEI + extrato 12 meses','Aposentado: extrato INSS + carta','Empresario: Contrato Social + balanco']},
+                        {t:'DOCUMENTOS DO IMOVEL',c:P.g2,its:['Matricula atualizada (max 30 dias)','Certidoes negativas do vendedor','Planta e habite-se','IPTU do exercicio atual']},
+                        {t:'PARA USO DO FGTS',c:P.t1,its:['Extrato FGTS (app Caixa Trabalhador)','Declaracao de nao ter outro imovel financiado','Comp. de 3 anos de FGTS (descontinuo OK)','Nao ter recebido FGTS nos ultimos 3 anos']},
+                    ];
+
+                    // Grid 2×2
+                    const hw2=(CW-4)/2;
+                    for(let gi=0;gi<docGrps.length;gi+=2){
+                        const g1=docGrps[gi], g2=docGrps[gi+1];
+                        const maxR2=Math.max(g1?g1.its.length:0, g2?g2.its.length:0);
+                        const gh=13+maxR2*9+4;
+                        need(gh+4);
+                        [g1,g2].forEach((g,side)=>{
+                            if(!g)return;
+                            const gx=MG+side*(hw2+4);
+                            card(gx,Y,hw2,gh,P.wh,4,P.bdL);
+                            FR(gx,Y,hw2,13,g.c,4);FR(gx,Y+10,hw2,3,g.c);
+                            tx(g.t,gx+5,Y+9,7,'bold',P.wh);
+                            let gy=Y+14;
+                            g.its.forEach((item,ii)=>{
+                                FR(gx,gy,hw2,9,ii%2===0?P.b1:P.b2);
+                                FR(gx+3,gy+2.5,5,5,g.c,2.5);
+                                tx('✓',gx+5.5,gy+7,5.5,'bold',P.wh,'center');
+                                tx(S(item),gx+11,gy+6.5,7,'normal',P.bk);
+                                ln(gx,gy+9,gx+hw2,gy+9,P.bdL,0.1);
+                                gy+=9;
+                            });
+                        });
+                        Y+=gh+4;
+                    }
+                    Y+=3;
+
+                    /* ── SEÇÃO 8: Glossário ──────────────────────── */
+                    secHdr('GLOSSARIO DE TERMOS FINANCEIROS','[8]',P.g3);
+
+                    const gloss=[
+                        ['FGTS','Fundo de Garantia — 8% do salario recolhido pelo empregador mensalmente.'],
+                        ['MCMV','Minha Casa Minha Vida — programa habitacional federal com subsidios.'],
+                        ['SBPE','Sistema Brasileiro de Poupanca e Emprestimo — para renda acima de R$8.000.'],
+                        ['IRPF','Imposto de Renda Pessoa Fisica — tributo sobre rendimentos anuais.'],
+                        ['Score','Pontuacao 0-1000 (Serasa) que indica probabilidade de pagamento.'],
+                        ['LTV','Loan to Value — proporcao entre valor financiado e valor do imovel.'],
+                        ['PGBL','Previdencia privada com deducao fiscal de ate 12% da renda bruta.'],
+                        ['CET','Custo Efetivo Total — juros + seguros + taxas administrativas.'],
+                        ['SAC','Amortizacao Constante — parcelas decrescentes ao longo do contrato.'],
+                        ['PRICE','Sistema Frances — parcelas fixas, amortizacao crescente.'],
+                    ];
+                    const half=Math.ceil(gloss.length/2);
+                    const [gl1,gl2]=[gloss.slice(0,half),gloss.slice(half)];
+                    const grh=doc.setFontSize(7)&&11;
+                    const glH=13+half*11+2;
+                    need(glH+4);
+                    [gl1,gl2].forEach((arr,side)=>{
+                        const gx=MG+side*(hw2+4);
+                        card(gx,Y,hw2,glH,P.wh,4,P.bdL);
+                        FR(gx,Y,hw2,13,side===0?P.g2:P.g3,4);FR(gx,Y+10,hw2,3,side===0?P.g2:P.g3);
+                        tx(side===0?'GLOSSARIO (A-L)':'GLOSSARIO (M-Z)',gx+5,Y+9,7,'bold',P.wh);
+                        let gy=Y+14;
+                        arr.forEach(([term,desc],i)=>{
+                            FR(gx,gy,hw2,11,i%2===0?P.b1:P.b2);
+                            FR(gx,gy,22,11,i%2===0?P.g2:P.g3);
+                            tx(term,gx+11,gy+7.5,6.5,'bold',P.wh,'center');
+                            doc.setFontSize(7);doc.setFont('helvetica','normal');doc.setTextColor(...P.bk);
+                            const wrap=doc.splitTextToSize(S(desc),hw2-28);
+                            wrap.forEach((wl,wi)=>doc.text(wl,gx+25,gy+5+wi*4.8));
+                            ln(gx,gy+11,gx+hw2,gy+11,P.bdL,0.1);
+                            gy+=11;
+                        });
+                    });
+                    Y+=glH+5;
+
+                    /* ── SEÇÃO 9: Aviso + Contato ────────────────── */
+                    secHdr('AVISO LEGAL E CONTATO DO CORRETOR','[9]',P.mk);
+
+                    // Card aviso
+                    need(24);
+                    card(MG,Y,CW,22,P.waXL,4,P.wa);
+                    FR(MG,Y,CW,11,P.wa,4); FR(MG,Y+8,CW,3,P.wa);
+                    FR(MG+4,Y+2,20,7,P.wh,3);
+                    tx('AVISO',MG+14,Y+6.8,5.5,'bold',P.wa,'center');
+                    tx('Documento Orientativo — carater informativo',MG+28,Y+8,8,'bold',P.wh);
+                    sf(8,'normal',P.bk);
+                    doc.splitTextToSize('Este documento e informativo e nao substitui consultoria de contador, advogado ou especialista credenciado.',CW-12).forEach((wl,wi)=>doc.text(wl,MG+4,Y+17+wi*5.5));
+                    Y+=22+5;
+
+                    // Card contato corretor
+                    need(32);
+                    card(MG,Y,CW,30,P.g1,4);
+                    dc(...P.t1);lw(0.6);doc.roundedRect(MG,Y,CW,30,4,4,'S');
+                    FR(MG,Y,CW,12,P.t1,4);FR(MG,Y+9,CW,3,P.t1);
+                    tx('FALE COM SEU CORRETOR',MG+6,Y+9,8.5,'bold',P.wh);
+                    FR(MG+5,Y+15,14,14,P.t1,3);
+                    tx('C',MG+12,Y+23.5,9,'bold',P.wh,'center');
+                    const cln=S(corNome||corImob);
+                    const ccr=corCreci?'  ·  CRECI: '+S(corCreci):'';
+                    tx(cln+ccr,MG+24,Y+21,9.5,'bold',P.gL);
+                    const ccp=[]; if(corTel)ccp.push('Tel: '+S(corTel)); if(corEmail)ccp.push(S(corEmail)); if(corImob)ccp.push(S(corImob));
+                    tx(ccp.join('   |   '),MG+24,Y+27,7.5,'normal',P.g4);
+                    Y+=30+4;
+
+                    doc.save('cartilha-consultoria-imobipro-'+new Date().toISOString().slice(0,10)+'.pdf');
+                    if(window.UI&&UI.showToast)UI.showToast('Cartilha PDF gerada com sucesso!');
                 } catch(e) {
                     console.error(e);
-                    if (window.UI && UI.showToast) UI.showToast('Erro ao gerar PDF. Tente novamente.', 'error');
+                    if(window.UI&&UI.showToast)UI.showToast('Erro ao gerar PDF. Tente novamente.','error');
                 }
             },
 
-            consNovoChatIA() {
+
+                        consNovoChatIA() {
                 const el = document.getElementById('cons-chat-messages');
                 if (!el) return;
                 const v = this._consData;
